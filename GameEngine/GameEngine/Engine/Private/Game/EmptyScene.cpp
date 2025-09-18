@@ -1,27 +1,44 @@
-﻿#include "../../Public/Game/EmptyScene.h"
+#include "Game/EmptyScene.h"
+#include "Game/ActorSpawner.h"
+#include "Game/Test/Player.h"
+#include "Input/Input.h"
+#include "Math/Color.h"
 
-
-EmptyScene::EmptyScene()
-    : player(300.f, 220.f, 50.f, 50.f, SDL_Color{255,255,255,255}) {}
-
-void EmptyScene::HandleEvent(const SDL_Event& e)
+namespace Engine::Game
 {
-    input.ProcessEvent(e);
-}
+    EmptyScene::EmptyScene() : Scene("EmptyScene")
+    {
+        
+    }
 
-void EmptyScene::Update(float dt)
-{
-    Vector3 pos = player.GetPosition();
+    void EmptyScene::HandleEvent(const SDL_Event&)
+    {
+        
+    }
 
-    if (input.IsKeyDown(SDLK_Z)) pos.y -= speed * dt;
-    if (input.IsKeyDown(SDLK_S)) pos.y += speed * dt;
-    if (input.IsKeyDown(SDLK_Q)) pos.x -= speed * dt;
-    if (input.IsKeyDown(SDLK_D)) pos.x += speed * dt;
+    void EmptyScene::Update(float deltaTime)
+    {
+        if (player_)
+            player_->Update(deltaTime);
+    }
 
-    player.SetPosition(pos);
-}
+    void EmptyScene::Render(Graphics::Renderer& renderer)
+    {
+        if (player_)
+            player_->Render(renderer);
+    }
 
-void EmptyScene::Render(Renderer& renderer)
-{
-    player.Render(renderer);
+    void EmptyScene::OnEnter()
+    {
+        Scene::OnEnter();
+
+        player_ = ActorSpawner::SpawnActor<Player>(
+            Math::Vector3(100, 100, 0),
+            Math::Vector3(50, 50, 1),
+            Math::Color::Red().ToSDL()
+        );
+        
+        if (player_ && HasInputManager())
+            player_->SetupInput(GetInputManager());
+    }
 }

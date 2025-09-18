@@ -1,2 +1,2 @@
-﻿#include "../../Public/Math/Vector2.h"
+#include "Math/Vector2.h"
 

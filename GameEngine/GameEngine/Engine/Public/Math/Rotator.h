@@ -1,79 +1,73 @@
-﻿#pragma once
-#include "Vector3.h"
+#pragma once
+#include <cmath>
+#include <string>
 
-struct Rotator {
-    float pitch; ///< Rotation around X-axis (looking up/down)
-    float yaw;   ///< Rotation around Y-axis (turning left/right)
-    float roll;  ///< Rotation around Z-axis (tilting head)
+#include "Math/Vector3.h"
 
-    // --- Constructors ---
-    Rotator() : pitch(0), yaw(0), roll(0) {}
-    Rotator(float p, float y, float r) : pitch(p), yaw(y), roll(r) {}
+namespace Engine::Math
+{
+    struct Rotator
+    {
+        float pitch{0.0f};
+        float yaw{0.0f};
+        float roll{0.0f};
 
-    // --- Constants ---
-    static Rotator Zero()
-    { return Rotator(0, 0, 0); }
-    
+        static constexpr float kDegreesToRadians = 0.0174532925199432957692369077f;
 
-    // --- Conversion to radians ---
-    float PitchRad() const
-    { return pitch * (3.1415926535f / 180.0f); }
-    
-    float YawRad()   const
-    { return yaw   * (3.1415926535f / 180.0f); }
-    
-    float RollRad()  const
-    { return roll  * (3.1415926535f / 180.0f); }
-    
+        constexpr Rotator() = default;
+        constexpr Rotator(float pitchDegrees, float yawDegrees, float rollDegrees)
+            : pitch(pitchDegrees), yaw(yawDegrees), roll(rollDegrees) {}
 
-    // --- Direction vectors ---
-    /**
-     * @brief Returns the forward direction vector (based on Pitch & Yaw).
-     * Equivalent to "look direction".
-     */
-    Vector3 Forward() const {
-        float cp = cosf(PitchRad());
-        float sp = sinf(PitchRad());
-        float cy = cosf(YawRad());
-        float sy = sinf(YawRad());
+        [[nodiscard]] static constexpr Rotator Zero() noexcept { return Rotator(0.0f, 0.0f, 0.0f); }
 
-        return Vector3(cp * cy, sp, cp * sy);
-    }
+        [[nodiscard]] float PitchRad() const noexcept { return pitch * kDegreesToRadians; }
+        [[nodiscard]] float YawRad() const noexcept   { return yaw * kDegreesToRadians; }
+        [[nodiscard]] float RollRad() const noexcept  { return roll * kDegreesToRadians; }
 
-    /**
-     * @brief Returns the right direction vector (perpendicular to Forward).
-     */
-    Vector3 Right() const {
-        float cy = cosf(YawRad());
-        float sy = sinf(YawRad());
+        [[nodiscard]] Vector3 Forward() const noexcept
+        {
+            const float cp = std::cos(PitchRad());
+            const float sp = std::sin(PitchRad());
+            const float cy = std::cos(YawRad());
+            const float sy = std::sin(YawRad());
 
-        return Vector3(-sy, 0, cy);
-    }
+            return Vector3(cp * cy, sp, cp * sy);
+        }
 
-    /**
-     * @brief Returns the up direction vector (based on Pitch, Yaw, Roll).
-     */
-    Vector3 Up() const {
-        Vector3 f = Forward();
-        Vector3 r = Right();
-        return r.Cross(f).Normalized();
-    }
+        [[nodiscard]] Vector3 Right() const noexcept
+        {
+            const float cy = std::cos(YawRad());
+            const float sy = std::sin(YawRad());
+            return Vector3(-sy, 0.0f, cy);
+        }
 
-    // --- Operators ---
-    Rotator operator+(const Rotator& other) const
-    { return Rotator(pitch + other.pitch, yaw + other.yaw, roll + other.roll); }
-    
-    Rotator operator-(const Rotator& other) const
-    { return Rotator(pitch - other.pitch, yaw - other.yaw, roll - other.roll); }
-    
-    Rotator operator*(float scalar) const
-    { return Rotator(pitch * scalar, yaw * scalar, roll * scalar); }
+        [[nodiscard]] Vector3 Up() const noexcept
+        {
+            const Vector3 forward = Forward();
+            const Vector3 right = Right();
+            return right.Cross(forward).Normalized();
+        }
 
-    
-    // --- ToString ---
-    std::string ToString() const {
-        return "Rotator(P=" + std::to_string(pitch) +
-               ", Y=" + std::to_string(yaw) +
-               ", R=" + std::to_string(roll) + ")";
-    }
-};
+        [[nodiscard]] constexpr Rotator operator+(const Rotator& other) const noexcept
+        {
+            return Rotator(pitch + other.pitch, yaw + other.yaw, roll + other.roll);
+        }
+
+        [[nodiscard]] constexpr Rotator operator-(const Rotator& other) const noexcept
+        {
+            return Rotator(pitch - other.pitch, yaw - other.yaw, roll - other.roll);
+        }
+
+        [[nodiscard]] constexpr Rotator operator*(float scalar) const noexcept
+        {
+            return Rotator(pitch * scalar, yaw * scalar, roll * scalar);
+        }
+
+        [[nodiscard]] std::string ToString() const
+        {
+            return "Rotator(P=" + std::to_string(pitch) +
+                   ", Y=" + std::to_string(yaw) +
+                   ", R=" + std::to_string(roll) + ")";
+        }
+    };
+}

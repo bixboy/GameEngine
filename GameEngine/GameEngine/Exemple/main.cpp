@@ -1,10 +1,13 @@
-﻿#include "../Engine/Public/Core/Application.h"
+#include "Engine.h"
 
-int main(int, char**) {
-    
-    Application app;
-    if (app.Init())
+int main(int, char**)
+{
+    Engine::Application app;
+    if (app.Initialize())
+    {
+        app.EmplaceScene<Engine::TestScene>();
         app.Run();
-    
+    }
+
     return 0;
 }

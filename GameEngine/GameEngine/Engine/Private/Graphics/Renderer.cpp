@@ -1,38 +1,46 @@
-﻿#include "../../Public/Graphics/Renderer.h"
-#include <iostream>
-#include <ostream>
+#include "Graphics/Renderer.h"
+#include "string"
+#include "Core/Logger.h"
 
-Renderer::Renderer(SDL_Window* window)
+namespace Engine::Graphics
 {
-    renderer = SDL_CreateRenderer(window, nullptr);
     
-    if (!renderer)
-        std::cerr << "Renderer creation failed: " << SDL_GetError() << '\n';
-}
-
-Renderer::~Renderer()
-{
-    if (renderer)
+    Renderer::Renderer(SDL_Window* window)
     {
-        SDL_DestroyRenderer(renderer);
-        renderer = nullptr;
+        renderer_ = SDL_CreateRenderer(window, nullptr);
+
+        if (!renderer_)
+            LOG_ERROR(std::string{"Renderer creation failed: "} + SDL_GetError());
     }
-}
 
-void Renderer::Clear()
-{
-    if (renderer)
-        SDL_RenderClear(renderer);
-}
+    Renderer::~Renderer()
+    {
+        if (renderer_)
+        {
+            SDL_DestroyRenderer(renderer_);
+            renderer_ = nullptr;
+        }
+    }
 
-void Renderer::Present()
-{
-    if (renderer)
-        SDL_RenderPresent(renderer);
-}
+    void Renderer::Clear(Math::Color color) const
+    {
+        if (!renderer_)
+            return;
 
-void Renderer::SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a)
-{
-    if (renderer)
-        SDL_SetRenderDrawColor(renderer, r, g, b, a);
+        SDL_SetRenderDrawColor(renderer_, color.r, color.g, color.b, color.a);
+        SDL_RenderClear(renderer_);
+    }
+
+    void Renderer::Present() const
+    {
+        if (renderer_)
+            SDL_RenderPresent(renderer_);
+    }
+
+    void Renderer::SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) const
+    {
+        if (renderer_)
+            SDL_SetRenderDrawColor(renderer_, r, g, b, a);
+    }
+
 }

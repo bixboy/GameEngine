@@ -1,17 +1,21 @@
-﻿#pragma once
-#include "unordered_map"
-#include "SDL3/SDL_events.h"
+#pragma once
 
-class Input
+#include <SDL3/SDL_events.h>
+
+#include <unordered_set>
+
+namespace Engine::Input
 {
-    
-public:
-    void ProcessEvent(const SDL_Event& e);
+    class Input
+    {
+        public:
+            void ProcessEvent(const SDL_Event& event);
 
-    bool IsKeyDown(SDL_Keycode key) const;
-    bool IsQuitRequested() const { return quitRequested; }
+            [[nodiscard]] bool IsKeyDown(SDL_Keycode key) const noexcept;
+            [[nodiscard]] bool IsQuitRequested() const noexcept { return quitRequested_; }
 
-private:
-    std::unordered_map<SDL_Keycode, bool> keys;
-    bool quitRequested = false;
-};
+        private:
+            std::unordered_set<SDL_Keycode> pressedKeys_{};
+            bool quitRequested_{false};
+    };
+}
