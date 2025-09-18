@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Core/Application.h"
 #include "Core/Logger.h"
 #include "Core/Timer.h"
@@ -9,7 +8,7 @@
 
 #include "Input/Input.h"
 
-#include "Game/Entity.h"
+#include "Game/Actor.h"
 #include "Game/EmptyScene.h"
 #include "Game/Scene.h"
 #include "Game/SceneManager.h"

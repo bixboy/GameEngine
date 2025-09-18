@@ -1,31 +1,43 @@
 #include "Game/EmptyScene.h"
+#include "Game/Test/Player.h"
+#include "Input/Input.h"
 
-#include <SDL3/SDL_keycode.h>
+namespace Engine::Game
+{
+    EmptyScene::EmptyScene() : Scene("EmptyScene")
+    {
+        
+    }
 
-#include "Graphics/Renderer.h"
+    void EmptyScene::HandleEvent(const SDL_Event&)
+    {
+        
+    }
 
-namespace Engine::Game {
+    void EmptyScene::Update(float deltaTime)
+    {
+        if (player_)
+            player_->Update(deltaTime);
+    }
 
-EmptyScene::EmptyScene()
-    : Scene("EmptyScene"),
-      player_(300.f, 220.f, 50.f, 50.f, SDL_Color{255, 255, 255, 255}) {}
+    void EmptyScene::Render(Graphics::Renderer& renderer)
+    {
+        if (player_)
+            player_->Render(renderer);
+    }
 
-void EmptyScene::HandleEvent(const SDL_Event& /*event*/) {}
+    void EmptyScene::OnEnter()
+    {
+        Scene::OnEnter();
 
-void EmptyScene::Update(float deltaTime) {
-    Math::Vector3 position = player_.GetPosition();
-    auto& input = GetInput();
+        player_ = std::make_unique<Player>(
+            Math::Vector3(300, 220, 0),
+            Math::Vector3(50, 50, 1)
+        );
 
-    if (input.IsKeyDown(SDLK_z)) { position.y -= speed_ * deltaTime; }
-    if (input.IsKeyDown(SDLK_s)) { position.y += speed_ * deltaTime; }
-    if (input.IsKeyDown(SDLK_q)) { position.x -= speed_ * deltaTime; }
-    if (input.IsKeyDown(SDLK_d)) { position.x += speed_ * deltaTime; }
-
-    player_.SetPosition(position);
+        if (HasInputManager())
+        {
+            dynamic_cast<Player*>(player_.get())->SetupInput(GetInputManager());
+        }
+    }
 }
-
-void EmptyScene::Render(Graphics::Renderer& renderer) {
-    player_.Render(renderer);
-}
-
-}  // namespace Engine::Game

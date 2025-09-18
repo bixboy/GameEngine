@@ -1,21 +1,21 @@
 #pragma once
-
-#include "Game/Entity.h"
+#include "Game/Actor.h"
 #include "Game/Scene.h"
 
-namespace Engine::Game {
+namespace Engine::Game
+{
+    class EmptyScene : public Scene
+    {
+        public:
+            EmptyScene();
 
-class EmptyScene : public Scene {
-public:
-    EmptyScene();
+            void HandleEvent(const SDL_Event& event) override;
+            void Update(float deltaTime) override;
+            void Render(Graphics::Renderer& renderer) override;
 
-    void HandleEvent(const SDL_Event& event) override;
-    void Update(float deltaTime) override;
-    void Render(Graphics::Renderer& renderer) override;
+             void OnEnter() override;
 
-private:
-    Entity player_{};
-    float speed_ = 200.0f;
-};
-
-}  // namespace Engine::Game
+        private:
+            std::unique_ptr<Actor> player_;
+    };
+}

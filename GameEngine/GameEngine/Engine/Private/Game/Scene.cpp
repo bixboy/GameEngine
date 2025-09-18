@@ -8,48 +8,49 @@
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
 
-namespace Engine::Game {
+namespace Engine::Game
+{
+    Scene::Scene(std::string name) : name_(std::move(name)) {}
 
-Scene::Scene(std::string name) : name_(std::move(name)) {}
-
-void Scene::SetContext(SceneContext context) noexcept {
-    context_ = context;
-}
-
-void Scene::SetName(std::string name) {
-    name_ = std::move(name);
-}
-
-Input::Input& Scene::GetInput() const {
-    if (!context_.input) {
-        throw std::runtime_error("Scene context does not provide an input subsystem.");
+    void Scene::SetContext(SceneContext context) noexcept
+    {
+        context_ = context;
     }
 
-    return *context_.input;
-}
-
-Graphics::Renderer& Scene::GetRenderer() const {
-    if (!context_.renderer) {
-        throw std::runtime_error("Scene context does not provide a renderer.");
+    void Scene::SetName(std::string name)
+    {
+        name_ = std::move(name);
     }
 
-    return *context_.renderer;
-}
+    Input::InputManager& Scene::GetInputManager() const
+    {
+        if (!context_.inputManager)
+            throw std::runtime_error("Scene context does not provide an input subsystem.");
 
-Core::Window& Scene::GetWindow() const {
-    if (!context_.window) {
-        throw std::runtime_error("Scene context does not provide a window.");
+        return *context_.inputManager;
     }
 
-    return *context_.window;
-}
+    Graphics::Renderer& Scene::GetRenderer() const
+    {
+        if (!context_.renderer)
+            throw std::runtime_error("Scene context does not provide a renderer.");
 
-Core::Timer& Scene::GetTimer() const {
-    if (!context_.timer) {
-        throw std::runtime_error("Scene context does not provide a timer.");
+        return *context_.renderer;
     }
 
-    return *context_.timer;
-}
+    Core::Window& Scene::GetWindow() const
+    {
+        if (!context_.window)
+            throw std::runtime_error("Scene context does not provide a window.");
 
-}  // namespace Engine::Game
+        return *context_.window;
+    }
+
+    Core::Timer& Scene::GetTimer() const
+    {
+        if (!context_.timer)
+            throw std::runtime_error("Scene context does not provide a timer.");
+
+        return *context_.timer;
+    }
+}
