@@ -3,8 +3,6 @@
 #include <string>
 #include <string_view>
 #include "Input/InputManager.h"
-#include "Test/Player.h"
-
 namespace Engine
 {
     namespace Graphics { class Renderer; }
@@ -27,9 +25,9 @@ namespace Engine
                 explicit Scene(std::string name = "Unnamed Scene");
                 virtual ~Scene() = default;
 
-                virtual void HandleEvent(const SDL_Event& event) = 0;
-                virtual void Update(float deltaTime) = 0;
-                virtual void Render(Graphics::Renderer& renderer) = 0;
+                virtual void HandleEvent(const SDL_Event& event) { (void)event; }
+                virtual void Update(float deltaTime) { (void)deltaTime; }
+                virtual void Render(Graphics::Renderer& renderer) { (void)renderer; }
 
                 virtual void OnEnter() {}
                 virtual void OnExit() {}

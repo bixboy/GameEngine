@@ -1,4 +1,7 @@
 #include "Game/EmptyScene.h"
+
+#include <memory>
+
 #include "Game/Test/Player.h"
 #include "Input/Input.h"
 
@@ -31,13 +34,12 @@ namespace Engine::Game
         Scene::OnEnter();
 
         player_ = std::make_unique<Player>(
-            Math::Vector3(300, 220, 0),
-            Math::Vector3(50, 50, 1)
+            Math::Vector3(300.0f, 220.0f, 0.0f),
+            Math::Vector3(50.0f, 50.0f, 1.0f),
+            SDL_Color{255, 255, 255, 255}
         );
 
-        if (HasInputManager())
-        {
-            dynamic_cast<Player*>(player_.get())->SetupInput(GetInputManager());
-        }
+        if (player_ && HasInputManager())
+            player_->SetupInput(GetInputManager());
     }
 }

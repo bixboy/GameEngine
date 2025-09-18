@@ -1,37 +1,61 @@
-﻿#include "Game/Test/Player.h"
+#include "Game/Test/Player.h"
+
+#include <memory>
+
+#include "Game/Components/SpriteComponent.h"
+#include "Input/InputManager.h"
+#include "Math/Math.h"
 
 namespace Engine::Game
 {
-    Player::Player(const Math::Vector3& position, const Math::Vector3& size)
+    Player::Player(const Math::Vector3& position,
+                   const Math::Vector3& size,
+                   SDL_Color color)
         : Actor(Math::Transform(position, Math::Rotator(), size))
     {
-        
+        AddComponent(std::make_unique<SpriteComponent>(this, color, size.x, size.y));
     }
 
-    void Player::SetupInput(Input::InputManager& input)
+    void Player::SetupInput(Input::InputManager& inputManager)
     {
-        input.BindAction("MoveUp",    SDLK_Z, Input::InputEvent::Hold, this, &Player::MoveUp);
-        input.BindAction("MoveDown",  SDLK_S, Input::InputEvent::Hold, this, &Player::MoveDown);
-        input.BindAction("MoveLeft",  SDLK_Q, Input::InputEvent::Hold, this, &Player::MoveLeft);
-        input.BindAction("MoveRight", SDLK_D, Input::InputEvent::Hold, this, &Player::MoveRight);
-    }
+        inputManager.BindAxis("MoveForward", SDLK_w, this, &Player::MoveForward, 1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_z, this, &Player::MoveForward, 1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_UP, this, &Player::MoveForward, 1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_s, this, &Player::MoveForward, -1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_DOWN, this, &Player::MoveForward, -1.0f);
 
-    void Player::MoveUp()    { AddMovement(0.0f, -1.0f); }
-    void Player::MoveDown()  { AddMovement(0.0f,  1.0f); }
-    void Player::MoveLeft()  { AddMovement(-1.0f, 0.0f); }
-    void Player::MoveRight() { AddMovement( 1.0f, 0.0f); }
-
-    void Player::AddMovement(float dx, float dy)
-    {
-        Math::Vector3 pos = GetPosition();
-        pos.x += dx * speed_ * deltaTime_;
-        pos.y += dy * speed_ * deltaTime_;
-        
-        SetPosition(pos);
+        inputManager.BindAxis("MoveRight", SDLK_d, this, &Player::MoveRight, 1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_RIGHT, this, &Player::MoveRight, 1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_a, this, &Player::MoveRight, -1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_q, this, &Player::MoveRight, -1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_LEFT, this, &Player::MoveRight, -1.0f);
     }
 
     void Player::Update(float deltaTime)
     {
-        deltaTime_ = deltaTime;
+        ApplyMovement(deltaTime);
+    }
+
+    void Player::MoveForward(float value)
+    {
+        pendingInput_.y = value;
+    }
+
+    void Player::MoveRight(float value)
+    {
+        pendingInput_.x = value;
+    }
+
+    void Player::ApplyMovement(float deltaTime)
+    {
+        Math::Vector2 input = pendingInput_;
+        if (input.LengthSquared() > 1.0f)
+            input = input.Normalized();
+
+        Math::Vector3 movement{ input.x, -input.y, 0.0f };
+        movement = movement * (moveSpeed_ * deltaTime);
+
+        SetPosition(GetPosition() + movement);
     }
 }
+

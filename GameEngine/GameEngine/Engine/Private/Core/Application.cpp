@@ -11,6 +11,7 @@
 #include "Game/Test/TestScene.h"
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
+#include "Input/InputManager.h"
 
 namespace Engine::Core
 {
@@ -85,6 +86,9 @@ namespace Engine::Core
         while (SDL_PollEvent(&event))
         {
             input_->ProcessEvent(event);
+
+            if (inputManager_)
+                inputManager_->ProcessEvent(event);
             if (sceneManager_)
             {
                 if (auto* scene = sceneManager_->GetScene())
@@ -98,6 +102,9 @@ namespace Engine::Core
 
     void Application::Update(float deltaTime)
     {
+        if (inputManager_)
+            inputManager_->Update();
+
         if (sceneManager_)
         {
             if (auto* scene = sceneManager_->GetScene())
@@ -187,6 +194,9 @@ namespace Engine::Core
         timer_ = std::make_unique<Timer>();
         input_ = std::make_unique<Input::Input>();
         inputManager_ = std::make_unique<Input::InputManager>();
+
+        if (inputManager_)
+            inputManager_->SetInputDevice(input_.get());
 
         sceneManager_ = std::make_unique<Game::SceneManager>();
 

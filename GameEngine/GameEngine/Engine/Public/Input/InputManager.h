@@ -1,13 +1,20 @@
-﻿#pragma once
-#include <unordered_map>
-#include <vector>
+#pragma once
+
+#include <algorithm>
+#include <cstddef>
+#include <cstring>
 #include <functional>
 #include <string>
-#include <SDL3/SDL.h>
+#include <typeindex>
+#include <utility>
+#include <vector>
 
+#include <SDL3/SDL.h>
 
 namespace Engine::Input
 {
+    class Input;
+
     enum class InputEvent
     {
         Pressed,
@@ -17,32 +24,97 @@ namespace Engine::Input
 
     class InputManager
     {
-    public:
-        void ProcessEvent(const SDL_Event& e);
+        public:
+            InputManager() = default;
 
-        template <typename T>
-        void BindAction(const std::string& actionName, SDL_Keycode key, InputEvent eventType, T* instance, void (T::*func)())
-        {
-            InputBinding binding;
-            binding.actionName = actionName;
-            binding.key = key;
-            binding.eventType = eventType;
+            void SetInputDevice(Input* input) noexcept { input_ = input; }
 
-            binding.callback = [instance, func]() { (instance->*func)(); };
+            void ProcessEvent(const SDL_Event& event);
+            void Update();
 
-            bindings_.push_back(std::move(binding));
-        }
+            template <typename T>
+            void BindAction(std::string actionName,
+                            SDL_Keycode key,
+                            InputEvent eventType,
+                            T* instance,
+                            void (T::*func)())
+            {
+                ActionBinding binding;
+                binding.actionName = std::move(actionName);
+                binding.key = key;
+                binding.eventType = eventType;
+                binding.callback = [instance, func]() { (instance->*func)(); };
 
-    private:
-        struct InputBinding
-        {
-            std::string actionName;
-            SDL_Keycode key;
-            
-            InputEvent eventType;
-            std::function<void()> callback;
-        };
+                actionBindings_.push_back(std::move(binding));
+            }
 
-        std::vector<InputBinding> bindings_;
-    };   
+            template <typename T>
+            void BindAxis(std::string axisName,
+                          SDL_Keycode key,
+                          T* instance,
+                          void (T::*func)(float),
+                          float scale = 1.0f)
+            {
+                const std::type_index typeIndex{typeid(T)};
+
+                std::vector<std::byte> methodKey(sizeof(func));
+                std::memcpy(methodKey.data(), &func, sizeof(func));
+
+                auto matches = [&](const AxisBinding& binding)
+                {
+                    return binding.axisName == axisName &&
+                           binding.instance == instance &&
+                           binding.typeIndex == typeIndex &&
+                           binding.methodKey == methodKey;
+                };
+
+                auto it = std::find_if(axisBindings_.begin(), axisBindings_.end(), matches);
+
+                if (it == axisBindings_.end())
+                {
+                    AxisBinding binding;
+                    binding.axisName = std::move(axisName);
+                    binding.instance = instance;
+                    binding.typeIndex = typeIndex;
+                    binding.methodKey = std::move(methodKey);
+                    binding.callback = [instance, func](float value) { (instance->*func)(value); };
+                    binding.keys.push_back({key, scale});
+                    axisBindings_.push_back(std::move(binding));
+                }
+                else
+                {
+                    it->keys.push_back({key, scale});
+                }
+            }
+
+        private:
+            struct ActionBinding
+            {
+                std::string actionName;
+                SDL_Keycode key{SDLK_UNKNOWN};
+                InputEvent eventType{InputEvent::Pressed};
+                std::function<void()> callback{};
+            };
+
+            struct AxisKey
+            {
+                SDL_Keycode key{SDLK_UNKNOWN};
+                float scale{1.0f};
+            };
+
+            struct AxisBinding
+            {
+                std::string axisName;
+                std::function<void(float)> callback{};
+                void* instance{nullptr};
+                std::type_index typeIndex{typeid(void)};
+                std::vector<std::byte> methodKey{};
+                std::vector<AxisKey> keys{};
+            };
+
+            Input* input_{nullptr};
+            std::vector<ActionBinding> actionBindings_{};
+            std::vector<AxisBinding> axisBindings_{};
+    };
 }
+

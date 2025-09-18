@@ -1,9 +1,13 @@
 #pragma once
-#include "Game/Actor.h"
+
+#include <memory>
+
 #include "Game/Scene.h"
 
 namespace Engine::Game
 {
+    class Player;
+
     class EmptyScene : public Scene
     {
         public:
@@ -16,6 +20,6 @@ namespace Engine::Game
              void OnEnter() override;
 
         private:
-            std::unique_ptr<Actor> player_;
+            std::unique_ptr<Player> player_{};
     };
 }

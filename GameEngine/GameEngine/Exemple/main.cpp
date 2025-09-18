@@ -2,10 +2,10 @@
 
 int main(int, char**)
 {
-    Engine::Core::Application app;
+    Engine::Application app;
     if (app.Initialize())
     {
-        app.EmplaceScene<Engine::Game::EmptyScene>();
+        app.EmplaceScene<Engine::TestScene>();
         app.Run();
     }
 

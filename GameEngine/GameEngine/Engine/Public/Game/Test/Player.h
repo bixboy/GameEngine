@@ -1,28 +1,40 @@
-﻿#pragma once
+#pragma once
+
+#include <memory>
+
+#include <SDL3/SDL.h>
+
 #include "Game/Actor.h"
-#include "Input/InputManager.h"
 
-namespace Engine::Game
+namespace Engine
 {
-    class Player : public Actor
+    namespace Graphics { class Renderer; }
+    namespace Input    { class InputManager; }
+
+    namespace Game
     {
-        public:
-            Player(const Math::Vector3& position,
-                   const Math::Vector3& size);
+        class SpriteComponent;
 
-            void Update(float deltaTime) override;
+        class Player : public Actor
+        {
+            public:
+                Player(const Math::Vector3& position,
+                       const Math::Vector3& size,
+                       SDL_Color color);
 
-            void SetupInput(Input::InputManager& input);
+                void SetupInput(Input::InputManager& inputManager);
 
-            void MoveUp();
-            void MoveDown();
-            void MoveLeft();
-            void MoveRight();
+                void Update(float deltaTime) override;
 
-        private:
-            void AddMovement(float dx, float dy);
-        
-            float speed_ = 200.0f;
-            float deltaTime_ = 0.0f;
-    };
+                void MoveForward(float value);
+                void MoveRight(float value);
+
+            private:
+                void ApplyMovement(float deltaTime);
+
+                Math::Vector2 pendingInput_{};
+                float moveSpeed_{200.0f};
+        };
+    }
 }
+

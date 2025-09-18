@@ -1,37 +1,32 @@
-﻿#pragma once
+#pragma once
+
+#include <memory>
+
 #include "Game/Scene.h"
-#include "Game/Test/Player.h"
 
-namespace Engine::Game
+namespace Engine
 {
-    class TestScene : public Scene
+    namespace Graphics { class Renderer; }
+
+    namespace Game
     {
-    public:
-        TestScene() = default;
+        class Player;
 
-        void OnEnter() override
+        class TestScene : public Scene
         {
-            player_ = std::make_unique<Player>(
-                Math::Vector3(300.0f, 220.0f, 0.0f),
-                Math::Vector3(50.0f, 50.0f, 1.0f)
-            );
+            public:
+                TestScene();
+                ~TestScene() override;
 
-            player_->SetupInput(GetInputManager());
-        }
+                void OnEnter() override;
+                void OnExit() override;
+                void HandleEvent(const SDL_Event& event) override;
+                void Update(float deltaTime) override;
+                void Render(Graphics::Renderer& renderer) override;
 
-        void Update(float dt) override
-        {
-            if (player_ && HasInputManager())
-                player_->Update(dt);
-        }
-
-        void Render(Graphics::Renderer& renderer) override
-        {
-            if (player_)
-                player_->Render(renderer);
-        }
-    
-    private:
-        std::unique_ptr<Player> player_;
-    };
+            private:
+                std::unique_ptr<Player> player_{};
+        };
+    }
 }
+
