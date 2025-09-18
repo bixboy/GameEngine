@@ -6,7 +6,6 @@ namespace Engine::Game
     void SceneManager::SetScene(std::unique_ptr<Scene> newScene) noexcept
     {
         ActivateScene(std::move(newScene));
-        activeScene_ = newScene.get();
     }
 
     void SceneManager::SetContext(SceneContext context) noexcept
@@ -32,7 +31,12 @@ namespace Engine::Game
         if (scene_)
         {
             scene_->SetContext(context_);
+            activeScene_ = scene_.get();
             scene_->OnEnter();
+        }
+        else
+        {
+            activeScene_ = nullptr;
         }
     }
 }

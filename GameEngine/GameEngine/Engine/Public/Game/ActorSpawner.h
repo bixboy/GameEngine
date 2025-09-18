@@ -1,5 +1,7 @@
-﻿#pragma once
+#pragma once
 #include <memory>
+#include <type_traits>
+#include <utility>
 #include "Game/Actor.h"
 #include "Game/SceneManager.h"
 

@@ -4,7 +4,7 @@
 #include <SDL3/SDL_events.h>
 #include <string>
 #include <string_view>
-#include "Engine.h"
+#include "Game/Actor.h"
 #include "Input/InputManager.h"
 
 namespace Engine
@@ -15,7 +15,6 @@ namespace Engine
 
     namespace Game
     {
-        class Actor;
         struct SceneContext
         {
             Graphics::Renderer* renderer{nullptr};
@@ -39,7 +38,7 @@ namespace Engine
 
                 void SetContext(SceneContext context) noexcept;
 
-                void AddActor(std::unique_ptr<Engine::Actor> actor);
+                void AddActor(std::unique_ptr<Actor> actor);
 
                 [[nodiscard]] std::string_view Name() const noexcept { return name_; }
 
