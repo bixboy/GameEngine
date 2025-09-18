@@ -1,7 +1,4 @@
 #include "Game/EmptyScene.h"
-
-#include <memory>
-
 #include "Game/ActorSpawner.h"
 #include "Game/Test/Player.h"
 #include "Input/Input.h"

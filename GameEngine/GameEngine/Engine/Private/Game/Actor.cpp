@@ -9,20 +9,28 @@ namespace Engine::Game
 
     Actor::~Actor() = default;
 
+    void Actor::BeginPlay()
+    {
+        for (auto& c : components_)
+            c->BeginPlay();
+    }
+
     void Actor::Update(float deltaTime)
     {
-        for (auto& comp : components_)
+        if (!hasBegunPlay_)
         {
-            comp->Update(deltaTime);
+            BeginPlay();
+            hasBegunPlay_ = true;
         }
+        
+        for (auto& comp : components_)
+            comp->Update(deltaTime);
     }
 
     void Actor::Render(Graphics::Renderer& renderer) const
     {
         for (const auto& comp : components_)
-        {
             comp->Render(renderer);
-        }
     }
 
     void Actor::AddComponent(std::unique_ptr<Component> component)

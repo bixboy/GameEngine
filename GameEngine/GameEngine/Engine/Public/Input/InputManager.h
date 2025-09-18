@@ -1,14 +1,11 @@
 #pragma once
-
 #include <algorithm>
 #include <cstddef>
-#include <cstring>
 #include <functional>
 #include <string>
 #include <typeindex>
 #include <utility>
 #include <vector>
-
 #include <SDL3/SDL.h>
 
 namespace Engine::Input
@@ -32,12 +29,10 @@ namespace Engine::Input
             void ProcessEvent(const SDL_Event& event);
             void Update();
 
+        
+        // ======= Bind Action =======
             template <typename T>
-            void BindAction(std::string actionName,
-                            SDL_Keycode key,
-                            InputEvent eventType,
-                            T* instance,
-                            void (T::*func)())
+            void BindAction(std::string actionName, SDL_Keycode key, InputEvent eventType, T* instance, void (T::*func)())
             {
                 ActionBinding binding;
                 binding.actionName = std::move(actionName);
@@ -48,12 +43,10 @@ namespace Engine::Input
                 actionBindings_.push_back(std::move(binding));
             }
 
+        
+        // ======= Bind Axis =======
             template <typename T>
-            void BindAxis(std::string axisName,
-                          SDL_Keycode key,
-                          T* instance,
-                          void (T::*func)(float),
-                          float scale = 1.0f)
+            void BindAxis(std::string axisName, SDL_Keycode key, T* instance, void (T::*func)(float), float scale = 1.0f)
             {
                 const std::type_index typeIndex{typeid(T)};
 
@@ -84,6 +77,37 @@ namespace Engine::Input
                 else
                 {
                     it->keys.push_back({key, scale});
+                }
+            }
+
+        
+        // ======= Unbind Action =======
+            void UnbindAction(const std::string& actionName, SDL_Keycode key, InputEvent eventType)
+            {
+                std::erase_if(actionBindings_, [&](const ActionBinding& binding)
+                {
+                    return binding.actionName == actionName
+                    && binding.key == key
+                    && binding.eventType == eventType;
+                });
+            }
+
+        
+        // ======= Unbind Axis =======
+            void UnbindAxis(const std::string& axisName, SDL_Keycode key)
+            {
+                for (auto it = axisBindings_.begin(); it != axisBindings_.end();)
+                {
+                    auto& keys = it->keys;
+                    std::erase_if(keys, [&](const AxisKey& axisKey)
+                    {
+                        return axisKey.key == key;
+                    });
+
+                    if (keys.empty())
+                        it = axisBindings_.erase(it);
+                    else
+                        ++it;
                 }
             }
 

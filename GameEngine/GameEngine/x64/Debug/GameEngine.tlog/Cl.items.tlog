@@ -1,5 +1,6 @@
 C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Core\Application.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\Application.obj
 C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Core\Logger.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\Logger.obj
+C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Game\ActorSpawner.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\ActorSpawner.obj
 C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Game\Components\Component.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\Component.obj
 C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Game\Components\SpriteComponent.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\SpriteComponent.obj
 C:\App\CustomEngine\GameEngine\GameEngine\Engine\Private\Game\Scene.cpp;C:\App\CustomEngine\GameEngine\GameEngine\x64\Debug\Scene.obj

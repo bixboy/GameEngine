@@ -1,7 +1,5 @@
 #include "Game/Test/Player.h"
-
 #include <memory>
-
 #include "Game/Components/SpriteComponent.h"
 #include "Input/InputManager.h"
 #include "Math/Math.h"
@@ -27,6 +25,8 @@ namespace Engine::Game
         inputManager.BindAxis("MoveRight", SDLK_A, this, &Player::MoveRight, -1.0f);
         inputManager.BindAxis("MoveRight", SDLK_Q, this, &Player::MoveRight, -1.0f);
         inputManager.BindAxis("MoveRight", SDLK_LEFT, this, &Player::MoveRight, -1.0f);
+
+        inputManager.UnbindAxis("MoveRight", SDLK_W);
     }
 
     void Player::Update(float deltaTime)

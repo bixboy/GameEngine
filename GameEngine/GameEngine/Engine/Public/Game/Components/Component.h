@@ -12,6 +12,7 @@ namespace Engine::Game
             explicit Component(Actor* owner) : owner_(owner) {}
             virtual ~Component() = default;
 
+            virtual void BeginPlay() {}
             virtual void Update(float deltaTime) {}
             virtual void Render(Graphics::Renderer& renderer) const {}
 
