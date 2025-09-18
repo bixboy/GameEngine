@@ -1,27 +1,31 @@
-﻿#include "../../Public/Game/EmptyScene.h"
+#include "Game/EmptyScene.h"
 
+#include <SDL3/SDL_keycode.h>
+
+#include "Graphics/Renderer.h"
+
+namespace Engine::Game {
 
 EmptyScene::EmptyScene()
-    : player(300.f, 220.f, 50.f, 50.f, SDL_Color{255,255,255,255}) {}
+    : Scene("EmptyScene"),
+      player_(300.f, 220.f, 50.f, 50.f, SDL_Color{255, 255, 255, 255}) {}
 
-void EmptyScene::HandleEvent(const SDL_Event& e)
-{
-    input.ProcessEvent(e);
+void EmptyScene::HandleEvent(const SDL_Event& /*event*/) {}
+
+void EmptyScene::Update(float deltaTime) {
+    Math::Vector3 position = player_.GetPosition();
+    auto& input = GetInput();
+
+    if (input.IsKeyDown(SDLK_z)) { position.y -= speed_ * deltaTime; }
+    if (input.IsKeyDown(SDLK_s)) { position.y += speed_ * deltaTime; }
+    if (input.IsKeyDown(SDLK_q)) { position.x -= speed_ * deltaTime; }
+    if (input.IsKeyDown(SDLK_d)) { position.x += speed_ * deltaTime; }
+
+    player_.SetPosition(position);
 }
 
-void EmptyScene::Update(float dt)
-{
-    Vector3 pos = player.GetPosition();
-
-    if (input.IsKeyDown(SDLK_Z)) pos.y -= speed * dt;
-    if (input.IsKeyDown(SDLK_S)) pos.y += speed * dt;
-    if (input.IsKeyDown(SDLK_Q)) pos.x -= speed * dt;
-    if (input.IsKeyDown(SDLK_D)) pos.x += speed * dt;
-
-    player.SetPosition(pos);
+void EmptyScene::Render(Graphics::Renderer& renderer) {
+    player_.Render(renderer);
 }
 
-void EmptyScene::Render(Renderer& renderer)
-{
-    player.Render(renderer);
-}
+}  // namespace Engine::Game

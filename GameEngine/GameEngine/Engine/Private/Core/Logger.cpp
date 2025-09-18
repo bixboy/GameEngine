@@ -1,46 +1,53 @@
-﻿#include "../../Public/Core/Logger.h"
-#include "iostream"
+#include "Core/Logger.h"
 
-// Color code
-#define COLOR_RESET   "\033[0m"
-#define COLOR_GREEN   "\033[32m"
-#define COLOR_YELLOW  "\033[33m"
-#define COLOR_RED     "\033[31m"
+#include <cstring>
+#include <iostream>
+#include <string_view>
 
-// File name extraction
-const char* Logger::ExtractFileName(const char* path) {
-    
-    const char* slash1 = strrchr(path, '/');
-    const char* slash2 = strrchr(path, '\\');
+namespace Engine::Core {
+
+namespace {
+
+constexpr const char* kColorReset = "\033[0m";
+constexpr const char* kColorGreen = "\033[32m";
+constexpr const char* kColorYellow = "\033[33m";
+constexpr const char* kColorRed = "\033[31m";
+
+}  // namespace
+
+const char* Logger::ExtractFileName(const char* path) noexcept {
+    const char* slash1 = std::strrchr(path, '/');
+    const char* slash2 = std::strrchr(path, '\\');
     const char* filename = slash1 ? slash1 + 1 : path;
-    
-    if (slash2 && slash2 > filename)
+
+    if (slash2 && slash2 > filename) {
         filename = slash2 + 1;
-    
+    }
+
     return filename;
 }
 
-// Print log
-void Logger::Log(const std::string& msg, LogLevel level, const char* file, int line) 
-{
-    const char* color = COLOR_RESET;
-    std::string levelStr;
-    
-    switch (level)
-    {
+void Logger::Log(std::string_view message, LogLevel level, const char* file, int line) {
+    const char* color = kColorReset;
+    std::string_view levelStr;
+
+    switch (level) {
         case LogLevel::Info:
-            color = COLOR_GREEN;
+            color = kColorGreen;
             levelStr = "[INFO]";
             break;
         case LogLevel::Warning:
-            color = COLOR_YELLOW;
+            color = kColorYellow;
             levelStr = "[WARNING]";
             break;
         case LogLevel::Error:
-            color = COLOR_RED;
+            color = kColorRed;
             levelStr = "[ERROR]";
             break;
     }
 
-    std::cout << color << ExtractFileName(file) << "(" << line << "): " << levelStr << " " << msg << COLOR_RESET << std::endl;
+    std::cout << color << ExtractFileName(file) << "(" << line << ") " << levelStr << ' ' << message
+              << kColorReset << std::endl;
 }
+
+}  // namespace Engine::Core

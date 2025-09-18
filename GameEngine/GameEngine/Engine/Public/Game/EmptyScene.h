@@ -1,19 +1,21 @@
-﻿#pragma once
-#include "../Core/Scene.h"
-#include "../Input/Input.h"
-#include "Entity.h"
+#pragma once
 
-class EmptyScene : public Scene
-{
+#include "Game/Entity.h"
+#include "Game/Scene.h"
+
+namespace Engine::Game {
+
+class EmptyScene : public Scene {
 public:
     EmptyScene();
-    void HandleEvent(const SDL_Event& e) override;
-    void Update(float dt) override;
-    void Render(Renderer& renderer) override;
+
+    void HandleEvent(const SDL_Event& event) override;
+    void Update(float deltaTime) override;
+    void Render(Graphics::Renderer& renderer) override;
 
 private:
-    
-    Input input;
-    Entity player;
-    float speed = 200.0f;
+    Entity player_{};
+    float speed_ = 200.0f;
 };
+
+}  // namespace Engine::Game

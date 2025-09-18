@@ -1,28 +1,29 @@
-﻿#include "../../Public/Game/Entity.h"
-#include "../../Public/Graphics/Renderer.h"
+#include "Game/Entity.h"
+
+#include "Graphics/Renderer.h"
+
+namespace Engine::Game {
 
 Entity::Entity(float x, float y, float w, float h, SDL_Color color)
-    : transform(Vector3(x, y, 0.0f), Rotator(), Vector3(w, h, 1.0f)), color(color) {}
+    : transform_(Math::Vector3(x, y, 0.0f), Math::Rotator(), Math::Vector3(w, h, 1.0f)), color_(color) {}
 
-Entity::Entity(const Transform& transform, SDL_Color color)
-    : transform(transform), color(color) {}
+Entity::Entity(const Math::Transform& transform, SDL_Color color)
+    : transform_(transform), color_(color) {}
 
-void Entity::Update(float dt)
-{
-    
-}
+void Entity::Update(float /*deltaTime*/) {}
 
-void Entity::Render(Renderer& renderer)
-{
-    renderer.SetColor(color.r, color.g, color.b, color.a);
+void Entity::Render(Graphics::Renderer& renderer) const {
+    renderer.SetColor(color_.r, color_.g, color_.b, color_.a);
 
     SDL_FRect rect{
-        transform.position.x,
-        transform.position.y,
-        transform.scale.x,
-        transform.scale.y
+        transform_.position.x,
+        transform_.position.y,
+        transform_.scale.x,
+        transform_.scale.y,
     };
 
     SDL_RenderFillRect(renderer.GetSDLRenderer(), &rect);
 }
+
+}  // namespace Engine::Game
 

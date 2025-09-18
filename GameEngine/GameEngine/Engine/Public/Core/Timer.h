@@ -1,16 +1,19 @@
-﻿#pragma once
-#include "SDL3/SDL_stdinc.h"
+#pragma once
 
-class Timer
-{
+#include <SDL3/SDL_stdinc.h>
+
+namespace Engine::Core {
+
+class Timer {
 public:
-    
     void Tick();
-    float GetDeltaTime() const { return deltaTime; }
 
-    float GetFPS() const { return (deltaTime > 0) ? 1.0f / deltaTime : 0.0f; }
+    [[nodiscard]] float GetDeltaTime() const noexcept { return deltaTime_; }
+    [[nodiscard]] float GetFPS() const noexcept { return deltaTime_ > 0.0f ? 1.0f / deltaTime_ : 0.0f; }
 
 private:
-    Uint64 lastTicks = 0;
-    float deltaTime = 0.0f;
+    Uint64 lastCounter_{0};
+    float deltaTime_{0.0f};
 };
+
+}  // namespace Engine::Core

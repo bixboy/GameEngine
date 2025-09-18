@@ -1,43 +1,48 @@
-﻿#pragma once
-#include "SDL3/SDL_pixels.h"
-#include "../Math/Math.h"
+#pragma once
 
+#include <SDL3/SDL_pixels.h>
+
+#include "Math/Math.h"
+
+namespace Engine::Graphics {
 class Renderer;
+}
 
-class Entity
-{
+namespace Engine::Game {
+
+class Entity {
 public:
-    Entity(const Transform& transform = Transform(),
+    Entity(const Math::Transform& transform = Math::Transform(),
            SDL_Color color = {255, 255, 255, 255});
 
     Entity(float x, float y, float w, float h, SDL_Color color);
 
-    void Update(float dt);
-    void Render(Renderer& renderer);
+    void Update(float deltaTime);
+    void Render(Graphics::Renderer& renderer) const;
 
-    Vector3 GetPosition() const { return transform.position; }
-    Rotator GetRotation() const { return transform.rotation; }
-    Vector3 GetScale()    const { return transform.scale; }
+    [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.position; }
+    [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.rotation; }
+    [[nodiscard]] Math::Vector3 GetScale() const noexcept { return transform_.scale; }
 
-    // --- Setters ---
-    void SetPosition(const Vector3& position) { transform.position = position; }
-    void SetRotation(const Rotator& rotation) { transform.rotation = rotation; }
-    void SetScale(const Vector3& scale)       { transform.scale = scale; }
+    void SetPosition(const Math::Vector3& position) { transform_.position = position; }
+    void SetRotation(const Math::Rotator& rotation) { transform_.rotation = rotation; }
+    void SetScale(const Math::Vector3& scale) { transform_.scale = scale; }
 
-    // --- Partial setters ---
-    void SetPositionX(float x) { transform.position.x = x; }
-    void SetPositionY(float y) { transform.position.y = y; }
-    void SetPositionZ(float z) { transform.position.z = z; }
+    void SetPositionX(float x) { transform_.position.x = x; }
+    void SetPositionY(float y) { transform_.position.y = y; }
+    void SetPositionZ(float z) { transform_.position.z = z; }
 
-    void SetScaleX(float x) { transform.scale.x = x; }
-    void SetScaleY(float y) { transform.scale.y = y; }
-    void SetScaleZ(float z) { transform.scale.z = z; }
+    void SetScaleX(float x) { transform_.scale.x = x; }
+    void SetScaleY(float y) { transform_.scale.y = y; }
+    void SetScaleZ(float z) { transform_.scale.z = z; }
 
-    void SetRotationPitch(float p) { transform.rotation.pitch = p; }
-    void SetRotationYaw(float y)   { transform.rotation.yaw   = y; }
-    void SetRotationRoll(float r)  { transform.rotation.roll  = r; }
+    void SetRotationPitch(float pitch) { transform_.rotation.pitch = pitch; }
+    void SetRotationYaw(float yaw) { transform_.rotation.yaw = yaw; }
+    void SetRotationRoll(float roll) { transform_.rotation.roll = roll; }
 
 private:
-    Transform transform;
-    SDL_Color color;
+    Math::Transform transform_{};
+    SDL_Color color_{};
 };
+
+}  // namespace Engine::Game

@@ -1,95 +1,200 @@
-﻿#include "../../Public/Core/Application.h"
-#include "../../Public/Core/Window.h"
-#include "../../Public/Input/Input.h"
-#include "../../Public/Game/Entity.h"
-#include "../../Public/Graphics/Renderer.h"
-#include "../../Public/Core/Timer.h"
-#include "../../Public/Core/SceneManager.h"
-#include "../../Public/Game/EmptyScene.h"
-#include "iostream"
-#include "SDL3/SDL.h"
+#include "Core/Application.h"
 
-#define WINDOW_WIDTH 640
-#define WINDOW_HEIGHT 480
+#include <SDL3/SDL.h>
 
-Application::Application() {}
+#include <string>
+#include <string_view>
+#include <utility>
+
+#include "Core/Logger.h"
+#include "Core/Timer.h"
+#include "Core/Window.h"
+#include "Game/Scene.h"
+#include "Game/SceneManager.h"
+#include "Graphics/Renderer.h"
+#include "Input/Input.h"
+
+namespace Engine::Core {
+
+namespace {
+
+constexpr const char* kDefaultAppName = "Example Custom Engine";
+constexpr const char* kDefaultAppId = "com.example.CustomEngine";
+constexpr const char* kDefaultAppVersion = "1.0";
+
+}  // namespace
+
+Application::Application(Config config) : config_(std::move(config)) {}
 
 Application::~Application() {
     Shutdown();
 }
 
-bool Application::Init() {
-    
-    SDL_SetAppMetadata("Example Custom engine", "1.0", "com.example.CustomEngine");
-
-    if (!SDL_Init(SDL_INIT_VIDEO)) {
-        SDL_Log("Couldn't initialize SDL: %s", SDL_GetError());
-        return SDL_APP_FAILURE;
+bool Application::Initialize() {
+    if (running_) {
+        return true;
     }
 
-    window = std::make_unique<Window>("Custom Engine", WINDOW_WIDTH, WINDOW_HEIGHT);
-    renderer = std::make_unique<Renderer>(window->GetSDLWindow());
+    SDL_SetAppMetadata(kDefaultAppName, kDefaultAppVersion, kDefaultAppId);
 
+    if (!InitializeSDL()) {
+        return false;
+    }
+
+    if (!CreateWindow()) {
+        ShutdownSDL();
+        return false;
+    }
+
+    if (!CreateRenderer()) {
+        ShutdownSDL();
+        return false;
+    }
+
+    InitializeSubsystems();
+
+    running_ = true;
     return true;
 }
 
-void Application::Run()
-{
-    Input input;
-    SDL_Event e;
-    Timer timer;
+void Application::Run() {
+    if (!running_) {
+        return;
+    }
 
-    SceneManager sceneManager;
-    sceneManager.SetScene(std::make_unique<EmptyScene>());
+    while (running_) {
+        timer_->Tick();
+        const float dt = timer_->GetDeltaTime();
 
-    while (running) {
-        timer.Tick();
-        float dt = timer.GetDeltaTime();
-
-        // --- Events ---
-        while (SDL_PollEvent(&e)) {
-            input.ProcessEvent(e);
-            if (sceneManager.GetScene()) {
-                sceneManager.GetScene()->HandleEvent(e);
-            }
-        }
-
-        if (input.IsQuitRequested() || input.IsKeyDown(SDLK_ESCAPE)) {
-            running = false;
-        }
-
-        // --- Update ---
-        if (sceneManager.GetScene()) {
-            sceneManager.GetScene()->Update(dt);
-        }
-
-        // --- Render ---
-        renderer->SetColor(0, 0, 0, 255);
-        renderer->Clear();
-
-        if (sceneManager.GetScene()) {
-            sceneManager.GetScene()->Render(*renderer);
-        }
-
-        // HUD commun (FPS + nom de scène)
-        SDL_RenderDebugTextFormat(
-            renderer->GetSDLRenderer(),
-            10, 10, "FPS: %.0f", timer.GetFPS()
-        );
-
-        if (sceneManager.GetScene()) {
-            SDL_RenderDebugText(
-                renderer->GetSDLRenderer(),
-                10, 30, ("Scene: " + sceneManager.GetScene()->getName()).c_str()
-            );
-        }
-
-        renderer->Present();
+        ProcessEvents();
+        Update(dt);
+        Render();
     }
 }
 
 void Application::Shutdown() {
-    renderer.reset();
-    window.reset();
-    SDL_Quit();
+    running_ = false;
+
+    ShutdownSubsystems();
+    ShutdownSDL();
 }
+
+void Application::ProcessEvents() {
+    SDL_Event event;
+    while (SDL_PollEvent(&event)) {
+        input_->ProcessEvent(event);
+        if (sceneManager_) {
+            if (auto* scene = sceneManager_->GetScene()) {
+                scene->HandleEvent(event);
+            }
+        }
+    }
+
+    if (input_->IsQuitRequested() || input_->IsKeyDown(SDLK_ESCAPE)) {
+        running_ = false;
+    }
+}
+
+void Application::Update(float deltaTime) {
+    if (sceneManager_) {
+        if (auto* scene = sceneManager_->GetScene()) {
+            scene->Update(deltaTime);
+        }
+    }
+}
+
+void Application::Render() {
+    if (!renderer_) {
+        return;
+    }
+
+    renderer_->Clear(config_.clearColor);
+
+    const Game::Scene* activeScene = nullptr;
+    if (sceneManager_) {
+        activeScene = sceneManager_->GetScene();
+        if (activeScene) {
+            activeScene->Render(*renderer_);
+        }
+    }
+
+    if (timer_) {
+        SDL_RenderDebugTextFormat(renderer_->GetSDLRenderer(), 10, 10, "FPS: %.0f", timer_->GetFPS());
+    }
+
+    if (activeScene) {
+        const std::string_view sceneName = activeScene->Name();
+        SDL_RenderDebugTextFormat(renderer_->GetSDLRenderer(), 10, 30, "Scene: %.*s",
+                                  static_cast<int>(sceneName.size()), sceneName.data());
+    }
+
+    renderer_->Present();
+}
+
+bool Application::InitializeSDL() {
+    if (sdlInitialized_) {
+        return true;
+    }
+
+    if (SDL_Init(SDL_INIT_VIDEO) != 0) {
+        LOG_ERROR(std::string{"Couldn't initialize SDL: "} + SDL_GetError());
+        return false;
+    }
+
+    sdlInitialized_ = true;
+    return true;
+}
+
+bool Application::CreateWindow() {
+    window_ = std::make_unique<Window>(config_.windowTitle, config_.width, config_.height, config_.resizable);
+    if (!window_ || !window_->IsValid()) {
+        LOG_ERROR(std::string{"Couldn't create window: "} + SDL_GetError());
+        window_.reset();
+        return false;
+    }
+
+    return true;
+}
+
+bool Application::CreateRenderer() {
+    renderer_ = std::make_unique<Graphics::Renderer>(window_->GetSDLWindow());
+    if (!renderer_ || !renderer_->IsValid()) {
+        LOG_ERROR(std::string{"Couldn't create renderer: "} + SDL_GetError());
+        renderer_.reset();
+        window_.reset();
+        return false;
+    }
+
+    return true;
+}
+
+void Application::InitializeSubsystems() {
+    timer_ = std::make_unique<Timer>();
+    input_ = std::make_unique<Input::Input>();
+    sceneManager_ = std::make_unique<Game::SceneManager>();
+
+    if (sceneManager_) {
+        sceneManager_->SetContext({renderer_.get(), input_.get(), window_.get(), timer_.get()});
+    }
+}
+
+void Application::ShutdownSubsystems() noexcept {
+    if (sceneManager_) {
+        sceneManager_->SetScene(nullptr);
+    }
+
+    sceneManager_.reset();
+    input_.reset();
+    timer_.reset();
+    renderer_.reset();
+    window_.reset();
+}
+
+void Application::ShutdownSDL() noexcept {
+    if (sdlInitialized_) {
+        SDL_Quit();
+        sdlInitialized_ = false;
+    }
+}
+
+}  // namespace Engine::Core

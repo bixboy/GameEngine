@@ -1,94 +1,70 @@
-﻿#pragma once
+#pragma once
+
 #include <cmath>
 #include <string>
 
+namespace Engine::Math {
 
 struct Vector3 {
-    float x, y, z; ///< Vector components
+    float x{0.0f};
+    float y{0.0f};
+    float z{0.0f};
 
-    // --- Constructors ---
-    Vector3() : x(0), y(0), z(0) {}
-    Vector3(float x, float y, float z) : x(x), y(y), z(z) {}
+    constexpr Vector3() = default;
+    constexpr Vector3(float xValue, float yValue, float zValue) : x(xValue), y(yValue), z(zValue) {}
 
-    // --- Constant vectors ---
-    static Vector3 Zero()     { return Vector3(0,0,0);  } ///< (0,0,0)
-    static Vector3 One()      { return Vector3(1,1,1);  } ///< (1,1,1)
-    static Vector3 Up()       { return Vector3(0,1,0);  } ///< Up direction (+Y)
-    static Vector3 Down()     { return Vector3(0,-1,0); } ///< Down direction (-Y)
-    static Vector3 Forward()  { return Vector3(0,0,1);  } ///< Forward direction (+Z)
-    static Vector3 Backward() { return Vector3(0,0,-1); } ///< Backward direction (-Z)
+    [[nodiscard]] static constexpr Vector3 Zero() noexcept { return Vector3(0.0f, 0.0f, 0.0f); }
+    [[nodiscard]] static constexpr Vector3 One() noexcept { return Vector3(1.0f, 1.0f, 1.0f); }
+    [[nodiscard]] static constexpr Vector3 Up() noexcept { return Vector3(0.0f, 1.0f, 0.0f); }
+    [[nodiscard]] static constexpr Vector3 Down() noexcept { return Vector3(0.0f, -1.0f, 0.0f); }
+    [[nodiscard]] static constexpr Vector3 Forward() noexcept { return Vector3(0.0f, 0.0f, 1.0f); }
+    [[nodiscard]] static constexpr Vector3 Backward() noexcept { return Vector3(0.0f, 0.0f, -1.0f); }
 
+    [[nodiscard]] float Length() const noexcept { return std::sqrt(x * x + y * y + z * z); }
 
-    // --- Magnitude & normalization ---
-    /**
-     * @brief Compute the vector's magnitude (length).
-     */
-    float Length() const
-    { return std::sqrt(x*x + y*y + z*z); }
-
-    
-    /**
-     * @brief Returns a normalized version of this vector (length = 1).
-     */
-    Vector3 Normalized() const {
-        float len = Length();
-        return len > 0 ? Vector3(x/len, y/len, z/len) : Vector3();
+    [[nodiscard]] Vector3 Normalized() const noexcept {
+        const float len = Length();
+        return len > 0.0f ? Vector3(x / len, y / len, z / len) : Vector3();
     }
 
+    [[nodiscard]] float Dot(const Vector3& other) const noexcept {
+        return x * other.x + y * other.y + z * other.z;
+    }
 
-    // --- Dot & Cross products ---
-    /**
-     * @brief Compute the dot product with another vector.
-     */
-    float Dot(const Vector3& other) const
-    { return x*other.x + y*other.y + z*other.z; }
-
-    
-    /**
-     * @brief Compute the cross product with another vector.
-     * @return A new vector perpendicular to both.
-     */
-    Vector3 Cross(const Vector3& o) const {
+    [[nodiscard]] Vector3 Cross(const Vector3& other) const noexcept {
         return Vector3(
-            y * o.z - z * o.y,
-            z * o.x - x * o.z,
-            x * o.y - y * o.x
-        );
+            y * other.z - z * other.y,
+            z * other.x - x * other.z,
+            x * other.y - y * other.x);
     }
 
-    // Add
-    Vector3 operator+(const Vector3& o) const
-    { return Vector3(x+o.x, y+o.y, z+o.z); }
+    [[nodiscard]] constexpr Vector3 operator+(const Vector3& other) const noexcept {
+        return Vector3(x + other.x, y + other.y, z + other.z);
+    }
 
-    // Subtract
-    Vector3 operator-(const Vector3& o) const
-    { return Vector3(x-o.x, y-o.y, z-o.z); }
+    [[nodiscard]] constexpr Vector3 operator-(const Vector3& other) const noexcept {
+        return Vector3(x - other.x, y - other.y, z - other.z);
+    }
 
-    // Multiply
-    Vector3 operator*(float s) const
-    { return Vector3(x*s, y*s, z*s); }
+    [[nodiscard]] constexpr Vector3 operator*(float scalar) const noexcept {
+        return Vector3(x * scalar, y * scalar, z * scalar);
+    }
 
-    // Divide
-    Vector3 operator/(float s) const
-    { return Vector3(x/s, y/s, z/s); }
+    [[nodiscard]] constexpr Vector3 operator/(float scalar) const noexcept {
+        return Vector3(x / scalar, y / scalar, z / scalar);
+    }
 
+    [[nodiscard]] constexpr bool operator==(const Vector3& other) const noexcept {
+        return x == other.x && y == other.y && z == other.z;
+    }
 
-    // --- Comparison operators ---
-    bool operator==(const Vector3& other) const
-    { return x == other.x && y == other.y && z == other.z; }
-    
-    bool operator!=(const Vector3& other) const
-    { return !(*this == other); }
+    [[nodiscard]] constexpr bool operator!=(const Vector3& other) const noexcept {
+        return !(*this == other);
+    }
 
-
-    // --- Debugging ---
-    /**
-     * @brief Convert vector to string for debugging.
-     * @return A string like "Vector3(1.000000, 0.000000, 2.000000)"
-     */
-    std::string ToString() const {
-        return "Vector3(" + std::to_string(x) + ", "
-                          + std::to_string(y) + ", "
-                          + std::to_string(z) + ")";
+    [[nodiscard]] std::string ToString() const {
+        return "Vector3(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";
     }
 };
+
+}  // namespace Engine::Math
