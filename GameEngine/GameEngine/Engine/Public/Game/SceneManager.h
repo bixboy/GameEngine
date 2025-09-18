@@ -16,6 +16,8 @@ namespace Engine::Game
 
             [[nodiscard]] Scene* GetScene() noexcept { return scene_.get(); }
             [[nodiscard]] const Scene* GetScene() const noexcept { return scene_.get(); }
+        
+            static Scene* GetActiveScene();
 
             template <typename TScene, typename... Args>
             TScene& EmplaceScene(Args&&... args)
@@ -31,6 +33,8 @@ namespace Engine::Game
 
         private:
             void ActivateScene(std::unique_ptr<Scene> newScene) noexcept;
+        
+            inline static Scene* activeScene_ = nullptr;
 
             std::unique_ptr<Scene> scene_{};
             SceneContext context_{};

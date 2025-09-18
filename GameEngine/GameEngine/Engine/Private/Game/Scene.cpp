@@ -17,6 +17,11 @@ namespace Engine::Game
         context_ = context;
     }
 
+    void Scene::AddActor(std::unique_ptr<Engine::Actor> actor)
+    {
+        actors_.push_back(std::move(actor));
+    }
+
     void Scene::SetName(std::string name)
     {
         name_ = std::move(name);

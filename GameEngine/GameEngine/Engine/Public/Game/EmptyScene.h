@@ -1,7 +1,5 @@
 #pragma once
-
 #include <memory>
-
 #include "Game/Scene.h"
 
 namespace Engine::Game
@@ -20,6 +18,6 @@ namespace Engine::Game
              void OnEnter() override;
 
         private:
-            std::unique_ptr<Player> player_{};
+            Player* player_{nullptr};
     };
 }

@@ -8,9 +8,7 @@
 
 namespace Engine::Game
 {
-    Player::Player(const Math::Vector3& position,
-                   const Math::Vector3& size,
-                   SDL_Color color)
+    Player::Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color)
         : Actor(Math::Transform(position, Math::Rotator(), size))
     {
         AddComponent(std::make_unique<SpriteComponent>(this, color, size.x, size.y));
@@ -18,16 +16,16 @@ namespace Engine::Game
 
     void Player::SetupInput(Input::InputManager& inputManager)
     {
-        inputManager.BindAxis("MoveForward", SDLK_w, this, &Player::MoveForward, 1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_z, this, &Player::MoveForward, 1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_W, this, &Player::MoveForward, 1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_Z, this, &Player::MoveForward, 1.0f);
         inputManager.BindAxis("MoveForward", SDLK_UP, this, &Player::MoveForward, 1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_s, this, &Player::MoveForward, -1.0f);
+        inputManager.BindAxis("MoveForward", SDLK_S, this, &Player::MoveForward, -1.0f);
         inputManager.BindAxis("MoveForward", SDLK_DOWN, this, &Player::MoveForward, -1.0f);
 
-        inputManager.BindAxis("MoveRight", SDLK_d, this, &Player::MoveRight, 1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_D, this, &Player::MoveRight, 1.0f);
         inputManager.BindAxis("MoveRight", SDLK_RIGHT, this, &Player::MoveRight, 1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_a, this, &Player::MoveRight, -1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_q, this, &Player::MoveRight, -1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_A, this, &Player::MoveRight, -1.0f);
+        inputManager.BindAxis("MoveRight", SDLK_Q, this, &Player::MoveRight, -1.0f);
         inputManager.BindAxis("MoveRight", SDLK_LEFT, this, &Player::MoveRight, -1.0f);
     }
 

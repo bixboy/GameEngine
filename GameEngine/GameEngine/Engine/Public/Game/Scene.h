@@ -1,8 +1,12 @@
 #pragma once
+#include <memory>
+#include <vector>
 #include <SDL3/SDL_events.h>
 #include <string>
 #include <string_view>
+#include "Engine.h"
 #include "Input/InputManager.h"
+
 namespace Engine
 {
     namespace Graphics { class Renderer; }
@@ -11,6 +15,7 @@ namespace Engine
 
     namespace Game
     {
+        class Actor;
         struct SceneContext
         {
             Graphics::Renderer* renderer{nullptr};
@@ -34,6 +39,8 @@ namespace Engine
 
                 void SetContext(SceneContext context) noexcept;
 
+                void AddActor(std::unique_ptr<Engine::Actor> actor);
+
                 [[nodiscard]] std::string_view Name() const noexcept { return name_; }
 
             protected:
@@ -54,6 +61,8 @@ namespace Engine
             private:
                 std::string name_;
                 SceneContext context_{};
+
+                std::vector<std::unique_ptr<Actor>> actors_;
         };
     }
 }

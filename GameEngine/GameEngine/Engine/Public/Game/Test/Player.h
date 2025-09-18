@@ -1,9 +1,5 @@
 #pragma once
-
-#include <memory>
-
 #include <SDL3/SDL.h>
-
 #include "Game/Actor.h"
 
 namespace Engine
@@ -18,9 +14,7 @@ namespace Engine
         class Player : public Actor
         {
             public:
-                Player(const Math::Vector3& position,
-                       const Math::Vector3& size,
-                       SDL_Color color);
+                Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
 
                 void SetupInput(Input::InputManager& inputManager);
 
