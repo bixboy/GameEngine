@@ -1,0 +1,131 @@
+{
+  "root_namespace": "Engine",
+  "templates": [
+    {
+      "name": "Actor",
+      "description": "Gameplay actor derived from Engine::Game::Actor.",
+      "aliases": ["Game/Actor.h", "Actor"],
+      "header": {
+        "includes": [
+          "Game/Actor.h"
+        ],
+        "body": [
+          "class {class_name} : public Engine::Game::Actor",
+          "{{",
+          "public:",
+          "    explicit {class_name}(const Engine::Math::Transform& transform = Engine::Math::Transform());",
+          "    void BeginPlay() override;",
+          "    void Update(float deltaTime) override;",
+          "    void Render(Engine::Graphics::Renderer& renderer) const override;",
+          "}};"
+        ]
+      },
+      "source": {
+        "includes": [
+          "{header_include}",
+          "Graphics/Renderer.h"
+        ],
+        "body": [
+          "{class_name}::{class_name}(const Engine::Math::Transform& transform)",
+          "    : Engine::Game::Actor(transform)",
+          "{{",
+          "}}",
+          "",
+          "void {class_name}::BeginPlay()",
+          "{{",
+          "    Engine::Game::Actor::BeginPlay();",
+          "}}",
+          "",
+          "void {class_name}::Update(float deltaTime)",
+          "{{",
+          "    Engine::Game::Actor::Update(deltaTime);",
+          "}}",
+          "",
+          "void {class_name}::Render(Engine::Graphics::Renderer& renderer) const",
+          "{{",
+          "    Engine::Game::Actor::Render(renderer);",
+          "}}"
+        ]
+      }
+    },
+    {
+      "name": "Component",
+      "description": "Gameplay component derived from Engine::Game::Component.",
+      "aliases": ["Game/Components/Component.h", "Component"],
+      "header": {
+        "includes": [
+          "Game/Components/Component.h"
+        ],
+        "body": [
+          "class {class_name} : public Engine::Game::Component",
+          "{{",
+          "public:",
+          "    using Engine::Game::Component::Component;",
+          "    void Render(Engine::Graphics::Renderer& renderer) const override;",
+          "}};"
+        ]
+      },
+      "source": {
+        "includes": [
+          "{header_include}",
+          "Graphics/Renderer.h"
+        ],
+        "body": [
+          "void {class_name}::Render(Engine::Graphics::Renderer& renderer) const",
+          "{{",
+          "    Engine::Game::Component::Render(renderer);",
+          "}}"
+        ]
+      }
+    },
+    {
+      "name": "Scene",
+      "description": "Scene class derived from Engine::Game::Scene.",
+      "aliases": ["Game/Scene.h", "Scene"],
+      "header": {
+        "includes": [
+          "Game/Scene.h"
+        ],
+        "body": [
+          "class {class_name} : public Engine::Game::Scene",
+          "{{",
+          "public:",
+          "    using Engine::Game::Scene::Scene;",
+          "    void BeginPlay() override;",
+          "    void Update(float deltaTime) override;",
+          "    void Render(Engine::Graphics::Renderer& renderer) override;",
+          "    void HandleEvent(const SDL_Event& event) override;",
+          "}};"
+        ]
+      },
+      "source": {
+        "includes": [
+          "{header_include}",
+          "Graphics/Renderer.h",
+          "SDL3/SDL_events.h"
+        ],
+        "body": [
+          "void {class_name}::BeginPlay()",
+          "{{",
+          "    Engine::Game::Scene::BeginPlay();",
+          "}}",
+          "",
+          "void {class_name}::Update(float deltaTime)",
+          "{{",
+          "    Engine::Game::Scene::Update(deltaTime);",
+          "}}",
+          "",
+          "void {class_name}::Render(Engine::Graphics::Renderer& renderer)",
+          "{{",
+          "    Engine::Game::Scene::Render(renderer);",
+          "}}",
+          "",
+          "void {class_name}::HandleEvent(const SDL_Event& event)",
+          "{{",
+          "    Engine::Game::Scene::HandleEvent(event);",
+          "}}"
+        ]
+      }
+    }
+  ]
+}
