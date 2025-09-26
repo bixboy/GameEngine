@@ -1,2 +1,1 @@
-﻿  GameEngine.cpp
-  GameEngine.vcxproj -> C:\Apps\CustomEngine\GameEngine\GameEngine\x64\Debug\GameEngine.exe
+﻿LINK : fatal error LNK1104: impossible d'ouvrir le fichier 'SDL3.lib'
