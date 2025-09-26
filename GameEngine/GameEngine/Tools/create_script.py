@@ -4,9 +4,10 @@
 This tool mimics part of the workflow provided by Unreal Engine when creating
 new gameplay scripts.  Given a desired class name and the directory where the
 script should appear, it will automatically generate the corresponding `.h`
-file inside the Public tree and the `.cpp` file inside the Private tree.  The
-behaviour is symmetrical: starting from a directory under either tree produces
-the complementary file in the matching directory of the other tree.
+file inside a module's Public tree and the `.cpp` file inside the mirrored
+Private tree below `Engine/Source`.  The behaviour is symmetrical: starting
+from a directory under either tree produces the complementary file in the
+matching directory of the other tree.
 
 Templates that describe the generated content are configurable via the
 `script_templates.json` file that sits next to this script.  The configuration
@@ -18,14 +19,15 @@ Example usages:
     # List available templates
     python Tools/create_script.py --list
 
-    # Create MyActor inside Engine/Public/Game/Actors using the "Actor" template
+    # Create MyActor inside Engine/Source/Game/Public/Game/Actors using the
+    # "Actor" template
     python Tools/create_script.py MyActor --template Actor \
-        --location Engine/Public/Game/Actors
+        --location Engine/Source/Game/Public/Game/Actors
 
     # Same, but starting from a Private directory.  The header will be written
     # to the mirrored Public location automatically.
     python Tools/create_script.py MyActor --template Actor \
-        --location Engine/Private/Game/Actors
+        --location Engine/Source/Game/Private/Game/Actors
 """
 
 from __future__ import annotations
@@ -35,6 +37,7 @@ import json
 import os
 import re
 import sys
+import uuid
 from pathlib import Path
 from typing import Dict, Iterable, List, Optional, Tuple
 import xml.etree.ElementTree as ET
@@ -281,6 +284,36 @@ def add_file_to_filters(
     ET.register_namespace("", namespace)
     ns = {"msbuild": namespace}
 
+    def ensure_filter_hierarchy(name: str) -> None:
+        if not name:
+            return
+
+        filter_group: Optional[ET.Element] = None
+        for group in root.findall("msbuild:ItemGroup", ns):
+            if any(child.tag == f"{{{namespace}}}Filter" for child in list(group)):
+                filter_group = group
+                break
+
+        if filter_group is None:
+            filter_group = ET.SubElement(root, f"{{{namespace}}}ItemGroup")
+
+        existing_filters = {
+            elem.get("Include") for elem in filter_group.findall(f"{{{namespace}}}Filter")
+        }
+
+        parts = name.split("\\")
+        for idx in range(1, len(parts) + 1):
+            prefix = "\\".join(parts[:idx])
+            if prefix in existing_filters:
+                continue
+            filter_elem = ET.SubElement(filter_group, f"{{{namespace}}}Filter")
+            filter_elem.set("Include", prefix)
+            uid_elem = ET.SubElement(filter_elem, f"{{{namespace}}}UniqueIdentifier")
+            uid_elem.text = "{" + str(uuid.uuid4()).upper() + "}"
+            existing_filters.add(prefix)
+
+    ensure_filter_hierarchy(filter_name)
+
     target_group: Optional[ET.Element] = None
     for group in root.findall("msbuild:ItemGroup", ns):
         if group.find(f"msbuild:{item_tag}", ns) is not None:
@@ -298,8 +331,9 @@ def add_file_to_filters(
 
     new_elem = ET.SubElement(target_group, f"{{{namespace}}}{item_tag}")
     new_elem.set("Include", relative_path)
-    filter_elem = ET.SubElement(new_elem, f"{{{namespace}}}Filter")
-    filter_elem.text = filter_name
+    if filter_name:
+        filter_elem = ET.SubElement(new_elem, f"{{{namespace}}}Filter")
+        filter_elem.text = filter_name
 
     ET.indent(tree, space="  ")
     tree.write(filters_path, encoding="utf-8", xml_declaration=True)
@@ -314,46 +348,56 @@ def determine_locations(
     project_root: Path,
     class_name: str,
     location: Path,
-) -> Tuple[Path, Path, Path, Path, List[str]]:
+) -> Tuple[Path, Path, Path, Path, List[str], str]:
     engine_root = project_root / "Engine"
-    public_root = engine_root / "Public"
-    private_root = engine_root / "Private"
+    source_root = engine_root / "Source"
 
     location = location.resolve()
     try:
-        relative_to_public = location.relative_to(public_root)
-        in_public = True
-        relative_parts = list(relative_to_public.parts)
-    except ValueError:
-        in_public = False
-        relative_to_public = None
+        relative_to_source = location.relative_to(source_root)
+    except ValueError as exc:
+        raise SystemExit(
+            "Location must reside under Engine/Source/<Module>/(Public|Private)."
+        ) from exc
 
-    try:
-        relative_to_private = location.relative_to(private_root)
-        in_private = True
-        private_parts = list(relative_to_private.parts)
-    except ValueError:
-        in_private = False
-        private_parts = []
+    parts = list(relative_to_source.parts)
+    if len(parts) < 2:
+        raise SystemExit(
+            "Location must include a module directory followed by Public or Private."
+        )
 
-    if in_public:
+    module_name, visibility, *sub_parts = parts
+    module_root = source_root / module_name
+    public_root = module_root / "Public"
+    private_root = module_root / "Private"
+
+    if visibility == "Public":
         header_dir = location
-        source_dir = private_root / relative_to_public
-    elif in_private:
+        source_dir = private_root.joinpath(*sub_parts)
+    elif visibility == "Private":
         source_dir = location
-        header_dir = public_root / relative_to_private
-        relative_parts = private_parts
+        header_dir = public_root.joinpath(*sub_parts)
     else:
         raise SystemExit(
-            "Location must reside under either Engine/Public or Engine/Private."
+            "Location must reside inside a Public or Private directory."
         )
 
     header_path = header_dir / f"{class_name}.h"
     source_path = source_dir / f"{class_name}.cpp"
 
-    namespace_parts = relative_parts
+    namespace_parts = list(sub_parts)
 
-    return header_dir, source_dir, header_path, source_path, namespace_parts
+    return header_dir, source_dir, header_path, source_path, namespace_parts, module_name
+
+
+def compute_filter_name(project_root: Path, file_path: Path) -> str:
+    relative = file_path.relative_to(project_root)
+    parts = list(relative.parts[:-1])
+    if len(parts) >= 2 and parts[0] == "Engine" and parts[1] == "Source":
+        parts = ["Source"] + parts[2:]
+    elif parts and parts[0] == "Engine":
+        parts[0] = "Source"
+    return "\\".join(parts)
 
 
 def ensure_directories(*directories: Path) -> None:
@@ -387,7 +431,10 @@ def parse_arguments() -> argparse.Namespace:
         "--location",
         "-l",
         dest="location",
-        help="Directory under Engine/Public or Engine/Private where the script should be created.",
+        help=(
+            "Directory under Engine/Source/<Module>/(Public|Private) where the script "
+            "should be created."
+        ),
     )
     parser.add_argument(
         "--allow",
@@ -420,7 +467,7 @@ def resolve_location_path(project_root: Path, location: Optional[str]) -> Path:
                 "supply --location."
             )
         location = input(
-            "Enter target directory (under Engine/Public or Engine/Private): "
+            "Enter target directory (under Engine/Source/<Module>/(Public|Private)): "
         ).strip()
     if not location:
         raise SystemExit("Location must not be empty.")
@@ -491,16 +538,22 @@ def main() -> None:
     else:
         template = prompt_user_to_select_template(filtered_templates)
 
-    header_dir, source_dir, header_path, source_path, relative_namespace_parts = (
-        determine_locations(project_root, class_name, location_path)
-    )
+    (
+        header_dir,
+        source_dir,
+        header_path,
+        source_path,
+        relative_namespace_parts,
+        module_name,
+    ) = determine_locations(project_root, class_name, location_path)
 
     ensure_directories(header_dir, source_dir)
 
     namespace_root = config.get("root_namespace", "")
     namespace_parts = build_namespace_parts(namespace_root, relative_namespace_parts)
 
-    relative_header = header_path.relative_to(project_root / "Engine" / "Public")
+    module_public_root = project_root / "Engine" / "Source" / module_name / "Public"
+    relative_header = header_path.relative_to(module_public_root)
     header_include = str(relative_header).replace(os.sep, "/")
 
     format_args = {
@@ -534,10 +587,13 @@ def main() -> None:
             header_project_path = str(header_path.relative_to(project_root)).replace("/", "\\")
             source_project_path = str(source_path.relative_to(project_root)).replace("/", "\\")
 
+            header_filter = compute_filter_name(project_root, header_path)
+            source_filter = compute_filter_name(project_root, source_path)
+
             add_file_to_project(project_file, "ClInclude", header_project_path)
             add_file_to_project(project_file, "ClCompile", source_project_path)
-            add_file_to_filters(filters_file, "ClInclude", header_project_path, "Header Files")
-            add_file_to_filters(filters_file, "ClCompile", source_project_path, "Source Files")
+            add_file_to_filters(filters_file, "ClInclude", header_project_path, header_filter)
+            add_file_to_filters(filters_file, "ClCompile", source_project_path, source_filter)
 
     print(f"Created {header_path}")
     print(f"Created {source_path}")
@@ -568,32 +624,93 @@ def run_gui(project_root: Path, templates: List[Dict[str, object]], config: Dict
     class_entry = tk.Entry(root)
     class_entry.pack(fill="x", padx=10)
 
-    # Location input
-    tk.Label(root, text="Location (under Engine/Public or Engine/Private):").pack(anchor="w", padx=10, pady=5)
-    loc_entry = tk.Entry(root)
-    loc_entry.insert(0, "Engine/Public/Game")
-    loc_entry.pack(fill="x", padx=10)
+    source_root = project_root / "Engine" / "Source"
+    modules = (
+        sorted([p.name for p in source_root.iterdir() if p.is_dir()])
+        if source_root.exists()
+        else []
+    )
+
+    tk.Label(root, text="Module:").pack(anchor="w", padx=10, pady=5)
+    module_var = tk.StringVar()
+    module_combo = ttk.Combobox(root, textvariable=module_var, values=modules, state="readonly")
+    if modules:
+        module_combo.current(0)
+    module_combo.pack(fill="x", padx=10)
+
+    tk.Label(root, text="Visibility:").pack(anchor="w", padx=10, pady=5)
+    visibility_var = tk.StringVar(value="Public")
+    visibility_frame = tk.Frame(root)
+    visibility_frame.pack(fill="x", padx=10)
+    tk.Radiobutton(
+        visibility_frame,
+        text="Public",
+        variable=visibility_var,
+        value="Public",
+    ).pack(side="left", padx=5)
+    tk.Radiobutton(
+        visibility_frame,
+        text="Private",
+        variable=visibility_var,
+        value="Private",
+    ).pack(side="left", padx=5)
+
+    tk.Label(root, text="Sub-path inside the module:").pack(anchor="w", padx=10, pady=5)
+    subpath_entry = tk.Entry(root)
+    default_subpath = modules[0] if modules else ""
+    subpath_entry.insert(0, default_subpath)
+    subpath_entry.pack(fill="x", padx=10)
+
+    selected_module = {"value": modules[0] if modules else ""}
+
+    def on_module_change(event: Optional[object] = None) -> None:
+        if not modules:
+            return
+        current = subpath_entry.get().strip()
+        new_module = module_var.get().strip()
+        previous = selected_module["value"]
+        if not current or current == previous:
+            subpath_entry.delete(0, tk.END)
+            subpath_entry.insert(0, new_module)
+        selected_module["value"] = new_module
+
+    module_combo.bind("<<ComboboxSelected>>", on_module_change)
 
     def on_create():
         class_name = class_entry.get().strip()
-        location = loc_entry.get().strip()
+        module = module_var.get().strip()
+        visibility = visibility_var.get().strip()
+        sub_path = subpath_entry.get().strip()
         template_name = template_var.get()
 
-        if not class_name or not location:
-            messagebox.showerror("Error", "Class name and location are required.")
+        if not class_name or not module:
+            messagebox.showerror("Error", "Class name and module selection are required.")
             return
 
         validate_class_name(class_name)
+
+        location_parts = [f"Engine/Source/{module}", visibility]
+        sub_path_clean = sub_path.replace("\\", "/").strip("/")
+        if sub_path_clean:
+            location_parts.append(sub_path_clean)
+        location = "/".join(location_parts)
+
         location_path = resolve_location_path(project_root, location)
 
         template = next(t for t in templates if t["name"] == template_name)
 
-        header_dir, source_dir, header_path, source_path, ns_parts = determine_locations(
-            project_root, class_name, location_path
-        )
+        (
+            header_dir,
+            source_dir,
+            header_path,
+            source_path,
+            ns_parts,
+            module_name,
+        ) = determine_locations(project_root, class_name, location_path)
         ensure_directories(header_dir, source_dir)
 
-        relative_header = header_path.relative_to(project_root / "Engine" / "Public")
+        module_public_root = project_root / "Engine" / "Source" / module_name / "Public"
+        relative_header = header_path.relative_to(module_public_root)
         header_include = str(relative_header).replace(os.sep, "/")
 
         format_args = {
@@ -611,6 +728,19 @@ def run_gui(project_root: Path, templates: List[Dict[str, object]], config: Dict
 
         write_file(header_path, header_lines, force=True)
         write_file(source_path, source_lines, force=True)
+
+        project_file = project_root / "GameEngine.vcxproj"
+        filters_file = project_root / "GameEngine.vcxproj.filters"
+        if project_file.exists() and filters_file.exists():
+            header_project_path = str(header_path.relative_to(project_root)).replace("/", "\\")
+            source_project_path = str(source_path.relative_to(project_root)).replace("/", "\\")
+            header_filter = compute_filter_name(project_root, header_path)
+            source_filter = compute_filter_name(project_root, source_path)
+
+            add_file_to_project(project_file, "ClInclude", header_project_path)
+            add_file_to_project(project_file, "ClCompile", source_project_path)
+            add_file_to_filters(filters_file, "ClInclude", header_project_path, header_filter)
+            add_file_to_filters(filters_file, "ClCompile", source_project_path, source_filter)
 
         messagebox.showinfo("Success", f"Created:\n{header_path}\n{source_path}")
         root.destroy()
