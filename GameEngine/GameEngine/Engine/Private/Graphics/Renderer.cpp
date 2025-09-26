@@ -1,6 +1,7 @@
 #include "Graphics/Renderer.h"
 #include "string"
 #include "Core/Logger.h"
+#include "imgui.h"
 
 namespace Engine::Graphics
 {
