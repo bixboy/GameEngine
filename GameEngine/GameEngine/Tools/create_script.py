@@ -434,12 +434,17 @@ def resolve_location_path(project_root: Path, location: Optional[str]) -> Path:
 def main() -> None:
     args = parse_arguments()
     script_path = Path(__file__).resolve()
-    project_root = script_path.parent.parent  # Points to GameEngine/GameEngine
+    project_root = script_path.parent.parent
     config_path = script_path.with_name("script_templates.json")
 
     config = load_templates(config_path)
     templates_raw = config.get("templates", [])
-    templates = [template for template in templates_raw if isinstance(template, dict)]
+    templates = [t for t in templates_raw if isinstance(t, dict)]
+
+    if len(sys.argv) == 1:
+        # 🚀 Pas d'arguments → lancer en mode GUI
+        run_gui(project_root, templates, config)
+        return
 
     if args.list:
         filtered = filter_templates(templates, args.allow)
@@ -537,6 +542,84 @@ def main() -> None:
     print(f"Created {header_path}")
     print(f"Created {source_path}")
 
+
+# ---------------------------------------------------------------------------
+# GUI mode (Unreal-style "Add C++ Class")
+# ---------------------------------------------------------------------------
+
+def run_gui(project_root: Path, templates: List[Dict[str, object]], config: Dict[str, object]):
+    import tkinter as tk
+    from tkinter import ttk, messagebox
+
+    root = tk.Tk()
+    root.title("Add C++ Class (Custom Engine)")
+    root.geometry("400x250")
+
+    # Template selection
+    tk.Label(root, text="Template:").pack(anchor="w", padx=10, pady=5)
+    template_var = tk.StringVar()
+    template_names = [tpl["name"] for tpl in templates]
+    combo = ttk.Combobox(root, textvariable=template_var, values=template_names, state="readonly")
+    combo.current(0)
+    combo.pack(fill="x", padx=10)
+
+    # Class name input
+    tk.Label(root, text="Class Name:").pack(anchor="w", padx=10, pady=5)
+    class_entry = tk.Entry(root)
+    class_entry.pack(fill="x", padx=10)
+
+    # Location input
+    tk.Label(root, text="Location (under Engine/Public or Engine/Private):").pack(anchor="w", padx=10, pady=5)
+    loc_entry = tk.Entry(root)
+    loc_entry.insert(0, "Engine/Public/Game")
+    loc_entry.pack(fill="x", padx=10)
+
+    def on_create():
+        class_name = class_entry.get().strip()
+        location = loc_entry.get().strip()
+        template_name = template_var.get()
+
+        if not class_name or not location:
+            messagebox.showerror("Error", "Class name and location are required.")
+            return
+
+        validate_class_name(class_name)
+        location_path = resolve_location_path(project_root, location)
+
+        template = next(t for t in templates if t["name"] == template_name)
+
+        header_dir, source_dir, header_path, source_path, ns_parts = determine_locations(
+            project_root, class_name, location_path
+        )
+        ensure_directories(header_dir, source_dir)
+
+        relative_header = header_path.relative_to(project_root / "Engine" / "Public")
+        header_include = str(relative_header).replace(os.sep, "/")
+
+        format_args = {
+            "class_name": class_name,
+            "header_include": header_include,
+        }
+
+        header_lines = render_section(template.get("header", {}), ns_parts, format_args)
+        source_lines = render_section(template.get("source", {}), ns_parts, format_args)
+
+        if header_lines:
+            header_lines = ["#pragma once", ""] + header_lines
+        else:
+            header_lines = ["#pragma once"]
+
+        write_file(header_path, header_lines, force=True)
+        write_file(source_path, source_lines, force=True)
+
+        messagebox.showinfo("Success", f"Created:\n{header_path}\n{source_path}")
+        root.destroy()
+
+    # Button
+    btn = tk.Button(root, text="Create Class", command=on_create)
+    btn.pack(pady=15)
+
+    root.mainloop()
 
 if __name__ == "__main__":
     main()
