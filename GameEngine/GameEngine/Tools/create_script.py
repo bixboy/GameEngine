@@ -657,11 +657,16 @@ def run_gui(project_root: Path, templates: List[Dict[str, object]], config: Dict
 
     tk.Label(root, text="Sub-path inside the module:").pack(anchor="w", padx=10, pady=5)
     subpath_entry = tk.Entry(root)
-    default_subpath = modules[0] if modules else ""
+    # Leave the sub-path empty by default so classes are generated directly
+    # inside the module's Public/Private folder unless the user explicitly
+    # chooses an additional hierarchy.  The previous behaviour pre-filled the
+    # module name here, which resulted in headers being written to
+    # `Module/Public/Module/...` instead of mirroring Unreal Engine's layout.
+    default_subpath = ""
     subpath_entry.insert(0, default_subpath)
     subpath_entry.pack(fill="x", padx=10)
 
-    selected_module = {"value": modules[0] if modules else ""}
+    selected_module = {"value": module_var.get().strip() if modules else ""}
 
     def on_module_change(event: Optional[object] = None) -> None:
         if not modules:
@@ -671,7 +676,9 @@ def run_gui(project_root: Path, templates: List[Dict[str, object]], config: Dict
         previous = selected_module["value"]
         if not current or current == previous:
             subpath_entry.delete(0, tk.END)
-            subpath_entry.insert(0, new_module)
+            # Keep the field empty so files land directly under
+            # Public/Private. Users can still provide a custom sub-path.
+            subpath_entry.insert(0, "")
         selected_module["value"] = new_module
 
     module_combo.bind("<<ComboboxSelected>>", on_module_change)
