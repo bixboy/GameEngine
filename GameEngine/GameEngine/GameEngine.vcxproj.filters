@@ -100,6 +100,12 @@
     <Filter Include="Source\Math\Public\Math">
       <UniqueIdentifier>{9BEEBD80-A6AE-4EAE-B888-D17115633F8D}</UniqueIdentifier>
     </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{8C922B88-A7B2-4A38-8F45-1A3B65FAF06E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\ImGui">
+      <UniqueIdentifier>{BB6CD2E5-9AFE-438B-8CE7-6A861A7C7E7F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Resource Files">
       <UniqueIdentifier>{DFC89BCC-BEB7-40C5-98CC-315E5A204203}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
@@ -171,6 +177,27 @@
     </ClCompile>
     <ClCompile Include="Exemple\main.cpp">
       <Filter>Exemple</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_demo.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_draw.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_tables.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_widgets.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdl3.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp">
+      <Filter>External\ImGui</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

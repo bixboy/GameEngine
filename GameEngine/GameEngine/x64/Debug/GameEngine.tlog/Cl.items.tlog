@@ -20,3 +20,10 @@ C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Math\Private\
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Math\Private\Math\Vector2.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\Vector2.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Math\Private\Math\Vector3.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\Vector3.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Exemple\main.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\main.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\imgui.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\imgui_demo.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_demo.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\imgui_draw.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_draw.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\imgui_tables.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_tables.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\imgui_widgets.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_widgets.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\backends\imgui_impl_sdl3.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_impl_sdl3.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\imgui_impl_sdlrenderer3.obj

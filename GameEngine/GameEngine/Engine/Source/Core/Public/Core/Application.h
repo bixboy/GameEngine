@@ -10,7 +10,7 @@ namespace Engine
 {
 
     namespace Graphics { class Renderer; }
-    namespace Game     { class SceneManager; }
+    namespace Game     { class Scene; class SceneManager; }
     namespace Input    { class InputManager; class Input; }
     namespace Core     { class Window; class Timer; }
 
@@ -49,16 +49,22 @@ namespace Engine
                 bool InitializeSDL();
                 bool CreateWindow();
                 bool CreateRenderer();
+                bool InitializeImGui();
                 void InitializeSubsystems();
                 void ShutdownSubsystems() noexcept;
                 void ShutdownSDL() noexcept;
+                void ShutdownImGui() noexcept;
                 void ProcessEvents();
+                void BeginFrame();
                 void Update(float deltaTime);
                 void Render();
+                void RenderGui(Game::Scene* activeScene);
 
                 Config config_{};
                 bool running_{false};
                 bool sdlInitialized_{false};
+                bool imguiInitialized_{false};
+                float lastDeltaTime_{0.0f};
 
                 std::unique_ptr<Window> window_;
                 std::unique_ptr<Graphics::Renderer> renderer_;

@@ -1629,6 +1629,13 @@
     <ClCompile Include="Exemple\main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\Libs\ImGui\imgui.cpp" />
+    <ClCompile Include="..\Libs\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="..\Libs\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="..\Libs\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="..\Libs\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Application.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h" />
