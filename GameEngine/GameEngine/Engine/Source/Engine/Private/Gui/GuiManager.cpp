@@ -22,7 +22,7 @@ namespace Engine::Gui
         }
     }
 
-    GuiPanel& GuiManager::CreatePanel(std::string name, std::string title)
+    GuiPanel& GuiManager::CreatePanel(String name, String title)
     {
         if (auto it = panels_.find(name); it != panels_.end())
         {
@@ -30,7 +30,7 @@ namespace Engine::Gui
             return *it->second;
         }
 
-        std::string key = name;
+        String key = name;
         auto panel = std::make_unique<GuiPanel>(std::move(name), std::move(title));
         GuiPanel& panelRef = *panel;
         panels_.emplace(std::move(key), std::move(panel));
@@ -41,7 +41,7 @@ namespace Engine::Gui
         return panelRef;
     }
 
-    void GuiManager::RemovePanel(const std::string& name)
+    void GuiManager::RemovePanel(const String& name)
     {
         if (auto it = panels_.find(name); it != panels_.end())
         {
@@ -52,7 +52,7 @@ namespace Engine::Gui
         }
     }
 
-    GuiPanel* GuiManager::FindPanel(const std::string& name) noexcept
+    GuiPanel* GuiManager::FindPanel(const String& name) noexcept
     {
         if (auto it = panels_.find(name); it != panels_.end())
             return it->second.get();
@@ -60,7 +60,7 @@ namespace Engine::Gui
         return nullptr;
     }
 
-    const GuiPanel* GuiManager::FindPanel(const std::string& name) const noexcept
+    const GuiPanel* GuiManager::FindPanel(const String& name) const noexcept
     {
         if (auto it = panels_.find(name); it != panels_.end())
             return it->second.get();

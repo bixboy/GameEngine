@@ -228,6 +228,9 @@
     <ClInclude Include="Engine\Source\Core\Public\Core\Application.h">
       <Filter>Source\Core\Public\Core</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Source\Core\Public\Core\Types.h">
+      <Filter>Source\Core\Public\Core</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h">
       <Filter>Source\Engine\Public</Filter>
     </ClInclude>
@@ -246,6 +249,9 @@
     <ClInclude Include="Engine\Source\Game\Public\Game\ActorSpawner.h">
       <Filter>Source\Game\Public\Game</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Source\Game\Public\Game\Object.h">
+      <Filter>Source\Game\Public\Game</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Source\Game\Public\Game\Components\Component.h">
       <Filter>Source\Game\Public\Game\Components</Filter>
     </ClInclude>
@@ -256,6 +262,9 @@
       <Filter>Source\Game\Public\Game</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Game\Public\Game\SceneManager.h">
+      <Filter>Source\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Game\Public\Game\SceneSerializer.h">
       <Filter>Source\Game\Public\Game</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Core\Public\Core\Timer.h">

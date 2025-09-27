@@ -28,7 +28,7 @@ namespace Engine::Core
     void Logger::Log(std::string_view message, LogLevel level, const char* file, int line)
     {
         const char* color = kColorReset;
-        std::string levelStr;
+        String levelStr;
 
         switch (level)
         {

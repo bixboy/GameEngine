@@ -3,7 +3,7 @@
 #include <cstdint>
 #include <exception>
 #include <fstream>
-#include <string>
+#include <memory>
 #include <string_view>
 #include <utility>
 #include <stdexcept>
@@ -38,11 +38,11 @@ namespace Engine::Game
             stream.write(value.data(), static_cast<std::streamsize>(length));
         }
 
-        std::string ReadString(std::istream& stream)
+        String ReadString(std::istream& stream)
         {
             std::uint32_t length = 0;
             ReadUint32(stream, length);
-            std::string result(length, '\0');
+            String result(length, '\0');
             stream.read(result.data(), static_cast<std::streamsize>(length));
             if (!stream)
                 throw std::runtime_error("Failed to read string from stream.");
@@ -60,14 +60,14 @@ namespace Engine::Game
         }
 
         WriteUint32(file, kSceneBinaryVersion);
-        WriteString(file, std::string(scene.Name()));
+        WriteString(file, String(scene.Name()));
 
         const auto actorCount = static_cast<std::uint32_t>(scene.GetActors().size());
         WriteUint32(file, actorCount);
 
         for (const auto& actor : scene.GetActors())
         {
-            WriteString(file, std::string(actor->GetTypeName()));
+            WriteString(file, String(actor->GetTypeName()));
             actor->SerializeBinary(file);
         }
 
@@ -90,7 +90,7 @@ namespace Engine::Game
         }
         catch (const std::exception& e)
         {
-            LOG_ERROR(std::string("Failed to read scene header: ") + e.what());
+            LOG_ERROR(String("Failed to read scene header: ") + e.what());
             return false;
         }
 
@@ -106,7 +106,7 @@ namespace Engine::Game
         }
         catch (const std::exception& e)
         {
-            LOG_ERROR(std::string("Failed to read scene name: ") + e.what());
+            LOG_ERROR(String("Failed to read scene name: ") + e.what());
             return false;
         }
 
@@ -119,20 +119,20 @@ namespace Engine::Game
         }
         catch (const std::exception& e)
         {
-            LOG_ERROR(std::string("Failed to read actor count: ") + e.what());
+            LOG_ERROR(String("Failed to read actor count: ") + e.what());
             return false;
         }
 
         for (std::uint32_t i = 0; i < actorCount; ++i)
         {
-            std::string type;
+            String type;
             try
             {
                 type = ReadString(file);
             }
             catch (const std::exception& e)
             {
-                LOG_ERROR(std::string("Failed to read actor type: ") + e.what());
+                LOG_ERROR(String("Failed to read actor type: ") + e.what());
                 return false;
             }
             auto actor = CreateActor(type);
@@ -148,7 +148,7 @@ namespace Engine::Game
             }
             catch (const std::exception& e)
             {
-                LOG_ERROR(std::string("Failed to deserialize actor ") + type + ": " + e.what());
+                LOG_ERROR(String("Failed to deserialize actor ") + type + ": " + e.what());
                 return false;
             }
 
@@ -158,7 +158,7 @@ namespace Engine::Game
         return true;
     }
 
-    void SceneSerializer::RegisterActorFactory(std::string typeName, ActorFactory factory)
+    void SceneSerializer::RegisterActorFactory(String typeName, ActorFactory factory)
     {
         if (typeName.empty() || !factory)
             return;
@@ -170,7 +170,34 @@ namespace Engine::Game
     void SceneSerializer::UnregisterActorFactory(std::string_view typeName)
     {
         auto& factories = GetFactories();
-        factories.erase(std::string(typeName));
+        factories.erase(String(typeName));
+    }
+
+    void SceneSerializer::EnsureActorFactory(const Actor& actor)
+    {
+        String typeName(actor.GetTypeName());
+        if (typeName.empty() || HasActorFactory(typeName))
+            return;
+
+        std::unique_ptr<Actor> prototype = actor.ClonePrototype();
+        if (!prototype)
+        {
+            LOG_ERROR("Failed to create prototype for actor type: " + typeName);
+            return;
+        }
+
+        auto sharedPrototype = std::shared_ptr<Actor>(std::move(prototype));
+
+        RegisterActorFactory(std::move(typeName), [sharedPrototype]() -> std::unique_ptr<Actor>
+        {
+            return sharedPrototype->ClonePrototype();
+        });
+    }
+
+    bool SceneSerializer::HasActorFactory(std::string_view typeName)
+    {
+        const auto& factories = GetFactories();
+        return factories.find(String(typeName)) != factories.end();
     }
 
     void SceneSerializer::ClearActorFactories()
@@ -183,16 +210,16 @@ namespace Engine::Game
     std::unique_ptr<Actor> SceneSerializer::CreateActor(std::string_view typeName)
     {
         auto& factories = GetFactories();
-        const auto it = factories.find(std::string(typeName));
+        const auto it = factories.find(String(typeName));
         if (it == factories.end())
             return nullptr;
 
         return it->second();
     }
 
-    std::unordered_map<std::string, SceneSerializer::ActorFactory>& SceneSerializer::GetFactories()
+    std::unordered_map<String, SceneSerializer::ActorFactory>& SceneSerializer::GetFactories()
     {
-        static std::unordered_map<std::string, ActorFactory> factories;
+        static std::unordered_map<String, ActorFactory> factories;
         static bool defaultsRegistered = false;
 
         if (!defaultsRegistered)

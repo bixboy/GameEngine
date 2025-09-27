@@ -2,11 +2,12 @@
 #include <algorithm>
 #include <cstddef>
 #include <functional>
-#include <string>
 #include <typeindex>
 #include <utility>
 #include <vector>
 #include <SDL3/SDL.h>
+
+#include "Core/Types.h"
 
 namespace Engine::Input
 {
@@ -32,7 +33,7 @@ namespace Engine::Input
         
         // ======= Bind Action =======
             template <typename T>
-            void BindAction(std::string actionName, SDL_Keycode key, InputEvent eventType, T* instance, void (T::*func)())
+            void BindAction(String actionName, SDL_Keycode key, InputEvent eventType, T* instance, void (T::*func)())
             {
                 ActionBinding binding;
                 binding.actionName = std::move(actionName);
@@ -46,7 +47,7 @@ namespace Engine::Input
         
         // ======= Bind Axis =======
             template <typename T>
-            void BindAxis(std::string axisName, SDL_Keycode key, T* instance, void (T::*func)(float), float scale = 1.0f)
+            void BindAxis(String axisName, SDL_Keycode key, T* instance, void (T::*func)(float), float scale = 1.0f)
             {
                 const std::type_index typeIndex{typeid(T)};
 
@@ -82,7 +83,7 @@ namespace Engine::Input
 
         
         // ======= Unbind Action =======
-            void UnbindAction(const std::string& actionName, SDL_Keycode key, InputEvent eventType)
+            void UnbindAction(const String& actionName, SDL_Keycode key, InputEvent eventType)
             {
                 std::erase_if(actionBindings_, [&](const ActionBinding& binding)
                 {
@@ -94,7 +95,7 @@ namespace Engine::Input
 
         
         // ======= Unbind Axis =======
-            void UnbindAxis(const std::string& axisName, SDL_Keycode key)
+            void UnbindAxis(const String& axisName, SDL_Keycode key)
             {
                 for (auto it = axisBindings_.begin(); it != axisBindings_.end();)
                 {
@@ -114,7 +115,7 @@ namespace Engine::Input
         private:
             struct ActionBinding
             {
-                std::string actionName;
+                String actionName;
                 SDL_Keycode key{SDLK_UNKNOWN};
                 InputEvent eventType{InputEvent::Pressed};
                 std::function<void()> callback{};
@@ -128,7 +129,7 @@ namespace Engine::Input
 
             struct AxisBinding
             {
-                std::string axisName;
+                String axisName;
                 std::function<void(float)> callback{};
                 void* instance{nullptr};
                 std::type_index typeIndex{typeid(void)};

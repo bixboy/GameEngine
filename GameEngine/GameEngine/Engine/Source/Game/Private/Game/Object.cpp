@@ -16,27 +16,24 @@ namespace Engine::Game
         constexpr std::uint32_t kBinaryFormatVersion = 1;
     }
 
-    Object::Object()
-        : Object("Object")
+    Object::Object() : Object("Object")
     {
     }
 
-    Object::Object(std::string name)
-        : uuid_(GenerateUUID()), name_(std::move(name))
+    Object::Object(String name) : uuid_(GenerateUUID()), name_(std::move(name))
     {
     }
 
-    Object::Object(std::string name, const Math::Transform& transform)
-        : uuid_(GenerateUUID()), name_(std::move(name)), transform_(transform)
+    Object::Object(String name, const Math::Transform& transform) : uuid_(GenerateUUID()), name_(std::move(name)), transform_(transform)
     {
     }
 
-    void Object::SetUUID(std::string uuid)
+    void Object::SetUUID(String uuid)
     {
         uuid_ = std::move(uuid);
     }
 
-    void Object::SetName(std::string name)
+    void Object::SetName(String name)
     {
         name_ = std::move(name);
     }
@@ -59,6 +56,7 @@ namespace Engine::Game
     {
         std::uint32_t version = 0;
         ReadPrimitive(stream, version);
+        
         if (version != kBinaryFormatVersion)
             throw std::runtime_error("Unsupported object binary version.");
 
@@ -71,22 +69,26 @@ namespace Engine::Game
     void Object::WriteString(std::ostream& stream, std::string_view value)
     {
         const auto length = static_cast<std::uint32_t>(value.size());
+        
         WritePrimitive(stream, length);
-        stream.write(value.data(), static_cast<std::streamsize>(length));
+        stream.write(value.data(), length);
     }
 
-    std::string Object::ReadString(std::istream& stream)
+    String Object::ReadString(std::istream& stream)
     {
         std::uint32_t length = 0;
         ReadPrimitive(stream, length);
-        std::string result(length, '\0');
+
+        String result(length, '\0');
         stream.read(result.data(), static_cast<std::streamsize>(length));
+
         if (!stream)
             throw std::runtime_error("Failed to read string from stream.");
+
         return result;
     }
 
-    std::string Object::GenerateUUID()
+    String Object::GenerateUUID()
     {
         std::array<std::uint8_t, 16> data{};
 
@@ -97,7 +99,6 @@ namespace Engine::Game
         for (auto& byte : data)
             byte = static_cast<std::uint8_t>(dist(gen));
 
-        // Set UUID version (4) and variant (RFC 4122)
         data[6] = static_cast<std::uint8_t>((data[6] & 0x0F) | 0x40);
         data[8] = static_cast<std::uint8_t>((data[8] & 0x3F) | 0x80);
 

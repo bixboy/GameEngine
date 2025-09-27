@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
-#include <string>
+
+#include "Core/Types.h"
 
 namespace Engine::Math
 {
@@ -71,9 +72,9 @@ namespace Engine::Math
             return !(*this == other);
         }
 
-        [[nodiscard]] std::string ToString() const
+        [[nodiscard]] String ToString() const
         {
-            return "Vector3(" + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";
+            return String("Vector3(") + std::to_string(x) + ", " + std::to_string(y) + ", " + std::to_string(z) + ")";
         }
     };
 

@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <string>
 #include <vector>
 #include "Game/Object.h"
 #include "Math/Math.h"
@@ -15,9 +14,9 @@ namespace Engine::Game
     {
         public:
             explicit Actor(const Math::Transform& transform = Math::Transform());
-            Actor(std::string name, const Math::Transform& transform = Math::Transform());
-            virtual ~Actor();
-
+        
+            Actor(String name, const Math::Transform& transform = Math::Transform());
+        
             virtual void BeginPlay();
             virtual void Update(float deltaTime);
             virtual void Render(Graphics::Renderer& renderer) const;
@@ -26,9 +25,11 @@ namespace Engine::Game
 
             [[nodiscard]] std::string_view GetTypeName() const noexcept override { return "Actor"; }
 
+            [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
+
         private:
         std::vector<std::unique_ptr<Component>> components_;
 
-        bool hasBegunPlay_{false};
+        bool has_begun_play_{false};
     };
 }

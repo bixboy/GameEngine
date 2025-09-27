@@ -1,6 +1,7 @@
 #pragma once
 #include <SDL3/SDL.h>
 #include <iosfwd>
+#include <memory>
 #include "Game/Actor.h"
 
 namespace Engine
@@ -26,6 +27,7 @@ namespace Engine
                 void MoveRight(float value);
 
                 [[nodiscard]] std::string_view GetTypeName() const noexcept override { return "Player"; }
+                [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
 
             private:
                 void SerializeBinaryImpl(std::ostream& stream) const override;

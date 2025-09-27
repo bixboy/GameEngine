@@ -1,5 +1,4 @@
 #include "Graphics/Renderer.h"
-#include <string>
 #include "Core/Logger.h"
 
 namespace Engine::Graphics
@@ -10,7 +9,7 @@ namespace Engine::Graphics
         renderer_ = SDL_CreateRenderer(window, nullptr);
 
         if (!renderer_)
-            LOG_ERROR(std::string{"Renderer creation failed: "} + SDL_GetError());
+            LOG_ERROR(String{"Renderer creation failed: "} + SDL_GetError());
     }
 
     Renderer::~Renderer()

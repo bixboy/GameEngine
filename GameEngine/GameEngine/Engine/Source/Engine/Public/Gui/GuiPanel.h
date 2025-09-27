@@ -1,7 +1,8 @@
 #pragma once
 
 #include <functional>
-#include <string>
+
+#include "Core/Types.h"
 
 #include "imgui.h"
 
@@ -12,11 +13,11 @@ namespace Engine::Gui
         public:
             using DrawFunction = std::function<void()>;
 
-            GuiPanel(std::string name, std::string title);
+            GuiPanel(String name, String title);
 
-            void SetTitle(std::string title);
-            [[nodiscard]] const std::string& GetTitle() const noexcept { return title_; }
-            [[nodiscard]] const std::string& GetName() const noexcept { return name_; }
+            void SetTitle(String title);
+            [[nodiscard]] const String& GetTitle() const noexcept { return title_; }
+            [[nodiscard]] const String& GetName() const noexcept { return name_; }
 
             void SetVisible(bool visible) noexcept { visible_ = visible; }
             [[nodiscard]] bool IsVisible() const noexcept { return visible_; }
@@ -45,8 +46,8 @@ namespace Engine::Gui
             void Draw();
 
         private:
-            std::string name_;
-            std::string title_;
+            String name_;
+            String title_;
             bool visible_{true};
 
             bool usePosition_{false};

@@ -46,7 +46,7 @@ namespace Engine::Gui
         {
             const char* error = SDL_GetError();
             if (error && *error)
-                LOG_ERROR(std::string{"Failed to initialize ImGui SDL3 backend: "} + error);
+                LOG_ERROR(String{"Failed to initialize ImGui SDL3 backend: "} + error);
             else
                 LOG_ERROR("Failed to initialize ImGui SDL3 backend.");
 
@@ -60,7 +60,7 @@ namespace Engine::Gui
         {
             const char* error = SDL_GetError();
             if (error && *error)
-                LOG_ERROR(std::string{"Failed to initialize ImGui SDL renderer backend: "} + error);
+                LOG_ERROR(String{"Failed to initialize ImGui SDL renderer backend: "} + error);
             else
                 LOG_ERROR("Failed to initialize ImGui SDL renderer backend.");
 

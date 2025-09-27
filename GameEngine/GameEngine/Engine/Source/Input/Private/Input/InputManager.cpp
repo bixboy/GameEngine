@@ -64,7 +64,7 @@ namespace Engine::Input
         if (axisBindings_.empty())
             return;
 
-        std::unordered_map<std::string, float> axisValues;
+        std::unordered_map<String, float> axisValues;
         axisValues.reserve(axisBindings_.size());
 
         for (const auto& binding : axisBindings_)
