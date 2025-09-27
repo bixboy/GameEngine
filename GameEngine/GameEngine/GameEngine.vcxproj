@@ -247,6 +247,7 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="Engine\Source\Core\Private\Core\Logger.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiPanel.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp" />
@@ -1794,6 +1795,7 @@
     <ClInclude Include="Engine\Source\Core\Public\Core\Application.h" />
     <ClInclude Include="Engine\Source\Core\Public\Core\String.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h" />
