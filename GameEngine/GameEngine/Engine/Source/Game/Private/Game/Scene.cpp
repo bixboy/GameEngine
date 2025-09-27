@@ -23,6 +23,16 @@ namespace Engine::Game
         actors_.push_back(std::move(actor));
     }
 
+    void Scene::ClearActors() noexcept
+    {
+        actors_.clear();
+    }
+
+    void Scene::Rename(std::string name)
+    {
+        name_ = std::move(name);
+    }
+
     void Scene::SetName(std::string name)
     {
         name_ = std::move(name);

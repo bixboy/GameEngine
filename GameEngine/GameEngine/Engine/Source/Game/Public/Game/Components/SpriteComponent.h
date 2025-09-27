@@ -12,6 +12,17 @@ namespace Engine::Game
 
             void Render(Graphics::Renderer& renderer) const override;
 
+            void SetColor(SDL_Color color) noexcept { color_ = color; }
+            void SetDimensions(float w, float h) noexcept
+            {
+                width_ = w;
+                height_ = h;
+            }
+
+            [[nodiscard]] SDL_Color GetColor() const noexcept { return color_; }
+            [[nodiscard]] float GetWidth() const noexcept { return width_; }
+            [[nodiscard]] float GetHeight() const noexcept { return height_; }
+
         private:
             SDL_Color color_;
             float width_;
