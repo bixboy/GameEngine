@@ -12,6 +12,7 @@ namespace Engine
     namespace Graphics { class Renderer; }
     namespace Core     { class Timer; class Window; }
     namespace Input    { class Input; }
+    namespace Gui      { class GuiManager; }
 
     namespace Game
     {
@@ -21,6 +22,7 @@ namespace Engine
             Input::InputManager* inputManager{nullptr};
             Core::Window* window{nullptr};
             Core::Timer* timer{nullptr};
+            Gui::GuiManager* guiManager{nullptr};
         };
 
         class Scene
@@ -56,6 +58,9 @@ namespace Engine
             
                 [[nodiscard]] Core::Timer& GetTimer() const;
                 [[nodiscard]] bool HasTimer() const noexcept { return context_.timer != nullptr; }
+
+                [[nodiscard]] Gui::GuiManager& GetGuiManager() const;
+                [[nodiscard]] bool HasGuiManager() const noexcept { return context_.guiManager != nullptr; }
 
             private:
                 std::string name_;
