@@ -151,6 +151,9 @@
     <ClCompile Include="Engine\Source\Game\Private\Game\SceneManager.cpp">
       <Filter>Source\Game\Private\Game</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Game\Private\Game\SceneSerializer.cpp">
+      <Filter>Source\Game\Private\Game</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Core\Private\Core\Timer.cpp">
       <Filter>Source\Core\Private\Core</Filter>
     </ClCompile>
@@ -158,6 +161,9 @@
       <Filter>Source\Core\Private\Core</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Game\Private\Game\EmptyScene.cpp">
+      <Filter>Source\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Game\Private\Game\Object.cpp">
       <Filter>Source\Game\Private\Game</Filter>
     </ClCompile>
     <ClCompile Include="Engine\Source\Game\Private\Game\Actor.cpp">
