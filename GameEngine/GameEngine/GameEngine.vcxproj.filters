@@ -25,8 +25,17 @@
     <Filter Include="Source\Engine">
       <UniqueIdentifier>{5ECD7252-C3CF-4A05-B9F6-C3730AF23F03}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source\Engine\Private">
+      <UniqueIdentifier>{C5F6E8B1-4C3E-4CC7-8D20-8A6B97A8B5C1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Engine\Private\Gui">
+      <UniqueIdentifier>{F0A2335F-6E3B-4B1E-9D4E-9A6356574A8F}</UniqueIdentifier>
+    </Filter>
     <Filter Include="Source\Engine\Public">
       <UniqueIdentifier>{2E486ABD-BF87-407C-B630-EA49B85A90B7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source\Engine\Public\Gui">
+      <UniqueIdentifier>{8B3C9A5D-1E6F-4F35-B4D5-571F058C29CF}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source\Game">
       <UniqueIdentifier>{C9DD7849-4CDB-4A4B-BAFF-98B74B368EED}</UniqueIdentifier>
@@ -118,6 +127,15 @@
     <ClCompile Include="Engine\Source\Core\Private\Core\Logger.cpp">
       <Filter>Source\Core\Private\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiPanel.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Game\Private\Game\ActorSpawner.cpp">
       <Filter>Source\Game\Private\Game</Filter>
     </ClCompile>
@@ -206,6 +224,15 @@
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h">
       <Filter>Source\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h">
       <Filter>Source\Core\Public\Core</Filter>

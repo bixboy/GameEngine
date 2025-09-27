@@ -247,6 +247,9 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="Engine\Source\Core\Private\Core\Logger.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiPanel.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp" />
     <ClCompile Include="Engine\Source\Game\Private\Game\ActorSpawner.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1638,6 +1641,9 @@
     <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Application.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h" />
     <ClInclude Include="Engine\Source\Game\Public\Game\ActorSpawner.h" />
     <ClInclude Include="Engine\Source\Game\Public\Game\Components\Component.h" />

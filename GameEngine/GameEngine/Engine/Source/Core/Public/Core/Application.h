@@ -10,6 +10,7 @@ namespace Engine
 {
 
     namespace Graphics { class Renderer; }
+    namespace Gui      { class GuiSystem; class GuiManager; class GuiPanel; }
     namespace Game     { class Scene; class SceneManager; }
     namespace Input    { class InputManager; class Input; }
     namespace Core     { class Window; class Timer; }
@@ -49,21 +50,21 @@ namespace Engine
                 bool InitializeSDL();
                 bool CreateWindow();
                 bool CreateRenderer();
-                bool InitializeImGui();
+                bool InitializeGui();
                 void InitializeSubsystems();
                 void ShutdownSubsystems() noexcept;
                 void ShutdownSDL() noexcept;
-                void ShutdownImGui() noexcept;
+                void ShutdownGui() noexcept;
                 void ProcessEvents();
                 void BeginFrame();
                 void Update(float deltaTime);
                 void Render();
                 void RenderGui(Game::Scene* activeScene);
+                void SetupDefaultGuiPanels();
 
                 Config config_{};
                 bool running_{false};
                 bool sdlInitialized_{false};
-                bool imguiInitialized_{false};
                 float lastDeltaTime_{0.0f};
 
                 std::unique_ptr<Window> window_;
@@ -71,6 +72,9 @@ namespace Engine
                 std::unique_ptr<Game::SceneManager> sceneManager_;
                 std::unique_ptr<Input::Input> input_;
                 std::unique_ptr<Input::InputManager> inputManager_;
+                std::unique_ptr<Gui::GuiSystem> guiSystem_;
+                std::unique_ptr<Gui::GuiManager> guiManager_;
+                Gui::GuiPanel* statsPanel_{nullptr};
                 std::unique_ptr<Timer> timer_;
         };
     }

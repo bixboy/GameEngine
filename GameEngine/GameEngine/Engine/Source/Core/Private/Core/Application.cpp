@@ -17,47 +17,19 @@
 #include "Input/Input.h"
 #include "Input/InputManager.h"
 
+#include "Gui/GuiManager.h"
+#include "Gui/GuiPanel.h"
+#include "Gui/GuiSystem.h"
+
 #include "imgui.h"
-#include "imgui_impl_sdl3.h"
-#include "imgui_impl_sdlrenderer3.h"
 
 namespace Engine::Core
 {
     namespace
     {
-        constexpr const char* kDefaultAppName = "Example Custom Engine";
-        constexpr const char* kDefaultAppId = "com.example.CustomEngine";
+        constexpr const char* kDefaultAppName = "Bixboy Custom Engine";
+        constexpr const char* kDefaultAppId = "com.Bixboy.CustomEngine";
         constexpr const char* kDefaultAppVersion = "1.0";
-
-        [[nodiscard]] bool HasEnvironmentVariable(const char* name)
-        {
-            if (name == nullptr)
-                return false;
-
-#if defined(_WIN32)
-            char* buffer = nullptr;
-            size_t size = 0;
-            const errno_t error = _dupenv_s(&buffer, &size, name);
-            std::unique_ptr<char, decltype(&std::free)> value(buffer, &std::free);
-
-            if (error != 0 || !value)
-                return false;
-
-            return size > 0 && value.get()[0] != '\0';
-#else
-            if (const char* value = std::getenv(name))
-                return value[0] != '\0';
-
-            return false;
-#endif
-        }
-
-        [[nodiscard]] bool ShouldForceHeadlessVideoDriver()
-        {
-            const bool hasDisplay = HasEnvironmentVariable("DISPLAY") || HasEnvironmentVariable("WAYLAND_DISPLAY");
-            const bool videoDriverPreset = HasEnvironmentVariable("SDL_VIDEO_DRIVER");
-            return !hasDisplay && !videoDriverPreset;
-        }
     }
 
     Application::Application(Config config) : config_(std::move(config)) {}
@@ -77,7 +49,7 @@ namespace Engine::Core
         if (!InitializeSDL())
             return false;
 
-        if (!CreateWindow() || !CreateRenderer() || !InitializeImGui())
+        if (!CreateWindow() || !CreateRenderer() || !InitializeGui())
         {
             Shutdown();
             return false;
@@ -118,8 +90,8 @@ namespace Engine::Core
         SDL_Event event{};
         while (SDL_PollEvent(&event))
         {
-            if (imguiInitialized_)
-                ImGui_ImplSDL3_ProcessEvent(&event);
+            if (guiSystem_ && guiSystem_->IsInitialized())
+                guiSystem_->ProcessEvent(event);
 
             input_->ProcessEvent(event);
 
@@ -142,19 +114,10 @@ namespace Engine::Core
 
     void Application::BeginFrame()
     {
-        if (!imguiInitialized_)
+        if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        if (!ImGui::GetCurrentContext())
-        {
-            LOG_WARNING("ImGui context not available; disabling ImGui frame generation.");
-            imguiInitialized_ = false;
-            return;
-        }
-
-        ImGui_ImplSDLRenderer3_NewFrame();
-        ImGui_ImplSDL3_NewFrame();
-        ImGui::NewFrame();
+        guiSystem_->BeginFrame();
     }
 
     void Application::Update(float deltaTime)
@@ -201,31 +164,16 @@ namespace Engine::Core
 
     void Application::RenderGui(Game::Scene* activeScene)
     {
-        if (!imguiInitialized_)
+        (void)activeScene;
+
+        if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        if (!ImGui::GetCurrentContext())
-        {
-            LOG_WARNING("ImGui context not available; skipping ImGui rendering.");
-            imguiInitialized_ = false;
-            return;
-        }
+        if (guiManager_)
+            guiManager_->DrawAll();
 
-        ImGui::Begin("Engine Stats");
-        ImGui::Text("FPS: %.1f", timer_ ? timer_->GetFPS() : 0.0f);
-        ImGui::Text("Delta Time: %.3f ms", lastDeltaTime_ * 1000.0f);
-
-        if (activeScene)
-        {
-            const std::string_view sceneName = activeScene->Name();
-            ImGui::Separator();
-            ImGui::Text("Scene: %.*s", static_cast<int>(sceneName.size()), sceneName.data());
-        }
-
-        ImGui::End();
-
-        ImGui::Render();
-        ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer_->GetSDLRenderer());
+        guiSystem_->EndFrame();
+        guiSystem_->Render();
     }
 
 // === SDL Init ====    
@@ -282,48 +230,23 @@ namespace Engine::Core
 
 #pragma endregion   
 
-    bool Application::InitializeImGui()
+    bool Application::InitializeGui()
     {
-        if (imguiInitialized_)
+        if (guiSystem_ && guiSystem_->IsInitialized())
             return true;
 
         if (!window_ || !renderer_)
             return false;
 
-        IMGUI_CHECKVERSION();
-        ImGui::CreateContext();
-        
-        ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
-        
-        ImGui::StyleColorsDark();
+        if (!guiSystem_)
+            guiSystem_ = std::make_unique<Gui::GuiSystem>();
 
-        if (!ImGui_ImplSDL3_InitForSDLRenderer(window_->GetSDLWindow(), renderer_->GetSDLRenderer()))
+        if (!guiSystem_->Initialize(window_->GetSDLWindow(), renderer_->GetSDLRenderer()))
         {
-            const char* error = SDL_GetError();
-            if (error && *error)
-                LOG_ERROR(std::string{"Failed to initialize ImGui SDL3 backend: "} + error);
-            else
-                LOG_ERROR("Failed to initialize ImGui SDL3 backend.");
-            
-            ImGui::DestroyContext();
+            guiSystem_.reset();
             return false;
         }
 
-        if (!ImGui_ImplSDLRenderer3_Init(renderer_->GetSDLRenderer()))
-        {
-            const char* error = SDL_GetError();
-            if (error && *error)
-                LOG_ERROR(std::string{"Failed to initialize ImGui SDL renderer backend: "} + error);
-            else
-                LOG_ERROR("Failed to initialize ImGui SDL renderer backend.");
-            
-            ImGui_ImplSDL3_Shutdown();
-            ImGui::DestroyContext();
-            return false;
-        }
-
-        imguiInitialized_ = true;
         return true;
     }
 
@@ -336,6 +259,16 @@ namespace Engine::Core
         if (inputManager_)
             inputManager_->SetInputDevice(input_.get());
 
+        if (guiSystem_ && guiSystem_->IsInitialized())
+        {
+            guiManager_ = std::make_unique<Gui::GuiManager>(*guiSystem_);
+            SetupDefaultGuiPanels();
+        }
+        else
+        {
+            guiManager_.reset();
+        }
+
         sceneManager_ = std::make_unique<Game::SceneManager>();
 
         if (sceneManager_)
@@ -344,9 +277,46 @@ namespace Engine::Core
                 renderer_.get(),
                 inputManager_.get(),
                 window_.get(),
-                timer_.get()
+                timer_.get(),
+                guiManager_.get()
             });
         }
+    }
+
+    void Application::SetupDefaultGuiPanels()
+    {
+        if (!guiManager_)
+        {
+            statsPanel_ = nullptr;
+            return;
+        }
+
+        Gui::GuiPanel& panel = guiManager_->CreatePanel("engine_stats", "Engine Stats");
+        panel.SetPosition(0.0f, 50.0f);
+        panel.SetSize(300.0f, 200.0f);
+        panel.SetResizable(false);
+        panel.SetMovable(true);
+        panel.SetCollapsable(true);
+        panel.SetClosable(true);
+        panel.SetBackgroundColor(ImVec4{0.1f, 0.1f, 0.1f, 0.95f});
+        panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
+        panel.SetDrawFunction([this]()
+        {
+            ImGui::Text("FPS: %.1f", timer_ ? timer_->GetFPS() : 0.0f);
+            ImGui::Text("Delta Time: %.3f ms", lastDeltaTime_ * 1000.0f);
+
+            if (sceneManager_)
+            {
+                if (auto* activeScene = sceneManager_->GetScene())
+                {
+                    const std::string_view sceneName = activeScene->Name();
+                    ImGui::Separator();
+                    ImGui::Text("Scene: %.*s", static_cast<int>(sceneName.size()), sceneName.data());
+                }
+            }
+        });
+
+        statsPanel_ = &panel;
     }
 
 // === Shutdown ===
@@ -369,7 +339,7 @@ namespace Engine::Core
         inputManager_.reset();
         input_.reset();
         timer_.reset();
-        ShutdownImGui();
+        ShutdownGui();
         renderer_.reset();
         window_.reset();
     }
@@ -383,18 +353,18 @@ namespace Engine::Core
         }
     }
 
-    void Application::ShutdownImGui() noexcept
+    void Application::ShutdownGui() noexcept
     {
-        if (!imguiInitialized_)
-            return;
+        statsPanel_ = nullptr;
 
-        ImGui_ImplSDLRenderer3_Shutdown();
-        ImGui_ImplSDL3_Shutdown();
+        if (guiManager_)
+            guiManager_.reset();
 
-        if (ImGuiContext* context = ImGui::GetCurrentContext())
-            ImGui::DestroyContext(context);
-
-        imguiInitialized_ = false;
+        if (guiSystem_)
+        {
+            guiSystem_->Shutdown();
+            guiSystem_.reset();
+        }
     }
 
 #pragma endregion

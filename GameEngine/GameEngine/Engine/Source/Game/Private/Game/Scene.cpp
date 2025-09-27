@@ -7,6 +7,7 @@
 #include "Core/Window.h"
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
+#include "Gui/GuiManager.h"
 
 namespace Engine::Game
 {
@@ -57,5 +58,13 @@ namespace Engine::Game
             throw std::runtime_error("Scene context does not provide a timer.");
 
         return *context_.timer;
+    }
+
+    Gui::GuiManager& Scene::GetGuiManager() const
+    {
+        if (!context_.guiManager)
+            throw std::runtime_error("Scene context does not provide a GUI manager.");
+
+        return *context_.guiManager;
     }
 }
