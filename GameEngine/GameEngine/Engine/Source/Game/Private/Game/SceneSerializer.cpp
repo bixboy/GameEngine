@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <exception>
 #include <fstream>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -171,6 +172,31 @@ namespace Engine::Game
     {
         auto& factories = GetFactories();
         factories.erase(std::string(typeName));
+    }
+
+    void SceneSerializer::EnsureActorFactory(const Actor& actor)
+    {
+        std::string typeName(actor.GetTypeName());
+        if (typeName.empty() || HasActorFactory(typeName))
+            return;
+
+        std::unique_ptr<Actor> prototype = actor.ClonePrototype();
+        if (!prototype)
+        {
+            LOG_ERROR("Failed to create prototype for actor type: " + typeName);
+            return;
+        }
+
+        RegisterActorFactory(std::move(typeName), [proto = std::move(prototype)]() mutable
+        {
+            return proto->ClonePrototype();
+        });
+    }
+
+    bool SceneSerializer::HasActorFactory(std::string_view typeName)
+    {
+        const auto& factories = GetFactories();
+        return factories.find(std::string(typeName)) != factories.end();
     }
 
     void SceneSerializer::ClearActorFactories()

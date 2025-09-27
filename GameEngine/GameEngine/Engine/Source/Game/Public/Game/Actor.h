@@ -26,6 +26,8 @@ namespace Engine::Game
 
             [[nodiscard]] std::string_view GetTypeName() const noexcept override { return "Actor"; }
 
+            [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
+
         private:
         std::vector<std::unique_ptr<Component>> components_;
 

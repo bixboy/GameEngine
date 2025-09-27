@@ -5,6 +5,7 @@
 
 #include "Core/Timer.h"
 #include "Core/Window.h"
+#include "Game/SceneSerializer.h"
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
 #include "Gui/GuiManager.h"
@@ -20,6 +21,8 @@ namespace Engine::Game
 
     void Scene::AddActor(std::unique_ptr<Actor> actor)
     {
+        if (actor)
+            SceneSerializer::EnsureActorFactory(*actor);
         actors_.push_back(std::move(actor));
     }
 

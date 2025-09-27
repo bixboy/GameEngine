@@ -6,28 +6,11 @@
 #include <stdexcept>
 
 #include "Game/Components/SpriteComponent.h"
-#include "Game/SceneSerializer.h"
 #include "Input/InputManager.h"
 #include "Math/Math.h"
 
 namespace Engine::Game
 {
-    namespace
-    {
-        struct PlayerFactoryRegistration
-        {
-            PlayerFactoryRegistration()
-            {
-                SceneSerializer::RegisterActorFactory("Player", []()
-                {
-                    return std::make_unique<Player>();
-                });
-            }
-        };
-
-        static PlayerFactoryRegistration g_playerFactoryRegistration;
-    }
-
     Player::Player()
         : Actor("Player")
     {

@@ -22,6 +22,8 @@ namespace Engine::Game
 
         static void RegisterActorFactory(std::string typeName, ActorFactory factory);
         static void UnregisterActorFactory(std::string_view typeName);
+        static void EnsureActorFactory(const Actor& actor);
+        [[nodiscard]] static bool HasActorFactory(std::string_view typeName);
         static void ClearActorFactories();
 
     private:

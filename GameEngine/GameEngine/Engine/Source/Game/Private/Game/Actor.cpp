@@ -1,6 +1,7 @@
 #include "Game/Actor.h"
 #include "Game/Components/Component.h"
 
+#include <memory>
 #include <utility>
 
 
@@ -41,6 +42,11 @@ namespace Engine::Game
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
         components_.push_back(std::move(component));
+    }
+
+    std::unique_ptr<Actor> Actor::ClonePrototype() const
+    {
+        return std::make_unique<Actor>();
     }
 }
 
