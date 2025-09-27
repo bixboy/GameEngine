@@ -55,7 +55,7 @@ namespace Engine::Core
         [[nodiscard]] bool ShouldForceHeadlessVideoDriver()
         {
             const bool hasDisplay = HasEnvironmentVariable("DISPLAY") || HasEnvironmentVariable("WAYLAND_DISPLAY");
-            const bool videoDriverPreset = HasEnvironmentVariable("SDL_VIDEODRIVER");
+            const bool videoDriverPreset = HasEnvironmentVariable("SDL_VIDEO_DRIVER");
             return !hasDisplay && !videoDriverPreset;
         }
     }
@@ -249,7 +249,7 @@ namespace Engine::Core
 
         if (ShouldForceHeadlessVideoDriver())
         {
-            SDL_SetHint(SDL_HINT_VIDEODRIVER, "dummy");
+            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
             SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
             LOG_WARNING("No display detected. Falling back to SDL dummy video driver.");
         }
