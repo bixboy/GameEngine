@@ -27,39 +27,9 @@ namespace Engine::Core
 {
     namespace
     {
-        constexpr const char* kDefaultAppName = "Example Custom Engine";
-        constexpr const char* kDefaultAppId = "com.example.CustomEngine";
+        constexpr const char* kDefaultAppName = "Bixboy Custom Engine";
+        constexpr const char* kDefaultAppId = "com.Bixboy.CustomEngine";
         constexpr const char* kDefaultAppVersion = "1.0";
-
-        [[nodiscard]] bool HasEnvironmentVariable(const char* name)
-        {
-            if (name == nullptr)
-                return false;
-
-#if defined(_WIN32)
-            char* buffer = nullptr;
-            size_t size = 0;
-            const errno_t error = _dupenv_s(&buffer, &size, name);
-            std::unique_ptr<char, decltype(&std::free)> value(buffer, &std::free);
-
-            if (error != 0 || !value)
-                return false;
-
-            return size > 0 && value.get()[0] != '\0';
-#else
-            if (const char* value = std::getenv(name))
-                return value[0] != '\0';
-
-            return false;
-#endif
-        }
-
-        [[nodiscard]] bool ShouldForceHeadlessVideoDriver()
-        {
-            const bool hasDisplay = HasEnvironmentVariable("DISPLAY") || HasEnvironmentVariable("WAYLAND_DISPLAY");
-            const bool videoDriverPreset = HasEnvironmentVariable("SDL_VIDEO_DRIVER");
-            return !hasDisplay && !videoDriverPreset;
-        }
     }
 
     Application::Application(Config config) : config_(std::move(config)) {}
@@ -322,10 +292,11 @@ namespace Engine::Core
         }
 
         Gui::GuiPanel& panel = guiManager_->CreatePanel("engine_stats", "Engine Stats");
-        panel.SetPosition(50.0f, 50.0f);
+        panel.SetPosition(0.0f, 50.0f);
         panel.SetSize(300.0f, 200.0f);
         panel.SetResizable(false);
         panel.SetMovable(true);
+        panel.SetCollapsable(true);
         panel.SetClosable(true);
         panel.SetBackgroundColor(ImVec4{0.1f, 0.1f, 0.1f, 0.95f});
         panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);

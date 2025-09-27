@@ -30,6 +30,7 @@ namespace Engine::Gui
             void SetResizable(bool resizable) noexcept { resizable_ = resizable; }
             void SetMovable(bool movable) noexcept { movable_ = movable; }
             void SetClosable(bool closable) noexcept { closable_ = closable; }
+            void SetCollapsable(bool collapsable) noexcept { collapsable_ = collapsable; }
 
             void SetWindowFlags(ImGuiWindowFlags flags) noexcept { windowFlags_ = flags; }
             void AddWindowFlags(ImGuiWindowFlags flags) noexcept { windowFlags_ |= flags; }
@@ -59,6 +60,7 @@ namespace Engine::Gui
             bool resizable_{true};
             bool movable_{true};
             bool closable_{false};
+            bool collapsable_{false};
 
             ImGuiWindowFlags windowFlags_{ImGuiWindowFlags_None};
 

@@ -54,10 +54,17 @@ namespace Engine::Gui
             ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
 
         ImGuiWindowFlags finalFlags = windowFlags_;
+        
         if (!resizable_)
             finalFlags |= ImGuiWindowFlags_NoResize;
+        
         if (!movable_)
             finalFlags |= ImGuiWindowFlags_NoMove;
+
+        if (!collapsable_)
+            finalFlags |= ImGuiWindowFlags_NoCollapse;
+        else
+            finalFlags &= ~ImGuiWindowFlags_NoCollapse;
 
         bool open = visible_;
         const bool shouldShow = closable_
@@ -66,7 +73,7 @@ namespace Engine::Gui
 
         if (closable_)
             visible_ = open;
-
+        
         if (shouldShow && drawFunction_)
             drawFunction_();
 

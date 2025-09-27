@@ -1,5 +1,8 @@
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Core\Private\Core\Application.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\Application.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Core\Private\Core\Logger.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\Logger.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\GuiManager.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\GuiManager.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\GuiPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\GuiPanel.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\GuiSystem.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\GuiSystem.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Game\Private\Game\ActorSpawner.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\ActorSpawner.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Game\Private\Game\Components\Component.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\Component.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Game\Private\Game\Components\SpriteComponent.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\SpriteComponent.obj
