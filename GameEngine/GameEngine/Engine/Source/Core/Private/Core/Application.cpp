@@ -247,14 +247,7 @@ namespace Engine::Core
             kDefaultAppId
         );
 
-        if (ShouldForceHeadlessVideoDriver())
-        {
-            SDL_SetHint(SDL_HINT_VIDEO_DRIVER, "dummy");
-            SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
-            LOG_WARNING("No display detected. Falling back to SDL dummy video driver.");
-        }
-
-        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
+        if (!SDL_Init(SDL_INIT_VIDEO))
         {
             LOG_ERROR(std::string{"Couldn't initialize SDL: "} + SDL_GetError());
             return false;
@@ -302,8 +295,10 @@ namespace Engine::Core
 
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
+        
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        
         ImGui::StyleColorsDark();
 
         if (!ImGui_ImplSDL3_InitForSDLRenderer(window_->GetSDLWindow(), renderer_->GetSDLRenderer()))
@@ -313,6 +308,7 @@ namespace Engine::Core
                 LOG_ERROR(std::string{"Failed to initialize ImGui SDL3 backend: "} + error);
             else
                 LOG_ERROR("Failed to initialize ImGui SDL3 backend.");
+            
             ImGui::DestroyContext();
             return false;
         }
@@ -324,6 +320,7 @@ namespace Engine::Core
                 LOG_ERROR(std::string{"Failed to initialize ImGui SDL renderer backend: "} + error);
             else
                 LOG_ERROR("Failed to initialize ImGui SDL renderer backend.");
+            
             ImGui_ImplSDL3_Shutdown();
             ImGui::DestroyContext();
             return false;
@@ -355,6 +352,9 @@ namespace Engine::Core
         }
     }
 
+// === Shutdown ===
+#pragma region Shutdown
+    
     void Application::ShutdownSubsystems() noexcept
     {
         if (sceneManager_)
@@ -391,4 +391,7 @@ namespace Engine::Core
 
         imguiInitialized_ = false;
     }
+
+#pragma endregion
+    
 }
