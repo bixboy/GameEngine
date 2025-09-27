@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 
+#include <cstdlib>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -26,6 +27,13 @@ namespace Engine::Core
         constexpr const char* kDefaultAppName = "Example Custom Engine";
         constexpr const char* kDefaultAppId = "com.example.CustomEngine";
         constexpr const char* kDefaultAppVersion = "1.0";
+
+        [[nodiscard]] bool ShouldForceHeadlessVideoDriver()
+        {
+            const bool hasDisplay = std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
+            const bool videoDriverPreset = std::getenv("SDL_VIDEODRIVER") != nullptr;
+            return !hasDisplay && !videoDriverPreset;
+        }
     }
 
     Application::Application(Config config) : config_(std::move(config)) {}
@@ -215,7 +223,14 @@ namespace Engine::Core
             kDefaultAppId
         );
 
-        if (SDL_Init(SDL_INIT_VIDEO) != 0)
+        if (ShouldForceHeadlessVideoDriver())
+        {
+            SDL_SetHint(SDL_HINT_VIDEODRIVER, "dummy");
+            SDL_SetHint(SDL_HINT_RENDER_DRIVER, "software");
+            LOG_WARNING("No display detected. Falling back to SDL dummy video driver.");
+        }
+
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_EVENTS) != 0)
         {
             LOG_ERROR(std::string{"Couldn't initialize SDL: "} + SDL_GetError());
             return false;
