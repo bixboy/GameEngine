@@ -3,6 +3,7 @@
 #include <SDL3/SDL.h>
 
 #include <cstdlib>
+#include <memory>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -28,10 +29,33 @@ namespace Engine::Core
         constexpr const char* kDefaultAppId = "com.example.CustomEngine";
         constexpr const char* kDefaultAppVersion = "1.0";
 
+        [[nodiscard]] bool HasEnvironmentVariable(const char* name)
+        {
+            if (name == nullptr)
+                return false;
+
+#if defined(_WIN32)
+            char* buffer = nullptr;
+            size_t size = 0;
+            const errno_t error = _dupenv_s(&buffer, &size, name);
+            std::unique_ptr<char, decltype(&std::free)> value(buffer, &std::free);
+
+            if (error != 0 || !value)
+                return false;
+
+            return size > 0 && value.get()[0] != '\0';
+#else
+            if (const char* value = std::getenv(name))
+                return value[0] != '\0';
+
+            return false;
+#endif
+        }
+
         [[nodiscard]] bool ShouldForceHeadlessVideoDriver()
         {
-            const bool hasDisplay = std::getenv("DISPLAY") != nullptr || std::getenv("WAYLAND_DISPLAY") != nullptr;
-            const bool videoDriverPreset = std::getenv("SDL_VIDEODRIVER") != nullptr;
+            const bool hasDisplay = HasEnvironmentVariable("DISPLAY") || HasEnvironmentVariable("WAYLAND_DISPLAY");
+            const bool videoDriverPreset = HasEnvironmentVariable("SDL_VIDEODRIVER");
             return !hasDisplay && !videoDriverPreset;
         }
     }
