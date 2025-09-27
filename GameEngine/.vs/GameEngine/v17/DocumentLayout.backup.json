@@ -1,10 +1,13 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "C:\\Apps\\CustomEngine\\GameEngine\\GameEngine\\",
+  "WorkspaceRootPath": "C:\\Apps\\CustomEngine\\BixEngine\\GameEngine\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{D531FE10-0587-4964-A92A-955539C1A087}|GameEngine\\GameEngine.vcxproj|C:\\Apps\\CustomEngine\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{D531FE10-0587-4964-A92A-955539C1A087}|GameEngine\\GameEngine.vcxproj|solutionrelative:GameEngine\\GameEngine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Apps\\CustomEngine\\BixEngine\\GameEngine\\GameEngine\\Engine\\Private\\Game\\Actor.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:GameEngine\\Engine\\Private\\Game\\Actor.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Apps\\CustomEngine\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
     }
   ],
   "DocumentGroupContainers": [
@@ -19,15 +22,24 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
+              "Title": "Actor.cpp",
+              "DocumentMoniker": "C:\\Apps\\CustomEngine\\BixEngine\\GameEngine\\GameEngine\\Engine\\Private\\Game\\Actor.cpp",
+              "RelativeDocumentMoniker": "GameEngine\\Engine\\Private\\Game\\Actor.cpp",
+              "ToolTip": "C:\\Apps\\CustomEngine\\BixEngine\\GameEngine\\GameEngine\\Engine\\Private\\Game\\Actor.cpp",
+              "RelativeToolTip": "GameEngine\\Engine\\Private\\Game\\Actor.cpp",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2025-09-26T10:42:37.381Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
               "Title": "GameEngine.cpp",
               "DocumentMoniker": "C:\\Apps\\CustomEngine\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp",
-              "RelativeDocumentMoniker": "GameEngine\\GameEngine.cpp",
+              "RelativeDocumentMoniker": "..\\..\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp",
               "ToolTip": "C:\\Apps\\CustomEngine\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp",
-              "RelativeToolTip": "GameEngine\\GameEngine.cpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAQAAAAtAAAAAAAAAA==",
+              "RelativeToolTip": "..\\..\\GameEngine\\GameEngine\\GameEngine\\GameEngine.cpp",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
-              "WhenOpened": "2025-09-16T20:48:39.336Z",
-              "EditorCaption": ""
+              "WhenOpened": "2025-09-16T20:48:39.336Z"
             }
           ]
         }
