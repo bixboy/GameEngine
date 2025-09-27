@@ -15,9 +15,9 @@ namespace Engine::Game
     {
         public:
             explicit Actor(const Math::Transform& transform = Math::Transform());
+        
             Actor(std::string name, const Math::Transform& transform = Math::Transform());
-            virtual ~Actor();
-
+        
             virtual void BeginPlay();
             virtual void Update(float deltaTime);
             virtual void Render(Graphics::Renderer& renderer) const;
@@ -31,6 +31,6 @@ namespace Engine::Game
         private:
         std::vector<std::unique_ptr<Component>> components_;
 
-        bool hasBegunPlay_{false};
+        bool has_begun_play_{false};
     };
 }

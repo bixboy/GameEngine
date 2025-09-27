@@ -292,7 +292,7 @@ namespace Engine::Core
         }
 
         Gui::GuiPanel& panel = guiManager_->CreatePanel("engine_stats", "Engine Stats");
-        panel.SetPosition(0.0f, 50.0f);
+        panel.SetPosition(0.f, 50.0f);
         panel.SetSize(300.0f, 200.0f);
         panel.SetResizable(false);
         panel.SetMovable(true);

@@ -7,14 +7,10 @@
 
 namespace Engine::Game
 {
-    Actor::Actor(const Math::Transform& transform)
-        : Object("Actor", transform) {}
+    Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}
 
-    Actor::Actor(std::string name, const Math::Transform& transform)
-        : Object(std::move(name), transform) {}
-
-    Actor::~Actor() = default;
-
+    Actor::Actor(std::string name, const Math::Transform& transform) : Object(std::move(name), transform) {}
+    
     void Actor::BeginPlay()
     {
         for (auto& c : components_)
@@ -23,10 +19,10 @@ namespace Engine::Game
 
     void Actor::Update(float deltaTime)
     {
-        if (!hasBegunPlay_)
+        if (!has_begun_play_)
         {
             BeginPlay();
-            hasBegunPlay_ = true;
+            has_begun_play_ = true;
         }
         
         for (auto& comp : components_)

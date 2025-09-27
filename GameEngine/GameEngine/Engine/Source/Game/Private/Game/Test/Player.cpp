@@ -11,8 +11,7 @@
 
 namespace Engine::Game
 {
-    Player::Player()
-        : Actor("Player")
+    Player::Player() : Actor("Player")
     {
         InitializeSpriteComponent();
     }
