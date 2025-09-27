@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <SDL3/SDL_pixels.h>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Math
 {

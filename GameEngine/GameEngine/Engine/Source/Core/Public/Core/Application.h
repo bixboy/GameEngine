@@ -2,7 +2,7 @@
 #include <memory>
 #include <type_traits>
 #include "Math/Color.h"
-#include "Core/Types.h"
+#include "Core/String.h"
 
 #define SDL_MAIN_HANDLED
 

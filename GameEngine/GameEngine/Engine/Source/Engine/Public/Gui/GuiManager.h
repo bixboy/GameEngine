@@ -4,7 +4,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Gui
 {

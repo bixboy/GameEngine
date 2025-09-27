@@ -2,7 +2,7 @@
 
 #include <functional>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 #include "imgui.h"
 

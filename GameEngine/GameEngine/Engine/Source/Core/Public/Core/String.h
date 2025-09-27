@@ -4,9 +4,8 @@
 #include <cctype>
 #include <initializer_list>
 #include <iterator>
-#include <cstddef>
 #include <ostream>
-#include <sstream>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -149,6 +148,25 @@ namespace Engine
             return std::string_view(lhs ? lhs : "") + rhs;
         }
 
+        // String + std::string
+        [[nodiscard]] String operator+(const std::string& other) const {
+            String result(*this);
+            result += std::string_view(other);
+            return result;
+        }
+
+        // std::string + String
+        friend String operator+(const std::string& lhs, const String& rhs) {
+            return String(lhs) + rhs;
+        }
+
+        // String + const char*
+        [[nodiscard]] String operator+(const char* other) const {
+            String result(*this);
+            result += std::string_view(other ? other : "");
+            return result;
+        }
+
         [[nodiscard]] bool operator==(const String& other) const noexcept { return data_ == other.data_; }
         [[nodiscard]] bool operator!=(const String& other) const noexcept { return data_ != other.data_; }
         [[nodiscard]] bool operator==(std::string_view other) const noexcept { return data_ == other; }
@@ -189,7 +207,7 @@ namespace Engine
 
         [[nodiscard]] bool EqualsIgnoreCase(std::string_view other) const noexcept
         {
-            return data_.size() == other.size() && std::equal(data_.begin(), data_.end(), other.begin(), other.end(), [](char a, char b)
+            return data_.size() == other.size() && std::ranges::equal(data_, other, [](char a, char b)
             {
                 return ToLowerChar(a) == ToLowerChar(b);
             });
@@ -211,13 +229,13 @@ namespace Engine
 
         String& ToUpperInline()
         {
-            std::transform(data_.begin(), data_.end(), data_.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            std::ranges::transform(data_, data_.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
             return *this;
         }
 
         String& ToLowerInline()
         {
-            std::transform(data_.begin(), data_.end(), data_.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            std::ranges::transform(data_, data_.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
             return *this;
         }
 
@@ -244,14 +262,14 @@ namespace Engine
 
         String& TrimStartInline()
         {
-            auto it = std::find_if_not(data_.begin(), data_.end(), [](unsigned char c) { return std::isspace(c) != 0; });
+            auto it = std::ranges::find_if_not(data_, [](unsigned char c) { return std::isspace(c) != 0; });
             data_.erase(data_.begin(), it);
             return *this;
         }
 
         String& TrimEndInline()
         {
-            auto it = std::find_if_not(data_.rbegin(), data_.rend(), [](unsigned char c) { return std::isspace(c) != 0; });
+            auto it = std::ranges::find_if_not(std::ranges::reverse_view(data_), [](unsigned char c) { return std::isspace(c) != 0; });
             data_.erase(it.base(), data_.end());
             return *this;
         }
@@ -279,7 +297,8 @@ namespace Engine
                 const size_type pos = caseSensitive ? data_.find(from, start) : FindInsensitive(from, start);
                 if (pos == std::string::npos)
                     break;
-                data_.replace(pos, from.size(), to.begin(), to.end());
+                
+                data_.replace(pos, from.size(), to.data(), to.size());
                 start = pos + to.size();
             }
             return *this;

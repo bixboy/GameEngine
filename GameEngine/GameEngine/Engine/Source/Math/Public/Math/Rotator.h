@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cmath>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 #include "Math/Vector3.h"
 

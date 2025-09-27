@@ -1792,7 +1792,7 @@
     <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Application.h" />
-    <ClInclude Include="Engine\Source\Core\Public\Core\Types.h" />
+    <ClInclude Include="Engine\Source\Core\Public\Core\String.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h" />

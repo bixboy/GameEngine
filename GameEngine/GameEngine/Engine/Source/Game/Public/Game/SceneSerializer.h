@@ -6,7 +6,7 @@
 #include <string_view>
 #include <unordered_map>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Game
 {

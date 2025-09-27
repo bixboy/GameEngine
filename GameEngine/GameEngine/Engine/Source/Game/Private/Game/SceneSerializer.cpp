@@ -73,7 +73,7 @@ namespace Engine::Game
                 if (length == 0)
                     return true;
 
-                stream_.read(value.data(), static_cast<std::streamsize>(length));
+                stream_.read(value.data(), length);
                 return static_cast<bool>(stream_);
             }
 
@@ -85,7 +85,7 @@ namespace Engine::Game
 
         bool LogStreamFailure(const std::filesystem::path& filePath, std::string_view action)
         {
-            LOG_ERROR(String("Failed to ") + action + ": " + filePath.string());
+            LOG_ERROR(String("Failed to ") + action + String(": ") + filePath.string());
             return false;
         }
     }
@@ -190,7 +190,7 @@ namespace Engine::Game
             }
             catch (const std::exception& e)
             {
-                LOG_ERROR(String("Failed to deserialize actor ") + type + ": " + e.what());
+                LOG_ERROR(String("Failed to deserialize actor ") + type + String(": ") + String(e.what()));
                 return false;
             }
 
@@ -245,7 +245,7 @@ namespace Engine::Game
     bool SceneSerializer::HasActorFactory(std::string_view typeName)
     {
         const auto& factories = GetFactories();
-        return factories.find(String(typeName)) != factories.end();
+        return factories.contains(String(typeName));
     }
 
     void SceneSerializer::ClearActorFactories()
@@ -259,6 +259,7 @@ namespace Engine::Game
     {
         auto& factories = GetFactories();
         const auto it = factories.find(String(typeName));
+        
         if (it == factories.end())
             return nullptr;
 

@@ -5,7 +5,7 @@
 #include <string_view>
 #include "Game/Actor.h"
 #include "Input/InputManager.h"
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine
 {
