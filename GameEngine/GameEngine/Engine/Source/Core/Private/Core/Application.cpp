@@ -113,14 +113,6 @@ namespace Engine::Core
         }
     }
 
-    void Application::Shutdown()
-    {
-        running_ = false;
-
-        ShutdownSubsystems();
-        ShutdownSDL();
-    }
-
     void Application::ProcessEvents()
     {
         SDL_Event event{};
@@ -236,6 +228,9 @@ namespace Engine::Core
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer_->GetSDLRenderer());
     }
 
+// === SDL Init ====    
+#pragma region SDL Init
+    
     bool Application::InitializeSDL()
     {
         if (sdlInitialized_)
@@ -284,6 +279,8 @@ namespace Engine::Core
 
         return true;
     }
+
+#pragma endregion   
 
     bool Application::InitializeImGui()
     {
@@ -354,6 +351,14 @@ namespace Engine::Core
 
 // === Shutdown ===
 #pragma region Shutdown
+
+    void Application::Shutdown()
+    {
+        running_ = false;
+
+        ShutdownSubsystems();
+        ShutdownSDL();
+    }
     
     void Application::ShutdownSubsystems() noexcept
     {
