@@ -12,7 +12,7 @@
 
 namespace Engine::Game
 {
-    Scene::Scene(std::string name) : name_(std::move(name)) {}
+    Scene::Scene(String name) : name_(std::move(name)) {}
 
     void Scene::SetContext(SceneContext context) noexcept
     {
@@ -31,12 +31,12 @@ namespace Engine::Game
         actors_.clear();
     }
 
-    void Scene::Rename(std::string name)
+    void Scene::Rename(String name)
     {
         name_ = std::move(name);
     }
 
-    void Scene::SetName(std::string name)
+    void Scene::SetName(String name)
     {
         name_ = std::move(name);
     }

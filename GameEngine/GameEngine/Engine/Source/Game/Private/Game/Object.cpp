@@ -20,20 +20,20 @@ namespace Engine::Game
     {
     }
 
-    Object::Object(std::string name) : uuid_(GenerateUUID()), name_(std::move(name))
+    Object::Object(String name) : uuid_(GenerateUUID()), name_(std::move(name))
     {
     }
 
-    Object::Object(std::string name, const Math::Transform& transform) : uuid_(GenerateUUID()), name_(std::move(name)), transform_(transform)
+    Object::Object(String name, const Math::Transform& transform) : uuid_(GenerateUUID()), name_(std::move(name)), transform_(transform)
     {
     }
 
-    void Object::SetUUID(std::string uuid)
+    void Object::SetUUID(String uuid)
     {
         uuid_ = std::move(uuid);
     }
 
-    void Object::SetName(std::string name)
+    void Object::SetName(String name)
     {
         name_ = std::move(name);
     }
@@ -74,21 +74,21 @@ namespace Engine::Game
         stream.write(value.data(), length);
     }
 
-    std::string Object::ReadString(std::istream& stream)
+    String Object::ReadString(std::istream& stream)
     {
         std::uint32_t length = 0;
         ReadPrimitive(stream, length);
-        
-        std::string result(length, '\0');
+
+        String result(length, '\0');
         stream.read(result.data(), static_cast<std::streamsize>(length));
-        
+
         if (!stream)
             throw std::runtime_error("Failed to read string from stream.");
-        
+
         return result;
     }
 
-    std::string Object::GenerateUUID()
+    String Object::GenerateUUID()
     {
         std::array<std::uint8_t, 16> data{};
 

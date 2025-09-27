@@ -1,13 +1,14 @@
 #pragma once
 #include <SDL3/SDL_video.h>
-#include <string>
+
+#include "Core/Types.h"
 
 namespace Engine::Core
 {
     class Window
     {
         public:
-            Window(const std::string& title, int width, int height, bool resizable = true);
+            Window(const String& title, int width, int height, bool resizable = true);
             ~Window();
 
             Window(const Window&) = delete;

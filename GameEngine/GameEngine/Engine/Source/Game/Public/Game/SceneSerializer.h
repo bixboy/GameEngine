@@ -3,9 +3,10 @@
 #include <filesystem>
 #include <functional>
 #include <memory>
-#include <string>
 #include <string_view>
 #include <unordered_map>
+
+#include "Core/Types.h"
 
 namespace Engine::Game
 {
@@ -20,7 +21,7 @@ namespace Engine::Game
         static bool SaveBinary(const Scene& scene, const std::filesystem::path& filePath);
         static bool LoadBinary(Scene& scene, const std::filesystem::path& filePath);
 
-        static void RegisterActorFactory(std::string typeName, ActorFactory factory);
+        static void RegisterActorFactory(String typeName, ActorFactory factory);
         static void UnregisterActorFactory(std::string_view typeName);
         static void EnsureActorFactory(const Actor& actor);
         [[nodiscard]] static bool HasActorFactory(std::string_view typeName);
@@ -28,7 +29,7 @@ namespace Engine::Game
 
     private:
         static std::unique_ptr<Actor> CreateActor(std::string_view typeName);
-        static std::unordered_map<std::string, ActorFactory>& GetFactories();
+        static std::unordered_map<String, ActorFactory>& GetFactories();
         static void EnsureDefaultFactories();
     };
 }

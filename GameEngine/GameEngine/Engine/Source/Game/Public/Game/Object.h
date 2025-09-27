@@ -2,10 +2,10 @@
 
 #include <istream>
 #include <ostream>
-#include <string>
 #include <string_view>
 
 #include "Math/Math.h"
+#include "Core/Types.h"
 
 namespace Engine::Game
 {
@@ -13,17 +13,17 @@ namespace Engine::Game
     {
     public:
         Object();
-        explicit Object(std::string name);
-        Object(std::string name, const Math::Transform& transform);
+        explicit Object(String name);
+        Object(String name, const Math::Transform& transform);
         virtual ~Object() = default;
 
         [[nodiscard]] virtual std::string_view GetTypeName() const noexcept;
 
-        [[nodiscard]] const std::string& GetUUID() const noexcept { return uuid_; }
-        void SetUUID(std::string uuid);
+        [[nodiscard]] const String& GetUUID() const noexcept { return uuid_; }
+        void SetUUID(String uuid);
 
-        [[nodiscard]] const std::string& GetName() const noexcept { return name_; }
-        void SetName(std::string name);
+        [[nodiscard]] const String& GetName() const noexcept { return name_; }
+        void SetName(String name);
 
         [[nodiscard]] const Math::Transform& GetTransform() const noexcept { return transform_; }
         void SetTransform(const Math::Transform& transform) noexcept { transform_ = transform; }
@@ -58,16 +58,16 @@ namespace Engine::Game
         }
 
         static void WriteString(std::ostream& stream, std::string_view value);
-        static std::string ReadString(std::istream& stream);
+        static String ReadString(std::istream& stream);
 
     private:
-        static std::string GenerateUUID();
+        static String GenerateUUID();
 
         void SerializeTransform(std::ostream& stream) const;
         void DeserializeTransform(std::istream& stream);
 
-        std::string uuid_;
-        std::string name_;
+        String uuid_;
+        String name_;
         Math::Transform transform_{};
     };
 }

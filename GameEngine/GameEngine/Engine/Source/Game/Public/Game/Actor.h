@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <string>
 #include <vector>
 #include "Game/Object.h"
 #include "Math/Math.h"
@@ -16,7 +15,7 @@ namespace Engine::Game
         public:
             explicit Actor(const Math::Transform& transform = Math::Transform());
         
-            Actor(std::string name, const Math::Transform& transform = Math::Transform());
+            Actor(String name, const Math::Transform& transform = Math::Transform());
         
             virtual void BeginPlay();
             virtual void Update(float deltaTime);

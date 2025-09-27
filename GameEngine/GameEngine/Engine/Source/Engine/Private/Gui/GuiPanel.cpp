@@ -4,12 +4,12 @@
 
 namespace Engine::Gui
 {
-    GuiPanel::GuiPanel(std::string name, std::string title)
+    GuiPanel::GuiPanel(String name, String title)
         : name_(std::move(name)), title_(std::move(title))
     {
     }
 
-    void GuiPanel::SetTitle(std::string title)
+    void GuiPanel::SetTitle(String title)
     {
         title_ = std::move(title);
     }

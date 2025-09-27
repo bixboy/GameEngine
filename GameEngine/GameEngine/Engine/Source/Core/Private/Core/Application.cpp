@@ -4,7 +4,6 @@
 
 #include <cstdlib>
 #include <memory>
-#include <string>
 #include <string_view>
 #include <utility>
 
@@ -192,7 +191,7 @@ namespace Engine::Core
 
         if (!SDL_Init(SDL_INIT_VIDEO))
         {
-            LOG_ERROR(std::string{"Couldn't initialize SDL: "} + SDL_GetError());
+            LOG_ERROR(String{"Couldn't initialize SDL: "} + SDL_GetError());
             return false;
         }
 
@@ -205,7 +204,7 @@ namespace Engine::Core
         window_ = std::make_unique<Window>(config_.windowTitle, config_.width, config_.height, config_.resizable);
         if (!window_ || !window_->IsValid())
         {
-            LOG_ERROR(std::string{"Couldn't create window: "} + SDL_GetError());
+            LOG_ERROR(String{"Couldn't create window: "} + SDL_GetError());
             window_.reset();
             return false;
         }
@@ -219,7 +218,7 @@ namespace Engine::Core
         
         if (!renderer_ || !renderer_->IsValid())
         {
-            LOG_ERROR(std::string{"Couldn't create renderer: "} + SDL_GetError());
+            LOG_ERROR(String{"Couldn't create renderer: "} + SDL_GetError());
             renderer_.reset();
             window_.reset();
             return false;

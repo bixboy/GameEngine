@@ -1,9 +1,10 @@
 #pragma once
 
 #include <memory>
-#include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "Core/Types.h"
 
 namespace Engine::Gui
 {
@@ -16,11 +17,11 @@ namespace Engine::Gui
             explicit GuiManager(GuiSystem& guiSystem);
             ~GuiManager();
 
-            GuiPanel& CreatePanel(std::string name, std::string title);
-            void RemovePanel(const std::string& name);
+            GuiPanel& CreatePanel(String name, String title);
+            void RemovePanel(const String& name);
 
-            [[nodiscard]] GuiPanel* FindPanel(const std::string& name) noexcept;
-            [[nodiscard]] const GuiPanel* FindPanel(const std::string& name) const noexcept;
+            [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
+            [[nodiscard]] const GuiPanel* FindPanel(const String& name) const noexcept;
 
             void DrawAll();
 
@@ -29,6 +30,6 @@ namespace Engine::Gui
 
         private:
             GuiSystem* guiSystem_{nullptr};
-            std::unordered_map<std::string, std::unique_ptr<GuiPanel>> panels_{};
+            std::unordered_map<String, std::unique_ptr<GuiPanel>> panels_{};
     };
 }

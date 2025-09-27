@@ -2,10 +2,10 @@
 #include <memory>
 #include <vector>
 #include <SDL3/SDL_events.h>
-#include <string>
 #include <string_view>
 #include "Game/Actor.h"
 #include "Input/InputManager.h"
+#include "Core/Types.h"
 
 namespace Engine
 {
@@ -28,7 +28,7 @@ namespace Engine
         class Scene
         {
             public:
-                explicit Scene(std::string name = "Unnamed Scene");
+                explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;
 
                 virtual void HandleEvent(const SDL_Event& event) { (void)event; }
@@ -46,12 +46,12 @@ namespace Engine
                 [[nodiscard]] const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept { return actors_; }
                 [[nodiscard]] std::vector<std::unique_ptr<Actor>>& GetActors() noexcept { return actors_; }
 
-                void Rename(std::string name);
+                void Rename(String name);
 
                 [[nodiscard]] std::string_view Name() const noexcept { return name_; }
 
             protected:
-                void SetName(std::string name);
+                void SetName(String name);
             
                 [[nodiscard]] Input::InputManager& GetInputManager() const;
                 [[nodiscard]] bool HasInputManager() const noexcept { return context_.inputManager != nullptr; }
@@ -69,7 +69,7 @@ namespace Engine
                 [[nodiscard]] bool HasGuiManager() const noexcept { return context_.guiManager != nullptr; }
 
             private:
-                std::string name_;
+                String name_;
                 SceneContext context_{};
 
                 std::vector<std::unique_ptr<Actor>> actors_;

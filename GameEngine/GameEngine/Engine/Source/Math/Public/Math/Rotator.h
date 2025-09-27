@@ -1,6 +1,7 @@
 #pragma once
 #include <cmath>
-#include <string>
+
+#include "Core/Types.h"
 
 #include "Math/Vector3.h"
 
@@ -63,9 +64,9 @@ namespace Engine::Math
             return Rotator(pitch * scalar, yaw * scalar, roll * scalar);
         }
 
-        [[nodiscard]] std::string ToString() const
+        [[nodiscard]] String ToString() const
         {
-            return "Rotator(P=" + std::to_string(pitch) +
+            return String("Rotator(P=") + std::to_string(pitch) +
                    ", Y=" + std::to_string(yaw) +
                    ", R=" + std::to_string(roll) + ")";
         }

@@ -1,6 +1,7 @@
 ﻿#pragma once
-#include <string>
 #include <SDL3/SDL_pixels.h>
+
+#include "Core/Types.h"
 
 namespace Engine::Math
 {
@@ -48,9 +49,9 @@ namespace Engine::Math
             );
         }
 
-        [[nodiscard]] std::string ToString() const
+        [[nodiscard]] String ToString() const
         {
-            return "Color(R=" + std::to_string(r) +
+            return String("Color(R=") + std::to_string(r) +
                    ", G=" + std::to_string(g) +
                    ", B=" + std::to_string(b) +
                    ", A=" + std::to_string(a) + ")";

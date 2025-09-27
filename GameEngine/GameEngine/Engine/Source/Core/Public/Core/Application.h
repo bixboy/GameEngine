@@ -1,8 +1,8 @@
 #pragma once
 #include <memory>
-#include <string>
 #include <type_traits>
 #include "Math/Color.h"
+#include "Core/Types.h"
 
 #define SDL_MAIN_HANDLED
 
@@ -23,7 +23,7 @@ namespace Engine
             public:
                 struct Config
                 {
-                    std::string windowTitle{"Custom Engine"};
+                    String windowTitle{"Custom Engine"};
                     int width{1280};
                     int height{720};
                     bool resizable{true};
