@@ -1,7 +1,5 @@
 #include "Input/InputManager.h"
-
-#include <unordered_map>
-
+#include "unordered_map"
 #include "Input/Input.h"
 
 namespace Engine::Input
@@ -30,13 +28,17 @@ namespace Engine::Input
             switch (binding.eventType)
             {
                 case InputEvent::Pressed:
+                
                     if (isPressed && binding.callback)
                         binding.callback();
+                
                     break;
 
                 case InputEvent::Released:
+                
                     if (!isPressed && binding.callback)
                         binding.callback();
+                
                     break;
 
                 case InputEvent::Hold:

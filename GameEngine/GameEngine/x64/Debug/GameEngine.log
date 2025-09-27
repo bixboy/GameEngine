@@ -1,1 +1,25 @@
-﻿LINK : fatal error LNK1104: impossible d'ouvrir le fichier 'SDL3.lib'
+﻿  Application.cpp
+  ActorSpawner.cpp
+  Component.cpp
+  SpriteComponent.cpp
+  Scene.cpp
+  SceneManager.cpp
+  Window.cpp
+  EmptyScene.cpp
+  Actor.cpp
+  Player.cpp
+  TestScene.cpp
+  Renderer.cpp
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Graphics\Private\Graphics\Renderer.cpp(31,75): warning C4244: 'argument' : conversion de 'float' en 'Uint8', perte possible de données
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Graphics\Private\Graphics\Renderer.cpp(31,66): warning C4244: 'argument' : conversion de 'float' en 'Uint8', perte possible de données
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Graphics\Private\Graphics\Renderer.cpp(31,57): warning C4244: 'argument' : conversion de 'float' en 'Uint8', perte possible de données
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Graphics\Private\Graphics\Renderer.cpp(31,48): warning C4244: 'argument' : conversion de 'float' en 'Uint8', perte possible de données
+  Input.cpp
+  InputManager.cpp
+  Color.cpp
+  Rotator.cpp
+  Transform.cpp
+  Vector2.cpp
+  Vector3.cpp
+  Génération de code en cours...
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Core\Private\Core\Window.cpp(1,1): error C1090: Échec de l'appel de l'API PDB, code d'erreur '3' : C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\vc143.pdb
