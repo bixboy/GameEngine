@@ -41,6 +41,12 @@ namespace Engine
                 void SetContext(SceneContext context) noexcept;
 
                 void AddActor(std::unique_ptr<Actor> actor);
+                void ClearActors() noexcept;
+
+                [[nodiscard]] const std::vector<std::unique_ptr<Actor>>& GetActors() const noexcept { return actors_; }
+                [[nodiscard]] std::vector<std::unique_ptr<Actor>>& GetActors() noexcept { return actors_; }
+
+                void Rename(std::string name);
 
                 [[nodiscard]] std::string_view Name() const noexcept { return name_; }
 

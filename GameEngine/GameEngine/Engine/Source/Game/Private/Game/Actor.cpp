@@ -1,11 +1,16 @@
 #include "Game/Actor.h"
 #include "Game/Components/Component.h"
 
+#include <utility>
+
 
 namespace Engine::Game
 {
     Actor::Actor(const Math::Transform& transform)
-        : transform_(transform) {}
+        : Object("Actor", transform) {}
+
+    Actor::Actor(std::string name, const Math::Transform& transform)
+        : Object(std::move(name), transform) {}
 
     Actor::~Actor() = default;
 
