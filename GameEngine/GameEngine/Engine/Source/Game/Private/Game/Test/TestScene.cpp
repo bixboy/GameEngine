@@ -1,5 +1,8 @@
 #include "Game/Test/TestScene.h"
 
+#include <algorithm>
+#include <memory>
+
 #include "Game/Test/Player.h"
 #include "Graphics/Renderer.h"
 #include "Input/InputManager.h"
@@ -23,7 +26,9 @@ namespace Engine::Game
     {
         Scene::OnEnter();
 
-        player_ = std::make_unique<Player>(kPlayerStart, kPlayerSize, kPlayerColor);
+        auto player = std::make_unique<Player>(kPlayerStart, kPlayerSize, kPlayerColor);
+        player_ = player.get();
+        AddActor(std::move(player));
 
         if (player_ && HasInputManager())
             player_->SetupInput(GetInputManager());
@@ -33,7 +38,21 @@ namespace Engine::Game
     {
         Scene::OnExit();
 
-        player_.reset();
+        if (player_)
+        {
+            auto& actors = GetActors();
+            actors.erase(
+                std::remove_if(
+                    actors.begin(),
+                    actors.end(),
+                    [this](const std::unique_ptr<Actor>& actor)
+                    {
+                        return actor.get() == player_;
+                    }),
+                actors.end());
+
+            player_ = nullptr;
+        }
     }
 
     void TestScene::HandleEvent(const SDL_Event& event)

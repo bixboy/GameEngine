@@ -5,7 +5,7 @@
 #include <string_view>
 
 #include "Math/Math.h"
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Game
 {

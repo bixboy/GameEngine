@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Math
 {
@@ -14,12 +14,12 @@ namespace Engine::Math
         constexpr Vector3() = default;
         constexpr Vector3(float xValue, float yValue, float zValue) : x(xValue), y(yValue), z(zValue) {}
 
-        [[nodiscard]] static constexpr Vector3 Zero() noexcept     { return Vector3(0.0f, 0.0f, 0.0f);  }
-        [[nodiscard]] static constexpr Vector3 One() noexcept      { return Vector3(1.0f, 1.0f, 1.0f);  }
-        [[nodiscard]] static constexpr Vector3 Up() noexcept       { return Vector3(0.0f, 1.0f, 0.0f);  }
-        [[nodiscard]] static constexpr Vector3 Down() noexcept     { return Vector3(0.0f, -1.0f, 0.0f); }
-        [[nodiscard]] static constexpr Vector3 Forward() noexcept  { return Vector3(0.0f, 0.0f, 1.0f);  }
-        [[nodiscard]] static constexpr Vector3 Backward() noexcept { return Vector3(0.0f, 0.0f, -1.0f); }
+        [[nodiscard]] static constexpr Vector3 Zero() noexcept     { return {0.0f, 0.0f, 0.0f};  }
+        [[nodiscard]] static constexpr Vector3 One() noexcept      { return {1.0f, 1.0f, 1.0f};  }
+        [[nodiscard]] static constexpr Vector3 Up() noexcept       { return {0.0f, 1.0f, 0.0f};  }
+        [[nodiscard]] static constexpr Vector3 Down() noexcept     { return {0.0f, -1.0f, 0.0f}; }
+        [[nodiscard]] static constexpr Vector3 Forward() noexcept  { return {0.0f, 0.0f, 1.0f};  }
+        [[nodiscard]] static constexpr Vector3 Backward() noexcept { return {0.0f, 0.0f, -1.0f}; }
 
         [[nodiscard]] float Length() const noexcept { return std::sqrt(x * x + y * y + z * z); }
 

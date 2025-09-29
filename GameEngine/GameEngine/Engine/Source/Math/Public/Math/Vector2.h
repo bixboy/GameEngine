@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Math
 {

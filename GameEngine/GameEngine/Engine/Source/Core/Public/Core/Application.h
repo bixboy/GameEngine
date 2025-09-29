@@ -2,7 +2,7 @@
 #include <memory>
 #include <type_traits>
 #include "Math/Color.h"
-#include "Core/Types.h"
+#include "Core/String.h"
 
 #define SDL_MAIN_HANDLED
 
@@ -75,6 +75,7 @@ namespace Engine
                 std::unique_ptr<Gui::GuiSystem> guiSystem_;
                 std::unique_ptr<Gui::GuiManager> guiManager_;
                 Gui::GuiPanel* statsPanel_{nullptr};
+                Gui::GuiPanel* outlinerPanel_{nullptr};
                 std::unique_ptr<Timer> timer_;
         };
     }

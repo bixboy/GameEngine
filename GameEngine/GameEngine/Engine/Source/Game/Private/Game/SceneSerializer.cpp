@@ -1,12 +1,13 @@
 #include "Game/SceneSerializer.h"
 
 #include <cstdint>
+#include <filesystem>
 #include <exception>
 #include <fstream>
 #include <memory>
+#include <stdexcept>
 #include <string_view>
 #include <utility>
-#include <stdexcept>
 
 #include "Core/Logger.h"
 #include "Game/Actor.h"
@@ -19,34 +20,73 @@ namespace Engine::Game
     {
         constexpr std::uint32_t kSceneBinaryVersion = 1;
 
-        void WriteUint32(std::ostream& stream, std::uint32_t value)
+        class BinaryWriter
         {
-            stream.write(reinterpret_cast<const char*>(&value), sizeof(value));
-        }
+        public:
+            explicit BinaryWriter(std::ostream& stream) : stream_(stream) {}
 
-        void ReadUint32(std::istream& stream, std::uint32_t& value)
-        {
-            stream.read(reinterpret_cast<char*>(&value), sizeof(value));
-            if (!stream)
-                throw std::runtime_error("Failed to read uint32_t from stream.");
-        }
+            bool WriteUint32(std::uint32_t value)
+            {
+                stream_.write(reinterpret_cast<const char*>(&value), sizeof(value));
+                return static_cast<bool>(stream_);
+            }
 
-        void WriteString(std::ostream& stream, std::string_view value)
-        {
-            const auto length = static_cast<std::uint32_t>(value.size());
-            WriteUint32(stream, length);
-            stream.write(value.data(), static_cast<std::streamsize>(length));
-        }
+            bool WriteString(std::string_view value)
+            {
+                const auto length = static_cast<std::uint32_t>(value.size());
+                return WriteUint32(length) && WriteBytes(value.data(), value.size());
+            }
 
-        String ReadString(std::istream& stream)
+            [[nodiscard]] bool Good() const noexcept { return static_cast<bool>(stream_); }
+
+        private:
+            bool WriteBytes(const char* data, std::size_t length)
+            {
+                if (length == 0)
+                    return true;
+
+                stream_.write(data, static_cast<std::streamsize>(length));
+                return static_cast<bool>(stream_);
+            }
+
+            std::ostream& stream_;
+        };
+
+        class BinaryReader
         {
-            std::uint32_t length = 0;
-            ReadUint32(stream, length);
-            String result(length, '\0');
-            stream.read(result.data(), static_cast<std::streamsize>(length));
-            if (!stream)
-                throw std::runtime_error("Failed to read string from stream.");
-            return result;
+        public:
+            explicit BinaryReader(std::istream& stream) : stream_(stream) {}
+
+            bool ReadUint32(std::uint32_t& value)
+            {
+                stream_.read(reinterpret_cast<char*>(&value), sizeof(value));
+                return static_cast<bool>(stream_);
+            }
+
+            bool ReadString(String& value)
+            {
+                std::uint32_t length = 0;
+                if (!ReadUint32(length))
+                    return false;
+
+                value.resize(length, '\0');
+                if (length == 0)
+                    return true;
+
+                stream_.read(value.data(), length);
+                return static_cast<bool>(stream_);
+            }
+
+            [[nodiscard]] bool Good() const noexcept { return static_cast<bool>(stream_); }
+
+        private:
+            std::istream& stream_;
+        };
+
+        bool LogStreamFailure(const std::filesystem::path& filePath, std::string_view action)
+        {
+            LOG_ERROR(String("Failed to ") + action + String(": ") + filePath.string());
+            return false;
         }
     }
 
@@ -59,19 +99,32 @@ namespace Engine::Game
             return false;
         }
 
-        WriteUint32(file, kSceneBinaryVersion);
-        WriteString(file, String(scene.Name()));
+        BinaryWriter writer(file);
+
+        if (!writer.WriteUint32(kSceneBinaryVersion))
+            return LogStreamFailure(filePath, "write scene header");
+
+        if (!writer.WriteString(scene.Name()))
+            return LogStreamFailure(filePath, "write scene name");
 
         const auto actorCount = static_cast<std::uint32_t>(scene.GetActors().size());
-        WriteUint32(file, actorCount);
+        if (!writer.WriteUint32(actorCount))
+            return LogStreamFailure(filePath, "write actor count");
 
         for (const auto& actor : scene.GetActors())
         {
-            WriteString(file, String(actor->GetTypeName()));
+            if (!writer.WriteString(actor->GetTypeName()))
+                return LogStreamFailure(filePath, "write actor type");
+
             actor->SerializeBinary(file);
+            if (!file)
+            {
+                LOG_ERROR(String("Failed to serialize actor ") + actor->GetTypeName());
+                return false;
+            }
         }
 
-        return static_cast<bool>(file);
+        return writer.Good();
     }
 
     bool SceneSerializer::LoadBinary(Scene& scene, const std::filesystem::path& filePath)
@@ -83,14 +136,12 @@ namespace Engine::Game
             return false;
         }
 
+        BinaryReader reader(file);
+
         std::uint32_t version = 0;
-        try
+        if (!reader.ReadUint32(version))
         {
-            ReadUint32(file, version);
-        }
-        catch (const std::exception& e)
-        {
-            LOG_ERROR(String("Failed to read scene header: ") + e.what());
+            LOG_ERROR("Failed to read scene header: " + filePath.string());
             return false;
         }
 
@@ -100,41 +151,32 @@ namespace Engine::Game
             return false;
         }
 
-        try
+        String sceneName;
+        if (!reader.ReadString(sceneName))
         {
-            scene.Rename(ReadString(file));
-        }
-        catch (const std::exception& e)
-        {
-            LOG_ERROR(String("Failed to read scene name: ") + e.what());
+            LOG_ERROR("Failed to read scene name from: " + filePath.string());
             return false;
         }
+        scene.Rename(std::move(sceneName));
 
         scene.ClearActors();
 
         std::uint32_t actorCount = 0;
-        try
+        if (!reader.ReadUint32(actorCount))
         {
-            ReadUint32(file, actorCount);
-        }
-        catch (const std::exception& e)
-        {
-            LOG_ERROR(String("Failed to read actor count: ") + e.what());
+            LOG_ERROR("Failed to read actor count from: " + filePath.string());
             return false;
         }
 
         for (std::uint32_t i = 0; i < actorCount; ++i)
         {
             String type;
-            try
+            if (!reader.ReadString(type))
             {
-                type = ReadString(file);
-            }
-            catch (const std::exception& e)
-            {
-                LOG_ERROR(String("Failed to read actor type: ") + e.what());
+                LOG_ERROR(String("Failed to read actor type at index ") + std::to_string(i));
                 return false;
             }
+
             auto actor = CreateActor(type);
             if (!actor)
             {
@@ -148,14 +190,20 @@ namespace Engine::Game
             }
             catch (const std::exception& e)
             {
-                LOG_ERROR(String("Failed to deserialize actor ") + type + ": " + e.what());
+                LOG_ERROR(String("Failed to deserialize actor ") + type + String(": ") + String(e.what()));
+                return false;
+            }
+
+            if (!file)
+            {
+                LOG_ERROR(String("Stream error while deserializing actor ") + type);
                 return false;
             }
 
             scene.AddActor(std::move(actor));
         }
 
-        return true;
+        return reader.Good();
     }
 
     void SceneSerializer::RegisterActorFactory(String typeName, ActorFactory factory)
@@ -197,7 +245,7 @@ namespace Engine::Game
     bool SceneSerializer::HasActorFactory(std::string_view typeName)
     {
         const auto& factories = GetFactories();
-        return factories.find(String(typeName)) != factories.end();
+        return factories.contains(String(typeName));
     }
 
     void SceneSerializer::ClearActorFactories()
@@ -211,6 +259,7 @@ namespace Engine::Game
     {
         auto& factories = GetFactories();
         const auto it = factories.find(String(typeName));
+        
         if (it == factories.end())
             return nullptr;
 

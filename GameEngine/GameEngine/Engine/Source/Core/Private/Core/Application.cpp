@@ -19,8 +19,7 @@
 #include "Gui/GuiManager.h"
 #include "Gui/GuiPanel.h"
 #include "Gui/GuiSystem.h"
-
-#include "imgui.h"
+#include "Gui/DefaultEngineGui.h"
 
 namespace Engine::Core
 {
@@ -287,35 +286,22 @@ namespace Engine::Core
         if (!guiManager_)
         {
             statsPanel_ = nullptr;
+            outlinerPanel_ = nullptr;
             return;
         }
 
-        Gui::GuiPanel& panel = guiManager_->CreatePanel("engine_stats", "Engine Stats");
-        panel.SetPosition(0.f, 50.0f);
-        panel.SetSize(300.0f, 200.0f);
-        panel.SetResizable(false);
-        panel.SetMovable(true);
-        panel.SetCollapsable(true);
-        panel.SetClosable(true);
-        panel.SetBackgroundColor(ImVec4{0.1f, 0.1f, 0.1f, 0.95f});
-        panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        panel.SetDrawFunction([this]()
-        {
-            ImGui::Text("FPS: %.1f", timer_ ? timer_->GetFPS() : 0.0f);
-            ImGui::Text("Delta Time: %.3f ms", lastDeltaTime_ * 1000.0f);
-
-            if (sceneManager_)
+        const Gui::DefaultEngineGuiContext context{
+            timer_.get(),
+            [this]() -> Game::SceneManager*
             {
-                if (auto* activeScene = sceneManager_->GetScene())
-                {
-                    const std::string_view sceneName = activeScene->Name();
-                    ImGui::Separator();
-                    ImGui::Text("Scene: %.*s", static_cast<int>(sceneName.size()), sceneName.data());
-                }
-            }
-        });
+                return sceneManager_.get();
+            },
+            &lastDeltaTime_
+        };
 
-        statsPanel_ = &panel;
+        const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
+        statsPanel_ = panels.statsPanel;
+        outlinerPanel_ = panels.sceneOutlinerPanel;
     }
 
 // === Shutdown ===
@@ -355,6 +341,7 @@ namespace Engine::Core
     void Application::ShutdownGui() noexcept
     {
         statsPanel_ = nullptr;
+        outlinerPanel_ = nullptr;
 
         if (guiManager_)
             guiManager_.reset();

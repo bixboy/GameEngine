@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Core
 {
@@ -15,10 +15,11 @@ namespace Engine::Core
     class Logger
     {
         public:
-            static void Log(std::string_view message, LogLevel level, const char* file, int line);
+        static void Log(const String& message, LogLevel level, const char* file, int line);
 
         private:
             static const char* ExtractFileName(const char* path) noexcept;
+        
     };
 }
 

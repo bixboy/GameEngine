@@ -25,7 +25,7 @@ namespace Engine::Core
         return filename;
     }
 
-    void Logger::Log(std::string_view message, LogLevel level, const char* file, int line)
+    void Logger::Log(const String& message, LogLevel level, const char* file, int line)
     {
         const char* color = kColorReset;
         String levelStr;

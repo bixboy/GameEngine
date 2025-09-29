@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL3/SDL_video.h>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Core
 {

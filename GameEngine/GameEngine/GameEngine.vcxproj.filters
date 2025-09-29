@@ -127,6 +127,9 @@
     <ClCompile Include="Engine\Source\Core\Private\Core\Logger.cpp">
       <Filter>Source\Core\Private\Core</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\DefaultEngineGui.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -233,6 +236,9 @@
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Engine.h">
       <Filter>Source\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\DefaultEngineGui.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h">
       <Filter>Source\Engine\Public\Gui</Filter>

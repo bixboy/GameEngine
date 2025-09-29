@@ -7,7 +7,7 @@
 #include <vector>
 #include <SDL3/SDL.h>
 
-#include "Core/Types.h"
+#include "Core/String.h"
 
 namespace Engine::Input
 {
