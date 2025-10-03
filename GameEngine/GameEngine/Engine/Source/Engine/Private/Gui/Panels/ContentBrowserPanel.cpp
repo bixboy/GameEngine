@@ -115,7 +115,7 @@ namespace Engine::Gui
             const fs::path basePath = fs::current_path(cwdError);
             if (cwdError)
             {
-                const std::string errorText = cwdError.message();
+                const String errorText = cwdError.message();
                 String message = String("Failed to determine working directory: ");
                 message += errorText;
                 LogAndStoreError(state.error, std::move(message));
@@ -129,7 +129,7 @@ namespace Engine::Gui
                 {
                     String message = String("Failed to create content directory: ") + state.root.string();
                     message += " (";
-                    const std::string errorText = createError.message();
+                    const String errorText = createError.message();
                     message += errorText;
                     message += ')';
                     LogAndStoreError(state.error, std::move(message));
@@ -356,11 +356,11 @@ namespace Engine::Gui
                 for (const auto& entry : entries)
                 {
                     const fs::path entryPath = entry.path();
-                    const std::string entryName = entryPath.filename().generic_string();
+                    const String entryName = entryPath.filename().generic_string();
                     if (!MatchesSearch(entryName, searchQuery))
                         continue;
 
-                    const std::string entryPathString = entryPath.generic_string();
+                    const String entryPathString = entryPath.generic_string();
                     const bool isDirectory = entry.is_directory();
 
                     ImGui::TableNextColumn();
@@ -592,7 +592,7 @@ namespace Engine::Gui
                             fs::create_directories(folderPath, createError);
                             if (createError)
                             {
-                                const std::string errorText = createError.message();
+                                const String errorText = createError.message();
                                 String message = "Impossible de créer le dossier : ";
                                 message += errorText;
                                 LogAndStoreError(requestPopups.folderError, std::move(message));
