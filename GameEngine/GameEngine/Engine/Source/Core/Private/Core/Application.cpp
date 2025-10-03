@@ -170,9 +170,11 @@ namespace Engine::Core
 
         if (guiManager_)
         {
+#ifdef IMGUI_HAS_DOCK
             ImGuiIO& io = ImGui::GetIO();
             if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
                 ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
+#endif
             guiManager_->DrawAll();
         }
 

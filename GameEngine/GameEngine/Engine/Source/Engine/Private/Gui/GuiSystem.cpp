@@ -45,7 +45,12 @@ namespace Engine::Gui
 
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+
+#ifdef IMGUI_HAS_DOCK
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
+#else
+        LOG_WARNING("ImGui was built without docking support; layout docking features are disabled.");
+#endif
 
         ImGui::StyleColorsDark();
 
