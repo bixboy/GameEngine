@@ -9,7 +9,10 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <filesystem>
+#include <fstream>
+#include <initializer_list>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -26,6 +29,36 @@ namespace Engine::Gui
         constexpr float kContentHeaderHeight = 72.0f;
         constexpr float kContentThumbnailSize = 72.0f;
         constexpr float kContentThumbnailPadding = 28.0f;
+
+        void DrawTooltipWithActions(std::string_view header, std::initializer_list<std::string_view> actions)
+        {
+            if (!ImGui::BeginTooltip())
+                return;
+
+            if (!header.empty())
+            {
+                ImGui::TextUnformatted(header.data(), header.data() + header.size());
+            }
+
+            if (!actions.size())
+            {
+                ImGui::EndTooltip();
+                return;
+            }
+
+            if (!header.empty())
+            {
+                ImGui::Separator();
+            }
+
+            ImGui::TextDisabled("Actions disponibles :");
+            for (std::string_view action : actions)
+            {
+                ImGui::BulletText("%.*s", static_cast<int>(action.size()), action.data());
+            }
+
+            ImGui::EndTooltip();
+        }
     }
 
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
@@ -54,6 +87,12 @@ namespace Engine::Gui
             static ContentState state{};
             static char searchBuffer[256] = "";
             static std::string selectedEntry{};
+            static bool requestCreateScriptPopup = false;
+            static bool requestCreateFolderPopup = false;
+            static char createScriptName[128] = "NewScript.lua";
+            static char createFolderName[128] = "NewFolder";
+            static String createScriptError{};
+            static String createFolderError{};
 
             const auto toLowerCopy = [](std::string value)
             {
@@ -176,8 +215,11 @@ namespace Engine::Gui
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(220.0f);
                 ImGui::InputTextWithHint("##ContentSearch", "Search content...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+                ImGui::Spacing();
+                ImGui::TextDisabled("Clique droit dans la zone de contenu pour créer des scripts ou des dossiers.");
             }
-            
+
             ImGui::EndChild();
             ImGui::PopStyleColor();
 
@@ -256,6 +298,25 @@ namespace Engine::Gui
             ImGui::SameLine();
 
             ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true);
+
+            if (ImGui::BeginPopupContextWindow("ContentBrowserBackgroundContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+            {
+                if (ImGui::MenuItem("Créer un script..."))
+                {
+                    std::snprintf(createScriptName, IM_ARRAYSIZE(createScriptName), "%s", "NewScript.lua");
+                    createScriptError.Clear();
+                    requestCreateScriptPopup = true;
+                }
+
+                if (ImGui::MenuItem("Créer un dossier..."))
+                {
+                    std::snprintf(createFolderName, IM_ARRAYSIZE(createFolderName), "%s", "NewFolder");
+                    createFolderError.Clear();
+                    requestCreateFolderPopup = true;
+                }
+
+                ImGui::EndPopup();
+            }
 
             std::vector<fs::directory_entry> entries{};
             std::error_code iterationError;
@@ -337,8 +398,13 @@ namespace Engine::Gui
                         selectedEntry = entryPath.generic_string();
                     }
 
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", entryName.c_str());
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+                    {
+                        if (isDirectory)
+                            DrawTooltipWithActions(entryName, {"Ouvrir", "Créer un script...", "Créer un dossier..."});
+                        else
+                            DrawTooltipWithActions(entryName, {"Ouvrir", "Clic droit pour plus d'options"});
+                    }
 
                     const bool isSelected = selectedEntry == entryPath.generic_string();
                     if (isSelected)
@@ -360,6 +426,168 @@ namespace Engine::Gui
             }
 
             ImGui::EndChild();
+
+            if (requestCreateScriptPopup)
+            {
+                ImGui::OpenPopup("ContentBrowserCreateScript");
+                requestCreateScriptPopup = false;
+            }
+
+            if (ImGui::BeginPopupModal("ContentBrowserCreateScript", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::TextUnformatted("Créer un nouveau script dans le dossier courant.");
+
+                if (ImGui::IsWindowAppearing())
+                    ImGui::SetKeyboardFocusHere();
+
+                bool create = ImGui::InputText("Nom", createScriptName, IM_ARRAYSIZE(createScriptName), ImGuiInputTextFlags_EnterReturnsTrue);
+
+                if (!createScriptError.IsEmpty())
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
+                    ImGui::TextWrapped("%s", createScriptError.c_str());
+                    ImGui::PopStyleColor();
+                }
+
+                if (ImGui::Button("Créer"))
+                    create = true;
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Annuler"))
+                {
+                    ImGui::CloseCurrentPopup();
+                    createScriptError.Clear();
+                }
+
+                if (create)
+                {
+                    std::string scriptName = createScriptName;
+                    scriptName.erase(scriptName.begin(), std::find_if(scriptName.begin(), scriptName.end(), [](unsigned char ch)
+                    {
+                        return !std::isspace(ch);
+                    }));
+                    scriptName.erase(std::find_if(scriptName.rbegin(), scriptName.rend(), [](unsigned char ch)
+                    {
+                        return !std::isspace(ch);
+                    }).base(), scriptName.end());
+
+                    if (scriptName.empty())
+                    {
+                        createScriptError = "Le nom du script ne peut pas être vide.";
+                    }
+                    else
+                    {
+                        fs::path scriptFileName = scriptName;
+                        if (scriptFileName.extension().empty())
+                            scriptFileName.replace_extension(".lua");
+
+                        const fs::path scriptPath = state.current / scriptFileName;
+
+                        if (fs::exists(scriptPath))
+                        {
+                            createScriptError = "Un fichier avec ce nom existe déjà.";
+                        }
+                        else
+                        {
+                            std::ofstream scriptFile(scriptPath);
+                            if (!scriptFile.is_open())
+                            {
+                                createScriptError = "Impossible de créer le script.";
+                            }
+                            else
+                            {
+                                scriptFile << "// Nouveau script généré depuis le Content Browser\n";
+                                scriptFile.close();
+
+                                selectedEntry = scriptPath.generic_string();
+                                createScriptError.Clear();
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
+
+            if (requestCreateFolderPopup)
+            {
+                ImGui::OpenPopup("ContentBrowserCreateFolder");
+                requestCreateFolderPopup = false;
+            }
+
+            if (ImGui::BeginPopupModal("ContentBrowserCreateFolder", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::TextUnformatted("Créer un nouveau dossier dans le dossier courant.");
+
+                if (ImGui::IsWindowAppearing())
+                    ImGui::SetKeyboardFocusHere();
+
+                bool create = ImGui::InputText("Nom", createFolderName, IM_ARRAYSIZE(createFolderName), ImGuiInputTextFlags_EnterReturnsTrue);
+
+                if (!createFolderError.IsEmpty())
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
+                    ImGui::TextWrapped("%s", createFolderError.c_str());
+                    ImGui::PopStyleColor();
+                }
+
+                if (ImGui::Button("Créer"))
+                    create = true;
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Annuler"))
+                {
+                    ImGui::CloseCurrentPopup();
+                    createFolderError.Clear();
+                }
+
+                if (create)
+                {
+                    std::string folderName = createFolderName;
+                    folderName.erase(folderName.begin(), std::find_if(folderName.begin(), folderName.end(), [](unsigned char ch)
+                    {
+                        return !std::isspace(ch);
+                    }));
+                    folderName.erase(std::find_if(folderName.rbegin(), folderName.rend(), [](unsigned char ch)
+                    {
+                        return !std::isspace(ch);
+                    }).base(), folderName.end());
+
+                    if (folderName.empty())
+                    {
+                        createFolderError = "Le nom du dossier ne peut pas être vide.";
+                    }
+                    else
+                    {
+                        const fs::path folderPath = state.current / folderName;
+
+                        if (fs::exists(folderPath))
+                        {
+                            createFolderError = "Un dossier avec ce nom existe déjà.";
+                        }
+                        else
+                        {
+                            std::error_code createError;
+                            fs::create_directories(folderPath, createError);
+                            if (createError)
+                            {
+                                createFolderError = Engine::String("Impossible de créer le dossier : ") + createError.message();
+                            }
+                            else
+                            {
+                                selectedEntry = folderPath.generic_string();
+                                createFolderError.Clear();
+                                ImGui::CloseCurrentPopup();
+                            }
+                        }
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
         });
 
         return contentPanel;
