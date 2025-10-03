@@ -5,7 +5,6 @@
 #include <initializer_list>
 #include <iterator>
 #include <ostream>
-#include <ranges>
 #include <string>
 #include <string_view>
 #include <utility>
@@ -16,10 +15,10 @@ namespace Engine
     class String
     {
     public:
-        using value_type = std::string::value_type;
-        using size_type  = std::string::size_type;
-        using iterator   = std::string::iterator;
-        using const_iterator = std::string::const_iterator;
+        using value_type      = std::string::value_type;
+        using size_type       = std::string::size_type;
+        using iterator        = std::string::iterator;
+        using const_iterator  = std::string::const_iterator;
 
         String() = default;
         String(const String&) = default;
@@ -45,7 +44,7 @@ namespace Engine
         }
         String& operator=(std::string_view value)
         {
-            data_.assign(value.begin(), value.end());
+            data_.assign(value);
             return *this;
         }
 
@@ -87,14 +86,14 @@ namespace Engine
         void pop_back() { PopBack(); }
         void PopBack()
         {
-            if (!data_.empty())
+            if (!empty())
                 data_.pop_back();
         }
 
 
         String& Append(std::string_view value)
         {
-            data_.append(value.begin(), value.end());
+            data_.append(value);
             return *this;
         }
 
@@ -106,20 +105,17 @@ namespace Engine
 
         String& operator+=(const String& other)
         {
-            data_ += other.data_;
-            return *this;
+            return Append(other.View());
         }
 
         String& operator+=(const std::string& other)
         {
-            data_.append(other);
-            return *this;
+            return Append(other);
         }
 
         String& operator+=(std::string_view other)
         {
-            data_.append(other.begin(), other.end());
-            return *this;
+            return Append(other);
         }
 
         String& operator+=(char ch)
@@ -130,8 +126,7 @@ namespace Engine
         String& operator+=(const char* other)
         {
             if (other)
-                data_.append(other);
-            
+                Append(other);
             return *this;
         }
 
@@ -158,7 +153,7 @@ namespace Engine
 
         friend String operator+(const char* lhs, const String& rhs)
         {
-            return std::string_view(lhs ? lhs : "") + rhs;
+            return String(lhs ? lhs : "") + rhs;
         }
 
         // String + std::string
@@ -194,11 +189,12 @@ namespace Engine
         {
             if (prefix.size() > data_.size())
                 return false;
+            const auto begin = data_.begin();
             if (caseSensitive)
-                return std::equal(prefix.begin(), prefix.end(), data_.begin());
-            return std::equal(prefix.begin(), prefix.end(), data_.begin(), [](char a, char b)
+                return std::equal(prefix.begin(), prefix.end(), begin);
+            return std::equal(prefix.begin(), prefix.end(), begin, [](char a, char b)
             {
-                return ToLowerChar(a) == ToLowerChar(b);
+                return EqualsIgnoreCaseChar(a, b);
             });
         }
 
@@ -207,27 +203,25 @@ namespace Engine
             if (suffix.size() > data_.size())
                 return false;
             const auto offset = data_.size() - suffix.size();
+            const auto begin = data_.begin() + static_cast<std::ptrdiff_t>(offset);
             if (caseSensitive)
-                return std::equal(suffix.begin(), suffix.end(), data_.begin() + static_cast<std::ptrdiff_t>(offset));
-            return std::equal(suffix.begin(), suffix.end(), data_.begin() + static_cast<std::ptrdiff_t>(offset), [](char a, char b)
+                return std::equal(suffix.begin(), suffix.end(), begin);
+            return std::equal(suffix.begin(), suffix.end(), begin, [](char a, char b)
             {
-                return ToLowerChar(a) == ToLowerChar(b);
+                return EqualsIgnoreCaseChar(a, b);
             });
         }
 
         [[nodiscard]] bool Contains(std::string_view value, bool caseSensitive = true) const
         {
-            if (caseSensitive)
-                return data_.find(value) != std::string::npos;
-
-            return FindInsensitive(value) != std::string::npos;
+            return caseSensitive ? data_.find(value) != std::string::npos : FindInsensitive(value) != std::string::npos;
         }
 
         [[nodiscard]] bool EqualsIgnoreCase(std::string_view other) const noexcept
         {
-            return data_.size() == other.size() && std::ranges::equal(data_, other, [](char a, char b)
+            return data_.size() == other.size() && std::equal(data_.begin(), data_.end(), other.begin(), [](char a, char b)
             {
-                return ToLowerChar(a) == ToLowerChar(b);
+                return EqualsIgnoreCaseChar(a, b);
             });
         }
 
@@ -247,13 +241,19 @@ namespace Engine
 
         String& ToUpperInline()
         {
-            std::ranges::transform(data_, data_.begin(), [](unsigned char c) { return static_cast<char>(std::toupper(c)); });
+            std::transform(data_.begin(), data_.end(), data_.begin(), [](unsigned char c)
+            {
+                return static_cast<char>(std::toupper(c));
+            });
             return *this;
         }
 
         String& ToLowerInline()
         {
-            std::ranges::transform(data_, data_.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+            std::transform(data_.begin(), data_.end(), data_.begin(), [](unsigned char c)
+            {
+                return static_cast<char>(std::tolower(c));
+            });
             return *this;
         }
 
@@ -280,14 +280,20 @@ namespace Engine
 
         String& TrimStartInline()
         {
-            auto it = std::ranges::find_if_not(data_, [](unsigned char c) { return std::isspace(c) != 0; });
+            const auto it = std::find_if_not(data_.begin(), data_.end(), [](unsigned char c)
+            {
+                return std::isspace(c) != 0;
+            });
             data_.erase(data_.begin(), it);
             return *this;
         }
 
         String& TrimEndInline()
         {
-            auto it = std::ranges::find_if_not(std::ranges::reverse_view(data_), [](unsigned char c) { return std::isspace(c) != 0; });
+            const auto it = std::find_if_not(data_.rbegin(), data_.rend(), [](unsigned char c)
+            {
+                return std::isspace(c) != 0;
+            });
             data_.erase(it.base(), data_.end());
             return *this;
         }
@@ -315,9 +321,10 @@ namespace Engine
                 const size_type pos = caseSensitive ? data_.find(from, start) : FindInsensitive(from, start);
                 if (pos == std::string::npos)
                     break;
-                
+
                 data_.replace(pos, from.size(), to.data(), to.size());
-                start = pos + to.size();
+                const size_type advance = to.empty() ? from.size() : to.size();
+                start = pos + advance;
             }
             return *this;
         }
@@ -325,18 +332,23 @@ namespace Engine
         [[nodiscard]] std::vector<String> Split(char delimiter, bool skipEmpty = false) const
         {
             std::vector<String> result;
+            const auto estimatedSegments = static_cast<size_type>(std::count(data_.begin(), data_.end(), delimiter)) + 1;
+            result.reserve(estimatedSegments);
+
             String current;
             for (char ch : data_)
             {
                 if (ch == delimiter)
                 {
                     if (!current.empty() || !skipEmpty)
-                        result.emplace_back(current);
-                    current.clear();
+                    {
+                        result.emplace_back(std::move(current));
+                        current.clear();
+                    }
                 }
                 else
                 {
-                    current.data_.push_back(ch);
+                    current.push_back(ch);
                 }
             }
             if (!current.empty() || !skipEmpty)
@@ -391,37 +403,20 @@ namespace Engine
             return String(data_.substr(start, count));
         }
 
-        static String Join(const std::vector<String>& values, std::string_view delimiter)
+        [[nodiscard]] static String Join(const std::vector<String>& values, std::string_view delimiter)
         {
-            if (values.empty())
-                return String();
-
-            String result;
-            size_type totalSize = 0;
-            for (const auto& value : values)
-                totalSize += value.size();
-            totalSize += (values.size() - 1) * delimiter.size();
-            result.reserve(totalSize);
-
-            for (std::size_t i = 0; i < values.size(); ++i)
-            {
-                result += values[i];
-                if (i + 1 < values.size())
-                    result += delimiter;
-            }
-
-            return result;
+            return JoinRange(values, delimiter);
         }
 
-        static String Join(std::initializer_list<String> values, std::string_view delimiter)
+        [[nodiscard]] static String Join(std::initializer_list<String> values, std::string_view delimiter)
         {
-            return Join(std::vector<String>(values), delimiter);
+            return JoinRange(values, delimiter);
         }
 
-        static String FromInt(int value) { return std::to_string(value); }
-        static String FromUInt(unsigned int value) { return std::to_string(value); }
-        static String FromFloat(float value) { return std::to_string(value); }
-        static String FromDouble(double value) { return std::to_string(value); }
+        [[nodiscard]] static String FromInt(int value) { return std::to_string(value); }
+        [[nodiscard]] static String FromUInt(unsigned int value) { return std::to_string(value); }
+        [[nodiscard]] static String FromFloat(float value) { return std::to_string(value); }
+        [[nodiscard]] static String FromDouble(double value) { return std::to_string(value); }
 
         [[nodiscard]] bool IsNumeric() const noexcept
         {
@@ -450,25 +445,63 @@ namespace Engine
     private:
         [[nodiscard]] size_type FindInsensitive(std::string_view value, size_type start = 0) const
         {
-            if (value.empty())
-                return start <= data_.size() ? start : std::string::npos;
+            if (start > data_.size())
+                return std::string::npos;
 
-            for (size_type i = start; i + value.size() <= data_.size(); ++i)
+            if (value.empty())
+                return start;
+
+            const auto begin = data_.begin() + static_cast<std::ptrdiff_t>(start);
+            const auto it = std::search(begin, data_.end(), value.begin(), value.end(), [](char a, char b)
             {
-                if (std::equal(value.begin(), value.end(), data_.begin() + static_cast<std::ptrdiff_t>(i), [](char a, char b)
-                {
-                    return ToLowerChar(a) == ToLowerChar(b);
-                }))
-                {
-                    return i;
-                }
-            }
-            return std::string::npos;
+                return EqualsIgnoreCaseChar(a, b);
+            });
+
+            return it == data_.end() ? std::string::npos : static_cast<size_type>(std::distance(data_.begin(), it));
+        }
+
+        static bool EqualsIgnoreCaseChar(char lhs, char rhs)
+        {
+            return ToLowerChar(static_cast<unsigned char>(lhs)) == ToLowerChar(static_cast<unsigned char>(rhs));
         }
 
         static unsigned char ToLowerChar(unsigned char c)
         {
             return static_cast<unsigned char>(std::tolower(c));
+        }
+
+        template <typename Range>
+        [[nodiscard]] static String JoinRange(const Range& values, std::string_view delimiter)
+        {
+            auto it = std::begin(values);
+            auto end = std::end(values);
+            if (it == end)
+                return {};
+
+            String result;
+            size_type totalSize = 0;
+            size_type count = 0;
+            for (const auto& value : values)
+            {
+                totalSize += value.size();
+                ++count;
+            }
+
+            if (count == 0)
+                return {};
+
+            totalSize += (count - 1) * delimiter.size();
+            result.reserve(totalSize);
+
+            size_type index = 0;
+            for (auto iter = std::begin(values); iter != end; ++iter, ++index)
+            {
+                result += *iter;
+                if (index + 1 < count)
+                    result += delimiter;
+            }
+
+            return result;
         }
 
         std::string data_{};
