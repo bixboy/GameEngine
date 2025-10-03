@@ -181,6 +181,9 @@ namespace Engine
         
         [[nodiscard]] bool operator==(const std::string_view other) const noexcept { return data_ == other; }
         [[nodiscard]] bool operator!=(const std::string_view other) const noexcept { return data_ != other; }
+
+        [[nodiscard]] bool operator==(const std::string& other) const noexcept { return data_ == other; }
+        [[nodiscard]] bool operator!=(const std::string& other) const noexcept { return data_ != other; }
         
         [[nodiscard]] bool operator==(const char* other) const noexcept { return data_ == (other ? other : ""); }
         [[nodiscard]] bool operator!=(const char* other) const noexcept { return !(*this == other); }
