@@ -130,6 +130,15 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\DefaultEngineGui.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\StatsPanel.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -238,6 +247,15 @@
       <Filter>Source\Engine\Public</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\DefaultEngineGui.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\ContentBrowserPanel.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\SceneOutlinerPanel.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\StatsPanel.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h">

@@ -287,6 +287,7 @@ namespace Engine::Core
         {
             statsPanel_ = nullptr;
             outlinerPanel_ = nullptr;
+            contentBrowserPanel_ = nullptr;
             return;
         }
 
@@ -302,6 +303,7 @@ namespace Engine::Core
         const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
+        contentBrowserPanel_ = panels.contentBrowserPanel;
     }
 
 // === Shutdown ===
@@ -342,6 +344,7 @@ namespace Engine::Core
     {
         statsPanel_ = nullptr;
         outlinerPanel_ = nullptr;
+        contentBrowserPanel_ = nullptr;
 
         if (guiManager_)
             guiManager_.reset();

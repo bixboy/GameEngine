@@ -24,6 +24,7 @@ namespace Engine::Gui
     {
         GuiPanel* statsPanel{nullptr};
         GuiPanel* sceneOutlinerPanel{nullptr};
+        GuiPanel* contentBrowserPanel{nullptr};
     };
 
     DefaultEngineGuiPanels CreateDefaultEngineGui(GuiManager& guiManager, const DefaultEngineGuiContext& context);

@@ -76,6 +76,7 @@ namespace Engine
                 std::unique_ptr<Gui::GuiManager> guiManager_;
                 Gui::GuiPanel* statsPanel_{nullptr};
                 Gui::GuiPanel* outlinerPanel_{nullptr};
+                Gui::GuiPanel* contentBrowserPanel_{nullptr};
                 std::unique_ptr<Timer> timer_;
         };
     }
