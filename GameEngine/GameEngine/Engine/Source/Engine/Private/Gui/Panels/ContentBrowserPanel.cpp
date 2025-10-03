@@ -11,6 +11,7 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdio>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <string>
@@ -48,10 +49,15 @@ namespace Engine::Gui
         {
             bool createScript{false};
             bool createFolder{false};
+            bool renameEntry{false};
             char scriptName[128] = "NewScript.lua";
             char folderName[128] = "NewFolder";
+            char renameBuffer[256] = "";
             String scriptError{};
             String folderError{};
+            String renameError{};
+            std::filesystem::path folderTarget{};
+            std::filesystem::path renameTarget{};
         };
 
         void LogAndStoreError(String& storage, String message, bool log = true)
@@ -101,6 +107,55 @@ namespace Engine::Gui
                 --end;
 
             return value.Mid(start, end - start);
+        }
+
+        bool ContainsPathSeparator(const String& value)
+        {
+            const std::string_view view = value.View();
+            return view.find('/') != std::string::npos || view.find('\\') != std::string::npos;
+        }
+
+        void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory)
+        {
+            namespace fs = std::filesystem;
+
+            if (path.empty())
+                return;
+
+#ifdef _WIN32
+            std::string command = "explorer ";
+            if (isDirectory)
+            {
+                command += '"';
+                command += path.string();
+                command += '"';
+            }
+            else
+            {
+                command += "/select,\"";
+                command += path.string();
+                command += "\"";
+            }
+            std::system(command.c_str());
+#elif defined(__APPLE__)
+            const fs::path target = isDirectory ? path : path.parent_path();
+            if (target.empty())
+                return;
+
+            std::string command = "open \"";
+            command += target.string();
+            command += "\"";
+            std::system(command.c_str());
+#else
+            const fs::path target = isDirectory ? path : path.parent_path();
+            if (target.empty())
+                return;
+
+            std::string command = "xdg-open \"";
+            command += target.string();
+            command += "\"";
+            std::system(command.c_str());
+#endif
         }
 
         void EnsureInitialized(ContentState& state)
@@ -311,6 +366,7 @@ namespace Engine::Gui
                 {
                     std::snprintf(requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), "%s", "NewFolder");
                     requestPopups.folderError.Clear();
+                    requestPopups.folderTarget = state.current;
                     requestPopups.createFolder = true;
                 }
 
@@ -378,7 +434,10 @@ namespace Engine::Gui
 
                     if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
                     {
-                        if (ImGui::MenuItem("Open"))
+                        ImGui::TextDisabled("Actions");
+                        ImGui::Separator();
+
+                        if (ImGui::MenuItem("Ouvrir"))
                         {
                             if (isDirectory)
                             {
@@ -390,6 +449,64 @@ namespace Engine::Gui
                                 selectedEntry = entryPathString;
                             }
                         }
+
+                        if (ImGui::MenuItem("Renommer..."))
+                        {
+                            std::snprintf(requestPopups.renameBuffer, IM_ARRAYSIZE(requestPopups.renameBuffer), "%s", entryName.c_str());
+                            requestPopups.renameError.Clear();
+                            requestPopups.renameTarget = entryPath;
+                            requestPopups.renameEntry = true;
+                        }
+
+                        if (ImGui::MenuItem("Supprimer"))
+                        {
+                            std::error_code removeError;
+                            if (isDirectory)
+                                std::filesystem::remove_all(entryPath, removeError);
+                            else
+                                std::filesystem::remove(entryPath, removeError);
+
+                            if (removeError)
+                            {
+                                const String errorText = removeError.message();
+                                String message = "Impossible de supprimer l'entrée : ";
+                                message += errorText;
+                                LOG_ERROR(message);
+                            }
+                            else
+                            {
+                                if (selectedEntry == entryPathString)
+                                    selectedEntry.Clear();
+                            }
+                        }
+
+                        ImGui::Separator();
+                        ImGui::TextDisabled("Utilitaires");
+                        ImGui::Separator();
+
+                        if (ImGui::MenuItem("Afficher dans l'explorateur"))
+                        {
+                            ShowPathInExplorer(entryPath, isDirectory);
+                        }
+
+                        if (ImGui::MenuItem("Nouveau dossier..."))
+                        {
+                            std::snprintf(requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), "%s", "NewFolder");
+                            requestPopups.folderError.Clear();
+                            if (isDirectory)
+                            {
+                                requestPopups.folderTarget = entryPath;
+                            }
+                            else
+                            {
+                                std::filesystem::path parent = entryPath.parent_path();
+                                if (parent.empty())
+                                    parent = state.current;
+                                requestPopups.folderTarget = std::move(parent);
+                            }
+                            requestPopups.createFolder = true;
+                        }
+
                         ImGui::EndPopup();
                     }
 
@@ -415,10 +532,15 @@ namespace Engine::Gui
                                 }},
                                 {"Créer un script...", [&]()
                                 {
+                                    std::snprintf(requestPopups.scriptName, IM_ARRAYSIZE(requestPopups.scriptName), "%s", "NewScript.lua");
+                                    requestPopups.scriptError.Clear();
                                     requestPopups.createScript = true;
                                 }},
                                 {"Créer un dossier...", [&]()
                                 {
+                                    std::snprintf(requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), "%s", "NewFolder");
+                                    requestPopups.folderError.Clear();
+                                    requestPopups.folderTarget = entryPath;
                                     requestPopups.createFolder = true;
                                 }}
                             });
@@ -549,7 +671,20 @@ namespace Engine::Gui
 
             if (ImGui::BeginPopupModal("ContentBrowserCreateFolder", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
             {
-                ImGui::TextUnformatted("Créer un nouveau dossier dans le dossier courant.");
+                const fs::path targetDirectory = requestPopups.folderTarget.empty() ? state.current : requestPopups.folderTarget;
+                fs::path relativeTarget = targetDirectory.lexically_relative(state.root);
+                std::string relativeString = relativeTarget.generic_string();
+
+                String displayLabel = "Content";
+                if (!relativeString.empty() && relativeString != ".")
+                {
+                    displayLabel += '/';
+                    displayLabel += relativeString;
+                }
+
+                String description = "Créer un nouveau dossier dans : ";
+                description += displayLabel;
+                ImGui::TextWrapped("%s", description.c_str());
 
                 if (ImGui::IsWindowAppearing())
                     ImGui::SetKeyboardFocusHere();
@@ -572,6 +707,7 @@ namespace Engine::Gui
                 {
                     ImGui::CloseCurrentPopup();
                     requestPopups.folderError.Clear();
+                    requestPopups.folderTarget.clear();
                 }
 
                 if (create)
@@ -582,9 +718,14 @@ namespace Engine::Gui
                     {
                         LogAndStoreError(requestPopups.folderError, "Le nom du dossier ne peut pas être vide.", false);
                     }
+                    else if (ContainsPathSeparator(folderName))
+                    {
+                        LogAndStoreError(requestPopups.folderError, "Le nom du dossier ne peut pas contenir de séparateurs.", false);
+                    }
                     else
                     {
-                        const fs::path folderPath = state.current / folderName.View();
+                        const fs::path baseDirectory = requestPopups.folderTarget.empty() ? state.current : requestPopups.folderTarget;
+                        const fs::path folderPath = baseDirectory / folderName.View();
 
                         if (fs::exists(folderPath))
                         {
@@ -605,7 +746,128 @@ namespace Engine::Gui
                             {
                                 selectedEntry = folderPath.generic_string();
                                 requestPopups.folderError.Clear();
+                                requestPopups.folderTarget.clear();
                                 ImGui::CloseCurrentPopup();
+                            }
+                        }
+                    }
+                }
+
+                ImGui::EndPopup();
+            }
+        }
+
+        void RenderRenameEntryPopup(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups)
+        {
+            namespace fs = std::filesystem;
+
+            if (requestPopups.renameEntry)
+            {
+                ImGui::OpenPopup("ContentBrowserRenameEntry");
+                requestPopups.renameEntry = false;
+            }
+
+            if (ImGui::BeginPopupModal("ContentBrowserRenameEntry", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                const fs::path target = requestPopups.renameTarget;
+                if (!target.empty())
+                {
+                    fs::path relativePath = target.lexically_relative(state.root);
+                    std::string relativeString = relativePath.generic_string();
+
+                    String label = relativeString;
+                    if (label.IsEmpty() || label == ".")
+                        label = target.filename().generic_string();
+
+                    String message = "Renommer : ";
+                    message += label;
+                    ImGui::TextWrapped("%s", message.c_str());
+                }
+                else
+                {
+                    ImGui::TextUnformatted("Renommer l'entrée sélectionnée.");
+                }
+
+                if (ImGui::IsWindowAppearing())
+                    ImGui::SetKeyboardFocusHere();
+
+                bool rename = ImGui::InputText("Nom", requestPopups.renameBuffer, IM_ARRAYSIZE(requestPopups.renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue);
+
+                if (!requestPopups.renameError.IsEmpty())
+                {
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
+                    ImGui::TextWrapped("%s", requestPopups.renameError.c_str());
+                    ImGui::PopStyleColor();
+                }
+
+                if (ImGui::Button("Renommer"))
+                    rename = true;
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Annuler"))
+                {
+                    ImGui::CloseCurrentPopup();
+                    requestPopups.renameError.Clear();
+                    requestPopups.renameTarget.clear();
+                }
+
+                if (rename)
+                {
+                    String newName = TrimCopy(String(requestPopups.renameBuffer));
+
+                    if (newName.IsEmpty())
+                    {
+                        LogAndStoreError(requestPopups.renameError, "Le nom ne peut pas être vide.", false);
+                    }
+                    else if (ContainsPathSeparator(newName))
+                    {
+                        LogAndStoreError(requestPopups.renameError, "Le nom ne peut pas contenir de séparateurs.", false);
+                    }
+                    else if (requestPopups.renameTarget.empty())
+                    {
+                        LogAndStoreError(requestPopups.renameError, "Aucune entrée à renommer n'a été trouvée.", false);
+                    }
+                    else
+                    {
+                        const fs::path oldPath = requestPopups.renameTarget;
+                        const String oldName = oldPath.filename().generic_string();
+
+                        if (oldName == newName)
+                        {
+                            requestPopups.renameError.Clear();
+                            ImGui::CloseCurrentPopup();
+                        }
+                        else
+                        {
+                            const fs::path parent = oldPath.parent_path();
+                            const fs::path newPath = parent / newName.View();
+
+                            if (fs::exists(newPath))
+                            {
+                                LogAndStoreError(requestPopups.renameError, "Un élément avec ce nom existe déjà.", false);
+                            }
+                            else
+                            {
+                                std::error_code renameError;
+                                fs::rename(oldPath, newPath, renameError);
+
+                                if (renameError)
+                                {
+                                    const String errorText = renameError.message();
+                                    String errorMessage = "Impossible de renommer l'entrée : ";
+                                    errorMessage += errorText;
+                                    LogAndStoreError(requestPopups.renameError, std::move(errorMessage));
+                                }
+                                else
+                                {
+                                    if (selectedEntry == oldPath.generic_string())
+                                        selectedEntry = newPath.generic_string();
+
+                                    requestPopups.renameTarget = newPath;
+                                    requestPopups.renameError.Clear();
+                                    ImGui::CloseCurrentPopup();
+                                }
                             }
                         }
                     }
@@ -619,6 +881,7 @@ namespace Engine::Gui
         {
             RenderCreateScriptPopup(state, selectedEntry, requestPopups);
             RenderCreateFolderPopup(state, selectedEntry, requestPopups);
+            RenderRenameEntryPopup(state, selectedEntry, requestPopups);
         }
     }
 
