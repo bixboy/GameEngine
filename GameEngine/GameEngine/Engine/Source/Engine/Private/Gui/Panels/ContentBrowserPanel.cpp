@@ -16,6 +16,7 @@
 #include <string>
 #include <string_view>
 #include <system_error>
+#include <utility>
 #include <vector>
 
 namespace Engine::Gui
@@ -34,122 +35,126 @@ namespace Engine::Gui
 #else
         constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
 #endif
-    }
 
-    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
-    {
-        GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
-        contentPanel.SetPosition(340.0f, 50.0f);
-        contentPanel.SetSize(900.0f, 540.0f);
-        contentPanel.SetResizable(true);
-        contentPanel.SetMovable(true);
-        contentPanel.SetCollapsable(true);
-        contentPanel.SetClosable(true);
-        contentPanel.SetBackgroundColor(kContentBackground);
-        contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        contentPanel.SetDrawFunction([]()
+        struct ContentState
         {
+            std::filesystem::path root{};
+            std::filesystem::path current{};
+            String error{};
+            bool initialized{false};
+        };
+
+        struct PopupRequestState
+        {
+            bool createScript{false};
+            bool createFolder{false};
+            char scriptName[128] = "NewScript.lua";
+            char folderName[128] = "NewFolder";
+            String scriptError{};
+            String folderError{};
+        };
+
+        void LogAndStoreError(String& storage, String message, bool log = true)
+        {
+            if (log)
+                LOG_ERROR(message);
+
+            storage = std::move(message);
+        }
+
+        std::string ToLowerCopy(std::string_view value)
+        {
+            std::string result(value);
+            std::transform(result.begin(), result.end(), result.begin(), [](unsigned char ch)
+            {
+                return static_cast<char>(std::tolower(ch));
+            });
+
+            return result;
+        }
+
+        bool CaseInsensitiveLess(std::string_view lhs, std::string_view rhs)
+        {
+            const std::string lhsLower = ToLowerCopy(lhs);
+            const std::string rhsLower = ToLowerCopy(rhs);
+            if (lhsLower == rhsLower)
+                return lhs < rhs;
+
+            return lhsLower < rhsLower;
+        }
+
+        std::string TrimCopy(std::string_view value)
+        {
+            std::string result(value);
+            const auto isSpace = [](unsigned char ch)
+            {
+                return std::isspace(ch) != 0;
+            };
+
+            result.erase(result.begin(), std::find_if(result.begin(), result.end(), [&](char ch)
+            {
+                return !isSpace(static_cast<unsigned char>(ch));
+            }));
+
+            result.erase(std::find_if(result.rbegin(), result.rend(), [&](char ch)
+            {
+                return !isSpace(static_cast<unsigned char>(ch));
+            }).base(), result.end());
+
+            return result;
+        }
+
+        void EnsureInitialized(ContentState& state)
+        {
+            if (state.initialized)
+                return;
+
             namespace fs = std::filesystem;
 
-            struct ContentState
+            std::error_code cwdError;
+            const fs::path basePath = fs::current_path(cwdError);
+            if (cwdError)
             {
-                fs::path root{};
-                fs::path current{};
-                String error{};
-                bool initialized{false};
-            };
-
-            static ContentState state{};
-            static char searchBuffer[256] = "";
-            static std::string selectedEntry{};
-            static bool requestCreateScriptPopup = false;
-            static bool requestCreateFolderPopup = false;
-            static char createScriptName[128] = "NewScript.lua";
-            static char createFolderName[128] = "NewFolder";
-            static String createScriptError{};
-            static String createFolderError{};
-
-            const auto toLowerCopy = [](std::string value)
+                const std::string errorText = cwdError.message();
+                String message = String("Failed to determine working directory: ");
+                message += errorText;
+                LogAndStoreError(state.error, std::move(message));
+            }
+            else
             {
-                std::transform(value.begin(), value.end(), value.begin(), [](unsigned char ch)
+                state.root = basePath / "Content";
+                std::error_code createError;
+                fs::create_directories(state.root, createError);
+                if (createError)
                 {
-                    return static_cast<char>(std::tolower(ch));
-                });
-                
-                return value;
-            };
-
-            const auto caseInsensitiveLess = [&](const std::string& lhs, const std::string& rhs)
-            {
-                const std::string lhsLower = toLowerCopy(lhs);
-                const std::string rhsLower = toLowerCopy(rhs);
-                if (lhsLower == rhsLower)
-                    return lhs < rhs;
-                return lhsLower < rhsLower;
-            };
-
-            if (!state.initialized)
-            {
-                std::error_code cwdError;
-                const fs::path basePath = fs::current_path(cwdError);
-                if (cwdError)
+                    String message = String("Failed to create content directory: ") + state.root.string();
+                    message += " (";
+                    const std::string errorText = createError.message();
+                    message += errorText;
+                    message += ')';
+                    LogAndStoreError(state.error, std::move(message));
+                }
+                else if (!fs::exists(state.root))
                 {
-                    Engine::String message = Engine::String("Failed to determine working directory: ") + cwdError.message();
-                    LOG_ERROR(message);
-                    state.error = message;
+                    String message = String("Content directory is not available: ") + state.root.string();
+                    LogAndStoreError(state.error, std::move(message));
                 }
                 else
                 {
-                    state.root = basePath / "Content";
-                    std::error_code createError;
-                    fs::create_directories(state.root, createError);
-                    if (createError)
-                    {
-                        String message = String("Failed to create content directory: ") + state.root.string();
-                        message += " (";
-                        message += std::string_view{createError.message()};
-                        message += ')';
-                        
-                        LOG_ERROR(message);
-                        state.error = message;
-                    }
-                    else if (!fs::exists(state.root))
-                    {
-                        String message = String("Content directory is not available: ") + state.root.string();
-                        LOG_ERROR(message);
-                        state.error = message;
-                    }
-                    else
-                    {
-                        state.current = state.root;
-                    }
+                    state.current = state.root;
                 }
-
-                state.initialized = true;
             }
 
-            if (!state.error.IsEmpty())
-            {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
-                ImGui::TextWrapped("%s", state.error.c_str());
-                ImGui::PopStyleColor();
-                ImGui::Spacing();
-                ImGui::TextDisabled("The Content Browser requires access to the Content directory.");
-                return;
-            }
+            state.initialized = true;
+        }
 
-            if (state.current.empty())
-                state.current = state.root;
+        void RenderHeader(ContentState& state, String& selectedEntry, char (&searchBuffer)[256])
+        {
+            namespace fs = std::filesystem;
 
-            if (!fs::exists(state.current))
-                state.current = state.root;
-
-            fs::path relativePath = state.current.lexically_relative(state.root);
+            const fs::path relativePath = state.current.lexically_relative(state.root);
             const std::string relativeString = relativePath.generic_string();
             const bool atRoot = relativeString.empty() || relativeString == ".";
-
-            const std::string_view searchQuery(searchBuffer);
-            const bool hasSearch = !searchQuery.empty();
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, kContentHeaderBackground);
             if (ImGui::BeginChild("ContentBrowserHeader", ImVec2(0.0f, kContentHeaderHeight), true, ImGuiWindowFlags_NoScrollbar))
@@ -158,49 +163,52 @@ namespace Engine::Gui
                 if (ImGui::Button("Content"))
                 {
                     state.current = state.root;
-                    selectedEntry.clear();
+                    selectedEntry.Clear();
                 }
-                
+
                 ImGui::PopStyleVar();
                 ImGui::SameLine();
                 ImGui::BeginDisabled(atRoot);
-                
+
                 if (ImGui::Button("Up"))
                 {
                     fs::path parent = state.current.parent_path();
                     fs::path parentRelative = parent.lexically_relative(state.root);
                     const String parentString = parentRelative.generic_string();
 
-                    if (parentString.empty() || parentString == "." || parentString.rfind("..", 0) == 0)
+                    if (parentString.IsEmpty() || parentString == "." || parentString.View().rfind("..", 0) == 0)
                     {
-                     state.current = state.root;   
+                        state.current = state.root;
                     }
                     else
                     {
                         state.current = parent;
                     }
-                    
-                    selectedEntry.clear();
-                }
-                ImGui::EndDisabled();
 
+                    selectedEntry.Clear();
+                }
+
+                ImGui::EndDisabled();
                 ImGui::SameLine();
                 ImGui::TextDisabled("%s", atRoot ? "Content" : relativeString.c_str());
-
                 ImGui::SameLine();
                 ImGui::SetNextItemWidth(220.0f);
                 ImGui::InputTextWithHint("##ContentSearch", "Search content...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
-
                 ImGui::Spacing();
                 ImGui::TextDisabled("Clique droit dans la zone de contenu pour créer des scripts ou des dossiers.");
             }
 
             ImGui::EndChild();
             ImGui::PopStyleColor();
+        }
+
+        void RenderDirectoryTree(ContentState& state, String& selectedEntry)
+        {
+            namespace fs = std::filesystem;
 
             ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, kContentTreeBackground);
-            
+
             if (ImGui::BeginChild("ContentBrowserTreeInner", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar))
             {
                 const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
@@ -218,7 +226,7 @@ namespace Engine::Gui
                     if (ImGui::IsItemClicked())
                     {
                         state.current = directory;
-                        selectedEntry.clear();
+                        selectedEntry.Clear();
                     }
 
                     if (open)
@@ -229,7 +237,7 @@ namespace Engine::Gui
                         {
                             if (!entry.is_directory())
                                 continue;
-                            
+
                             children.push_back(entry.path());
                         }
 
@@ -241,7 +249,7 @@ namespace Engine::Gui
                         {
                             std::sort(children.begin(), children.end(), [&](const fs::path& lhs, const fs::path& rhs)
                             {
-                                return caseInsensitiveLess(lhs.filename().generic_string(), rhs.filename().generic_string());
+                                return CaseInsensitiveLess(lhs.filename().generic_string(), rhs.filename().generic_string());
                             });
 
                             for (const auto& child : children)
@@ -263,14 +271,28 @@ namespace Engine::Gui
 
                 if (fs::exists(state.root))
                 {
-                    renderDirectoryTree(renderDirectoryTree, state.root, 0);   
+                    renderDirectoryTree(renderDirectoryTree, state.root, 0);
                 }
             }
+
             ImGui::EndChild();
             ImGui::PopStyleColor();
             ImGui::EndChild();
+        }
 
-            ImGui::SameLine();
+        bool MatchesSearch(std::string_view value, std::string_view query)
+        {
+            if (query.empty())
+                return true;
+
+            const std::string valueLower = ToLowerCopy(value);
+            const std::string queryLower = ToLowerCopy(query);
+            return valueLower.find(queryLower) != std::string::npos;
+        }
+
+        void RenderEntries(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups, std::string_view searchQuery)
+        {
+            namespace fs = std::filesystem;
 
             ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true);
 
@@ -278,16 +300,16 @@ namespace Engine::Gui
             {
                 if (ImGui::MenuItem("Créer un script..."))
                 {
-                    std::snprintf(createScriptName, IM_ARRAYSIZE(createScriptName), "%s", "NewScript.lua");
-                    createScriptError.Clear();
-                    requestCreateScriptPopup = true;
+                    std::snprintf(requestPopups.scriptName, IM_ARRAYSIZE(requestPopups.scriptName), "%s", "NewScript.lua");
+                    requestPopups.scriptError.Clear();
+                    requestPopups.createScript = true;
                 }
 
                 if (ImGui::MenuItem("Créer un dossier..."))
                 {
-                    std::snprintf(createFolderName, IM_ARRAYSIZE(createFolderName), "%s", "NewFolder");
-                    createFolderError.Clear();
-                    requestCreateFolderPopup = true;
+                    std::snprintf(requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), "%s", "NewFolder");
+                    requestPopups.folderError.Clear();
+                    requestPopups.createFolder = true;
                 }
 
                 ImGui::EndPopup();
@@ -302,9 +324,10 @@ namespace Engine::Gui
 
             if (iterationError)
             {
-                String message = String("Failed to enumerate content: ") + iterationError.message();
-                LOG_ERROR(message);
-                ImGui::TextDisabled("Unable to read directory contents.");
+                const std::string errorText = iterationError.message();
+                String displayMessage{};
+                LogAndStoreError(displayMessage, String("Failed to enumerate content: ") + String(errorText));
+                ImGui::TextDisabled("%s", displayMessage.c_str());
                 ImGui::EndChild();
                 return;
             }
@@ -313,16 +336,16 @@ namespace Engine::Gui
             {
                 if (lhs.is_directory() && !rhs.is_directory())
                     return true;
-                
+
                 if (!lhs.is_directory() && rhs.is_directory())
                     return false;
-                
-                return caseInsensitiveLess(lhs.path().filename().generic_string(), rhs.path().filename().generic_string());
+
+                return CaseInsensitiveLess(lhs.path().filename().generic_string(), rhs.path().filename().generic_string());
             });
 
             const float cellSize = kContentThumbnailSize + kContentThumbnailPadding;
             const float panelWidth = ImGui::GetContentRegionAvail().x;
-            
+
             int columns = static_cast<int>(panelWidth / cellSize);
             columns = std::max(columns, 1);
 
@@ -334,12 +357,14 @@ namespace Engine::Gui
                 {
                     const fs::path entryPath = entry.path();
                     const std::string entryName = entryPath.filename().generic_string();
+                    if (!MatchesSearch(entryName, searchQuery))
+                        continue;
+
                     const std::string entryPathString = entryPath.generic_string();
                     const bool isDirectory = entry.is_directory();
 
                     ImGui::TableNextColumn();
                     ImGui::PushID(entryName.c_str());
-
                     ImGui::BeginGroup();
 
                     ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
@@ -354,7 +379,7 @@ namespace Engine::Gui
                             if (isDirectory)
                             {
                                 state.current = entryPath;
-                                selectedEntry.clear();
+                                selectedEntry.Clear();
                             }
                             else
                             {
@@ -367,7 +392,7 @@ namespace Engine::Gui
                     if (clicked && isDirectory)
                     {
                         state.current = entryPath;
-                        selectedEntry.clear();
+                        selectedEntry.Clear();
                     }
                     else if (clicked)
                     {
@@ -382,15 +407,15 @@ namespace Engine::Gui
                                 {"Ouvrir", [&, entryPath]()
                                 {
                                     state.current = entryPath;
-                                    selectedEntry.clear();
+                                    selectedEntry.Clear();
                                 }},
                                 {"Créer un script...", [&]()
                                 {
-                                    requestCreateScriptPopup = true;
+                                    requestPopups.createScript = true;
                                 }},
                                 {"Créer un dossier...", [&]()
                                 {
-                                    requestCreateFolderPopup = true;
+                                    requestPopups.createFolder = true;
                                 }}
                             });
                         }
@@ -408,7 +433,7 @@ namespace Engine::Gui
                     const bool isSelected = selectedEntry == entryPathString;
                     if (isSelected)
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.4f, 1.0f));
-                    
+
                     ImGui::TextWrapped("%s", entryName.c_str());
                     if (isSelected)
                         ImGui::PopStyleColor();
@@ -425,11 +450,16 @@ namespace Engine::Gui
             }
 
             ImGui::EndChild();
+        }
 
-            if (requestCreateScriptPopup)
+        void RenderCreateScriptPopup(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups)
+        {
+            namespace fs = std::filesystem;
+
+            if (requestPopups.createScript)
             {
                 ImGui::OpenPopup("ContentBrowserCreateScript");
-                requestCreateScriptPopup = false;
+                requestPopups.createScript = false;
             }
 
             if (ImGui::BeginPopupModal("ContentBrowserCreateScript", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -439,12 +469,12 @@ namespace Engine::Gui
                 if (ImGui::IsWindowAppearing())
                     ImGui::SetKeyboardFocusHere();
 
-                bool create = ImGui::InputText("Nom", createScriptName, IM_ARRAYSIZE(createScriptName), ImGuiInputTextFlags_EnterReturnsTrue);
+                bool create = ImGui::InputText("Nom", requestPopups.scriptName, IM_ARRAYSIZE(requestPopups.scriptName), ImGuiInputTextFlags_EnterReturnsTrue);
 
-                if (!createScriptError.IsEmpty())
+                if (!requestPopups.scriptError.IsEmpty())
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
-                    ImGui::TextWrapped("%s", createScriptError.c_str());
+                    ImGui::TextWrapped("%s", requestPopups.scriptError.c_str());
                     ImGui::PopStyleColor();
                 }
 
@@ -456,24 +486,16 @@ namespace Engine::Gui
                 if (ImGui::Button("Annuler"))
                 {
                     ImGui::CloseCurrentPopup();
-                    createScriptError.Clear();
+                    requestPopups.scriptError.Clear();
                 }
 
                 if (create)
                 {
-                    std::string scriptName = createScriptName;
-                    scriptName.erase(scriptName.begin(), std::find_if(scriptName.begin(), scriptName.end(), [](unsigned char ch)
-                    {
-                        return !std::isspace(ch);
-                    }));
-                    scriptName.erase(std::find_if(scriptName.rbegin(), scriptName.rend(), [](unsigned char ch)
-                    {
-                        return !std::isspace(ch);
-                    }).base(), scriptName.end());
+                    std::string scriptName = TrimCopy(requestPopups.scriptName);
 
                     if (scriptName.empty())
                     {
-                        createScriptError = "Le nom du script ne peut pas être vide.";
+                        LogAndStoreError(requestPopups.scriptError, "Le nom du script ne peut pas être vide.", false);
                     }
                     else
                     {
@@ -485,14 +507,14 @@ namespace Engine::Gui
 
                         if (fs::exists(scriptPath))
                         {
-                            createScriptError = "Un fichier avec ce nom existe déjà.";
+                            LogAndStoreError(requestPopups.scriptError, "Un fichier avec ce nom existe déjà.", false);
                         }
                         else
                         {
                             std::ofstream scriptFile(scriptPath);
                             if (!scriptFile.is_open())
                             {
-                                createScriptError = "Impossible de créer le script.";
+                                LogAndStoreError(requestPopups.scriptError, "Impossible de créer le script.");
                             }
                             else
                             {
@@ -500,7 +522,7 @@ namespace Engine::Gui
                                 scriptFile.close();
 
                                 selectedEntry = scriptPath.generic_string();
-                                createScriptError.Clear();
+                                requestPopups.scriptError.Clear();
                                 ImGui::CloseCurrentPopup();
                             }
                         }
@@ -509,11 +531,16 @@ namespace Engine::Gui
 
                 ImGui::EndPopup();
             }
+        }
 
-            if (requestCreateFolderPopup)
+        void RenderCreateFolderPopup(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups)
+        {
+            namespace fs = std::filesystem;
+
+            if (requestPopups.createFolder)
             {
                 ImGui::OpenPopup("ContentBrowserCreateFolder");
-                requestCreateFolderPopup = false;
+                requestPopups.createFolder = false;
             }
 
             if (ImGui::BeginPopupModal("ContentBrowserCreateFolder", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
@@ -523,12 +550,12 @@ namespace Engine::Gui
                 if (ImGui::IsWindowAppearing())
                     ImGui::SetKeyboardFocusHere();
 
-                bool create = ImGui::InputText("Nom", createFolderName, IM_ARRAYSIZE(createFolderName), ImGuiInputTextFlags_EnterReturnsTrue);
+                bool create = ImGui::InputText("Nom", requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), ImGuiInputTextFlags_EnterReturnsTrue);
 
-                if (!createFolderError.IsEmpty())
+                if (!requestPopups.folderError.IsEmpty())
                 {
                     ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
-                    ImGui::TextWrapped("%s", createFolderError.c_str());
+                    ImGui::TextWrapped("%s", requestPopups.folderError.c_str());
                     ImGui::PopStyleColor();
                 }
 
@@ -540,24 +567,16 @@ namespace Engine::Gui
                 if (ImGui::Button("Annuler"))
                 {
                     ImGui::CloseCurrentPopup();
-                    createFolderError.Clear();
+                    requestPopups.folderError.Clear();
                 }
 
                 if (create)
                 {
-                    std::string folderName = createFolderName;
-                    folderName.erase(folderName.begin(), std::find_if(folderName.begin(), folderName.end(), [](unsigned char ch)
-                    {
-                        return !std::isspace(ch);
-                    }));
-                    folderName.erase(std::find_if(folderName.rbegin(), folderName.rend(), [](unsigned char ch)
-                    {
-                        return !std::isspace(ch);
-                    }).base(), folderName.end());
+                    std::string folderName = TrimCopy(requestPopups.folderName);
 
                     if (folderName.empty())
                     {
-                        createFolderError = "Le nom du dossier ne peut pas être vide.";
+                        LogAndStoreError(requestPopups.folderError, "Le nom du dossier ne peut pas être vide.", false);
                     }
                     else
                     {
@@ -565,7 +584,7 @@ namespace Engine::Gui
 
                         if (fs::exists(folderPath))
                         {
-                            createFolderError = "Un dossier avec ce nom existe déjà.";
+                            LogAndStoreError(requestPopups.folderError, "Un dossier avec ce nom existe déjà.", false);
                         }
                         else
                         {
@@ -573,12 +592,15 @@ namespace Engine::Gui
                             fs::create_directories(folderPath, createError);
                             if (createError)
                             {
-                                createFolderError = Engine::String("Impossible de créer le dossier : ") + createError.message();
+                                const std::string errorText = createError.message();
+                                String message = "Impossible de créer le dossier : ";
+                                message += errorText;
+                                LogAndStoreError(requestPopups.folderError, std::move(message));
                             }
                             else
                             {
                                 selectedEntry = folderPath.generic_string();
-                                createFolderError.Clear();
+                                requestPopups.folderError.Clear();
                                 ImGui::CloseCurrentPopup();
                             }
                         }
@@ -587,6 +609,64 @@ namespace Engine::Gui
 
                 ImGui::EndPopup();
             }
+        }
+
+        void RenderPopups(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups)
+        {
+            RenderCreateScriptPopup(state, selectedEntry, requestPopups);
+            RenderCreateFolderPopup(state, selectedEntry, requestPopups);
+        }
+    }
+
+    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
+    {
+        GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
+        contentPanel.SetPosition(340.0f, 50.0f);
+        contentPanel.SetSize(900.0f, 540.0f);
+        contentPanel.SetResizable(true);
+        contentPanel.SetMovable(true);
+        contentPanel.SetCollapsable(true);
+        contentPanel.SetClosable(true);
+        contentPanel.SetBackgroundColor(kContentBackground);
+        contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
+        contentPanel.SetDrawFunction([]()
+        {
+            namespace fs = std::filesystem;
+
+            static ContentState state{};
+            static char searchBuffer[256] = "";
+            static String selectedEntry{};
+            static PopupRequestState popupRequests{};
+
+            EnsureInitialized(state);
+
+            if (!state.error.IsEmpty())
+            {
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
+                ImGui::TextWrapped("%s", state.error.c_str());
+                ImGui::PopStyleColor();
+                ImGui::Spacing();
+                ImGui::TextDisabled("The Content Browser requires access to the Content directory.");
+                return;
+            }
+
+            if (state.current.empty())
+                state.current = state.root;
+
+            if (!fs::exists(state.current))
+                state.current = state.root;
+
+            RenderHeader(state, selectedEntry, searchBuffer);
+
+            ImGui::BeginGroup();
+            RenderDirectoryTree(state, selectedEntry);
+            ImGui::SameLine();
+
+            const std::string_view searchQuery(searchBuffer);
+            RenderEntries(state, selectedEntry, popupRequests, searchQuery);
+            ImGui::EndGroup();
+
+            RenderPopups(state, selectedEntry, popupRequests);
         });
 
         return contentPanel;
