@@ -110,6 +110,12 @@ namespace Engine
             return *this;
         }
 
+        String& operator+=(const std::string& other)
+        {
+            data_.append(other);
+            return *this;
+        }
+
         String& operator+=(std::string_view other)
         {
             data_.append(other.begin(), other.end());
@@ -156,9 +162,10 @@ namespace Engine
         }
 
         // String + std::string
-        [[nodiscard]] String operator+(const std::string& other) const {
+        [[nodiscard]] String operator+(const std::string& other) const
+        {
             String result(*this);
-            result += std::string_view(other);
+            result += other;
             return result;
         }
 
@@ -437,6 +444,7 @@ namespace Engine
         operator std::string&() & noexcept { return data_; }
         operator const std::string&() const& noexcept { return data_; }
         operator std::string&&() && noexcept { return std::move(data_); }
+        operator const char*() const noexcept { return data_.c_str(); }
         operator std::string_view() const noexcept { return data_; }
 
     private:

@@ -14,7 +14,6 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
-#include <string_view>
 #include <system_error>
 #include <utility>
 #include <vector>
@@ -62,9 +61,9 @@ namespace Engine::Gui
             storage = std::move(message);
         }
 
-        std::string ToLowerCopy(std::string_view value)
+        String ToLowerCopy(const String& value)
         {
-            std::string result(value);
+            String result(value);
             std::transform(result.begin(), result.end(), result.begin(), [](unsigned char ch)
             {
                 return static_cast<char>(std::tolower(ch));
@@ -73,35 +72,34 @@ namespace Engine::Gui
             return result;
         }
 
-        bool CaseInsensitiveLess(std::string_view lhs, std::string_view rhs)
+        bool CaseInsensitiveLess(const String& lhs, const String& rhs)
         {
-            const std::string lhsLower = ToLowerCopy(lhs);
-            const std::string rhsLower = ToLowerCopy(rhs);
+            const String lhsLower = ToLowerCopy(lhs);
+            const String rhsLower = ToLowerCopy(rhs);
             if (lhsLower == rhsLower)
-                return lhs < rhs;
+                return lhs.View() < rhs.View();
 
-            return lhsLower < rhsLower;
+            return lhsLower.View() < rhsLower.View();
         }
 
-        std::string TrimCopy(std::string_view value)
+        String TrimCopy(String value)
         {
-            std::string result(value);
             const auto isSpace = [](unsigned char ch)
             {
                 return std::isspace(ch) != 0;
             };
 
-            result.erase(result.begin(), std::find_if(result.begin(), result.end(), [&](char ch)
-            {
-                return !isSpace(static_cast<unsigned char>(ch));
-            }));
+            String::size_type start = 0;
+            const String::size_type length = value.size();
 
-            result.erase(std::find_if(result.rbegin(), result.rend(), [&](char ch)
-            {
-                return !isSpace(static_cast<unsigned char>(ch));
-            }).base(), result.end());
+            while (start < length && isSpace(static_cast<unsigned char>(value[start])))
+                ++start;
 
-            return result;
+            String::size_type end = length;
+            while (end > start && isSpace(static_cast<unsigned char>(value[end - 1])))
+                --end;
+
+            return value.Mid(start, end - start);
         }
 
         void EnsureInitialized(ContentState& state)
@@ -153,8 +151,8 @@ namespace Engine::Gui
             namespace fs = std::filesystem;
 
             const fs::path relativePath = state.current.lexically_relative(state.root);
-            const std::string relativeString = relativePath.generic_string();
-            const bool atRoot = relativeString.empty() || relativeString == ".";
+            const String relativeString = relativePath.generic_string();
+            const bool atRoot = relativeString.IsEmpty() || relativeString == ".";
 
             ImGui::PushStyleColor(ImGuiCol_ChildBg, kContentHeaderBackground);
             if (ImGui::BeginChild("ContentBrowserHeader", ImVec2(0.0f, kContentHeaderHeight), true, ImGuiWindowFlags_NoScrollbar))
@@ -213,7 +211,8 @@ namespace Engine::Gui
             {
                 const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
                 {
-                    const std::string directoryName = directory == state.root ? "Content" : directory.filename().generic_string();
+                    const String directoryName = directory == state.root ? String("Content") : String(directory.filename().generic_string());
+                    const String directoryId = directory.generic_string();
                     std::error_code equivalentError;
                     const bool isSelected = fs::equivalent(directory, state.current, equivalentError);
                     const ImGuiTreeNodeFlags nodeFlags =
@@ -222,7 +221,7 @@ namespace Engine::Gui
                         ImGuiTreeNodeFlags_SpanFullWidth |
                         (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
 
-                    const bool open = ImGui::TreeNodeEx(directory.generic_string().c_str(), nodeFlags, "%s", directoryName.c_str());
+                    const bool open = ImGui::TreeNodeEx(directoryId.c_str(), nodeFlags, "%s", directoryName.c_str());
                     if (ImGui::IsItemClicked())
                     {
                         state.current = directory;
@@ -249,7 +248,9 @@ namespace Engine::Gui
                         {
                             std::sort(children.begin(), children.end(), [&](const fs::path& lhs, const fs::path& rhs)
                             {
-                                return CaseInsensitiveLess(lhs.filename().generic_string(), rhs.filename().generic_string());
+                                const String lhsName = lhs.filename().generic_string();
+                                const String rhsName = rhs.filename().generic_string();
+                                return CaseInsensitiveLess(lhsName, rhsName);
                             });
 
                             for (const auto& child : children)
@@ -280,17 +281,17 @@ namespace Engine::Gui
             ImGui::EndChild();
         }
 
-        bool MatchesSearch(std::string_view value, std::string_view query)
+        bool MatchesSearch(const String& value, const String& query)
         {
-            if (query.empty())
+            if (query.IsEmpty())
                 return true;
 
-            const std::string valueLower = ToLowerCopy(value);
-            const std::string queryLower = ToLowerCopy(query);
-            return valueLower.find(queryLower) != std::string::npos;
+            const String valueLower = ToLowerCopy(value);
+            const String queryLower = ToLowerCopy(query);
+            return valueLower.find(queryLower.View()) != std::string::npos;
         }
 
-        void RenderEntries(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups, std::string_view searchQuery)
+        void RenderEntries(ContentState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery)
         {
             namespace fs = std::filesystem;
 
@@ -324,9 +325,9 @@ namespace Engine::Gui
 
             if (iterationError)
             {
-                const std::string errorText = iterationError.message();
+                const String errorText = iterationError.message();
                 String displayMessage{};
-                LogAndStoreError(displayMessage, String("Failed to enumerate content: ") + String(errorText));
+                LogAndStoreError(displayMessage, String("Failed to enumerate content: ") + errorText);
                 ImGui::TextDisabled("%s", displayMessage.c_str());
                 ImGui::EndChild();
                 return;
@@ -340,7 +341,9 @@ namespace Engine::Gui
                 if (!lhs.is_directory() && rhs.is_directory())
                     return false;
 
-                return CaseInsensitiveLess(lhs.path().filename().generic_string(), rhs.path().filename().generic_string());
+                const String lhsName = lhs.path().filename().generic_string();
+                const String rhsName = rhs.path().filename().generic_string();
+                return CaseInsensitiveLess(lhsName, rhsName);
             });
 
             const float cellSize = kContentThumbnailSize + kContentThumbnailPadding;
@@ -491,15 +494,15 @@ namespace Engine::Gui
 
                 if (create)
                 {
-                    std::string scriptName = TrimCopy(requestPopups.scriptName);
+                    String scriptName = TrimCopy(String(requestPopups.scriptName));
 
-                    if (scriptName.empty())
+                    if (scriptName.IsEmpty())
                     {
                         LogAndStoreError(requestPopups.scriptError, "Le nom du script ne peut pas être vide.", false);
                     }
                     else
                     {
-                        fs::path scriptFileName = scriptName;
+                        fs::path scriptFileName = scriptName.View();
                         if (scriptFileName.extension().empty())
                             scriptFileName.replace_extension(".lua");
 
@@ -572,15 +575,15 @@ namespace Engine::Gui
 
                 if (create)
                 {
-                    std::string folderName = TrimCopy(requestPopups.folderName);
+                    String folderName = TrimCopy(String(requestPopups.folderName));
 
-                    if (folderName.empty())
+                    if (folderName.IsEmpty())
                     {
                         LogAndStoreError(requestPopups.folderError, "Le nom du dossier ne peut pas être vide.", false);
                     }
                     else
                     {
-                        const fs::path folderPath = state.current / folderName;
+                        const fs::path folderPath = state.current / folderName.View();
 
                         if (fs::exists(folderPath))
                         {
@@ -662,7 +665,7 @@ namespace Engine::Gui
             RenderDirectoryTree(state, selectedEntry);
             ImGui::SameLine();
 
-            const std::string_view searchQuery(searchBuffer);
+            const String searchQuery(searchBuffer);
             RenderEntries(state, selectedEntry, popupRequests, searchQuery);
             ImGui::EndGroup();
 

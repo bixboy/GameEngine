@@ -6,7 +6,6 @@
 #include <fstream>
 #include <memory>
 #include <stdexcept>
-#include <string_view>
 #include <utility>
 
 #include "Core/Logger.h"
@@ -31,10 +30,10 @@ namespace Engine::Game
                 return static_cast<bool>(stream_);
             }
 
-            bool WriteString(std::string_view value)
+            bool WriteString(const String& value)
             {
                 const auto length = static_cast<std::uint32_t>(value.size());
-                return WriteUint32(length) && WriteBytes(value.data(), value.size());
+                return WriteUint32(length) && WriteBytes(value.c_str(), value.size());
             }
 
             [[nodiscard]] bool Good() const noexcept { return static_cast<bool>(stream_); }
@@ -83,7 +82,7 @@ namespace Engine::Game
             std::istream& stream_;
         };
 
-        bool LogStreamFailure(const std::filesystem::path& filePath, std::string_view action)
+        bool LogStreamFailure(const std::filesystem::path& filePath, const String& action)
         {
             LOG_ERROR(String("Failed to ") + action + String(": ") + filePath.string());
             return false;
@@ -215,10 +214,10 @@ namespace Engine::Game
         factories[std::move(typeName)] = std::move(factory);
     }
 
-    void SceneSerializer::UnregisterActorFactory(std::string_view typeName)
+    void SceneSerializer::UnregisterActorFactory(const String& typeName)
     {
         auto& factories = GetFactories();
-        factories.erase(String(typeName));
+        factories.erase(typeName);
     }
 
     void SceneSerializer::EnsureActorFactory(const Actor& actor)
@@ -242,10 +241,10 @@ namespace Engine::Game
         });
     }
 
-    bool SceneSerializer::HasActorFactory(std::string_view typeName)
+    bool SceneSerializer::HasActorFactory(const String& typeName)
     {
         const auto& factories = GetFactories();
-        return factories.contains(String(typeName));
+        return factories.contains(typeName);
     }
 
     void SceneSerializer::ClearActorFactories()
@@ -255,11 +254,11 @@ namespace Engine::Game
         EnsureDefaultFactories();
     }
 
-    std::unique_ptr<Actor> SceneSerializer::CreateActor(std::string_view typeName)
+    std::unique_ptr<Actor> SceneSerializer::CreateActor(const String& typeName)
     {
         auto& factories = GetFactories();
-        const auto it = factories.find(String(typeName));
-        
+        const auto it = factories.find(typeName);
+
         if (it == factories.end())
             return nullptr;
 
@@ -283,7 +282,7 @@ namespace Engine::Game
     void SceneSerializer::EnsureDefaultFactories()
     {
         auto& factories = GetFactories();
-        if (!factories.contains("Actor"))
+        if (!factories.contains(String("Actor")))
         {
             factories["Actor"] = []() { return std::make_unique<Actor>(); };
         }

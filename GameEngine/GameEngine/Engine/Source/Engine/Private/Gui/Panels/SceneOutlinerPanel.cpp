@@ -9,7 +9,6 @@
 #include "imgui.h"
 
 #include <cstddef>
-#include <string_view>
 
 namespace Engine::Gui
 {
@@ -44,8 +43,8 @@ namespace Engine::Gui
 
             static char searchBuffer[128] = "";
             ImGui::InputTextWithHint("##SceneOutlinerSearch", "Search actors...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
-            const std::string_view searchQuery(searchBuffer);
-            const bool hasSearch = !searchQuery.empty();
+            const String searchQuery(searchBuffer);
+            const bool hasSearch = !searchQuery.IsEmpty();
 
             const auto& actors = activeScene->GetActors();
 
@@ -55,11 +54,11 @@ namespace Engine::Gui
                     return true;
 
                 const Engine::String& actorName = actor.GetName();
-                if (!actorName.IsEmpty() && actorName.Contains(searchQuery, false))
+                if (!actorName.IsEmpty() && actorName.Contains(searchQuery.View(), false))
                     return true;
 
                 Engine::String typeName(actor.GetTypeName());
-                return typeName.Contains(searchQuery, false);
+                return typeName.Contains(searchQuery.View(), false);
             };
 
             std::size_t totalActors = 0;
@@ -77,7 +76,8 @@ namespace Engine::Gui
 
             ImGui::Separator();
 
-            const std::string_view sceneName = activeScene->Name();
+            const Engine::String& sceneName = activeScene->Name();
+            const auto sceneNameView = sceneName.View();
             const ImGuiTreeNodeFlags sceneFlags =
                 ImGuiTreeNodeFlags_DefaultOpen |
                 ImGuiTreeNodeFlags_OpenOnArrow |
@@ -85,7 +85,7 @@ namespace Engine::Gui
                 ImGuiTreeNodeFlags_SpanFullWidth;
 
             if (ImGui::TreeNodeEx(static_cast<const void*>(activeScene), sceneFlags, "%.*s",
-                static_cast<int>(sceneName.size()), sceneName.data()))
+                static_cast<int>(sceneNameView.size()), sceneNameView.data()))
             {
                 if (totalActors == 0)
                 {
@@ -99,8 +99,9 @@ namespace Engine::Gui
                             continue;
 
                         const Engine::String& actorName = actor->GetName();
-                        const std::string_view actorNameView = actorName.View();
-                        const std::string_view actorType = actor->GetTypeName();
+                        const auto actorNameView = actorName.View();
+                        const Engine::String actorType = actor->GetTypeName();
+                        const auto actorTypeView = actorType.View();
 
                         const bool hasName = !actorNameView.empty();
                         const ImGuiTreeNodeFlags actorFlags =
@@ -112,12 +113,12 @@ namespace Engine::Gui
                         {
                             ImGui::TreeNodeEx(actor.get(), actorFlags, "%.*s (%.*s)",
                                 static_cast<int>(actorNameView.size()), actorNameView.data(),
-                                static_cast<int>(actorType.size()), actorType.data());
+                                static_cast<int>(actorTypeView.size()), actorTypeView.data());
                         }
                         else
                         {
                             ImGui::TreeNodeEx(actor.get(), actorFlags, "<Unnamed> (%.*s)",
-                                static_cast<int>(actorType.size()), actorType.data());
+                                static_cast<int>(actorTypeView.size()), actorTypeView.data());
                         }
                     }
 

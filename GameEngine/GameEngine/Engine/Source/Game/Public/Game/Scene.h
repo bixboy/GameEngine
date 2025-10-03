@@ -2,7 +2,6 @@
 #include <memory>
 #include <vector>
 #include <SDL3/SDL_events.h>
-#include <string_view>
 #include "Game/Actor.h"
 #include "Input/InputManager.h"
 #include "Core/String.h"
@@ -48,7 +47,7 @@ namespace Engine
 
                 void Rename(String name);
 
-                [[nodiscard]] std::string_view Name() const noexcept { return name_; }
+                [[nodiscard]] const String& Name() const noexcept { return name_; }
 
             protected:
                 void SetName(String name);

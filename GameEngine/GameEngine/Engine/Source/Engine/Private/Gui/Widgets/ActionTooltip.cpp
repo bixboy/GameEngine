@@ -13,7 +13,7 @@ namespace Engine::Gui
             for (std::size_t index = 0; index < count; ++index)
             {
                 const ActionTooltipAction& action = actions[index];
-                if (action.Label.empty())
+                if (action.Label.IsEmpty())
                     continue;
 
                 ImGui::PushID(static_cast<int>(index));
@@ -27,20 +27,21 @@ namespace Engine::Gui
         }
     }
 
-    void ShowActionTooltip(std::string_view header, std::initializer_list<ActionTooltipAction> actions)
+    void ShowActionTooltip(const String& header, std::initializer_list<ActionTooltipAction> actions)
     {
         ShowActionTooltip(header, actions.begin(), actions.size());
     }
 
-    void ShowActionTooltip(std::string_view header, const ActionTooltipAction* actions, std::size_t count)
+    void ShowActionTooltip(const String& header, const ActionTooltipAction* actions, std::size_t count)
     {
         if (!ImGui::BeginTooltip())
             return;
 
-        const bool hasHeader = !header.empty();
+        const bool hasHeader = !header.IsEmpty();
         if (hasHeader)
         {
-            ImGui::TextUnformatted(header.data(), header.data() + header.size());
+            const auto headerView = header.View();
+            ImGui::TextUnformatted(headerView.data(), headerView.data() + headerView.size());
         }
 
         if (count > 0)

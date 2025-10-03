@@ -3,24 +3,24 @@
 #include <cstddef>
 #include <functional>
 #include <initializer_list>
-#include <string>
-#include <string_view>
 #include <utility>
+
+#include "Core/String.h"
 
 namespace Engine::Gui
 {
     struct ActionTooltipAction
     {
-        std::string Label{};
+        String Label{};
         std::function<void()> Callback{};
 
         ActionTooltipAction() = default;
-        ActionTooltipAction(std::string label, std::function<void()> callback)
+        ActionTooltipAction(String label, std::function<void()> callback)
             : Label(std::move(label)), Callback(std::move(callback))
         {
         }
     };
 
-    void ShowActionTooltip(std::string_view header, std::initializer_list<ActionTooltipAction> actions);
-    void ShowActionTooltip(std::string_view header, const ActionTooltipAction* actions, std::size_t count);
+    void ShowActionTooltip(const String& header, std::initializer_list<ActionTooltipAction> actions);
+    void ShowActionTooltip(const String& header, const ActionTooltipAction* actions, std::size_t count);
 }

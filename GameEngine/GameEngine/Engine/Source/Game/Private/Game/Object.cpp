@@ -38,7 +38,7 @@ namespace Engine::Game
         name_ = std::move(name);
     }
 
-    std::string_view Object::GetTypeName() const noexcept
+    String Object::GetTypeName() const noexcept
     {
         return "Object";
     }
@@ -66,12 +66,12 @@ namespace Engine::Game
         DeserializeBinaryImpl(stream);
     }
 
-    void Object::WriteString(std::ostream& stream, std::string_view value)
+    void Object::WriteString(std::ostream& stream, const String& value)
     {
         const auto length = static_cast<std::uint32_t>(value.size());
-        
+
         WritePrimitive(stream, length);
-        stream.write(value.data(), length);
+        stream.write(value.data(), static_cast<std::streamsize>(length));
     }
 
     String Object::ReadString(std::istream& stream)

@@ -2,8 +2,6 @@
 
 #include <istream>
 #include <ostream>
-#include <string_view>
-
 #include "Math/Math.h"
 #include "Core/String.h"
 
@@ -17,7 +15,7 @@ namespace Engine::Game
         Object(String name, const Math::Transform& transform);
         virtual ~Object() = default;
 
-        [[nodiscard]] virtual std::string_view GetTypeName() const noexcept;
+        [[nodiscard]] virtual String GetTypeName() const noexcept;
 
         [[nodiscard]] const String& GetUUID() const noexcept { return uuid_; }
         void SetUUID(String uuid);
@@ -57,7 +55,7 @@ namespace Engine::Game
             stream.read(reinterpret_cast<char*>(&value), sizeof(T));
         }
 
-        static void WriteString(std::ostream& stream, std::string_view value);
+        static void WriteString(std::ostream& stream, const String& value);
         static String ReadString(std::istream& stream);
 
     private:

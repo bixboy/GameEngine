@@ -4,7 +4,6 @@
 
 #include <cstdlib>
 #include <memory>
-#include <string_view>
 #include <utility>
 
 #include "Core/Logger.h"
@@ -146,14 +145,14 @@ namespace Engine::Core
 
         if (activeScene)
         {
-            const std::string_view sceneName = activeScene->Name();
+            const String& sceneName = activeScene->Name();
             SDL_RenderDebugTextFormat(
                 renderer_->GetSDLRenderer(),
                 10,
                 30,
                 "Scene: %.*s",
                 static_cast<int>(sceneName.size()),
-                sceneName.data());
+                sceneName.c_str());
         }
 
         RenderGui(activeScene);

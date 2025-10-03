@@ -6,7 +6,6 @@
 #include "Gui/GuiManager.h"
 #include "Gui/GuiPanel.h"
 
-#include <string_view>
 
 #include "imgui.h"
 
@@ -44,9 +43,13 @@ namespace Engine::Gui
 
             if (const auto* activeScene = sceneManager->GetScene())
             {
-                const std::string_view sceneName = activeScene->Name();
+                const String& sceneName = activeScene->Name();
+                const auto sceneNameView = sceneName.View();
                 ImGui::Separator();
-                ImGui::Text("Scene: %.*s", static_cast<int>(sceneName.size()), sceneName.data());
+                ImGui::Text(
+                    "Scene: %.*s",
+                    static_cast<int>(sceneNameView.size()),
+                    sceneNameView.data());
             }
         });
 

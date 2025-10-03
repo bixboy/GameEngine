@@ -23,7 +23,7 @@ namespace Engine::Game
 
              void AddComponent(std::unique_ptr<Component> component);
 
-            [[nodiscard]] std::string_view GetTypeName() const noexcept override { return "Actor"; }
+            [[nodiscard]] String GetTypeName() const noexcept override { return "Actor"; }
 
             [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
 

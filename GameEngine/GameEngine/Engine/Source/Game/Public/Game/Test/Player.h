@@ -26,7 +26,7 @@ namespace Engine
                 void MoveForward(float value);
                 void MoveRight(float value);
 
-                [[nodiscard]] std::string_view GetTypeName() const noexcept override { return "Player"; }
+                [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
                 [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
 
             private:
