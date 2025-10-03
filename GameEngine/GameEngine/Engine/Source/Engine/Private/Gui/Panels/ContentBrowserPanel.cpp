@@ -47,7 +47,7 @@ namespace Engine::Gui
             {
                 fs::path root{};
                 fs::path current{};
-                Engine::String error{};
+                String error{};
                 bool initialized{false};
             };
 
@@ -61,6 +61,7 @@ namespace Engine::Gui
                 {
                     return static_cast<char>(std::tolower(ch));
                 });
+                
                 return value;
             };
 
@@ -90,16 +91,17 @@ namespace Engine::Gui
                     fs::create_directories(state.root, createError);
                     if (createError)
                     {
-                        Engine::String message = Engine::String("Failed to create content directory: ") + state.root.string();
+                        String message = String("Failed to create content directory: ") + state.root.string();
                         message += " (";
                         message += std::string_view{createError.message()};
                         message += ')';
+                        
                         LOG_ERROR(message);
                         state.error = message;
                     }
                     else if (!fs::exists(state.root))
                     {
-                        Engine::String message = Engine::String("Content directory is not available: ") + state.root.string();
+                        String message = String("Content directory is not available: ") + state.root.string();
                         LOG_ERROR(message);
                         state.error = message;
                     }
@@ -144,19 +146,26 @@ namespace Engine::Gui
                     state.current = state.root;
                     selectedEntry.clear();
                 }
+                
                 ImGui::PopStyleVar();
-
                 ImGui::SameLine();
                 ImGui::BeginDisabled(atRoot);
+                
                 if (ImGui::Button("Up"))
                 {
                     fs::path parent = state.current.parent_path();
                     fs::path parentRelative = parent.lexically_relative(state.root);
-                    const std::string parentString = parentRelative.generic_string();
+                    const String parentString = parentRelative.generic_string();
+
                     if (parentString.empty() || parentString == "." || parentString.rfind("..", 0) == 0)
-                        state.current = state.root;
+                    {
+                     state.current = state.root;   
+                    }
                     else
+                    {
                         state.current = parent;
+                    }
+                    
                     selectedEntry.clear();
                 }
                 ImGui::EndDisabled();
@@ -168,11 +177,13 @@ namespace Engine::Gui
                 ImGui::SetNextItemWidth(220.0f);
                 ImGui::InputTextWithHint("##ContentSearch", "Search content...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
             }
+            
             ImGui::EndChild();
             ImGui::PopStyleColor();
 
             ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true);
             ImGui::PushStyleColor(ImGuiCol_ChildBg, kContentTreeBackground);
+            
             if (ImGui::BeginChild("ContentBrowserTreeInner", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar))
             {
                 const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
@@ -201,6 +212,7 @@ namespace Engine::Gui
                         {
                             if (!entry.is_directory())
                                 continue;
+                            
                             children.push_back(entry.path());
                         }
 
@@ -233,7 +245,9 @@ namespace Engine::Gui
                 };
 
                 if (fs::exists(state.root))
-                    renderDirectoryTree(renderDirectoryTree, state.root, 0);
+                {
+                    renderDirectoryTree(renderDirectoryTree, state.root, 0);   
+                }
             }
             ImGui::EndChild();
             ImGui::PopStyleColor();
@@ -252,7 +266,7 @@ namespace Engine::Gui
 
             if (iterationError)
             {
-                Engine::String message = Engine::String("Failed to enumerate content: ") + iterationError.message();
+                String message = String("Failed to enumerate content: ") + iterationError.message();
                 LOG_ERROR(message);
                 ImGui::TextDisabled("Unable to read directory contents.");
                 ImGui::EndChild();
@@ -263,16 +277,18 @@ namespace Engine::Gui
             {
                 if (lhs.is_directory() && !rhs.is_directory())
                     return true;
+                
                 if (!lhs.is_directory() && rhs.is_directory())
                     return false;
+                
                 return caseInsensitiveLess(lhs.path().filename().generic_string(), rhs.path().filename().generic_string());
             });
 
             const float cellSize = kContentThumbnailSize + kContentThumbnailPadding;
             const float panelWidth = ImGui::GetContentRegionAvail().x;
+            
             int columns = static_cast<int>(panelWidth / cellSize);
-            if (columns < 1)
-                columns = 1;
+            columns = std::max(columns, 1);
 
             if (ImGui::BeginTable("ContentBrowserEntries", columns))
             {
@@ -327,6 +343,7 @@ namespace Engine::Gui
                     const bool isSelected = selectedEntry == entryPath.generic_string();
                     if (isSelected)
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.4f, 1.0f));
+                    
                     ImGui::TextWrapped("%s", entryName.c_str());
                     if (isSelected)
                         ImGui::PopStyleColor();

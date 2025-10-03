@@ -12,10 +12,7 @@ namespace Engine::Gui
         {
         public:
             DefaultEngineGuiPanelManager(GuiManager& guiManager, const DefaultEngineGuiContext& context)
-                : guiManager_(guiManager)
-                , context_(context)
-            {
-            }
+            : guiManager_(guiManager), context_(context){}
 
             DefaultEngineGuiPanels CreatePanels()
             {

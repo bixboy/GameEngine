@@ -17,8 +17,8 @@ namespace Engine
     {
     public:
         using value_type = std::string::value_type;
-        using size_type = std::string::size_type;
-        using iterator = std::string::iterator;
+        using size_type  = std::string::size_type;
+        using iterator   = std::string::iterator;
         using const_iterator = std::string::const_iterator;
 
         String() = default;
@@ -31,9 +31,9 @@ namespace Engine
         String(std::string_view value) : data_(value) {}
         String(size_type count, char ch) : data_(count, ch) {}
 
-        String& operator=(const String&) = default;
-        String& operator=(String&&) noexcept = default;
-        String& operator=(const char* value)
+        String& operator = (const String&) = default;
+        String& operator = (String&&) noexcept = default;
+        String& operator = (const char* value)
         {
             data_ = value ? value : "";
             return *this;
@@ -121,6 +121,13 @@ namespace Engine
             data_.push_back(ch);
             return *this;
         }
+        String& operator+=(const char* other)
+        {
+            if (other)
+                data_.append(other);
+            
+            return *this;
+        }
 
         [[nodiscard]] String operator+(const String& other) const
         {
@@ -169,8 +176,12 @@ namespace Engine
 
         [[nodiscard]] bool operator==(const String& other) const noexcept { return data_ == other.data_; }
         [[nodiscard]] bool operator!=(const String& other) const noexcept { return data_ != other.data_; }
-        [[nodiscard]] bool operator==(std::string_view other) const noexcept { return data_ == other; }
-        [[nodiscard]] bool operator!=(std::string_view other) const noexcept { return data_ != other; }
+        
+        [[nodiscard]] bool operator==(const std::string_view other) const noexcept { return data_ == other; }
+        [[nodiscard]] bool operator!=(const std::string_view other) const noexcept { return data_ != other; }
+        
+        [[nodiscard]] bool operator==(const char* other) const noexcept { return data_ == (other ? other : ""); }
+        [[nodiscard]] bool operator!=(const char* other) const noexcept { return !(*this == other); }
 
         [[nodiscard]] bool StartsWith(std::string_view prefix, bool caseSensitive = true) const noexcept
         {
@@ -413,6 +424,14 @@ namespace Engine
             {
                 return std::isdigit(c) != 0 || c == '+' || c == '-' || c == '.';
             });
+        }
+
+        [[nodiscard]] size_type find(std::string_view value, size_type pos = 0) const noexcept {
+            return data_.find(value, pos);
+        }
+
+        [[nodiscard]] size_type rfind(std::string_view value, size_type pos = std::string::npos) const noexcept {
+            return data_.rfind(value, pos);
         }
 
         operator std::string&() & noexcept { return data_; }
