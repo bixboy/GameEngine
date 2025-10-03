@@ -18,6 +18,7 @@ namespace Engine::Gui
             void SetTitle(String title);
             [[nodiscard]] const String& GetTitle() const noexcept { return title_; }
             [[nodiscard]] const String& GetName() const noexcept { return name_; }
+            [[nodiscard]] const String& GetWindowLabel() const noexcept { return windowLabel_; }
 
             void SetVisible(bool visible) noexcept { visible_ = visible; }
             [[nodiscard]] bool IsVisible() const noexcept { return visible_; }

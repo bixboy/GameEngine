@@ -21,6 +21,9 @@
 #include "Gui/LayoutSystem.h"
 #include "Gui/DefaultEngineGui.h"
 #include "imgui.h"
+#ifdef IMGUI_HAS_DOCK
+#include "imgui_internal.h"
+#endif
 
 namespace Engine::Core
 {
@@ -312,6 +315,53 @@ namespace Engine::Core
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
         contentBrowserPanel_ = panels.contentBrowserPanel;
+
+#ifdef IMGUI_HAS_DOCK
+        if (guiSystem_)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+            {
+                if (ImGuiViewport* viewport = ImGui::GetMainViewport())
+                {
+                    const ImGuiID dockspaceId = viewport->ID;
+                    ImGui::DockBuilderRemoveNode(dockspaceId);
+                    ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+                    ImGui::DockBuilderSetNodePos(dockspaceId, viewport->Pos);
+                    ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
+
+                    ImGuiID centralDockId = dockspaceId;
+
+                    if (contentBrowserPanel_)
+                    {
+                        ImGuiID bottomDockId = ImGui::DockBuilderSplitNode(
+                            centralDockId,
+                            ImGuiDir_Down,
+                            0.30f,
+                            nullptr,
+                            &centralDockId);
+                        ImGui::DockBuilderDockWindow(contentBrowserPanel_->GetWindowLabel().c_str(), bottomDockId);
+                    }
+
+                    if (outlinerPanel_)
+                    {
+                        ImGuiID rightDockId = ImGui::DockBuilderSplitNode(
+                            centralDockId,
+                            ImGuiDir_Right,
+                            0.25f,
+                            nullptr,
+                            &centralDockId);
+                        ImGui::DockBuilderDockWindow(outlinerPanel_->GetWindowLabel().c_str(), rightDockId);
+                    }
+
+                    if (statsPanel_)
+                        ImGui::DockBuilderDockWindow(statsPanel_->GetWindowLabel().c_str(), centralDockId);
+
+                    ImGui::DockBuilderFinish(dockspaceId);
+                }
+            }
+        }
+#endif
 
         if (guiSystem_)
             guiSystem_->GetLayoutSystem().CaptureDefaultLayout();
