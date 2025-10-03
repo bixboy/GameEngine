@@ -48,6 +48,7 @@ namespace Engine::Gui
         private:
             String name_;
             String title_;
+            String windowLabel_;
             bool visible_{true};
 
             bool usePosition_{false};
@@ -69,5 +70,7 @@ namespace Engine::Gui
             ImVec4 backgroundColor_{1.0f, 1.0f, 1.0f, 1.0f};
 
             DrawFunction drawFunction_{};
+
+            void UpdateWindowLabel();
     };
 }

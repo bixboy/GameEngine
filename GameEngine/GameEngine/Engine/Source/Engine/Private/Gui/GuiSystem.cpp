@@ -8,6 +8,7 @@
 
 #include "Core/Logger.h"
 #include "Gui/GuiPanel.h"
+#include "Gui/LayoutSystem.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"
@@ -15,6 +16,11 @@
 
 namespace Engine::Gui
 {
+    GuiSystem::GuiSystem()
+        : layoutSystem_(std::make_unique<LayoutSystem>())
+    {
+    }
+
     GuiSystem::~GuiSystem()
     {
         Shutdown();
@@ -39,6 +45,7 @@ namespace Engine::Gui
 
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         ImGui::StyleColorsDark();
 
@@ -81,6 +88,9 @@ namespace Engine::Gui
             return;
 
         panels_.clear();
+
+        if (layoutSystem_)
+            layoutSystem_->Clear();
 
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
@@ -148,6 +158,9 @@ namespace Engine::Gui
     {
         if (std::find(panels_.begin(), panels_.end(), &panel) == panels_.end())
             panels_.push_back(&panel);
+
+        if (layoutSystem_)
+            layoutSystem_->RegisterPanel(&panel);
     }
 
     void GuiSystem::UnregisterPanel(GuiPanel& panel)
@@ -155,5 +168,8 @@ namespace Engine::Gui
         auto it = std::find(panels_.begin(), panels_.end(), &panel);
         if (it != panels_.end())
             panels_.erase(it);
+
+        if (layoutSystem_)
+            layoutSystem_->UnregisterPanel(&panel);
     }
 }

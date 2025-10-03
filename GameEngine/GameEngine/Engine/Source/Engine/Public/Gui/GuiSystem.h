@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <vector>
 
 #include <SDL3/SDL_events.h>
@@ -10,11 +11,12 @@ struct SDL_Renderer;
 namespace Engine::Gui
 {
     class GuiPanel;
+    class LayoutSystem;
 
     class GuiSystem
     {
         public:
-            GuiSystem() = default;
+            GuiSystem();
             ~GuiSystem();
 
             GuiSystem(const GuiSystem&) = delete;
@@ -36,6 +38,9 @@ namespace Engine::Gui
 
             [[nodiscard]] bool IsInitialized() const noexcept { return initialized_; }
 
+            [[nodiscard]] LayoutSystem& GetLayoutSystem() noexcept { return *layoutSystem_; }
+            [[nodiscard]] const LayoutSystem& GetLayoutSystem() const noexcept { return *layoutSystem_; }
+
         private:
             SDL_Window* window_{nullptr};
             SDL_Renderer* renderer_{nullptr};
@@ -43,5 +48,6 @@ namespace Engine::Gui
             bool frameBegun_{false};
 
             std::vector<GuiPanel*> panels_{};
+            std::unique_ptr<LayoutSystem> layoutSystem_{};
     };
 }

@@ -148,6 +148,9 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\LayoutSystem.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -271,6 +274,9 @@
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\LayoutSystem.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h">

@@ -7,11 +7,13 @@ namespace Engine::Gui
     GuiPanel::GuiPanel(String name, String title)
         : name_(std::move(name)), title_(std::move(title))
     {
+        UpdateWindowLabel();
     }
 
     void GuiPanel::SetTitle(String title)
     {
         title_ = std::move(title);
+        UpdateWindowLabel();
     }
 
     void GuiPanel::SetPosition(float x, float y, ImGuiCond condition) noexcept
@@ -68,8 +70,8 @@ namespace Engine::Gui
 
         bool open = visible_;
         const bool shouldShow = closable_
-            ? ImGui::Begin(title_.c_str(), &open, finalFlags)
-            : ImGui::Begin(title_.c_str(), nullptr, finalFlags);
+            ? ImGui::Begin(windowLabel_.c_str(), &open, finalFlags)
+            : ImGui::Begin(windowLabel_.c_str(), nullptr, finalFlags);
 
         if (closable_)
             visible_ = open;
@@ -81,5 +83,12 @@ namespace Engine::Gui
 
         if (useBackgroundColor_)
             ImGui::PopStyleColor();
+    }
+
+    void GuiPanel::UpdateWindowLabel()
+    {
+        windowLabel_ = title_;
+        windowLabel_ += "###";
+        windowLabel_ += name_;
     }
 }

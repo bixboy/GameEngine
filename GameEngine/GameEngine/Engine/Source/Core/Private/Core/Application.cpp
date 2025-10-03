@@ -18,7 +18,9 @@
 #include "Gui/GuiManager.h"
 #include "Gui/GuiPanel.h"
 #include "Gui/GuiSystem.h"
+#include "Gui/LayoutSystem.h"
 #include "Gui/DefaultEngineGui.h"
+#include "imgui.h"
 
 namespace Engine::Core
 {
@@ -167,7 +169,12 @@ namespace Engine::Core
             return;
 
         if (guiManager_)
+        {
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+                ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
             guiManager_->DrawAll();
+        }
 
         guiSystem_->EndFrame();
         guiSystem_->Render();
@@ -303,6 +310,9 @@ namespace Engine::Core
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
         contentBrowserPanel_ = panels.contentBrowserPanel;
+
+        if (guiSystem_)
+            guiSystem_->GetLayoutSystem().CaptureDefaultLayout();
     }
 
 // === Shutdown ===

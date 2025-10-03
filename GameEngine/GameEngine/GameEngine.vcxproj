@@ -254,6 +254,7 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiPanel.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\LayoutSystem.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp" />
     <ClCompile Include="Engine\Source\Game\Private\Game\ActorSpawner.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -1807,6 +1808,7 @@
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\LayoutSystem.h" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h" />
     <ClInclude Include="Engine\Source\Game\Public\Game\ActorSpawner.h" />
     <ClInclude Include="Engine\Source\Game\Public\Game\Object.h" />
