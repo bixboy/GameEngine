@@ -29,11 +29,12 @@ namespace Engine::Gui
         constexpr float kContentHeaderHeight = 72.0f;
         constexpr float kContentThumbnailSize = 72.0f;
         constexpr float kContentThumbnailPadding = 28.0f;
-#ifdef ImGuiHoveredFlags_ForTooltip
+        
+    #ifdef ImGuiHoveredFlags_ForTooltip
         constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_ForTooltip;
-#else
+    #else
         constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
-#endif
+    #endif
 
         struct ContentState
         {
