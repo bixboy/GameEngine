@@ -4,6 +4,7 @@
 #include "Core/String.h"
 #include "Gui/GuiManager.h"
 #include "Gui/GuiPanel.h"
+#include "Gui/Widgets/ActionTooltip.h"
 
 #include "imgui.h"
 
@@ -12,7 +13,6 @@
 #include <cstdio>
 #include <filesystem>
 #include <fstream>
-#include <initializer_list>
 #include <string>
 #include <string_view>
 #include <system_error>
@@ -29,36 +29,11 @@ namespace Engine::Gui
         constexpr float kContentHeaderHeight = 72.0f;
         constexpr float kContentThumbnailSize = 72.0f;
         constexpr float kContentThumbnailPadding = 28.0f;
-
-        void DrawTooltipWithActions(std::string_view header, std::initializer_list<std::string_view> actions)
-        {
-            if (!ImGui::BeginTooltip())
-                return;
-
-            if (!header.empty())
-            {
-                ImGui::TextUnformatted(header.data(), header.data() + header.size());
-            }
-
-            if (!actions.size())
-            {
-                ImGui::EndTooltip();
-                return;
-            }
-
-            if (!header.empty())
-            {
-                ImGui::Separator();
-            }
-
-            ImGui::TextDisabled("Actions disponibles :");
-            for (std::string_view action : actions)
-            {
-                ImGui::BulletText("%.*s", static_cast<int>(action.size()), action.data());
-            }
-
-            ImGui::EndTooltip();
-        }
+#ifdef ImGuiHoveredFlags_ForTooltip
+        constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_ForTooltip;
+#else
+        constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
+#endif
     }
 
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
@@ -359,6 +334,7 @@ namespace Engine::Gui
                 {
                     const fs::path entryPath = entry.path();
                     const std::string entryName = entryPath.filename().generic_string();
+                    const std::string entryPathString = entryPath.generic_string();
                     const bool isDirectory = entry.is_directory();
 
                     ImGui::TableNextColumn();
@@ -382,7 +358,7 @@ namespace Engine::Gui
                             }
                             else
                             {
-                                selectedEntry = entryPath.generic_string();
+                                selectedEntry = entryPathString;
                             }
                         }
                         ImGui::EndPopup();
@@ -395,18 +371,41 @@ namespace Engine::Gui
                     }
                     else if (clicked)
                     {
-                        selectedEntry = entryPath.generic_string();
+                        selectedEntry = entryPathString;
                     }
 
-                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+                    if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
                     {
                         if (isDirectory)
-                            DrawTooltipWithActions(entryName, {"Ouvrir", "Créer un script...", "Créer un dossier..."});
+                        {
+                            ShowActionTooltip(entryName, {
+                                {"Ouvrir", [&, entryPath]()
+                                {
+                                    state.current = entryPath;
+                                    selectedEntry.clear();
+                                }},
+                                {"Créer un script...", [&]()
+                                {
+                                    requestCreateScriptPopup = true;
+                                }},
+                                {"Créer un dossier...", [&]()
+                                {
+                                    requestCreateFolderPopup = true;
+                                }}
+                            });
+                        }
                         else
-                            DrawTooltipWithActions(entryName, {"Ouvrir", "Clic droit pour plus d'options"});
+                        {
+                            ShowActionTooltip(entryName, {
+                                {"Ouvrir", [&, entryPathString]()
+                                {
+                                    selectedEntry = entryPathString;
+                                }}
+                            });
+                        }
                     }
 
-                    const bool isSelected = selectedEntry == entryPath.generic_string();
+                    const bool isSelected = selectedEntry == entryPathString;
                     if (isSelected)
                         ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.4f, 1.0f));
                     

@@ -148,6 +148,9 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiSystem.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Game\Private\Game\ActorSpawner.cpp">
       <Filter>Source\Game\Private\Game</Filter>
     </ClCompile>
@@ -256,6 +259,9 @@
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\StatsPanel.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Widgets\ActionTooltip.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h">
