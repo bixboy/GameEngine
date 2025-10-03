@@ -2,14 +2,13 @@
 
 #include "imgui.h"
 
-#include <cfloat>
-
 namespace Engine::Gui
 {
     namespace
     {
         void DrawActionButtons(const ActionTooltipAction* actions, std::size_t count)
         {
+            ImGui::Indent(8.0f);
             for (std::size_t index = 0; index < count; ++index)
             {
                 const ActionTooltipAction& action = actions[index];
@@ -17,13 +16,17 @@ namespace Engine::Gui
                     continue;
 
                 ImGui::PushID(static_cast<int>(index));
-                const bool clicked = ImGui::Button(action.Label.c_str(), ImVec2(-FLT_MIN, 0.0f));
-                if (clicked && action.Callback)
-                {
+                ImGui::TextDisabled("%s", action.Label.c_str());
+
+                if (ImGui::IsItemHovered())
+                    ImGui::SetMouseCursor(ImGuiMouseCursor_Hand);
+
+                if (action.Callback && ImGui::IsItemClicked())
                     action.Callback();
-                }
+
                 ImGui::PopID();
             }
+            ImGui::Unindent(8.0f);
         }
     }
 
