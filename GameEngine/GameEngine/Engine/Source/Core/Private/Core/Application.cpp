@@ -16,10 +16,7 @@
 #include "Input/InputManager.h"
 
 #include "Gui/GuiManager.h"
-#include "Gui/GuiPanel.h"
 #include "Gui/GuiSystem.h"
-#include "Gui/LayoutSystem.h"
-#include "Gui/DefaultEngineGui.h"
 #include "imgui.h"
 #ifdef IMGUI_HAS_DOCK
 #include "imgui_internal.h"
@@ -171,15 +168,49 @@ namespace Engine::Core
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        if (guiManager_)
-        {
 #ifdef IMGUI_HAS_DOCK
-            ImGuiIO& io = ImGui::GetIO();
-            if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-                ImGui::DockSpaceOverViewport(ImGui::GetMainViewport(), ImGuiDockNodeFlags_PassthruCentralNode);
-#endif
-            guiManager_->DrawAll();
+        const ImGuiIO& io = ImGui::GetIO();
+        if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
+        {
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
+            ImGui::SetNextWindowPos(viewport->Pos);
+            ImGui::SetNextWindowSize(viewport->Size);
+            ImGui::SetNextWindowViewport(viewport->ID);
+
+            ImGuiWindowFlags windowFlags =
+                ImGuiWindowFlags_NoDocking |
+                ImGuiWindowFlags_NoTitleBar |
+                ImGuiWindowFlags_NoCollapse |
+                ImGuiWindowFlags_NoResize |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoBringToFrontOnFocus |
+                ImGuiWindowFlags_NoNavFocus |
+                ImGuiWindowFlags_NoBackground;
+
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.0f, 0.0f));
+            ImGui::Begin("MainDockSpace", nullptr, windowFlags);
+            ImGui::PopStyleVar(3);
+
+            const ImGuiID dockspaceId = ImGui::GetID("MainDockSpace");
+
+            if (!dockspaceLayoutBuilt_ && !iniLayoutLoaded_)
+            {
+                SetupDockspace(dockspaceId);
+                dockspaceLayoutBuilt_ = true;
+            }
+
+            constexpr ImGuiDockNodeFlags dockspaceFlags = ImGuiDockNodeFlags_PassthruCentralNode;
+            ImGui::DockSpace(dockspaceId, ImVec2(0.0f, 0.0f), dockspaceFlags);
+            ImGui::End();
         }
+#endif
+
+        DrawPanels();
+
+        if (guiManager_)
+            guiManager_->DrawAll();
 
         guiSystem_->EndFrame();
         guiSystem_->Render();
@@ -276,6 +307,8 @@ namespace Engine::Core
         else
         {
             guiManager_.reset();
+            iniLayoutLoaded_ = false;
+            dockspaceLayoutBuilt_ = false;
         }
 
         sceneManager_ = std::make_unique<Game::SceneManager>();
@@ -294,77 +327,79 @@ namespace Engine::Core
 
     void Application::SetupDefaultGuiPanels()
     {
-        if (!guiManager_)
+        statsPanel_ = nullptr;
+        outlinerPanel_ = nullptr;
+        contentBrowserPanel_ = nullptr;
+
+        if (guiSystem_ && guiSystem_->IsInitialized())
         {
-            statsPanel_ = nullptr;
-            outlinerPanel_ = nullptr;
-            contentBrowserPanel_ = nullptr;
-            return;
+            iniLayoutLoaded_ = guiSystem_->WasIniSettingsLoaded();
+            dockspaceLayoutBuilt_ = iniLayoutLoaded_;
         }
+        else
+        {
+            iniLayoutLoaded_ = false;
+            dockspaceLayoutBuilt_ = false;
+        }
+    }
 
-        const Gui::DefaultEngineGuiContext context{
-            timer_.get(),
-            [this]() -> Game::SceneManager*
-            {
-                return sceneManager_.get();
-            },
-            &lastDeltaTime_
-        };
-
-        const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
-        statsPanel_ = panels.statsPanel;
-        outlinerPanel_ = panels.sceneOutlinerPanel;
-        contentBrowserPanel_ = panels.contentBrowserPanel;
-
+    void Application::SetupDockspace(ImGuiID dockspaceId)
+    {
 #ifdef IMGUI_HAS_DOCK
-        if (guiSystem_)
+        ImGui::DockBuilderRemoveNode(dockspaceId);
+        ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
+
+        if (ImGuiViewport* viewport = ImGui::GetMainViewport())
         {
-            ImGuiIO& io = ImGui::GetIO();
-            if (io.ConfigFlags & ImGuiConfigFlags_DockingEnable)
-            {
-                if (ImGuiViewport* viewport = ImGui::GetMainViewport())
-                {
-                    const ImGuiID dockspaceId = viewport->ID;
-                    ImGui::DockBuilderRemoveNode(dockspaceId);
-                    ImGui::DockBuilderAddNode(dockspaceId, ImGuiDockNodeFlags_DockSpace);
-                    ImGui::DockBuilderSetNodePos(dockspaceId, viewport->Pos);
-                    ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
-
-                    ImGuiID centralDockId = dockspaceId;
-
-                    if (contentBrowserPanel_)
-                    {
-                        ImGuiID bottomDockId = ImGui::DockBuilderSplitNode(
-                            centralDockId,
-                            ImGuiDir_Down,
-                            0.30f,
-                            nullptr,
-                            &centralDockId);
-                        ImGui::DockBuilderDockWindow(contentBrowserPanel_->GetWindowLabel().c_str(), bottomDockId);
-                    }
-
-                    if (outlinerPanel_)
-                    {
-                        ImGuiID rightDockId = ImGui::DockBuilderSplitNode(
-                            centralDockId,
-                            ImGuiDir_Right,
-                            0.25f,
-                            nullptr,
-                            &centralDockId);
-                        ImGui::DockBuilderDockWindow(outlinerPanel_->GetWindowLabel().c_str(), rightDockId);
-                    }
-
-                    if (statsPanel_)
-                        ImGui::DockBuilderDockWindow(statsPanel_->GetWindowLabel().c_str(), centralDockId);
-
-                    ImGui::DockBuilderFinish(dockspaceId);
-                }
-            }
+            ImGui::DockBuilderSetNodePos(dockspaceId, viewport->Pos);
+            ImGui::DockBuilderSetNodeSize(dockspaceId, viewport->Size);
         }
-#endif
 
-        if (guiSystem_)
-            guiSystem_->GetLayoutSystem().CaptureDefaultLayout();
+        ImGuiID dockMainId = dockspaceId;
+        ImGuiID dockRight = 0;
+        ImGuiID dockDown = 0;
+        ImGuiID dockRightDown = 0;
+
+        ImGui::DockBuilderSplitNode(dockMainId, ImGuiDir_Right, 0.25f, &dockRight, &dockMainId);
+        ImGui::DockBuilderSplitNode(dockRight, ImGuiDir_Down, 0.6f, &dockRightDown, &dockRight);
+        ImGui::DockBuilderSplitNode(dockMainId, ImGuiDir_Down, 0.3f, &dockDown, &dockMainId);
+
+        ImGui::DockBuilderDockWindow("Viewport", dockMainId);
+        ImGui::DockBuilderDockWindow("Outliner", dockRight);
+        ImGui::DockBuilderDockWindow("Details", dockRightDown);
+        ImGui::DockBuilderDockWindow("Content Browser", dockDown);
+
+        ImGui::DockBuilderFinish(dockspaceId);
+#else
+        (void)dockspaceId;
+#endif
+    }
+
+    void Application::DrawPanels()
+    {
+        if (ImGui::Begin("Viewport"))
+        {
+            ImGui::TextUnformatted("Ici le rendu 3D du moteur.");
+        }
+        ImGui::End();
+
+        if (ImGui::Begin("Outliner"))
+        {
+            ImGui::TextUnformatted("Liste des objets de la scene.");
+        }
+        ImGui::End();
+
+        if (ImGui::Begin("Details"))
+        {
+            ImGui::TextUnformatted("Proprietes de l'objet selectionne.");
+        }
+        ImGui::End();
+
+        if (ImGui::Begin("Content Browser"))
+        {
+            ImGui::TextUnformatted("Explorateur d'assets.");
+        }
+        ImGui::End();
     }
 
 // === Shutdown ===
@@ -406,6 +441,8 @@ namespace Engine::Core
         statsPanel_ = nullptr;
         outlinerPanel_ = nullptr;
         contentBrowserPanel_ = nullptr;
+        dockspaceLayoutBuilt_ = false;
+        iniLayoutLoaded_ = false;
 
         if (guiManager_)
             guiManager_.reset();

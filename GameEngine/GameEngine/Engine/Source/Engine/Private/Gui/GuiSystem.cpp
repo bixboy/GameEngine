@@ -1,6 +1,7 @@
 #include "Gui/GuiSystem.h"
 
 #include <algorithm>
+#include <filesystem>
 #include <string>
 #include <utility>
 
@@ -45,6 +46,16 @@ namespace Engine::Gui
 
         ImGuiIO& io = ImGui::GetIO();
         io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.IniFilename = nullptr;
+
+        iniSettingsLoaded_ = false;
+        iniSettingsPathUtf8_ = iniSettingsPath_.string();
+
+        if (std::filesystem::exists(iniSettingsPath_))
+        {
+            ImGui::LoadIniSettingsFromDisk(iniSettingsPathUtf8_.c_str());
+            iniSettingsLoaded_ = true;
+        }
 
 #ifdef IMGUI_HAS_DOCK
         io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
@@ -101,12 +112,18 @@ namespace Engine::Gui
         ImGui_ImplSDL3_Shutdown();
 
         if (ImGuiContext* context = ImGui::GetCurrentContext())
+        {
+            if (!iniSettingsPathUtf8_.empty())
+                ImGui::SaveIniSettingsToDisk(iniSettingsPathUtf8_.c_str());
+
             ImGui::DestroyContext(context);
+        }
 
         initialized_ = false;
         frameBegun_ = false;
         window_ = nullptr;
         renderer_ = nullptr;
+        iniSettingsLoaded_ = false;
     }
 
     void GuiSystem::BeginFrame()
@@ -149,6 +166,9 @@ namespace Engine::Gui
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer_);
+
+        if (!iniSettingsPathUtf8_.empty() && ImGui::GetIO().WantSaveIniSettings)
+            ImGui::SaveIniSettingsToDisk(iniSettingsPathUtf8_.c_str());
     }
 
     void GuiSystem::ProcessEvent(const SDL_Event& event)

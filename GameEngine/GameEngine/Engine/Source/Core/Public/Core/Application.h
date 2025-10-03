@@ -1,8 +1,10 @@
 #pragma once
 #include <memory>
 #include <type_traits>
+
 #include "Math/Color.h"
 #include "Core/String.h"
+#include "imgui.h"
 
 #define SDL_MAIN_HANDLED
 
@@ -61,6 +63,8 @@ namespace Engine
                 void Render();
                 void RenderGui(Game::Scene* activeScene);
                 void SetupDefaultGuiPanels();
+                void SetupDockspace(ImGuiID dockspaceId);
+                void DrawPanels();
 
                 Config config_{};
                 bool running_{false};
@@ -77,6 +81,8 @@ namespace Engine
                 Gui::GuiPanel* statsPanel_{nullptr};
                 Gui::GuiPanel* outlinerPanel_{nullptr};
                 Gui::GuiPanel* contentBrowserPanel_{nullptr};
+                bool dockspaceLayoutBuilt_{false};
+                bool iniLayoutLoaded_{false};
                 std::unique_ptr<Timer> timer_;
         };
     }
