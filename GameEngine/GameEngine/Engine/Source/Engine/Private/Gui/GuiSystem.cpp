@@ -1,7 +1,10 @@
 #include "Gui/GuiSystem.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <string>
+#include <system_error>
 #include <utility>
 
 #include <SDL3/SDL.h>
@@ -46,6 +49,8 @@ namespace Engine::Gui
 
         ImGui::StyleColorsDark();
 
+        useSavedDockLayout_ = dockingEnabled_ && HasSavedDockLayout_();
+
         if (dockingEnabled_)
         {
             ImGuiStyle& style = ImGui::GetStyle();
@@ -82,8 +87,8 @@ namespace Engine::Gui
         }
 
         initialized_ = true;
-        dockLayoutBuilt_ = false;
-        rebuildDockLayout_ = true;
+        dockLayoutBuilt_ = useSavedDockLayout_;
+        rebuildDockLayout_ = !useSavedDockLayout_;
         dockRegionIds_.fill(0);
         pendingDockUpdates_.clear();
         return true;
@@ -96,6 +101,16 @@ namespace Engine::Gui
 
         panels_.clear();
         pendingDockUpdates_.clear();
+
+        if (ImGuiContext* context = ImGui::GetCurrentContext())
+        {
+            ImGui::SetCurrentContext(context);
+            ImGui::DestroyPlatformWindows();
+
+            ImGuiIO& io = ImGui::GetIO();
+            if (io.IniFilename && *io.IniFilename)
+                ImGui::SaveIniSettingsToDisk(io.IniFilename);
+        }
 
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
@@ -112,6 +127,7 @@ namespace Engine::Gui
         dockRegionIds_.fill(0);
         window_ = nullptr;
         renderer_ = nullptr;
+        useSavedDockLayout_ = false;
     }
 
     void GuiSystem::BeginFrame()
@@ -177,7 +193,7 @@ namespace Engine::Gui
         {
             panels_.push_back(&panel);
             panel.ResetDockId();
-            if (dockingEnabled_)
+            if (dockingEnabled_ && !useSavedDockLayout_)
                 QueuePanelForDockUpdate_(panel);
         }
     }
@@ -213,6 +229,7 @@ namespace Engine::Gui
         rebuildDockLayout_ = true;
         dockLayoutBuilt_ = false;
         dockRegionIds_.fill(0);
+        useSavedDockLayout_ = false;
         QueueAllPanelsForDockUpdate_();
     }
 
@@ -292,6 +309,12 @@ namespace Engine::Gui
         if (!dockLayoutBuilt_ || dockspaceId_ == 0 || pendingDockUpdates_.empty())
             return;
 
+        if (useSavedDockLayout_)
+        {
+            pendingDockUpdates_.clear();
+            return;
+        }
+
         std::vector<GuiPanel*> remaining;
         remaining.reserve(pendingDockUpdates_.size());
 
@@ -328,6 +351,9 @@ namespace Engine::Gui
 
     void GuiSystem::QueuePanelForDockUpdate_(GuiPanel& panel)
     {
+        if (useSavedDockLayout_)
+            return;
+
         if (std::find(pendingDockUpdates_.begin(), pendingDockUpdates_.end(), &panel) == pendingDockUpdates_.end())
             pendingDockUpdates_.push_back(&panel);
     }
@@ -341,10 +367,53 @@ namespace Engine::Gui
 
     void GuiSystem::QueueAllPanelsForDockUpdate_()
     {
+        if (useSavedDockLayout_)
+            return;
+
         for (GuiPanel* panel : panels_)
         {
             if (panel)
                 QueuePanelForDockUpdate_(*panel);
         }
+    }
+
+    bool GuiSystem::HasSavedDockLayout_() const
+    {
+        if (!ImGui::GetCurrentContext())
+            return false;
+
+        const ImGuiIO& io = ImGui::GetIO();
+        if (!io.IniFilename || *io.IniFilename == '\0')
+            return false;
+
+        std::error_code error;
+        if (!std::filesystem::exists(io.IniFilename, error) || error)
+            return false;
+
+        std::ifstream file(io.IniFilename);
+        if (!file.is_open())
+            return false;
+
+        std::string line;
+        bool inDockingSection = false;
+        while (std::getline(file, line))
+        {
+            if (line.rfind("[Docking][Data]", 0) == 0)
+            {
+                inDockingSection = true;
+                continue;
+            }
+
+            if (!inDockingSection)
+                continue;
+
+            if (!line.empty() && line.front() == '[')
+                break;
+
+            if (line.find("DockSpace") != std::string::npos)
+                return true;
+        }
+
+        return false;
     }
 }

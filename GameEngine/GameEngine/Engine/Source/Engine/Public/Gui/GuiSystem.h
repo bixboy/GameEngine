@@ -53,6 +53,7 @@ namespace Engine::Gui
             void QueuePanelForDockUpdate_(GuiPanel& panel);
             void RemovePanelFromDockQueue_(GuiPanel& panel);
             void QueueAllPanelsForDockUpdate_();
+            [[nodiscard]] bool HasSavedDockLayout_() const;
 
             SDL_Window* window_{nullptr};
             SDL_Renderer* renderer_{nullptr};
@@ -62,6 +63,7 @@ namespace Engine::Gui
             bool dockingEnabled_{false};
             bool dockLayoutBuilt_{false};
             bool rebuildDockLayout_{true};
+            bool useSavedDockLayout_{false};
             ImGuiID dockspaceId_{0};
             std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)> dockRegionIds_{};
             std::vector<GuiPanel*> pendingDockUpdates_{};
