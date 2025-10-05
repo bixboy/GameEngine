@@ -267,6 +267,9 @@
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiDocking.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>

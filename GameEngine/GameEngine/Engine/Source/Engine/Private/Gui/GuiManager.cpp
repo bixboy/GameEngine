@@ -68,6 +68,20 @@ namespace Engine::Gui
         return nullptr;
     }
 
+    void GuiManager::SetPanelDockingArea(const String& name, DockSpaceRegion area, ImGuiCond condition)
+    {
+        if (GuiPanel* panel = FindPanel(name))
+            SetPanelDockingArea(*panel, area, condition);
+    }
+
+    void GuiManager::SetPanelDockingArea(GuiPanel& panel, DockSpaceRegion area, ImGuiCond condition)
+    {
+        panel.SetDockingPreference(area, condition);
+
+        if (guiSystem_)
+            guiSystem_->EnqueueDockUpdate(panel);
+    }
+
     void GuiManager::DrawAll()
     {
         for (auto& [_, panel] : panels_)

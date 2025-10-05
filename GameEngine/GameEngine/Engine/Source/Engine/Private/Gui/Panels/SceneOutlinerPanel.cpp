@@ -20,8 +20,7 @@ namespace Engine::Gui
     GuiPanel& CreateSceneOutlinerPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& outlinerPanel = guiManager.CreatePanel("scene_outliner", "Scene Outliner");
-        outlinerPanel.SetPosition(0.f, 260.0f);
-        outlinerPanel.SetSize(320.0f, 400.0f);
+        guiManager.SetPanelDockingArea(outlinerPanel, DockSpaceRegion::Left);
         outlinerPanel.SetResizable(true);
         outlinerPanel.SetMovable(true);
         outlinerPanel.SetCollapsable(true);

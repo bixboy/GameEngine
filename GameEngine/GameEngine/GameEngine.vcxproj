@@ -1805,6 +1805,7 @@
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiDocking.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiSystem.h" />
     <ClInclude Include="Engine\Source\Core\Public\Core\Logger.h" />

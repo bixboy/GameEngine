@@ -888,8 +888,7 @@ namespace Engine::Gui
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
     {
         GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
-        contentPanel.SetPosition(340.0f, 50.0f);
-        contentPanel.SetSize(900.0f, 540.0f);
+        guiManager.SetPanelDockingArea(contentPanel, DockSpaceRegion::Bottom);
         contentPanel.SetResizable(true);
         contentPanel.SetMovable(true);
         contentPanel.SetCollapsable(true);

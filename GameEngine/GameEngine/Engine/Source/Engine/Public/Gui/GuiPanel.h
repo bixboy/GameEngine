@@ -4,6 +4,8 @@
 
 #include "Core/String.h"
 
+#include "Gui/GuiDocking.h"
+
 #include "imgui.h"
 
 namespace Engine::Gui
@@ -43,6 +45,15 @@ namespace Engine::Gui
 
             void SetDrawFunction(DrawFunction drawFunction);
 
+            void SetDockingPreference(DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver) noexcept;
+            void ResetDockingPreference() noexcept;
+            [[nodiscard]] bool HasDockingPreference() const noexcept { return dockPreferenceSet_; }
+            [[nodiscard]] DockSpaceRegion GetDockingPreference() const noexcept { return dockPreference_; }
+            [[nodiscard]] ImGuiCond GetDockingPreferenceCondition() const noexcept { return dockPreferenceCondition_; }
+
+            void SetDockId(ImGuiID dockId, ImGuiCond condition, ImGuiCond fallbackCondition) noexcept;
+            void ResetDockId() noexcept;
+
             void Draw();
 
         private:
@@ -67,6 +78,16 @@ namespace Engine::Gui
 
             bool useBackgroundColor_{false};
             ImVec4 backgroundColor_{1.0f, 1.0f, 1.0f, 1.0f};
+
+            bool dockPreferenceSet_{true};
+            DockSpaceRegion dockPreference_{DockSpaceRegion::Center};
+            ImGuiCond dockPreferenceCondition_{ImGuiCond_FirstUseEver};
+
+            bool useDockId_{false};
+            bool applyDockFallback_{false};
+            ImGuiID dockId_{0};
+            ImGuiCond dockCondition_{ImGuiCond_FirstUseEver};
+            ImGuiCond dockFallbackCondition_{ImGuiCond_FirstUseEver};
 
             DrawFunction drawFunction_{};
     };

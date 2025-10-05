@@ -19,8 +19,7 @@ namespace Engine::Gui
     GuiPanel& CreateStatsPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& statsPanel = guiManager.CreatePanel("engine_stats", "Engine Stats");
-        statsPanel.SetPosition(0.f, 50.0f);
-        statsPanel.SetSize(300.0f, 200.0f);
+        guiManager.SetPanelDockingArea(statsPanel, DockSpaceRegion::Right);
         statsPanel.SetResizable(false);
         statsPanel.SetMovable(true);
         statsPanel.SetCollapsable(true);

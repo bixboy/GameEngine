@@ -6,6 +6,10 @@
 
 #include "Core/String.h"
 
+#include "Gui/GuiDocking.h"
+
+#include "imgui.h"
+
 namespace Engine::Gui
 {
     class GuiSystem;
@@ -22,6 +26,9 @@ namespace Engine::Gui
 
             [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
             [[nodiscard]] const GuiPanel* FindPanel(const String& name) const noexcept;
+
+            void SetPanelDockingArea(const String& name, DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver);
+            void SetPanelDockingArea(GuiPanel& panel, DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver);
 
             void DrawAll();
 
