@@ -3,6 +3,7 @@ C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Core\Private\
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\DefaultEngineGui.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\DefaultEngineGui.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\ContentBrowserPanel.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\SceneOutlinerPanel.obj
+C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\ActorInspectorPanel.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\Panels\StatsPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\StatsPanel.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\GuiManager.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\GuiManager.obj
 C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\Engine\Source\Engine\Private\Gui\GuiPanel.cpp;C:\Apps\CustomEngine\BixEngine\GameEngine\GameEngine\x64\Debug\GuiPanel.obj

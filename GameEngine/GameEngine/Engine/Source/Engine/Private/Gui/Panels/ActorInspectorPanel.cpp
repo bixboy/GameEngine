@@ -42,6 +42,7 @@ namespace Engine::Gui
 
             Math::Rotator rotation = actor.GetRotation();
             float rotationValues[3] = { rotation.pitch, rotation.yaw, rotation.roll };
+            
             if (ImGui::DragFloat3("Rotation", rotationValues, 0.1f, 0.0f, 0.0f, "%.2f"))
                 actor.SetRotation(Math::Rotator(rotationValues[0], rotationValues[1], rotationValues[2]));
 
@@ -146,10 +147,12 @@ namespace Engine::Gui
 
             if (selectedActor != lastActorForName)
             {
-                const Engine::String& actorName = selectedActor->GetName();
+                const String& actorName = selectedActor->GetName();
                 const auto actorNameView = actorName.View();
+                
                 const std::size_t copyLength = std::min(actorNameView.size(), sizeof(nameBuffer) - 1);
                 std::memcpy(nameBuffer, actorNameView.data(), copyLength);
+                
                 nameBuffer[copyLength] = '\0';
                 lastActorForName = selectedActor;
             }
@@ -157,8 +160,9 @@ namespace Engine::Gui
             if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer)))
                 selectedActor->SetName(nameBuffer);
 
-            const Engine::String typeName = selectedActor->GetTypeName();
+            const String typeName = selectedActor->GetTypeName();
             const auto typeNameView = typeName.View();
+            
             ImGui::TextDisabled("Type: %.*s",
                 static_cast<int>(typeNameView.size()),
                 typeNameView.data());
