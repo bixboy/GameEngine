@@ -1,4 +1,6 @@
-﻿#pragma once
+#pragma once
+
+#include "Core/String.h"
 
 namespace Engine::Graphics { class Renderer; }
 
@@ -8,15 +10,17 @@ namespace Engine::Game
 
     class Component
     {
-        public:
-            explicit Component(Actor* owner) : owner_(owner) {}
-            virtual ~Component() = default;
+    public:
+        explicit Component(Actor* owner) : owner_(owner) {}
+        virtual ~Component() = default;
 
-            virtual void BeginPlay() {}
-            virtual void Update(float deltaTime) {}
-            virtual void Render(Graphics::Renderer& renderer) const {}
+        virtual void BeginPlay() {}
+        virtual void Update(float deltaTime) {}
+        virtual void Render(Graphics::Renderer& renderer) const {}
 
-        protected:
-            Actor* owner_{nullptr};
+        [[nodiscard]] virtual Engine::String GetTypeName() const { return "Component"; }
+
+    protected:
+        Actor* owner_{nullptr};
     };
 }

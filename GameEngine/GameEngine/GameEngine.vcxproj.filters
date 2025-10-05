@@ -136,6 +136,9 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp">
+      <Filter>Source\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\StatsPanel.cpp">
       <Filter>Source\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -256,6 +259,9 @@
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\SceneOutlinerPanel.h">
+      <Filter>Source\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\ActorInspectorPanel.h">
       <Filter>Source\Engine\Public\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\StatsPanel.h">

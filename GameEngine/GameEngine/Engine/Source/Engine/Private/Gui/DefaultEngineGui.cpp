@@ -1,5 +1,6 @@
 #include "Gui/DefaultEngineGui.h"
 
+#include "Gui/Panels/ActorInspectorPanel.h"
 #include "Gui/Panels/ContentBrowserPanel.h"
 #include "Gui/Panels/SceneOutlinerPanel.h"
 #include "Gui/Panels/StatsPanel.h"
@@ -19,6 +20,7 @@ namespace Engine::Gui
                 DefaultEngineGuiPanels panels{};
                 panels.statsPanel = &CreateStatsPanel(guiManager_, context_);
                 panels.sceneOutlinerPanel = &CreateSceneOutlinerPanel(guiManager_, context_);
+                panels.actorInspectorPanel = &CreateActorInspectorPanel(guiManager_, context_);
                 panels.contentBrowserPanel = &CreateContentBrowserPanel(guiManager_, context_);
                 return panels;
             }

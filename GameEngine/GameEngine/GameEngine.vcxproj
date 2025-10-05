@@ -250,6 +250,7 @@
     <ClCompile Include="Engine\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
+    <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\Panels\StatsPanel.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiManager.cpp" />
     <ClCompile Include="Engine\Source\Engine\Private\Gui\GuiPanel.cpp" />
@@ -1802,6 +1803,7 @@
     <ClInclude Include="Engine\Source\Engine\Public\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\ContentBrowserPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\SceneOutlinerPanel.h" />
+    <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\ActorInspectorPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Engine\Source\Engine\Public\Gui\GuiManager.h" />

@@ -9,6 +9,7 @@
 #include "Core/Logger.h"
 #include "Core/Timer.h"
 #include "Core/Window.h"
+#include "Game/Actor.h"
 #include "Game/Scene.h"
 #include "Game/SceneManager.h"
 #include "Graphics/Renderer.h"
@@ -287,8 +288,12 @@ namespace Engine::Core
             statsPanel_ = nullptr;
             outlinerPanel_ = nullptr;
             contentBrowserPanel_ = nullptr;
+            inspectorPanel_ = nullptr;
+            selectedActor_ = nullptr;
             return;
         }
+
+        selectedActor_ = nullptr;
 
         const Gui::DefaultEngineGuiContext context{
             timer_.get(),
@@ -296,13 +301,22 @@ namespace Engine::Core
             {
                 return sceneManager_.get();
             },
-            &lastDeltaTime_
+            &lastDeltaTime_,
+            [this]() -> Game::Actor*
+            {
+                return selectedActor_;
+            },
+            [this](Game::Actor* actor)
+            {
+                selectedActor_ = actor;
+            }
         };
 
         const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
         contentBrowserPanel_ = panels.contentBrowserPanel;
+        inspectorPanel_ = panels.actorInspectorPanel;
     }
 
 // === Shutdown ===
@@ -344,6 +358,8 @@ namespace Engine::Core
         statsPanel_ = nullptr;
         outlinerPanel_ = nullptr;
         contentBrowserPanel_ = nullptr;
+        inspectorPanel_ = nullptr;
+        selectedActor_ = nullptr;
 
         if (guiManager_)
             guiManager_.reset();

@@ -27,7 +27,9 @@ namespace Engine::Gui
         outlinerPanel.SetClosable(true);
         outlinerPanel.SetBackgroundColor(kOutlinerBackground);
         outlinerPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        outlinerPanel.SetDrawFunction([provider = context.sceneManagerProvider]()
+        outlinerPanel.SetDrawFunction([provider = context.sceneManagerProvider,
+                                       getSelectedActor = context.selectedActorGetter,
+                                       setSelectedActor = context.selectedActorSetter]()
         {
             ImGui::PushID("SceneOutlinerPanel");
 
@@ -46,6 +48,7 @@ namespace Engine::Gui
             const bool hasSearch = !searchQuery.IsEmpty();
 
             const auto& actors = activeScene->GetActors();
+            Game::Actor* selectedActor = getSelectedActor ? getSelectedActor() : nullptr;
 
             const auto matchesFilter = [&searchQuery, hasSearch](const Game::Actor& actor)
             {
@@ -86,6 +89,9 @@ namespace Engine::Gui
             if (ImGui::TreeNodeEx(static_cast<const void*>(activeScene), sceneFlags, "%.*s",
                 static_cast<int>(sceneNameView.size()), sceneNameView.data()))
             {
+                if (ImGui::IsItemClicked() && setSelectedActor)
+                    setSelectedActor(nullptr);
+
                 if (totalActors == 0)
                 {
                     ImGui::TextDisabled("No actors in this scene.");
@@ -103,10 +109,13 @@ namespace Engine::Gui
                         const auto actorTypeView = actorType.View();
 
                         const bool hasName = !actorNameView.empty();
-                        const ImGuiTreeNodeFlags actorFlags =
+                        ImGuiTreeNodeFlags actorFlags =
                             ImGuiTreeNodeFlags_Leaf |
                             ImGuiTreeNodeFlags_NoTreePushOnOpen |
                             ImGuiTreeNodeFlags_SpanFullWidth;
+
+                        if (selectedActor == actor.get())
+                            actorFlags |= ImGuiTreeNodeFlags_Selected;
 
                         if (hasName)
                         {
@@ -119,6 +128,9 @@ namespace Engine::Gui
                             ImGui::TreeNodeEx(actor.get(), actorFlags, "<Unnamed> (%.*s)",
                                 static_cast<int>(actorTypeView.size()), actorTypeView.data());
                         }
+
+                        if (ImGui::IsItemClicked() && setSelectedActor)
+                            setSelectedActor(actor.get());
                     }
 
                     if (hasSearch && filteredActors == 0)

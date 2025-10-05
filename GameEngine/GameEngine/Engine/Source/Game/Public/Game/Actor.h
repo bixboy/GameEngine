@@ -27,6 +27,9 @@ namespace Engine::Game
 
             [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
 
+        public:
+            [[nodiscard]] const std::vector<std::unique_ptr<Component>>& GetComponents() const noexcept { return components_; }
+
         private:
         std::vector<std::unique_ptr<Component>> components_;
 
