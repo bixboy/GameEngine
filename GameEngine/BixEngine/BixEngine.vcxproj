@@ -123,10 +123,6 @@
       <AdditionalLibraryDirectories>$(BixEngineSDL3Lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>python "$(ProjectDir)Tools\fetch_sdl3.py" --arch=all</Command>
-      <Message>Ensuring SDL3 binaries are available</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -148,10 +144,6 @@
       <AdditionalLibraryDirectories>$(BixEngineSDL3Lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>python "$(ProjectDir)Tools\fetch_sdl3.py" --arch=all</Command>
-      <Message>Ensuring SDL3 binaries are available</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -175,10 +167,6 @@
       <AdditionalLibraryDirectories>$(BixEngineSDL3Lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>python "$(ProjectDir)Tools\fetch_sdl3.py" --arch=all</Command>
-      <Message>Ensuring SDL3 binaries are available</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -202,10 +190,6 @@
       <AdditionalLibraryDirectories>$(BixEngineSDL3Lib);%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <AdditionalDependencies>SDL3.lib;SDL3_test.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
-    <PreBuildEvent>
-      <Command>python "$(ProjectDir)Tools\fetch_sdl3.py" --arch=all</Command>
-      <Message>Ensuring SDL3 binaries are available</Message>
-    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Runtime\Source\Core\Private\Core\Application.cpp">
