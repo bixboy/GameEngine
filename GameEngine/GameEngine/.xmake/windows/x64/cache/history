@@ -1,6 +1,0 @@
-{
-    cmdlines = {
-        "xmake build GameEngineEditor",
-        "xmake run GameEngineEditor"
-    }
-}

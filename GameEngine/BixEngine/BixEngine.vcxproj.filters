@@ -1,0 +1,358 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <Filter Include="Samples">
+      <UniqueIdentifier>{7632EE37-A637-4126-BB43-00A89868DA9E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime">
+      <UniqueIdentifier>{7DC2C8D5-0690-48F7-9446-C3ABA1773BD5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Core">
+      <UniqueIdentifier>{91F38F9F-6E1A-4A82-8269-6670A4F34BF7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Core\Private">
+      <UniqueIdentifier>{1E50A45A-B138-4071-94B8-066D4B241F95}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Core\Private\Core">
+      <UniqueIdentifier>{650040DB-256F-4818-96C6-AF2AC275959A}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Core\Public">
+      <UniqueIdentifier>{A35E0E31-22AE-4F92-889F-71C02DCCD883}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Core\Public\Core">
+      <UniqueIdentifier>{BD5C6626-EB0A-43C2-B77B-FC1F270D36C7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Engine">
+      <UniqueIdentifier>{5ECD7252-C3CF-4A05-B9F6-C3730AF23F03}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Engine\Private">
+      <UniqueIdentifier>{C5F6E8B1-4C3E-4CC7-8D20-8A6B97A8B5C1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Engine\Private\Gui">
+      <UniqueIdentifier>{F0A2335F-6E3B-4B1E-9D4E-9A6356574A8F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Engine\Public">
+      <UniqueIdentifier>{2E486ABD-BF87-407C-B630-EA49B85A90B7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Engine\Public\Gui">
+      <UniqueIdentifier>{8B3C9A5D-1E6F-4F35-B4D5-571F058C29CF}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game">
+      <UniqueIdentifier>{C9DD7849-4CDB-4A4B-BAFF-98B74B368EED}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Private">
+      <UniqueIdentifier>{CF874475-CFAE-4F13-A079-8C1470273EA3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Private\Game">
+      <UniqueIdentifier>{E1D0D647-187B-4559-B117-2FD1685BD305}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Private\Game\Components">
+      <UniqueIdentifier>{06CCFD30-7345-4A3C-BD9E-631BE5490828}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Private\Game\Test">
+      <UniqueIdentifier>{7FBECB4E-F1AE-4745-8D48-425568BD2BD3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Public">
+      <UniqueIdentifier>{3F384DB3-E90B-41D4-B773-B935CF112154}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Public\Game">
+      <UniqueIdentifier>{1923FBC5-B951-4052-82CE-739C5EB3C1A9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Public\Game\Components">
+      <UniqueIdentifier>{9C87926D-9F68-46ED-B705-C5328A75D54C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Game\Public\Game\Test">
+      <UniqueIdentifier>{FC5DECDE-1E63-4477-B0EA-4F2326FC673F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Graphics">
+      <UniqueIdentifier>{DD87D34B-7CEB-4458-8CD6-CBE4E2DBED40}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Graphics\Private">
+      <UniqueIdentifier>{9E0E13D2-DD5E-4C69-879C-0EAC14AA7305}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Graphics\Private\Graphics">
+      <UniqueIdentifier>{5483414C-31AD-426B-B762-A690EA285C2D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Graphics\Public">
+      <UniqueIdentifier>{5CC85556-1E85-4736-B7F3-25EE00EC3B6D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Graphics\Public\Graphics">
+      <UniqueIdentifier>{1478D642-FED3-4BF8-B0C8-4A46DCEA5D34}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Input">
+      <UniqueIdentifier>{AB57C545-E1E3-4201-8163-DA40F61FE2C6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Input\Private">
+      <UniqueIdentifier>{21666F6E-EDD3-428B-BF5B-0042F6C3B0C4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Input\Private\Input">
+      <UniqueIdentifier>{AD33CD4D-0B6B-498F-B881-9E9204DCA93C}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Input\Public">
+      <UniqueIdentifier>{64960572-20CB-4FEB-8C3F-968B74851E83}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Input\Public\Input">
+      <UniqueIdentifier>{20EDEC04-53CB-4E38-A6C2-5F14BC47DACD}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Math">
+      <UniqueIdentifier>{E168D4A5-5C72-493B-B472-6719A3FF54E7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Math\Private">
+      <UniqueIdentifier>{562A07DF-32D3-4A63-976E-01D4B2A8EBFC}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Math\Private\Math">
+      <UniqueIdentifier>{2C6CA222-0A08-4B15-87DF-786C36394B9B}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Math\Public">
+      <UniqueIdentifier>{6F545357-A6D8-48B6-8704-A7F1AAA79833}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime\Math\Public\Math">
+      <UniqueIdentifier>{9BEEBD80-A6AE-4EAE-B888-D17115633F8D}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External">
+      <UniqueIdentifier>{8C922B88-A7B2-4A38-8F45-1A3B65FAF06E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="External\ImGui">
+      <UniqueIdentifier>{BB6CD2E5-9AFE-438B-8CE7-6A861A7C7E7F}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{DFC89BCC-BEB7-40C5-98CC-315E5A204203}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Runtime\Source\Core\Private\Core\Application.cpp">
+      <Filter>Runtime\Core\Private\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Core\Logger.cpp">
+      <Filter>Runtime\Core\Private\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\StatsPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiSystem.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\ActorSpawner.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Components\Component.cpp">
+      <Filter>Runtime\Game\Private\Game\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Components\SpriteComponent.cpp">
+      <Filter>Runtime\Game\Private\Game\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Scene.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\SceneManager.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\SceneSerializer.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Core\Timer.cpp">
+      <Filter>Runtime\Core\Private\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Core\Window.cpp">
+      <Filter>Runtime\Core\Private\Core</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\EmptyScene.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Object.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Actor.cpp">
+      <Filter>Runtime\Game\Private\Game</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Test\Player.cpp">
+      <Filter>Runtime\Game\Private\Game\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Game\Test\TestScene.cpp">
+      <Filter>Runtime\Game\Private\Game\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Graphics\Private\Graphics\Renderer.cpp">
+      <Filter>Runtime\Graphics\Private\Graphics</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Input\Private\Input\Input.cpp">
+      <Filter>Runtime\Input\Private\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Input\Private\Input\InputManager.cpp">
+      <Filter>Runtime\Input\Private\Input</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Math\Color.cpp">
+      <Filter>Runtime\Math\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Math\Rotator.cpp">
+      <Filter>Runtime\Math\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Math\Transform.cpp">
+      <Filter>Runtime\Math\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Math\Vector2.cpp">
+      <Filter>Runtime\Math\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Math\Vector3.cpp">
+      <Filter>Runtime\Math\Private\Math</Filter>
+    </ClCompile>
+    <ClCompile Include="Samples\main.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_demo.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_draw.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_tables.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\imgui_widgets.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdl3.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+    <ClCompile Include="..\Libs\ImGui\backends\imgui_impl_sdlrenderer3.cpp">
+      <Filter>External\ImGui</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Runtime\Source\Core\Public\Core\Application.h">
+      <Filter>Runtime\Core\Public\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Core\Public\Core\Types.h">
+      <Filter>Runtime\Core\Public\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Engine.h">
+      <Filter>Runtime\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\DefaultEngineGui.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\Panels\ContentBrowserPanel.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\Panels\SceneOutlinerPanel.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\Panels\ActorInspectorPanel.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\Panels\StatsPanel.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\Widgets\ActionTooltip.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\GuiManager.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\GuiDocking.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\BixEngine.h">
+      <Filter>Runtime\Engine\Public</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\GuiPanel.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Public\Gui\GuiSystem.h">
+      <Filter>Runtime\Engine\Public\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Core\Public\Core\Logger.h">
+      <Filter>Runtime\Core\Public\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\ActorSpawner.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Object.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Components\Component.h">
+      <Filter>Runtime\Game\Public\Game\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Components\SpriteComponent.h">
+      <Filter>Runtime\Game\Public\Game\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Scene.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\SceneManager.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\SceneSerializer.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Core\Public\Core\Timer.h">
+      <Filter>Runtime\Core\Public\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Core\Public\Core\Window.h">
+      <Filter>Runtime\Core\Public\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\EmptyScene.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Actor.h">
+      <Filter>Runtime\Game\Public\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Test\Player.h">
+      <Filter>Runtime\Game\Public\Game\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Game\Public\Game\Test\TestScene.h">
+      <Filter>Runtime\Game\Public\Game\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Graphics\Public\Graphics\Renderer.h">
+      <Filter>Runtime\Graphics\Public\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Input\Public\Input\Input.h">
+      <Filter>Runtime\Input\Public\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Input\Public\Input\InputManager.h">
+      <Filter>Runtime\Input\Public\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Color.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Math.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Rotator.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Transform.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Vector2.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Math\Public\Math\Vector3.h">
+      <Filter>Runtime\Math\Public\Math</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
