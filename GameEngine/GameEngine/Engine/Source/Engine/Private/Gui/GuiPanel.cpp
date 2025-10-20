@@ -39,6 +39,40 @@ namespace Engine::Gui
         drawFunction_ = std::move(drawFunction);
     }
 
+    void GuiPanel::SetDockingPreference(DockSpaceRegion area, ImGuiCond condition) noexcept
+    {
+        dockPreferenceSet_ = true;
+        dockPreference_ = area;
+        dockPreferenceCondition_ = condition;
+        ResetDockId();
+    }
+
+    void GuiPanel::ResetDockingPreference() noexcept
+    {
+        dockPreferenceSet_ = false;
+        dockPreference_ = DockSpaceRegion::Center;
+        dockPreferenceCondition_ = ImGuiCond_FirstUseEver;
+        ResetDockId();
+    }
+
+    void GuiPanel::SetDockId(ImGuiID dockId, ImGuiCond condition, ImGuiCond fallbackCondition) noexcept
+    {
+        dockId_ = dockId;
+        dockCondition_ = condition;
+        dockFallbackCondition_ = fallbackCondition;
+        useDockId_ = dockId_ != 0;
+        applyDockFallback_ = useDockId_ && dockCondition_ == ImGuiCond_Always && dockCondition_ != dockFallbackCondition_;
+    }
+
+    void GuiPanel::ResetDockId() noexcept
+    {
+        useDockId_ = false;
+        applyDockFallback_ = false;
+        dockId_ = 0;
+        dockCondition_ = ImGuiCond_FirstUseEver;
+        dockFallbackCondition_ = ImGuiCond_FirstUseEver;
+    }
+
     void GuiPanel::Draw()
     {
         if (!visible_)
@@ -50,11 +84,24 @@ namespace Engine::Gui
         if (useSize_)
             ImGui::SetNextWindowSize(size_, sizeCondition_);
 
+        if (useDockId_ && dockId_ != 0)
+        {
+            ImGui::SetNextWindowDockID(dockId_, dockCondition_);
+
+            if (applyDockFallback_)
+            {
+                dockCondition_ = dockFallbackCondition_;
+                applyDockFallback_ = false;
+                if (dockFallbackCondition_ == ImGuiCond_None)
+                    useDockId_ = false;
+            }
+        }
+
         if (useBackgroundColor_)
             ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
 
         ImGuiWindowFlags finalFlags = windowFlags_;
-        
+
         if (!resizable_)
             finalFlags |= ImGuiWindowFlags_NoResize;
         

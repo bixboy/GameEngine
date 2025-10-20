@@ -11,7 +11,7 @@ namespace Engine
 
     namespace Graphics { class Renderer; }
     namespace Gui      { class GuiSystem; class GuiManager; class GuiPanel; }
-    namespace Game     { class Scene; class SceneManager; }
+    namespace Game     { class Scene; class SceneManager; class Actor; }
     namespace Input    { class InputManager; class Input; }
     namespace Core     { class Window; class Timer; }
 
@@ -76,6 +76,9 @@ namespace Engine
                 std::unique_ptr<Gui::GuiManager> guiManager_;
                 Gui::GuiPanel* statsPanel_{nullptr};
                 Gui::GuiPanel* outlinerPanel_{nullptr};
+                Gui::GuiPanel* contentBrowserPanel_{nullptr};
+                Gui::GuiPanel* inspectorPanel_{nullptr};
+                Game::Actor* selectedActor_{nullptr};
                 std::unique_ptr<Timer> timer_;
         };
     }
