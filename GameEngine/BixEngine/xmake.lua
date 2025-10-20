@@ -18,6 +18,10 @@ option("sdl3_lib_dir")
     set_description("Directory containing SDL3 libraries to link against")
 option_end()
 
+-- ---------------------------------------------------------------------------
+-- SDL3 path resolution
+-- ---------------------------------------------------------------------------
+
 local function resolve_library_dir(candidates)
     local library_markers = {"SDL3.lib", "SDL3.dll", "libSDL3.a", "libSDL3.so"}
     local subdirs = {"", "x64", "Win64", "x86", "Win32", "x86_64"}
@@ -77,10 +81,10 @@ local function collect_sdl3_paths()
 
     lib_dir = resolve_library_dir(lib_candidates)
 
-    return include_dir, lib_dir
+    return include_dir, lib_dir, sdl3_root
 end
 
-local sdl3_include_dir, sdl3_lib_dir = collect_sdl3_paths()
+local sdl3_include_dir, sdl3_lib_dir, sdl3_root = collect_sdl3_paths()
 
 if sdl3_include_dir then
     add_includedirs(sdl3_include_dir, {public = true})
@@ -102,7 +106,10 @@ else
     add_syslinks("pthread", "dl")
 end
 
--- ImGui renderer integration -------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- ImGui
+-- ---------------------------------------------------------------------------
+
 target("bixengine_imgui")
     set_kind("static")
     add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", {public = true})
@@ -117,27 +124,56 @@ target("bixengine_imgui")
         "ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp"
     )
 
--- Engine core ----------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Engine Core
+-- ---------------------------------------------------------------------------
+
 target("bixengine_runtime")
     set_kind("static")
     add_deps("bixengine_imgui")
-    add_headerfiles(
-        "Runtime/Source/**/Public/**.h",
-        "Runtime/Source/**/Public/**.inl"
-    )
+    add_headerfiles("Runtime/Source/**/Public/**.h", "Runtime/Source/**/Public/**.inl")
     add_includedirs(
         "Runtime/Source/Core/Public",
         "Runtime/Source/Engine/Public",
         "Runtime/Source/Game/Public",
         "Runtime/Source/Graphics/Public",
         "Runtime/Source/Input/Public",
-        "Runtime/Source/Math/Public"
-    , {public = true})
+        "Runtime/Source/Math/Public",
+        {public = true}
+    )
     add_files("Runtime/Source/**.cpp")
     add_links("SDL3", {public = true})
 
--- Game executable ------------------------------------------------------------
+-- ---------------------------------------------------------------------------
+-- Executable
+-- ---------------------------------------------------------------------------
+
 target("BixEngine")
     set_kind("binary")
     add_deps("bixengine_runtime")
     add_files("Samples/main.cpp")
+
+    -- Copie la bonne SDL3.dll dans le bon répertoire après compilation
+    after_build(function (target)
+        if not sdl3_root then
+            return
+        end
+
+        local dll_candidates = {
+            path.join(sdl3_root, "bin", "x64", "SDL3.dll"),
+            path.join(sdl3_root, "bin", "Win64", "SDL3.dll"),
+            path.join(sdl3_root, "lib", "x64", "SDL3.dll"),
+            path.join(sdl3_root, "lib", "Win64", "SDL3.dll"),
+        }
+
+        for _, dll_path in ipairs(dll_candidates) do
+            if os.isfile(dll_path) then
+                -- 1️⃣ Copie vers le dossier de l’exécutable (xmake run)
+                os.cp(dll_path, path.join(target:targetdir(), "SDL3.dll"))
+                -- 2️⃣ Copie aussi vers la racine du projet (pour le bouton Run)
+                os.cp(dll_path, path.join(os.scriptdir(), "SDL3.dll"))
+                print("✅ Copied SDL3.dll from: " .. dll_path)
+                break
+            end
+        end
+    end)
