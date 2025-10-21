@@ -9,6 +9,8 @@
 namespace BixEngine
 {
 
+    struct SDL_Texture;
+
     namespace Graphics { class Renderer; }
     namespace Gui      { class GuiSystem; class GuiManager; class GuiPanel; }
     namespace Game     { class Scene; class SceneManager; class Actor; }
@@ -61,6 +63,8 @@ namespace BixEngine
                 void Render();
                 void RenderGui(Game::Scene* activeScene);
                 void SetupDefaultGuiPanels();
+                bool EnsureSceneViewportTexture();
+                void DestroySceneViewportTexture() noexcept;
 
                 Config config_{};
                 bool running_{false};
@@ -78,8 +82,13 @@ namespace BixEngine
                 Gui::GuiPanel* outlinerPanel_{nullptr};
                 Gui::GuiPanel* contentBrowserPanel_{nullptr};
                 Gui::GuiPanel* inspectorPanel_{nullptr};
+                Gui::GuiPanel* viewportPanel_{nullptr};
                 Game::Actor* selectedActor_{nullptr};
                 std::unique_ptr<Timer> timer_;
+                SDL_Texture* sceneViewportTexture_{nullptr};
+                int sceneViewportWidth_{0};
+                int sceneViewportHeight_{0};
+                bool sceneViewportTextureErrorLogged_{false};
         };
     }
 }

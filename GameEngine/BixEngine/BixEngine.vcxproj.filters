@@ -24,6 +24,9 @@
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -120,6 +123,9 @@
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneViewportPanel.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h">
