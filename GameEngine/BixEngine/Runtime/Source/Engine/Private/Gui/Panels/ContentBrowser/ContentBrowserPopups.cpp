@@ -75,6 +75,27 @@ namespace BixEngine::Gui
             }), requests.existingScripts.end());
         }
 
+        struct ParentScriptInfo
+        {
+            std::string className{};
+            std::string includeDirective{};
+
+            [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
+        };
+
+        ParentScriptInfo ResolveDefaultParent(const PopupRequestState& requests)
+        {
+            switch (requests.scriptType)
+            {
+            case ScriptTemplateType::Actor:
+                return {"BixEngine::Game::Actor", "Bix/Game/Actor.h"};
+            case ScriptTemplateType::Component:
+                return {"BixEngine::Game::Component", "Bix/Game/Components/Component.h"};
+            default:
+                return {};
+            }
+        }
+
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
         {
             namespace fs = std::filesystem;
@@ -233,26 +254,31 @@ namespace BixEngine::Gui
                                     }
                                     else
                                     {
-                                        std::string parentClass{};
+                                        ParentScriptInfo parentInfo{};
                                         if (requests.selectedParentScript >= 0 && requests.selectedParentScript < static_cast<int>(requests.existingScripts.size()))
-                                            parentClass = std::string(requests.existingScripts[requests.selectedParentScript].View());
-
-                                        const bool hasParent = !parentClass.empty();
+                                        {
+                                            parentInfo.className = std::string(requests.existingScripts[requests.selectedParentScript].View());
+                                            parentInfo.includeDirective = parentInfo.className + kScriptHeaderExtension;
+                                        }
+                                        else
+                                        {
+                                            parentInfo = ResolveDefaultParent(requests);
+                                        }
 
                                         headerFile << "#pragma once\n\n";
                                         headerFile << "// Type: " << GetScriptTypeLabel(requests.scriptType) << '\n';
-                                        headerFile << "// Parent: " << (hasParent ? parentClass : "(none)") << '\n';
+                                        headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
-                                        if (hasParent)
-                                            headerFile << "#include \"" << parentClass << kScriptHeaderExtension << "\"\n\n";
+                                        if (parentInfo.IsValid())
+                                            headerFile << "#include \"" << parentInfo.includeDirective << "\"\n\n";
                                         headerFile << "class " << baseName;
-                                        if (hasParent)
-                                            headerFile << " : public " << parentClass;
+                                        if (parentInfo.IsValid())
+                                            headerFile << " : public " << parentInfo.className;
                                         headerFile << '\n';
                                         headerFile << "{\n";
                                         headerFile << "public:\n";
-                                        if (hasParent)
-                                            headerFile << "    using Super = " << parentClass << ";\n\n";
+                                        if (parentInfo.IsValid())
+                                            headerFile << "    using Super = " << parentInfo.className << ";\n\n";
                                         headerFile << "    " << baseName << "();\n";
                                         headerFile << "    void OnCreate();\n";
                                         headerFile << "    void OnUpdate(float deltaTime);\n";
@@ -262,12 +288,12 @@ namespace BixEngine::Gui
                                         sourceFile << baseName << "::" << baseName << "() = default;\n\n";
                                         sourceFile << "void " << baseName << "::OnCreate()\n";
                                         sourceFile << "{\n";
-                                        if (hasParent)
+                                        if (parentInfo.IsValid())
                                             sourceFile << "    // Super::OnCreate();\n";
                                         sourceFile << "}\n\n";
                                         sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
                                         sourceFile << "{\n";
-                                        if (hasParent)
+                                        if (parentInfo.IsValid())
                                             sourceFile << "    // Super::OnUpdate(deltaTime);\n";
                                         sourceFile << "}\n";
 
