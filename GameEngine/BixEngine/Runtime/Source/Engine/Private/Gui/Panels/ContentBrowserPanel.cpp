@@ -1,10 +1,10 @@
-#include "Gui/Panels/ContentBrowserPanel.h"
+#include "Bix/Engine/Gui/Panels/ContentBrowserPanel.h"
 
-#include "Core/Logger.h"
-#include "Core/String.h"
-#include "Gui/GuiManager.h"
-#include "Gui/GuiPanel.h"
-#include "Gui/Widgets/ActionTooltip.h"
+#include "Bix/Core/Logger.h"
+#include "Bix/Core/String.h"
+#include "Bix/Engine/Gui/GuiManager.h"
+#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Bix/Engine/Gui/Widgets/ActionTooltip.h"
 
 #include "imgui.h"
 
