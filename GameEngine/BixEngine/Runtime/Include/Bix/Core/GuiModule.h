@@ -2,11 +2,7 @@
 
 #include <memory>
 #include <utility>
-
 #include <SDL3/SDL_events.h>
-
-#include "Bix/Engine/Gui/GuiManager.h"
-
 
 namespace BixEngine
 {
@@ -23,13 +19,8 @@ namespace BixEngine::Core
     class GuiModule
     {
     public:
-        GuiModule() = default;
+        GuiModule();
         ~GuiModule();
-
-        GuiModule(const GuiModule&) = delete;
-        GuiModule& operator=(const GuiModule&) = delete;
-        GuiModule(GuiModule&&) noexcept = delete;
-        GuiModule& operator=(GuiModule&&) noexcept = delete;
 
         bool Initialize(Window& window, Graphics::Renderer& renderer);
         void Shutdown() noexcept;
@@ -38,7 +29,6 @@ namespace BixEngine::Core
         void ProcessEvent(const SDL_Event& event);
         void BeginFrame();
         void Render(SubsystemManager& subsystems);
-
         void SetupDefaultGuiPanels(SubsystemManager& subsystems, const float* lastDeltaTimePointer);
 
         bool EnsureSceneViewportTexture(Graphics::Renderer& renderer);
@@ -49,8 +39,8 @@ namespace BixEngine::Core
         Gui::GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
 
     private:
-        std::unique_ptr<Gui::GuiSystem> guiSystem_{};
-        std::unique_ptr<Gui::GuiManager> guiManager_{};
+        std::unique_ptr<Gui::GuiSystem> guiSystem_;
+        std::unique_ptr<Gui::GuiManager> guiManager_;
 
         Gui::GuiPanel* statsPanel_{nullptr};
         Gui::GuiPanel* outlinerPanel_{nullptr};

@@ -17,6 +17,8 @@
 
 namespace BixEngine::Core
 {
+    GuiModule::GuiModule() = default;
+
     GuiModule::~GuiModule()
     {
         Shutdown();

@@ -249,7 +249,13 @@
       <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+<ClCompile Include="Runtime\Source\Core\Private\EngineBootstrap.cpp" />
+<ClCompile Include="Runtime\Source\Core\Private\EventDispatcher.cpp" />
+<ClCompile Include="Runtime\Source\Core\Private\GuiModule.cpp" />
     <ClCompile Include="Runtime\Source\Core\Private\Logger.cpp" />
+    <ClCompile Include="Runtime\Source\Core\Private\RenderLoop.cpp" />
+    <ClCompile Include="Runtime\Source\Core\Private\SdlSystem.cpp" />
+    <ClCompile Include="Runtime\Source\Core\Private\SubsystemManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
@@ -1802,7 +1808,14 @@
     </ItemGroup>
 <ItemGroup>
 <ClInclude Include="Runtime\Include\Bix\Core\Application.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\ApplicationConfig.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\EngineBootstrap.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\EventDispatcher.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\GuiModule.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\RenderLoop.h" />
+<ClInclude Include="Runtime\Include\Bix\Core\SdlSystem.h" />
     <ClInclude Include="Runtime\Include\Bix\Core\String.h" />
+    <ClInclude Include="Runtime\Include\Bix\Core\SubsystemManager.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowserPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h" />

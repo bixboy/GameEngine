@@ -1,7 +1,6 @@
 #pragma once
 
 #include <memory>
-
 #include <SDL3/SDL_events.h>
 
 namespace BixEngine
@@ -12,6 +11,10 @@ namespace BixEngine
     namespace Input { class Input; class InputManager; }
     namespace Core { class Window; class Timer; }
 }
+
+#include "Bix/Input/Input.h"
+#include "Bix/Input/InputManager.h"
+#include "Bix/Core/Timer.h"
 
 namespace BixEngine::Core
 {
