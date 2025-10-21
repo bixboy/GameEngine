@@ -99,6 +99,12 @@ namespace BixEngine::Input
             {
                 for (auto it = axisBindings_.begin(); it != axisBindings_.end();)
                 {
+                    if (it->axisName != axisName)
+                    {
+                        ++it;
+                        continue;
+                    }
+
                     auto& keys = it->keys;
                     std::erase_if(keys, [&](const AxisKey& axisKey)
                     {

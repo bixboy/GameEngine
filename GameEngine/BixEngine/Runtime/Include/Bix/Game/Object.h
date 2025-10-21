@@ -40,8 +40,8 @@ namespace BixEngine::Game
         virtual void DeserializeBinary(std::istream& stream);
 
     protected:
-        virtual void SerializeBinaryImpl(std::ostream& stream) const {}
-        virtual void DeserializeBinaryImpl(std::istream& stream) {}
+        virtual void SerializeBinaryImpl(std::ostream&) const {}
+        virtual void DeserializeBinaryImpl(std::istream&) {}
 
         template<typename T>
         static void WritePrimitive(std::ostream& stream, const T& value)

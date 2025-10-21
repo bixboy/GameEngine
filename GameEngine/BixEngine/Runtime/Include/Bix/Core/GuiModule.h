@@ -5,6 +5,9 @@
 
 #include <SDL3/SDL_events.h>
 
+#include "Bix/Engine/Gui/GuiManager.h"
+
+
 namespace BixEngine
 {
     namespace Core { class Window; class Timer; class SubsystemManager; }
