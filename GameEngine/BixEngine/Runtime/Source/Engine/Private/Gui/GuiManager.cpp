@@ -1,10 +1,10 @@
-#include "Gui/GuiManager.h"
+#include "Bix/Engine/Gui/GuiManager.h"
 
 #include <utility>
 #include <vector>
 
-#include "Gui/GuiPanel.h"
-#include "Gui/GuiSystem.h"
+#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Bix/Engine/Gui/GuiSystem.h"
 
 namespace BixEngine::Gui
 {

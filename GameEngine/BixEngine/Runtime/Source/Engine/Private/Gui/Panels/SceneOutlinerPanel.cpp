@@ -1,10 +1,10 @@
-#include "Gui/Panels/SceneOutlinerPanel.h"
+#include "Bix/Engine/Gui/Panels/SceneOutlinerPanel.h"
 
-#include "Game/Actor.h"
-#include "Game/Scene.h"
-#include "Game/SceneManager.h"
-#include "Gui/GuiManager.h"
-#include "Gui/GuiPanel.h"
+#include "Bix/Game/Actor.h"
+#include "Bix/Game/Scene.h"
+#include "Bix/Game/SceneManager.h"
+#include "Bix/Engine/Gui/GuiManager.h"
+#include "Bix/Engine/Gui/GuiPanel.h"
 
 #include "imgui.h"
 

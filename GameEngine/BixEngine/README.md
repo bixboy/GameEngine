@@ -10,7 +10,9 @@ BixEngine/
 ├── Build/                 # Artefacts de build générés par MSBuild/XMake
 ├── Binaries/              # Binaires runtime (exécutables, DLL, logs)
 ├── Content/               # Contenu du moteur (scènes, assets, etc.)
-├── Runtime/               # Code source du moteur (Core, Graphics, Input, ...)
+├── Runtime/
+│   ├── Include/Bix/       # En-têtes publics modulaires (Core, Engine, Game, ...)
+│   └── Source/            # Implémentations et code privé du runtime
 ├── Samples/               # Points d'entrée et exemples de jeu
 ├── ThirdParty/            # Dépendances externes (SDL3, ImGui)
 └── Tools/                 # Scripts utilitaires (ex: téléchargement SDL3)

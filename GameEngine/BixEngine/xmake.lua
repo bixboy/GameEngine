@@ -131,16 +131,8 @@ target("bixengine_imgui")
 target("bixengine_runtime")
     set_kind("static")
     add_deps("bixengine_imgui")
-    add_headerfiles("Runtime/Source/**/Public/**.h", "Runtime/Source/**/Public/**.inl")
-    add_includedirs(
-        "Runtime/Source/Core/Public",
-        "Runtime/Source/Engine/Public",
-        "Runtime/Source/Game/Public",
-        "Runtime/Source/Graphics/Public",
-        "Runtime/Source/Input/Public",
-        "Runtime/Source/Math/Public",
-        {public = true}
-    )
+    add_headerfiles("Runtime/Include/**.h", "Runtime/Include/**.inl")
+    add_includedirs("Runtime/Include", {public = true})
     add_files("Runtime/Source/**.cpp")
     add_links("SDL3", {public = true})
 
