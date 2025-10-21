@@ -21,6 +21,18 @@
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPopups.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserState.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserUISections.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserUtils.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -121,6 +133,9 @@
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowserPanel.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanelInternal.h">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
