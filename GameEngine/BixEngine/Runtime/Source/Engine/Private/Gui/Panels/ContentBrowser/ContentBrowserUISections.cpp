@@ -178,6 +178,7 @@ namespace BixEngine::Gui
                 requestPopups.scriptType = ScriptTemplateType::Actor;
                 requestPopups.scriptError.Clear();
                 requestPopups.createScript = true;
+                requestPopups.selectedParentScript = -1;
             }
 
             if (ImGui::MenuItem("Create folder..."))
@@ -237,7 +238,7 @@ namespace BixEngine::Gui
 
                 const String entryPathString = entryPath.generic_string();
                 const bool isDirectory = entry.is_directory();
-                const bool isScript = !isDirectory && entryPath.extension() == ".lua";
+                const bool isScript = !isDirectory && (entryPath.extension() == ".h" || entryPath.extension() == ".cpp");
                 const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "\xF0\x9F\x93\x9C" : "\xef\x81\x96");
 
                 ImGui::TableNextColumn();
@@ -358,6 +359,7 @@ namespace BixEngine::Gui
                                 requestPopups.scriptError.Clear();
                                 requestPopups.scriptType = ScriptTemplateType::Actor;
                                 requestPopups.createScript = true;
+                                requestPopups.selectedParentScript = -1;
                             }},
                             {"Create folder...", [&, entryPath]()
                             {

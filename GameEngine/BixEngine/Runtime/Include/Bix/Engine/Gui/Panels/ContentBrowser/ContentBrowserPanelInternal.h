@@ -40,6 +40,7 @@ namespace BixEngine::Gui
         std::filesystem::path folderTarget{};
         std::filesystem::path renameTarget{};
         std::vector<String> existingScripts{};
+        int selectedParentScript{-1};
     };
 
     inline constexpr ImVec4 kContentBackground{0.09f, 0.09f, 0.09f, 0.95f};
