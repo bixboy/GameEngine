@@ -19,7 +19,7 @@ namespace BixEngine::Core
     {
     public:
         SubsystemManager() = default;
-        ~SubsystemManager() = default;
+        ~SubsystemManager();
 
         bool Initialize(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager);
         void Shutdown() noexcept;

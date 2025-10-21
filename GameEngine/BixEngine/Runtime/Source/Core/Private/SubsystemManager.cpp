@@ -12,6 +12,8 @@
 
 namespace BixEngine::Core
 {
+    SubsystemManager::~SubsystemManager() = default;
+
     bool SubsystemManager::Initialize(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager)
     {
         timer_ = std::make_unique<Timer>();
