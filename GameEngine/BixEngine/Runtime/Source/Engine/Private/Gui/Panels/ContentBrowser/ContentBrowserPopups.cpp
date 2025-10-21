@@ -281,7 +281,6 @@ namespace BixEngine::Gui
                         }
                     }
                 }
-                }
             }
 
             ImGui::EndPopup();
