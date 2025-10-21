@@ -1,5 +1,3 @@
-#include "ContentBrowserPanelInternal.h"
-
 #include "Bix/Core/Logger.h"
 
 #include <algorithm>
@@ -86,15 +84,6 @@ namespace BixEngine::Gui
             command += path.string();
             command += "\"";
         }
-        std::system(command.c_str());
-#elif defined(__APPLE__)
-        const fs::path target = isDirectory ? path : path.parent_path();
-        if (target.empty())
-            return;
-
-        std::string command = "open \"";
-        command += target.string();
-        command += "\"";
         std::system(command.c_str());
 #else
         const fs::path target = isDirectory ? path : path.parent_path();

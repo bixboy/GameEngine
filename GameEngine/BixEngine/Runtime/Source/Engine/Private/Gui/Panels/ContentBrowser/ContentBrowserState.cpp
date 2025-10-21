@@ -1,9 +1,8 @@
-#include "ContentBrowserPanelInternal.h"
-
 #include "Bix/Core/Logger.h"
-
 #include <filesystem>
 #include <system_error>
+#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+
 
 namespace BixEngine::Gui
 {

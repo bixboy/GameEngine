@@ -1,14 +1,11 @@
-#include "ContentBrowserPanelInternal.h"
-
 #include "Bix/Core/Logger.h"
 #include "Bix/Engine/Gui/Widgets/ActionTooltip.h"
-
 #include "imgui_internal.h"
-
 #include <algorithm>
-#include <cstdio>
 #include <filesystem>
 #include <vector>
+#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+
 
 namespace BixEngine::Gui
 {
@@ -241,7 +238,7 @@ namespace BixEngine::Gui
                 const String entryPathString = entryPath.generic_string();
                 const bool isDirectory = entry.is_directory();
                 const bool isScript = !isDirectory && entryPath.extension() == ".lua";
-                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? u8"\xF0\x9F\x93\x9C" : "\xef\x81\x96");
+                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "\xF0\x9F\x93\x9C" : "\xef\x81\x96");
 
                 ImGui::TableNextColumn();
                 ImGui::PushID(entryName.c_str());

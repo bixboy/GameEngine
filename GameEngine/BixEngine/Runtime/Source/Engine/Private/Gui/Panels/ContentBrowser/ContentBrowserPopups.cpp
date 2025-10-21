@@ -1,11 +1,10 @@
-#include "ContentBrowserPanelInternal.h"
-
 #include "imgui.h"
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+
 
 namespace BixEngine::Gui
 {
