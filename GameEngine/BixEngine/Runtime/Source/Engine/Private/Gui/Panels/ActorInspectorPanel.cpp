@@ -69,7 +69,7 @@ namespace BixEngine::Gui
                 if (!component)
                     continue;
 
-                const BixEngine::String typeName = component->GetTypeName();
+                const String typeName = component->GetTypeName();
                 const auto typeNameView = typeName.View();
 
                 const bool open = ImGui::TreeNodeEx(
@@ -101,9 +101,7 @@ namespace BixEngine::Gui
         inspectorPanel.SetClosable(true);
         inspectorPanel.SetBackgroundColor(kInspectorBackground);
         inspectorPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        inspectorPanel.SetDrawFunction([provider = context.sceneManagerProvider,
-                                        getSelectedActor = context.selectedActorGetter,
-                                        setSelectedActor = context.selectedActorSetter]()
+        inspectorPanel.SetDrawFunction([provider = context.sceneManagerProvider, getSelectedActor = context.selectedActorGetter, setSelectedActor = context.selectedActorSetter]()
         {
             ImGui::PushID("ActorInspectorPanel");
 
