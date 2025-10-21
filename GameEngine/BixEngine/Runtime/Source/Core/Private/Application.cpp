@@ -135,11 +135,29 @@ namespace BixEngine::Core
         if (!renderer_)
             return;
 
-        renderer_->Clear(config_.clearColor);
-
         Game::Scene* activeScene = sceneManager_ ? sceneManager_->GetScene() : nullptr;
-        if (activeScene)
-            activeScene->Render(*renderer_);
+
+        SDL_Renderer* sdlRenderer = renderer_->GetSDLRenderer();
+        const bool renderedToTexture = EnsureSceneViewportTexture();
+
+        if (renderedToTexture && sdlRenderer && sceneViewportTexture_)
+        {
+            SDL_SetRenderTarget(sdlRenderer, sceneViewportTexture_);
+            renderer_->Clear(config_.clearColor);
+
+            if (activeScene)
+                activeScene->Render(*renderer_);
+
+            SDL_SetRenderTarget(sdlRenderer, nullptr);
+            renderer_->Clear(config_.clearColor);
+        }
+        else
+        {
+            renderer_->Clear(config_.clearColor);
+
+            if (activeScene)
+                activeScene->Render(*renderer_);
+        }
 
         if (timer_)
             SDL_RenderDebugTextFormat(renderer_->GetSDLRenderer(), 10, 10, "FPS: %.0f", timer_->GetFPS());
@@ -289,6 +307,7 @@ namespace BixEngine::Core
             outlinerPanel_ = nullptr;
             contentBrowserPanel_ = nullptr;
             inspectorPanel_ = nullptr;
+            viewportPanel_ = nullptr;
             selectedActor_ = nullptr;
             return;
         }
@@ -309,10 +328,19 @@ namespace BixEngine::Core
             [this](Game::Actor* actor)
             {
                 selectedActor_ = actor;
+            },
+            [this]() -> SDL_Texture*
+            {
+                return sceneViewportTexture_;
+            },
+            [this]() -> std::pair<int, int>
+            {
+                return {sceneViewportWidth_, sceneViewportHeight_};
             }
         };
 
         const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
+        viewportPanel_ = panels.sceneViewportPanel;
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
         contentBrowserPanel_ = panels.contentBrowserPanel;
@@ -335,6 +363,7 @@ namespace BixEngine::Core
         if (sceneManager_)
             sceneManager_->SetScene(nullptr);
 
+        DestroySceneViewportTexture();
         sceneManager_.reset();
         inputManager_.reset();
         input_.reset();
@@ -359,6 +388,7 @@ namespace BixEngine::Core
         outlinerPanel_ = nullptr;
         contentBrowserPanel_ = nullptr;
         inspectorPanel_ = nullptr;
+        viewportPanel_ = nullptr;
         selectedActor_ = nullptr;
 
         if (guiManager_)
@@ -371,6 +401,76 @@ namespace BixEngine::Core
         }
     }
 
+    bool Application::EnsureSceneViewportTexture()
+    {
+        if (!renderer_)
+        {
+            DestroySceneViewportTexture();
+            return false;
+        }
+
+        SDL_Renderer* sdlRenderer = renderer_->GetSDLRenderer();
+        if (!sdlRenderer)
+        {
+            DestroySceneViewportTexture();
+            return false;
+        }
+
+        int outputWidth = 0;
+        int outputHeight = 0;
+        if (!SDL_GetCurrentRenderOutputSize(sdlRenderer, &outputWidth, &outputHeight) || outputWidth <= 0 || outputHeight <= 0)
+        {
+            DestroySceneViewportTexture();
+            return false;
+        }
+
+        if (sceneViewportTexture_ && (outputWidth != sceneViewportWidth_ || outputHeight != sceneViewportHeight_))
+            DestroySceneViewportTexture();
+
+        if (!sceneViewportTexture_)
+        {
+            sceneViewportTexture_ = SDL_CreateTexture(
+                sdlRenderer,
+                SDL_PIXELFORMAT_RGBA32,
+                SDL_TEXTUREACCESS_TARGET,
+                outputWidth,
+                outputHeight);
+
+            if (!sceneViewportTexture_)
+            {
+                if (!sceneViewportTextureErrorLogged_)
+                {
+                    LOG_ERROR(String{"Failed to create scene viewport texture: "} + SDL_GetError());
+                    sceneViewportTextureErrorLogged_ = true;
+                }
+
+                sceneViewportWidth_ = 0;
+                sceneViewportHeight_ = 0;
+                return false;
+            }
+
+            SDL_SetTextureBlendMode(sceneViewportTexture_, SDL_BLENDMODE_BLEND);
+            sceneViewportWidth_ = outputWidth;
+            sceneViewportHeight_ = outputHeight;
+            sceneViewportTextureErrorLogged_ = false;
+        }
+
+        return sceneViewportTexture_ != nullptr;
+    }
+
+    void Application::DestroySceneViewportTexture() noexcept
+    {
+        if (sceneViewportTexture_)
+        {
+            SDL_DestroyTexture(sceneViewportTexture_);
+            sceneViewportTexture_ = nullptr;
+        }
+
+        sceneViewportWidth_ = 0;
+        sceneViewportHeight_ = 0;
+        sceneViewportTextureErrorLogged_ = false;
+    }
+
 #pragma endregion
-    
+
 }

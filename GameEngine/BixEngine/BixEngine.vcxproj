@@ -253,6 +253,7 @@
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\StatsPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp" />
@@ -1805,6 +1806,7 @@
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowserPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneViewportPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Widgets\ActionTooltip.h" />

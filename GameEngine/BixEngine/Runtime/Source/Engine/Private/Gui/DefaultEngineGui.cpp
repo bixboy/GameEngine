@@ -3,6 +3,7 @@
 #include "Bix/Engine/Gui/Panels/ActorInspectorPanel.h"
 #include "Bix/Engine/Gui/Panels/ContentBrowserPanel.h"
 #include "Bix/Engine/Gui/Panels/SceneOutlinerPanel.h"
+#include "Bix/Engine/Gui/Panels/SceneViewportPanel.h"
 #include "Bix/Engine/Gui/Panels/StatsPanel.h"
 
 namespace BixEngine::Gui
@@ -18,6 +19,7 @@ namespace BixEngine::Gui
             DefaultEngineGuiPanels CreatePanels()
             {
                 DefaultEngineGuiPanels panels{};
+                panels.sceneViewportPanel = &CreateSceneViewportPanel(guiManager_, context_);
                 panels.statsPanel = &CreateStatsPanel(guiManager_, context_);
                 panels.sceneOutlinerPanel = &CreateSceneOutlinerPanel(guiManager_, context_);
                 panels.actorInspectorPanel = &CreateActorInspectorPanel(guiManager_, context_);
