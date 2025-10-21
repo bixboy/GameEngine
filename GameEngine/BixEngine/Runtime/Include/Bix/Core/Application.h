@@ -6,11 +6,10 @@
 
 #define SDL_MAIN_HANDLED
 
+struct SDL_Texture;
+
 namespace BixEngine
 {
-
-    struct SDL_Texture;
-
     namespace Graphics { class Renderer; }
     namespace Gui      { class GuiSystem; class GuiManager; class GuiPanel; }
     namespace Game     { class Scene; class SceneManager; class Actor; }

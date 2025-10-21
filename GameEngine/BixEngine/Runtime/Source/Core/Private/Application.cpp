@@ -418,7 +418,7 @@ namespace BixEngine::Core
 
         int outputWidth = 0;
         int outputHeight = 0;
-        if (!SDL_GetRendererOutputSize(sdlRenderer, &outputWidth, &outputHeight) || outputWidth <= 0 || outputHeight <= 0)
+        if (!SDL_GetCurrentRenderOutputSize(sdlRenderer, &outputWidth, &outputHeight) || outputWidth <= 0 || outputHeight <= 0)
         {
             DestroySceneViewportTexture();
             return false;
