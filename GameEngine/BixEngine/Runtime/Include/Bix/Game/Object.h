@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bix/Core/String.h"
+#include "Bix/Engine/SaveSystem/BixArchive.h"
 #include "Bix/Engine/SaveSystem/BixReflection.h"
 #include "Bix/Math/Math.h"
 
