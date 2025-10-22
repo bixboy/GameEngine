@@ -342,10 +342,12 @@ namespace BixEngine::Gui
 
             const String lhsName = lhs.type == ContentEntryType::Script
                 ? lhs.script.name
-                : lhs.path.filename().generic_string();
+                : String(lhs.path.filename().generic_string());
+
             const String rhsName = rhs.type == ContentEntryType::Script
                 ? rhs.script.name
-                : rhs.path.filename().generic_string();
+                : String(rhs.path.filename().generic_string());
+
 
             return CaseInsensitiveLess(lhsName, rhsName);
         });
@@ -363,11 +365,12 @@ namespace BixEngine::Gui
             {
                 const bool isDirectory = entry.type == ContentEntryType::Directory;
                 const bool isScript = entry.type == ContentEntryType::Script;
-                const String entryName = isScript ? entry.script.name : entry.path.filename().generic_string();
+                const String entryName = isScript ? entry.script.name : String(entry.path.filename().generic_string());
+                
                 if (!MatchesSearch(entryName, searchQuery))
                     continue;
 
-                const String selectionId = isScript ? BuildScriptSelectionId(entry.script) : entry.path.generic_string();
+                const String selectionId = isScript ? BuildScriptSelectionId(entry.script) : String(entry.path.generic_string());
                 const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "<>" : "\xef\x81\x96");
 
                 ImGui::TableNextColumn();

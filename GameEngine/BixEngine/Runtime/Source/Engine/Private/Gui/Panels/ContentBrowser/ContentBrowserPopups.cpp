@@ -548,90 +548,91 @@ namespace BixEngine::Gui
                                 const fs::path newHeaderPath = makeNewPath(headerOldPath);
                                 const fs::path newSourcePath = makeNewPath(sourceOldPath);
 
-                            const auto hasConflict = [&](const fs::path& candidate)
-                            {
-                                if (candidate.empty())
-                                    return false;
-
-                                std::error_code existsError;
-                                const bool exists = fs::exists(candidate, existsError);
-                                if (existsError)
+                                const auto hasConflict = [&](const fs::path& candidate)
                                 {
-                                    String errorMessage = "Unable to verify entry during rename: ";
-                                    errorMessage += existsError.message();
-                                    LogAndStoreError(requests.renameError, std::move(errorMessage));
-                                    return true;
-                                }
+                                    if (candidate.empty())
+                                        return false;
 
-                                if (exists)
-                                {
-                                    LogAndStoreError(requests.renameError, "An entry with this name already exists.", false);
-                                    return true;
-                                }
-
-                                return false;
-                            };
-
-                            if (hasConflict(newHeaderPath) || hasConflict(newSourcePath))
-                            {
-                                // Conflict handled inside hasConflict.
-                            }
-                            else
-                            {
-                                std::vector<std::pair<fs::path, fs::path>> renamePairs{};
-                                if (!headerOldPath.empty())
-                                    renamePairs.emplace_back(headerOldPath, newHeaderPath);
-                                if (!sourceOldPath.empty())
-                                    renamePairs.emplace_back(sourceOldPath, newSourcePath);
-
-                                std::vector<std::pair<fs::path, fs::path>> completedRenames{};
-                                bool renameFailed = false;
-
-                                for (const auto& pair : renamePairs)
-                                {
-                                    std::error_code renameError;
-                                    fs::rename(pair.first, pair.second, renameError);
-                                    if (renameError)
+                                    std::error_code existsError;
+                                    const bool exists = fs::exists(candidate, existsError);
+                                    if (existsError)
                                     {
-                                        String errorMessage = "Unable to rename entry: ";
-                                        errorMessage += renameError.message();
+                                        String errorMessage = "Unable to verify entry during rename: ";
+                                        errorMessage += existsError.message();
                                         LogAndStoreError(requests.renameError, std::move(errorMessage));
-                                        renameFailed = true;
-                                        break;
+                                        return true;
                                     }
 
-                                    completedRenames.push_back(pair);
-                                }
-
-                                if (renameFailed)
-                                {
-                                    for (auto it = completedRenames.rbegin(); it != completedRenames.rend(); ++it)
+                                    if (exists)
                                     {
-                                        std::error_code revertError;
-                                        fs::rename(it->second, it->first, revertError);
-                                        if (revertError)
-                                        {
-                                            String revertMessage = "Unable to restore entry after rename failure: ";
-                                            revertMessage += revertError.message();
-                                            LOG_ERROR(revertMessage);
-                                        }
+                                        LogAndStoreError(requests.renameError, "An entry with this name already exists.", false);
+                                        return true;
                                     }
+
+                                    return false;
+                                };
+
+                                if (hasConflict(newHeaderPath) || hasConflict(newSourcePath))
+                                {
+                                    // Conflict handled inside hasConflict.
                                 }
                                 else
                                 {
-                                    fs::path selectionPath = parent / newBaseName;
-                                    selectedEntry = selectionPath.generic_string();
-                                    requests.renameError.Clear();
-                                    requests.renameTarget = newHeaderPath;
-                                    requests.renameSecondaryTarget = newSourcePath;
-                                    requests.renameTargetIsScriptGroup = false;
-                                    ImGui::CloseCurrentPopup();
+                                    std::vector<std::pair<fs::path, fs::path>> renamePairs{};
+                                    if (!headerOldPath.empty())
+                                        renamePairs.emplace_back(headerOldPath, newHeaderPath);
+                                    if (!sourceOldPath.empty())
+                                        renamePairs.emplace_back(sourceOldPath, newSourcePath);
+
+                                    std::vector<std::pair<fs::path, fs::path>> completedRenames{};
+                                    bool renameFailed = false;
+
+                                    for (const auto& pair : renamePairs)
+                                    {
+                                        std::error_code renameError;
+                                        fs::rename(pair.first, pair.second, renameError);
+                                        if (renameError)
+                                        {
+                                            String errorMessage = "Unable to rename entry: ";
+                                            errorMessage += renameError.message();
+                                            LogAndStoreError(requests.renameError, std::move(errorMessage));
+                                            renameFailed = true;
+                                            break;
+                                        }
+
+                                        completedRenames.push_back(pair);
+                                    }
+
+                                    if (renameFailed)
+                                    {
+                                        for (auto it = completedRenames.rbegin(); it != completedRenames.rend(); ++it)
+                                        {
+                                            std::error_code revertError;
+                                            fs::rename(it->second, it->first, revertError);
+                                            if (revertError)
+                                            {
+                                                String revertMessage = "Unable to restore entry after rename failure: ";
+                                                revertMessage += revertError.message();
+                                                LOG_ERROR(revertMessage);
+                                            }
+                                        }
+                                    }
+                                    else
+                                    {
+                                        fs::path selectionPath = parent / newBaseName;
+                                        selectedEntry = selectionPath.generic_string();
+                                        requests.renameError.Clear();
+                                        requests.renameTarget = newHeaderPath;
+                                        requests.renameSecondaryTarget = newSourcePath;
+                                        requests.renameTargetIsScriptGroup = false;
+                                        ImGui::CloseCurrentPopup();
+                                    }
                                 }
                             }
                         }
                     }
                 }
-                else
+                else // <-- ce else s’applique si renamingScriptGroup == false
                 {
                     const fs::path oldPath = requests.renameTarget;
                     const String oldName = oldPath.filename().generic_string();
@@ -674,8 +675,6 @@ namespace BixEngine::Gui
                     }
                 }
             }
-
-            ImGui::EndPopup();
         }
     }
 
