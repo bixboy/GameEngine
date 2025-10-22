@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <vector>
 #include "Bix/Game/Object.h"
+#include "Bix/Game/Scripting/ScriptReflection.h"
 #include "Bix/Math/Math.h"
 
 namespace BixEngine::Graphics { class Renderer; }
@@ -11,11 +12,14 @@ namespace BixEngine::Game
 {
     class Component;
     
-    class Actor : public Object
+    class Actor : public Object, public Scripting::ScriptBase
     {
         public:
+            BIX_GENERATED_BODY(Actor);
+            BIX_DECLARE_SCRIPT_CLASS(Actor, Scripting::ScriptBase);
+
             explicit Actor(const Math::Transform& transform = Math::Transform());
-        
+
             Actor(String name, const Math::Transform& transform = Math::Transform());
         
             virtual void BeginPlay();

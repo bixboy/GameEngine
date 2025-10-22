@@ -63,6 +63,9 @@
     <ClCompile Include="Runtime\Source\Game\Private\Components\Component.cpp">
       <Filter>Runtime\Game\Private\Components</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Components\ComponentRegistry.cpp">
+      <Filter>Runtime\Game\Private\Components</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Game\Private\Components\SpriteComponent.cpp">
       <Filter>Runtime\Game\Private\Components</Filter>
     </ClCompile>
@@ -95,6 +98,9 @@
     </ClCompile>
     <ClCompile Include="Runtime\Source\Game\Private\Test\TestScene.cpp">
       <Filter>Runtime\Game\Private\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Scripting\ScriptRegistry.cpp">
+      <Filter>Runtime\Game\Private</Filter>
     </ClCompile>
     <ClCompile Include="Runtime\Source\Graphics\Private\Renderer.cpp">
       <Filter>Runtime\Graphics\Private</Filter>
@@ -179,6 +185,9 @@
     <ClInclude Include="Runtime\Include\Bix\Game\Components\Component.h">
       <Filter>Runtime\Include\Game\Components</Filter>
     </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Components\ComponentRegistry.h">
+      <Filter>Runtime\Include\Game\Components</Filter>
+    </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Components\SpriteComponent.h">
       <Filter>Runtime\Include\Game\Components</Filter>
     </ClInclude>
@@ -201,6 +210,9 @@
       <Filter>Runtime\Include\Game</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Actor.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Scripting\ScriptReflection.h">
       <Filter>Runtime\Include\Game</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h">

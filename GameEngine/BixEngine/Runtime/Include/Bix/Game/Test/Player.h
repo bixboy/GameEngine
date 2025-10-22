@@ -16,6 +16,9 @@ namespace BixEngine
         class Player : public Actor
         {
             public:
+                BIX_GENERATED_BODY(Player);
+                BIX_DECLARE_SCRIPT_CLASS(Player, Actor);
+
                 Player();
                 Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
 

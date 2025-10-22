@@ -13,6 +13,9 @@ namespace BixEngine
         class TestScene : public Scene
         {
             public:
+                BIX_GENERATED_BODY(TestScene);
+                BIX_DECLARE_SCRIPT_CLASS(TestScene, Scene);
+
                 TestScene();
                 ~TestScene() override;
 
