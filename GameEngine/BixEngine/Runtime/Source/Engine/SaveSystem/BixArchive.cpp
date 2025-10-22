@@ -1,4 +1,5 @@
 #include "Bix/Engine/SaveSystem/BixArchive.h"
+#include "Bix/Engine/SaveSystem/BixReflection.h"
 
 #include <iomanip>
 #include <sstream>

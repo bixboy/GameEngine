@@ -6,6 +6,7 @@
 #include <functional>
 #include <memory>
 #include <mutex>
+#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -15,6 +16,9 @@
 #include <vector>
 
 #include "Bix/Core/String.h"
+#include "Bix/Engine/SaveSystem/BixGuid.h"
+#include "Bix/Engine/SaveSystem/BixTypeTraits.h"
+#include "Bix/Engine/SaveSystem/BixArchive.h"
 
 namespace BixEngine::Engine::SaveSystem
 {
@@ -33,32 +37,6 @@ namespace BixEngine::Engine::SaveSystem
      * Represents a globally unique identifier used by the save system to
      * uniquely identify every reflected object.
      */
-    struct BixGuid
-    {
-        std::array<std::uint8_t, 16> data{};
-
-        [[nodiscard]] bool IsValid() const noexcept;
-        [[nodiscard]] String ToString() const;
-
-        static BixGuid NewGuid();
-        static BixGuid FromString(std::string_view text);
-
-        friend bool operator==(const BixGuid& lhs, const BixGuid& rhs) noexcept
-        {
-            return lhs.data == rhs.data;
-        }
-
-        friend bool operator!=(const BixGuid& lhs, const BixGuid& rhs) noexcept
-        {
-            return !(lhs == rhs);
-        }
-    };
-
-    struct BixGuidHasher
-    {
-        std::size_t operator()(const BixGuid& guid) const noexcept;
-    };
-
     /**
      * Describes a reflected property that can be serialized by the save
      * system. The property stores both read/write callbacks which operate on
@@ -66,8 +44,8 @@ namespace BixEngine::Engine::SaveSystem
      */
     struct BixProperty
     {
-        using WriteFunction = void(*)(const BixObject&, BixArchiveWriter&);
-        using ReadFunction  = void(*)(BixObject&, BixArchiveReader&);
+        using WriteFunction = std::function<void(const BixObject&, BixArchiveWriter&)>;
+        using ReadFunction  = std::function<void(BixObject&, BixArchiveReader&)>;
 
         String name;
         WriteFunction write{nullptr};
@@ -137,6 +115,80 @@ namespace BixEngine::Engine::SaveSystem
 
         BixGuid guid_{};
         BixObject* outer_{nullptr};
+    };
+
+    template<typename T>
+    struct PropertyAdapter<std::unique_ptr<T>>
+    {
+        static void Serialize(const BixObject&, const std::unique_ptr<T>& value, BixArchiveWriter& writer)
+        {
+            if constexpr (std::is_convertible_v<T*, BixObject*>)
+            {
+                writer.WriteObject(value.get());
+            }
+            else
+            {
+                static_assert(AlwaysFalse<T>::value, "Unsupported unique_ptr property type.");
+            }
+        }
+
+        static void Deserialize(BixObject& owner, std::unique_ptr<T>& value, BixArchiveReader& reader)
+        {
+            if constexpr (std::is_convertible_v<T*, BixObject*>)
+            {
+                auto object = reader.ReadObject(&owner);
+                if (!object)
+                {
+                    value.reset();
+                    return;
+                }
+
+                auto* typed = dynamic_cast<T*>(object.release());
+                if (!typed)
+                    throw std::runtime_error("Property type mismatch while deserializing unique_ptr property.");
+                value.reset(typed);
+            }
+            else
+            {
+                static_assert(AlwaysFalse<T>::value, "Unsupported unique_ptr property type.");
+            }
+        }
+    };
+
+    template<typename T>
+    struct PropertyAdapter<std::vector<std::unique_ptr<T>>>
+    {
+        static void Serialize(const BixObject& owner, const std::vector<std::unique_ptr<T>>& values, BixArchiveWriter& writer)
+        {
+            const auto count = static_cast<std::uint32_t>(values.size());
+            writer.WritePrimitive(count);
+            for (const auto& value : values)
+            {
+                PropertyAdapter<std::unique_ptr<T>>::Serialize(owner, value, writer);
+            }
+        }
+
+        static void Deserialize(BixObject& owner, std::vector<std::unique_ptr<T>>& values, BixArchiveReader& reader)
+        {
+            std::uint32_t count = 0;
+            reader.ReadPrimitive(count);
+            values.clear();
+            values.reserve(count);
+            for (std::uint32_t i = 0; i < count; ++i)
+            {
+                auto object = reader.ReadObject(&owner);
+                if (!object)
+                {
+                    values.emplace_back();
+                    continue;
+                }
+
+                auto* typed = dynamic_cast<T*>(object.release());
+                if (!typed)
+                    throw std::runtime_error("Property type mismatch while deserializing object array property.");
+                values.emplace_back(typed);
+            }
+        }
     };
 
     /**
@@ -255,12 +307,6 @@ namespace BixEngine::Engine::SaveSystem
 
         BixClass* class_{};
     };
-
-    template<typename T>
-    struct AlwaysFalse : std::false_type {};
-
-    template<typename T>
-    struct PropertyAdapter;
 
     template<typename TObject, typename TValue>
     class PropertyRegistration

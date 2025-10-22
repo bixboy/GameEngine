@@ -14,11 +14,13 @@
 #include "SDL3/SDL.h"
 
 #include "Bix/Core/String.h"
-#include "Bix/Engine/SaveSystem/BixReflection.h"
+#include "Bix/Engine/SaveSystem/BixGuid.h"
+#include "Bix/Engine/SaveSystem/BixTypeTraits.h"
 #include "Bix/Math/Math.h"
 
 namespace BixEngine::Engine::SaveSystem
 {
+    class BixObject;
     class BixArchiveWriter
     {
     public:
@@ -207,77 +209,9 @@ namespace BixEngine::Engine::SaveSystem
     };
 
     template<typename T>
-    struct PropertyAdapter<std::unique_ptr<T>>
-    {
-        static void Serialize(const BixObject&, const std::unique_ptr<T>& value, BixArchiveWriter& writer)
-        {
-            if constexpr (std::is_base_of_v<BixObject, T>)
-            {
-                writer.WriteObject(value.get());
-            }
-            else
-            {
-                static_assert(AlwaysFalse<T>::value, "Unsupported unique_ptr property type.");
-            }
-        }
-
-        static void Deserialize(BixObject& owner, std::unique_ptr<T>& value, BixArchiveReader& reader)
-        {
-            if constexpr (std::is_base_of_v<BixObject, T>)
-            {
-                auto object = reader.ReadObject(&owner);
-                if (!object)
-                {
-                    value.reset();
-                    return;
-                }
-
-                auto* typed = dynamic_cast<T*>(object.release());
-                if (!typed)
-                    throw std::runtime_error("Property type mismatch while deserializing unique_ptr property.");
-                value.reset(typed);
-            }
-            else
-            {
-                static_assert(AlwaysFalse<T>::value, "Unsupported unique_ptr property type.");
-            }
-        }
-    };
+    struct PropertyAdapter<std::unique_ptr<T>>;
 
     template<typename T>
-    struct PropertyAdapter<std::vector<std::unique_ptr<T>>>
-    {
-        static void Serialize(const BixObject& owner, const std::vector<std::unique_ptr<T>>& values, BixArchiveWriter& writer)
-        {
-            const auto count = static_cast<std::uint32_t>(values.size());
-            writer.WritePrimitive(count);
-            for (const auto& value : values)
-            {
-                PropertyAdapter<std::unique_ptr<T>>::Serialize(owner, value, writer);
-            }
-        }
-
-        static void Deserialize(BixObject& owner, std::vector<std::unique_ptr<T>>& values, BixArchiveReader& reader)
-        {
-            std::uint32_t count = 0;
-            reader.ReadPrimitive(count);
-            values.clear();
-            values.reserve(count);
-            for (std::uint32_t i = 0; i < count; ++i)
-            {
-                auto object = reader.ReadObject(&owner);
-                if (!object)
-                {
-                    values.emplace_back();
-                    continue;
-                }
-
-                auto* typed = dynamic_cast<T*>(object.release());
-                if (!typed)
-                    throw std::runtime_error("Property type mismatch while deserializing object array property.");
-                values.emplace_back(typed);
-            }
-        }
-    };
+    struct PropertyAdapter<std::vector<std::unique_ptr<T>>>;
 }
 
