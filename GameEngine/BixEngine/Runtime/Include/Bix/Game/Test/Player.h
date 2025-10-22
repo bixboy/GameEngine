@@ -33,6 +33,8 @@ namespace BixEngine
                 void SerializeBinaryImpl(std::ostream& stream) const override;
                 void DeserializeBinaryImpl(std::istream& stream) override;
 
+                void OnComponentRemoved(const Component& component) override;
+
                 void ApplyMovement(float deltaTime);
                 void InitializeSpriteComponent();
                 void RefreshSpriteComponent();
