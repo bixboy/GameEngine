@@ -47,6 +47,8 @@ namespace BixEngine::Gui
         String selectedParentInclude{};
         String selectedParentDisplay{};
         bool selectedParentIsBase{false};
+        bool selectedParentIsActor{false};
+        bool selectedParentIsComponent{false};
     };
 
     inline void ClearSelectedParent(PopupRequestState& requests)
@@ -55,6 +57,8 @@ namespace BixEngine::Gui
         requests.selectedParentInclude.Clear();
         requests.selectedParentDisplay.Clear();
         requests.selectedParentIsBase = false;
+        requests.selectedParentIsActor = false;
+        requests.selectedParentIsComponent = false;
     }
 
     inline constexpr ImVec4 kContentBackground{0.09f, 0.09f, 0.09f, 0.95f};

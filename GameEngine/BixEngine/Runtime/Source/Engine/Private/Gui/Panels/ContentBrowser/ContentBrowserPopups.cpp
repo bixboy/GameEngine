@@ -5,6 +5,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <cstring>
 #include <unordered_map>
@@ -31,11 +32,15 @@ namespace BixEngine::Gui
                 value.erase(value.length() - extLength, extLength);
         }
 
+        struct ScriptNode;
+
         struct ParentScriptInfo
         {
             std::string displayName{};
             std::string className{};
             std::string includePath{};
+            bool isActor{false};
+            bool isComponent{false};
 
             [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
         };
@@ -43,10 +48,47 @@ namespace BixEngine::Gui
         const std::vector<ParentScriptInfo>& GetBaseClassParents()
         {
             static const std::vector<ParentScriptInfo> baseParents = {
-                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h"},
-                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h"},
+                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h", true, false},
+                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h", false, true},
             };
             return baseParents;
+        }
+
+        bool MatchesActorType(std::string_view typeName)
+        {
+            return typeName == "Actor" || typeName == "BixEngine::Game::Actor" || typeName == "::BixEngine::Game::Actor";
+        }
+
+        bool MatchesComponentType(std::string_view typeName)
+        {
+            return typeName == "Component" || typeName == "BixEngine::Game::Component" || typeName == "::BixEngine::Game::Component";
+        }
+
+        template<typename TPredicate>
+        bool InheritsFrom(const std::unordered_map<std::string, ScriptNode>& nodes, const std::string& startType, TPredicate predicate)
+        {
+            if (startType.empty())
+                return false;
+
+            std::unordered_set<std::string> visited{};
+            std::string current = startType;
+
+            while (!current.empty())
+            {
+                if (predicate(current))
+                    return true;
+
+                auto it = nodes.find(current);
+                if (it == nodes.end())
+                    break;
+
+                if (!visited.insert(it->first).second)
+                    break;
+
+                current = it->second.parentName;
+            }
+
+            return false;
         }
 
         std::string TrimWhitespace(std::string value)
@@ -62,6 +104,8 @@ namespace BixEngine::Gui
             std::string name{};
             std::string parentName{};
             std::string includePath{};
+            bool inheritsActor{false};
+            bool inheritsComponent{false};
             std::vector<ScriptNode> children{};
         };
 
@@ -257,6 +301,8 @@ namespace BixEngine::Gui
             auto buildTree = [&](const auto& self, const std::string& name, std::unordered_set<std::string>& visited) -> ScriptNode
             {
                 ScriptNode result = nodes.at(name);
+                result.inheritsActor = InheritsFrom(nodes, result.parentName, MatchesActorType);
+                result.inheritsComponent = InheritsFrom(nodes, result.parentName, MatchesComponentType);
 
                 auto childIt = children.find(name);
                 if (childIt != children.end())
@@ -328,6 +374,8 @@ namespace BixEngine::Gui
                 info.displayName = node.name;
                 info.className = node.name;
                 info.includePath = node.includePath;
+                info.isActor = node.inheritsActor;
+                info.isComponent = node.inheritsComponent;
                 outInfo.emplace(info.className, info);
 
                 Utils::TreeNodeData guiNode{};
@@ -349,6 +397,8 @@ namespace BixEngine::Gui
                 info.displayName = requests.selectedParentDisplay.View();
                 info.className = requests.selectedParentClass.View();
                 info.includePath = requests.selectedParentInclude.View();
+                info.isActor = requests.selectedParentIsActor;
+                info.isComponent = requests.selectedParentIsComponent;
             }
             return info;
         }
@@ -359,6 +409,13 @@ namespace BixEngine::Gui
             requests.selectedParentInclude = info.includePath;
             requests.selectedParentDisplay = info.displayName;
             requests.selectedParentIsBase = isBaseParent;
+            requests.selectedParentIsActor = info.isActor;
+            requests.selectedParentIsComponent = info.isComponent;
+
+            if (info.isComponent)
+                requests.scriptType = ScriptTemplateType::Component;
+            else if (info.isActor)
+                requests.scriptType = ScriptTemplateType::Actor;
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -597,6 +654,7 @@ namespace BixEngine::Gui
                                         const ParentScriptInfo info = GetSelectedParentInfo(requests);
                                         const bool hasParent = info.IsValid();
                                         const bool hasParentInclude = hasParent && !info.includePath.empty();
+                                        const bool inheritsComponent = requests.selectedParentIsComponent || info.isComponent;
                                         const std::string baseType = hasParent ? info.className : "::BixEngine::Game::Scripting::ScriptBase";
 
                                         auto resolveScriptKindLiteral = [&]() -> std::string
@@ -608,6 +666,11 @@ namespace BixEngine::Gui
                                                 if (info.className == "BixEngine::Game::Component" || info.displayName == "Component")
                                                     return "::BixEngine::Game::Scripting::ScriptKind::Component";
                                             }
+
+                                            if (requests.selectedParentIsComponent || info.isComponent)
+                                                return "::BixEngine::Game::Scripting::ScriptKind::Component";
+                                            if (requests.selectedParentIsActor || info.isActor)
+                                                return "::BixEngine::Game::Scripting::ScriptKind::Actor";
 
                                             switch (requests.scriptType)
                                             {
@@ -637,7 +700,10 @@ namespace BixEngine::Gui
                                         headerFile << "    BIX_GENERATED_BODY(" << baseName << ");\n";
                                         headerFile << "    BIX_DECLARE_SCRIPT_CLASS(" << baseName << ", " << baseType << ");\n\n";
                                         headerFile << "    using Super = " << baseType << ";\n\n";
-                                        headerFile << "    " << baseName << "();\n";
+                                        if (inheritsComponent)
+                                            headerFile << "    explicit " << baseName << "(::BixEngine::Game::Actor* owner);\n";
+                                        else
+                                            headerFile << "    " << baseName << "();\n";
                                         headerFile << "    void OnCreate();\n";
                                         headerFile << "    void OnUpdate(float deltaTime);\n";
                                         headerFile << "};\n\n";
@@ -648,7 +714,17 @@ namespace BixEngine::Gui
                                         sourceFile << "    .moduleName = BIX_SCRIPT_DEFAULT_MODULE,\n";
                                         sourceFile << "    .kind = " << resolveScriptKindLiteral() << ",\n";
                                         sourceFile << "}));\n\n";
-                                        sourceFile << baseName << "::" << baseName << "() = default;\n\n";
+                                        if (inheritsComponent)
+                                        {
+                                            sourceFile << baseName << "::" << baseName << "(::BixEngine::Game::Actor* owner)\n";
+                                            sourceFile << "    : " << baseType << "(owner)\n";
+                                            sourceFile << "{\n";
+                                            sourceFile << "}\n\n";
+                                        }
+                                        else
+                                        {
+                                            sourceFile << baseName << "::" << baseName << "() = default;\n\n";
+                                        }
                                         sourceFile << "void " << baseName << "::OnCreate()\n";
                                         sourceFile << "{\n";
                                         
