@@ -91,6 +91,16 @@ namespace BixEngine::Game
         SetScale(size_);
     }
 
+    void Player::OnComponentRemoved(const Component& component)
+    {
+        if (&component == spriteComponent_)
+        {
+            spriteComponent_ = nullptr;
+        }
+
+        Actor::OnComponentRemoved(component);
+    }
+
     void Player::InitializeSpriteComponent()
     {
         auto sprite = std::make_unique<SpriteComponent>(this, color_, size_.x, size_.y);

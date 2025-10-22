@@ -68,6 +68,7 @@ namespace BixEngine::Game
             return false;
         }
 
+        OnComponentRemoved(*(*it));
         components_.erase(it);
         return true;
     }

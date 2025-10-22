@@ -47,6 +47,9 @@ namespace BixEngine::Game
 
             bool RemoveComponent(const Component* component);
 
+        protected:
+            virtual void OnComponentRemoved(const Component& /*component*/) {}
+
         private:
         std::vector<std::unique_ptr<Component>> components_;
 
