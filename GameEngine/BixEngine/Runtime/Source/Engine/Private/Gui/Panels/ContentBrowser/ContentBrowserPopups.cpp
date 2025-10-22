@@ -16,20 +16,6 @@ namespace BixEngine::Gui
         constexpr const char* kScriptHeaderExtension = ".h";
         constexpr const char* kScriptSourceExtension = ".cpp";
 
-        const char* GetScriptTypeLabel(ScriptTemplateType type)
-        {
-            switch (type)
-            {
-            case ScriptTemplateType::Actor:
-                return "Actor Script";
-            case ScriptTemplateType::Component:
-                return "Component Script";
-            case ScriptTemplateType::Utility:
-            default:
-                return "Utility Script";
-            }
-        }
-
         void RemoveExtensionIfPresent(std::string& value, const char* extension)
         {
             const size_t extLength = std::strlen(extension);
@@ -79,23 +65,20 @@ namespace BixEngine::Gui
 
         struct ParentScriptInfo
         {
+            std::string displayName{};
             std::string className{};
-            std::string includeDirective{};
+            std::string includePath{};
 
             [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
         };
 
-        ParentScriptInfo ResolveDefaultParent(const PopupRequestState& requests)
+        const std::vector<ParentScriptInfo>& GetBaseClassParents()
         {
-            switch (requests.scriptType)
-            {
-            case ScriptTemplateType::Actor:
-                return {"BixEngine::Game::Actor", "Bix/Game/Actor.h"};
-            case ScriptTemplateType::Component:
-                return {"BixEngine::Game::Component", "Bix/Game/Components/Component.h"};
-            default:
-                return {};
-            }
+            static const std::vector<ParentScriptInfo> baseParents = {
+                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h"},
+                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h"},
+            };
+            return baseParents;
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -114,8 +97,38 @@ namespace BixEngine::Gui
             const fs::path scriptsDirectory = state.root / "Scripts";
             RefreshExistingScripts(requests, scriptsDirectory);
 
-            if (requests.selectedParentScript >= static_cast<int>(requests.existingScripts.size()))
+            const auto& baseParents = GetBaseClassParents();
+
+            std::vector<ParentScriptInfo> userParents;
+            userParents.reserve(requests.existingScripts.size());
+            for (const auto& script : requests.existingScripts)
+            {
+                ParentScriptInfo info{};
+                info.displayName = script.View();
+                info.className = info.displayName;
+                info.includePath = info.className + kScriptHeaderExtension;
+                userParents.emplace_back(std::move(info));
+            }
+
+            const int totalParentOptions = static_cast<int>(baseParents.size() + userParents.size());
+            if (requests.selectedParentScript >= totalParentOptions)
                 requests.selectedParentScript = -1;
+
+            auto resolveSelectedParent = [&](int selection) -> ParentScriptInfo
+            {
+                if (selection < 0)
+                    return {};
+
+                const int baseCount = static_cast<int>(baseParents.size());
+                if (selection < baseCount)
+                    return baseParents[selection];
+
+                const int userIndex = selection - baseCount;
+                if (userIndex >= 0 && userIndex < static_cast<int>(userParents.size()))
+                    return userParents[userIndex];
+
+                return {};
+            };
 
             ImGui::TextUnformatted("Create a new C++ script in the current directory.");
 
@@ -128,12 +141,6 @@ namespace BixEngine::Gui
 
             bool create = ImGui::InputText("##ScriptName", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue);
 
-            const char* scriptTypes[] = {"Actor Script", "Component Script", "Utility Script"};
-            int selectedType = static_cast<int>(requests.scriptType);
-            ImGui::SetNextItemWidth(200.0f);
-            if (ImGui::Combo("Script type", &selectedType, scriptTypes, IM_ARRAYSIZE(scriptTypes)))
-                requests.scriptType = static_cast<ScriptTemplateType>(selectedType);
-
             if (!requests.scriptError.IsEmpty())
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
@@ -141,35 +148,74 @@ namespace BixEngine::Gui
                 ImGui::PopStyleColor();
             }
 
-            if (!requests.existingScripts.empty())
+            std::string parentPreview = "None";
+            if (requests.selectedParentScript >= 0)
             {
-                ImGui::Spacing();
-                ImGui::Separator();
-                ImGui::TextDisabled("Parent script (optional)");
-                const char* parentPreview = requests.selectedParentScript >= 0 ? requests.existingScripts[requests.selectedParentScript].c_str() : "None";
-                ImGui::SetNextItemWidth(240.0f);
-                if (ImGui::BeginCombo("##ParentScriptSelection", parentPreview))
+                const ParentScriptInfo previewInfo = resolveSelectedParent(requests.selectedParentScript);
+                if (previewInfo.IsValid())
                 {
-                    const bool noneSelected = requests.selectedParentScript == -1;
-                    if (ImGui::Selectable("None", noneSelected))
-                        requests.selectedParentScript = -1;
-                    if (noneSelected)
-                        ImGui::SetItemDefaultFocus();
+                    parentPreview = previewInfo.displayName;
+                    if (requests.selectedParentScript >= static_cast<int>(baseParents.size()))
+                        parentPreview += kScriptHeaderExtension;
+                }
+                else
+                {
+                    parentPreview = "None";
+                    requests.selectedParentScript = -1;
+                }
+            }
 
-                    for (int i = 0; i < static_cast<int>(requests.existingScripts.size()); ++i)
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::TextDisabled("Parent (optional)");
+            ImGui::SetNextItemWidth(240.0f);
+            if (ImGui::BeginCombo("##ParentScriptSelection", parentPreview.c_str()))
+            {
+                const bool noneSelected = requests.selectedParentScript == -1;
+                if (ImGui::Selectable("None", noneSelected))
+                    requests.selectedParentScript = -1;
+                if (noneSelected)
+                    ImGui::SetItemDefaultFocus();
+
+                if (!baseParents.empty())
+                {
+                    // Base Classes section mirrors Unreal Engine's layout.
+                    ImGui::Separator();
+                    ImGui::TextDisabled("Base Classes");
+                    for (int i = 0; i < static_cast<int>(baseParents.size()); ++i)
                     {
                         const bool isSelected = requests.selectedParentScript == i;
-                        if (ImGui::Selectable(requests.existingScripts[i].c_str(), isSelected))
+                        if (ImGui::Selectable(baseParents[i].displayName.c_str(), isSelected))
                             requests.selectedParentScript = i;
                         if (isSelected)
                             ImGui::SetItemDefaultFocus();
                     }
-
-                    ImGui::EndCombo();
                 }
 
-                ImGui::Spacing();
-                ImGui::Separator();
+                if (!userParents.empty())
+                {
+                    // User Scripts section lists headers discovered in Content/Scripts.
+                    ImGui::Separator();
+                    ImGui::TextDisabled("User Scripts");
+                    for (int i = 0; i < static_cast<int>(userParents.size()); ++i)
+                    {
+                        const int globalIndex = static_cast<int>(baseParents.size()) + i;
+                        const bool isSelected = requests.selectedParentScript == globalIndex;
+                        std::string label = userParents[i].displayName + kScriptHeaderExtension;
+                        if (ImGui::Selectable(label.c_str(), isSelected))
+                            requests.selectedParentScript = globalIndex;
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+                }
+
+                ImGui::EndCombo();
+            }
+            ImGui::Spacing();
+            ImGui::Separator();
+
+            if (!requests.existingScripts.empty())
+            {
                 ImGui::TextDisabled("Existing scripts in Content/Scripts:");
                 ImGui::Spacing();
                 ImGui::BeginChild("ExistingScriptsList", ImVec2(320.0f, 120.0f), true);
@@ -179,8 +225,6 @@ namespace BixEngine::Gui
             }
             else
             {
-                ImGui::Spacing();
-                ImGui::Separator();
                 ImGui::TextDisabled("No scripts found in Content/Scripts.");
             }
 
@@ -256,23 +300,17 @@ namespace BixEngine::Gui
                                     }
                                     else
                                     {
-                                        ParentScriptInfo parentInfo{};
-                                        if (requests.selectedParentScript >= 0 && requests.selectedParentScript < static_cast<int>(requests.existingScripts.size()))
-                                        {
-                                            parentInfo.className = std::string(requests.existingScripts[requests.selectedParentScript].View());
-                                            parentInfo.includeDirective = parentInfo.className + kScriptHeaderExtension;
-                                        }
-                                        else
-                                        {
-                                            parentInfo = ResolveDefaultParent(requests);
-                                        }
+                                        // Resolve the inheritance information from the current selection.
+                                        const ParentScriptInfo parentInfo = resolveSelectedParent(requests.selectedParentScript);
 
                                         headerFile << "#pragma once\n\n";
-                                        headerFile << "// Type: " << GetScriptTypeLabel(requests.scriptType) << '\n';
                                         headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
                                         if (parentInfo.IsValid())
-                                            headerFile << "#include \"" << parentInfo.includeDirective << "\"\n\n";
+                                        {
+                                            // Include directive is driven by the selected parent (base class or user script).
+                                            headerFile << "#include \"" << parentInfo.includePath << "\"\n\n";
+                                        }
                                         headerFile << "class " << baseName;
                                         if (parentInfo.IsValid())
                                             headerFile << " : public " << parentInfo.className;
