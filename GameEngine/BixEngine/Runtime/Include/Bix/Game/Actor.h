@@ -12,12 +12,11 @@ namespace BixEngine::Game
 {
     class Component;
 
+    BCLASS(Actor, Scripting::ScriptBase, Object)
     class Actor : public Object, public Scripting::ScriptBase
     {
         public:
-            BIX_GENERATED_BODY(Actor);
-            BIX_DECLARE_SCRIPT_CLASS(Actor, Scripting::ScriptBase);
-            BIX_CLASS(Actor, Object);
+            BIX_GENERATED_BODY();
 
             explicit Actor(const Math::Transform& transform = Math::Transform());
 
@@ -55,14 +54,19 @@ namespace BixEngine::Game
             bool RemoveComponent(const Component* component);
 
         protected:
+            static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
+
             void OnPostDeserialize() override;
             virtual void OnComponentRemoved(const Component& /*component*/) {}
 
         private:
-            BIX_PROPERTY(std::vector<std::unique_ptr<Component>>, components_);
+            BPROPERTY()
+            std::vector<std::unique_ptr<Component>> components_;
 
             bool has_begun_play_{false};
-            BIX_PROPERTY(bool, active_, = true);
+
+            BPROPERTY()
+            bool active_ = true;
     };
 }
 

@@ -20,6 +20,17 @@ namespace BixEngine::Game
 
     BIX_IMPLEMENT_CLASS(SpriteComponent);
 
+    void SpriteComponent::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls)
+    {
+        Component::RegisterProperties(cls);
+
+        using ::BixEngine::Engine::SaveSystem::RegisterProperty;
+
+        RegisterProperty<SpriteComponent>(cls, "color", &SpriteComponent::color_);
+        RegisterProperty<SpriteComponent>(cls, "width", &SpriteComponent::width_);
+        RegisterProperty<SpriteComponent>(cls, "height", &SpriteComponent::height_);
+    }
+
     SpriteComponent::SpriteComponent(Actor* owner)
         : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight)
     {

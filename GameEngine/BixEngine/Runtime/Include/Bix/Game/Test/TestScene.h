@@ -10,11 +10,11 @@ namespace BixEngine
     {
         class Player;
 
+        BCLASS(TestScene, Scene)
         class TestScene : public Scene
         {
             public:
-                BIX_GENERATED_BODY(TestScene);
-                BIX_DECLARE_SCRIPT_CLASS(TestScene, Scene);
+                BIX_GENERATED_BODY();
 
                 TestScene();
                 ~TestScene() override;

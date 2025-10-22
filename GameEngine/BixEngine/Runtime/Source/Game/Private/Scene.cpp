@@ -25,6 +25,15 @@ namespace BixEngine::Game
 
     BIX_IMPLEMENT_CLASS(Scene);
 
+    void Scene::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls)
+    {
+        Object::RegisterProperties(cls);
+
+        using ::BixEngine::Engine::SaveSystem::RegisterProperty;
+
+        RegisterProperty<Scene>(cls, "actors", &Scene::actors_);
+    }
+
     Scene::Scene(String name) : Object(std::move(name)) {}
 
     void Scene::SetContext(SceneContext context) noexcept

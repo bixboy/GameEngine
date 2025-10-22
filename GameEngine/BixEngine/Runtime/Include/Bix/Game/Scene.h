@@ -25,12 +25,11 @@ namespace BixEngine
             Gui::GuiManager* guiManager{nullptr};
         };
 
+        BCLASS(Scene, Scripting::ScriptBase, Object)
         class Scene : public Object, public Scripting::ScriptBase
         {
             public:
-                BIX_GENERATED_BODY(Scene);
-                BIX_DECLARE_SCRIPT_CLASS(Scene, Scripting::ScriptBase);
-                BIX_CLASS(Scene, Object);
+                BIX_GENERATED_BODY();
 
                 explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;
@@ -55,6 +54,8 @@ namespace BixEngine
                 [[nodiscard]] const String& Name() const noexcept { return GetName(); }
 
             protected:
+                static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
+
                 void SetName(String name);
 
                 [[nodiscard]] Input::InputManager& GetInputManager() const;
@@ -75,7 +76,8 @@ namespace BixEngine
             private:
                 SceneContext context_{};
 
-                BIX_PROPERTY(std::vector<std::unique_ptr<Actor>>, actors_);
+                BPROPERTY()
+                std::vector<std::unique_ptr<Actor>> actors_;
         };
     }
 }

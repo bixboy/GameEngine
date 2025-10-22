@@ -10,12 +10,11 @@ namespace BixEngine::Game
 {
     class Actor;
 
+    BCLASS(Component, Scripting::ScriptBase, Object)
     class Component : public Object, public Scripting::ScriptBase
     {
     public:
-        BIX_GENERATED_BODY(Component);
-        BIX_DECLARE_SCRIPT_CLASS(Component, Scripting::ScriptBase);
-        BIX_CLASS(Component, Object);
+        BIX_GENERATED_BODY();
 
         Component() : Object("Component") {}
         explicit Component(Actor* owner) : Object("Component"), owner_(owner) {}
@@ -37,6 +36,8 @@ namespace BixEngine::Game
         [[nodiscard]] Actor* GetOwner() const noexcept { return owner_; }
 
     protected:
+        static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
+
         Actor* owner_{nullptr};
     };
 }

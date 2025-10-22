@@ -5,12 +5,11 @@
 
 namespace BixEngine::Game
 {
+    BCLASS(SpriteComponent, Component, Component)
     class SpriteComponent : public Component
     {
     public:
-        BIX_GENERATED_BODY(SpriteComponent);
-        BIX_DECLARE_SCRIPT_CLASS(SpriteComponent, Component);
-        BIX_CLASS(SpriteComponent, Component);
+        BIX_GENERATED_BODY();
 
         explicit SpriteComponent(Actor* owner);
         SpriteComponent(Actor* owner, SDL_Color color, float w, float h)
@@ -31,9 +30,17 @@ namespace BixEngine::Game
 
         [[nodiscard]] String GetTypeName() const override { return "SpriteComponent"; }
 
+    protected:
+        static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
+
     private:
-        BIX_PROPERTY(SDL_Color, color_, {});
-        BIX_PROPERTY(float, width_, = 0.0f);
-        BIX_PROPERTY(float, height_, = 0.0f);
+        BPROPERTY()
+        SDL_Color color_{};
+
+        BPROPERTY()
+        float width_ = 0.0f;
+
+        BPROPERTY()
+        float height_ = 0.0f;
     };
 }

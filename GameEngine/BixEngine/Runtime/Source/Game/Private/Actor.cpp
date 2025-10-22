@@ -21,6 +21,16 @@ namespace BixEngine::Game
 
     BIX_IMPLEMENT_CLASS(Actor);
 
+    void Actor::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls)
+    {
+        Object::RegisterProperties(cls);
+
+        using ::BixEngine::Engine::SaveSystem::RegisterProperty;
+
+        RegisterProperty<Actor>(cls, "components", &Actor::components_);
+        RegisterProperty<Actor>(cls, "active", &Actor::active_);
+    }
+
     Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform) {}

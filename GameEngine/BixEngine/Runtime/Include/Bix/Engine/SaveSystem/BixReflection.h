@@ -9,6 +9,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <type_traits>
 #include <typeinfo>
 #include <unordered_map>
@@ -309,29 +310,22 @@ namespace BixEngine::Engine::SaveSystem
     };
 
     template<typename TObject, typename TValue>
-    class PropertyRegistration
+    inline void RegisterProperty(BixClass& cls, const char* name, TValue TObject::*member)
     {
-    public:
-        PropertyRegistration(const char* name, TValue TObject::*member)
+        BixProperty property;
+        property.name = name;
+        property.write = [member](const BixObject& object, BixArchiveWriter& writer)
         {
-            PropertyRegistry<TObject>::Register([name, member](BixClass& cls)
-            {
-                BixProperty property;
-                property.name = name;
-                property.write = [member](const BixObject& object, BixArchiveWriter& writer)
-                {
-                    const auto& typed = static_cast<const TObject&>(object);
-                    PropertyAdapter<TValue>::Serialize(object, typed.*member, writer);
-                };
-                property.read = [member](BixObject& object, BixArchiveReader& reader)
-                {
-                    auto& typed = static_cast<TObject&>(object);
-                    PropertyAdapter<TValue>::Deserialize(object, typed.*member, reader);
-                };
-                cls.AddProperty(std::move(property));
-            });
-        }
-    };
+            const auto& typed = static_cast<const TObject&>(object);
+            PropertyAdapter<TValue>::Serialize(object, typed.*member, writer);
+        };
+        property.read = [member](BixObject& object, BixArchiveReader& reader)
+        {
+            auto& typed = static_cast<TObject&>(object);
+            PropertyAdapter<TValue>::Deserialize(object, typed.*member, reader);
+        };
+        cls.AddProperty(std::move(property));
+    }
 
     // Utility macro helpers -------------------------------------------------
 
@@ -370,10 +364,32 @@ namespace BixEngine::Engine::SaveSystem
             return ClassType::StaticClass(); \
         }
 
-    #define BIX_PROPERTY(Type, Name, ...) \
-        Type Name __VA_ARGS__; \
-        static inline ::BixEngine::Engine::SaveSystem::PropertyRegistration<ThisClass, Type> \
-            BIX_CONCAT(s_bixPropertyReg_, __LINE__){#Name, &ThisClass::Name}
+    namespace detail
+    {
+        template<typename... TArgs>
+        struct PropertyMetadata
+        {
+            using Tuple = std::tuple<TArgs...>;
+            Tuple values;
+        };
+
+        constexpr PropertyMetadata<> MakePropertyMetadata()
+        {
+            return {};
+        }
+
+        template<typename... TArgs>
+        constexpr PropertyMetadata<std::decay_t<TArgs>...> MakePropertyMetadata(TArgs&&... args)
+        {
+            return { std::tuple<std::decay_t<TArgs>...>{std::forward<TArgs>(args)...} };
+        }
+    }
+
+    #define BPROPERTY(...) \
+        [[maybe_unused]] static constexpr auto BIX_CONCAT(s_bixPropertyMetadata_, __LINE__) = \
+            ::BixEngine::Engine::SaveSystem::detail::MakePropertyMetadata(__VA_ARGS__);
+
+    #define BFUNCTION(...)
 
 } // namespace BixEngine::Engine::SaveSystem
 

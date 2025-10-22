@@ -21,6 +21,17 @@ namespace BixEngine::Game
 
     BIX_IMPLEMENT_CLASS(Player);
 
+    void Player::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls)
+    {
+        Actor::RegisterProperties(cls);
+
+        using ::BixEngine::Engine::SaveSystem::RegisterProperty;
+
+        RegisterProperty<Player>(cls, "moveSpeed", &Player::moveSpeed_);
+        RegisterProperty<Player>(cls, "size", &Player::size_);
+        RegisterProperty<Player>(cls, "color", &Player::color_);
+    }
+
     Player::Player() : Actor("Player")
     {
         InitializeSpriteComponent();

@@ -42,8 +42,11 @@ namespace BixEngine::Game
         static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
 
     private:
-        BIX_PROPERTY(String, name_);
-        BIX_PROPERTY(Math::Transform, transform_, {});
+        BPROPERTY()
+        String name_;
+
+        BPROPERTY()
+        Math::Transform transform_{};
     };
 }
 

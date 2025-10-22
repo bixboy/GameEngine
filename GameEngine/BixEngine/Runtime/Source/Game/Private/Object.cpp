@@ -28,9 +28,12 @@ namespace BixEngine::Game
         name_ = std::move(name);
     }
 
-    void Object::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass&)
+    void Object::RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls)
     {
-        // Properties are registered automatically through BIX_PROPERTY macros.
+        using ::BixEngine::Engine::SaveSystem::RegisterProperty;
+
+        RegisterProperty<Object>(cls, "name", &Object::name_);
+        RegisterProperty<Object>(cls, "transform", &Object::transform_);
     }
 }
 

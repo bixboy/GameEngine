@@ -12,12 +12,11 @@ namespace BixEngine
     {
         class SpriteComponent;
 
+        BCLASS(Player, Actor, Actor)
         class Player : public Actor
         {
             public:
-                BIX_GENERATED_BODY(Player);
-                BIX_DECLARE_SCRIPT_CLASS(Player, Actor);
-                BIX_CLASS(Player, Actor);
+                BIX_GENERATED_BODY();
 
                 Player();
                 Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
@@ -32,6 +31,9 @@ namespace BixEngine
                 [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
                 [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
 
+            protected:
+                static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
+
             private:
                 void OnPostDeserialize() override;
                 void OnComponentRemoved(const Component& component) override;
@@ -41,9 +43,15 @@ namespace BixEngine
                 void RefreshSpriteComponent();
 
                 Math::Vector2 pendingInput_{};
-                BIX_PROPERTY(float, moveSpeed_, = 200.0f);
-                BIX_PROPERTY(Math::Vector3, size_, = Math::Vector3(32.0f, 32.0f, 1.0f));
-                BIX_PROPERTY(SDL_Color, color_, = SDL_Color{255, 255, 255, 255});
+
+                BPROPERTY()
+                float moveSpeed_ = 200.0f;
+
+                BPROPERTY()
+                Math::Vector3 size_ = Math::Vector3(32.0f, 32.0f, 1.0f);
+
+                BPROPERTY()
+                SDL_Color color_ = SDL_Color{255, 255, 255, 255};
                 SpriteComponent* spriteComponent_{nullptr};
         };
     }
