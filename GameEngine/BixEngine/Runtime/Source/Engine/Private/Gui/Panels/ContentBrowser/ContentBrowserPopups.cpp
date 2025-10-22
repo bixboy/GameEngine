@@ -1,5 +1,6 @@
 #include "Bix/Core/Logger.h"
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Bix/Game/Scripting/ScriptReflection.h"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -47,19 +48,73 @@ namespace BixEngine::Gui
             std::string displayName{};
             std::string className{};
             std::string includePath{};
+            std::string tooltip{};
             bool isActor{false};
             bool isComponent{false};
+            bool isDeprecated{false};
+            bool isEditorOnly{false};
 
             [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
         };
 
-        const std::vector<ParentScriptInfo>& GetBaseClassParents()
+        std::vector<ParentScriptInfo> GetBaseClassParents()
         {
-            static const std::vector<ParentScriptInfo> baseParents = {
-                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h", true, false},
-                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h", false, true},
-            };
-            return baseParents;
+            std::vector<ParentScriptInfo> parents{};
+            const auto registryClasses = Game::Scripting::ScriptRegistry::Get().GetClassesForEditor(true);
+            parents.reserve(registryClasses.size());
+
+            for (const auto* scriptClass : registryClasses)
+            {
+                if (!scriptClass)
+                    continue;
+
+                const auto* include = scriptClass->FindMetadata("IncludePath");
+                if (!include || include->IsEmpty())
+                    continue;
+
+                ParentScriptInfo info{};
+                info.displayName = scriptClass->displayName.Std();
+                info.className = scriptClass->name.Std();
+                info.includePath = include->Std();
+                info.tooltip = scriptClass->GetTooltip().IsEmpty() ? info.className : scriptClass->GetTooltip().Std();
+                info.isActor = scriptClass->kind == Game::Scripting::ScriptKind::Actor;
+                info.isComponent = scriptClass->kind == Game::Scripting::ScriptKind::Component;
+                info.isDeprecated = scriptClass->IsDeprecated();
+                info.isEditorOnly = scriptClass->IsEditorOnly();
+
+                parents.emplace_back(std::move(info));
+            }
+
+            if (parents.empty())
+            {
+                parents.push_back({
+                    "Actor",
+                    "BixEngine::Game::Actor",
+                    "Bix/Game/Actor.h",
+                    "Base gameplay actor class.",
+                    true,
+                    false,
+                    false,
+                    false,
+                });
+                parents.push_back({
+                    "Component",
+                    "BixEngine::Game::Component",
+                    "Bix/Game/Components/Component.h",
+                    "Base gameplay component class.",
+                    false,
+                    true,
+                    false,
+                    false,
+                });
+            }
+
+            std::sort(parents.begin(), parents.end(), [](const ParentScriptInfo& lhs, const ParentScriptInfo& rhs)
+            {
+                return CaseInsensitiveLess(lhs.displayName, rhs.displayName);
+            });
+
+            return parents;
         }
 
         bool MatchesActorType(std::string_view typeName)
@@ -374,6 +429,7 @@ namespace BixEngine::Gui
                 info.includePath = node.includePath;
                 info.isActor = node.inheritsActor;
                 info.isComponent = node.inheritsComponent;
+                info.tooltip = node.includePath;
                 outInfo.emplace(info.className, info);
 
                 Utils::TreeNodeData guiNode{};
@@ -430,7 +486,7 @@ namespace BixEngine::Gui
                 return;
 
             const fs::path scriptsDirectory = state.root / "Scripts";
-            const auto& baseParents = GetBaseClassParents();
+            const auto baseParents = GetBaseClassParents();
             const std::vector<ScriptNode> userScriptRoots = ParseScriptHierarchy(scriptsDirectory, state.root);
             std::unordered_map<std::string, ParentScriptInfo> userScriptInfo{};
             const std::vector<Utils::TreeNodeData> userScriptTree = BuildGuiTreeNodes(userScriptRoots, userScriptInfo);
@@ -493,13 +549,20 @@ namespace BixEngine::Gui
                             ImGui::PushID(static_cast<int>(baseIndex));
                             const auto& baseParent = baseParents[baseIndex];
                             const bool isSelectedBase = requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && requests.selectedParentClass.View() == baseParent.className;
-                            if (ImGui::Selectable(baseParent.displayName.c_str(), isSelectedBase))
+                            std::string label = baseParent.displayName;
+                            if (baseParent.isDeprecated)
+                                label += " (Deprecated)";
+                            if (baseParent.isEditorOnly)
+                                label += " [Editor]";
+
+                            if (ImGui::Selectable(label.c_str(), isSelectedBase))
                             {
                                 SetSelectedParent(requests, baseParent, true);
                             }
                             if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
                             {
-                                ImGui::SetTooltip("%s", baseParent.className.c_str());
+                                const char* tooltip = baseParent.tooltip.empty() ? baseParent.className.c_str() : baseParent.tooltip.c_str();
+                                ImGui::SetTooltip("%s", tooltip);
                             }
                             ImGui::PopID();
                         }

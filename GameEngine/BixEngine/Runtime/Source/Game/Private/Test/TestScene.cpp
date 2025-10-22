@@ -3,6 +3,8 @@
 #include <algorithm>
 #include <memory>
 
+#include <array>
+
 #include "Bix/Game/Test/Player.h"
 #include "Bix/Graphics/Renderer.h"
 #include "Bix/Input/InputManager.h"
@@ -17,12 +19,21 @@ namespace BixEngine::Game
         constexpr Math::Vector3 kPlayerSize{50.0f, 50.0f, 1.0f};
         constexpr SDL_Color kPlayerColor{255, 165, 0, 255};
         constexpr const char* kTestSceneModule = "Test";
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kTestSceneMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/Test/TestScene.h"},
+        };
     }
 
     BIX_DEFINE_SCRIPT_CLASS(TestScene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
         .name = "TestScene",
         .moduleName = kTestSceneModule,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
+        .category = "Examples",
+        .tooltip = "Demonstration scene showcasing gameplay components.",
+        .keywords = "Scene,Example,Test",
+        .metadata = kTestSceneMetadata,
+        .metadataCount = std::size(kTestSceneMetadata),
     }));
 
     TestScene::TestScene() : Scene("TestScene") {}

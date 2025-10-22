@@ -3,6 +3,8 @@
 #include <stdexcept>
 #include <utility>
 
+#include <array>
+
 #include "Bix/Core/Timer.h"
 #include "Bix/Core/Window.h"
 #include "Bix/Game/SceneSerializer.h"
@@ -15,6 +17,10 @@ namespace BixEngine::Game
     namespace
     {
         constexpr const char* kSceneModule = "Game";
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kSceneMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/Scene.h"},
+        };
     }
 
     BIX_DEFINE_SCRIPT_CLASS(Scene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
@@ -22,6 +28,11 @@ namespace BixEngine::Game
         .moduleName = kSceneModule,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
         .isAbstract = true,
+        .category = "World",
+        .tooltip = "Abstract scene container for actors.",
+        .keywords = "Scene,World,Level",
+        .metadata = kSceneMetadata,
+        .metadataCount = std::size(kSceneMetadata),
     }));
 
     Scene::Scene(String name) : name_(std::move(name)) {}

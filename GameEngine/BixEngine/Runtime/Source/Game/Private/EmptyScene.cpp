@@ -4,17 +4,28 @@
 #include "Bix/Input/Input.h"
 #include "Bix/Math/Color.h"
 
+#include <array>
+
 namespace BixEngine::Game
 {
     namespace
     {
         constexpr const char* kEmptySceneModule = "Game";
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kEmptySceneMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/EmptyScene.h"},
+        };
     }
 
     BIX_DEFINE_SCRIPT_CLASS(EmptyScene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
         .name = "EmptyScene",
         .moduleName = kEmptySceneModule,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
+        .category = "World",
+        .tooltip = "Example empty scene used for samples.",
+        .keywords = "Scene,Example,Sample",
+        .metadata = kEmptySceneMetadata,
+        .metadataCount = std::size(kEmptySceneMetadata),
     }));
 
     EmptyScene::EmptyScene() : Scene("EmptyScene")

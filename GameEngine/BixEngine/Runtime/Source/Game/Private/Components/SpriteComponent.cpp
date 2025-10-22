@@ -3,6 +3,8 @@
 #include "Bix/Game/Components/ComponentRegistry.h"
 #include "Bix/Graphics/Renderer.h"
 
+#include <array>
+
 namespace BixEngine::Game
 {
     namespace
@@ -12,10 +14,24 @@ namespace BixEngine::Game
         constexpr float kDefaultSpriteHeight = 32.0f;
     }
 
+    namespace
+    {
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kSpriteMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/Components/SpriteComponent.h"},
+            {"EditorIcon", "Icons/Sprite"},
+        };
+    }
+
     BIX_DEFINE_SCRIPT_CLASS(SpriteComponent, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
         .name = "SpriteComponent",
         .moduleName = "Game",
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Component,
+        .category = "Rendering",
+        .tooltip = "Draws a simple colored rectangle sprite.",
+        .keywords = "Sprite,Rendering,Visual",
+        .metadata = kSpriteMetadata,
+        .metadataCount = std::size(kSpriteMetadata),
     }));
 
     SpriteComponent::SpriteComponent(Actor* owner)

@@ -5,6 +5,8 @@
 #include <ostream>
 #include <stdexcept>
 
+#include <array>
+
 #include "Bix/Game/Components/SpriteComponent.h"
 #include "Bix/Input/InputManager.h"
 #include "Bix/Math/Math.h"
@@ -14,12 +16,21 @@ namespace BixEngine::Game
     namespace
     {
         constexpr const char* kPlayerModule = "Test";
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kPlayerMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/Test/Player.h"},
+        };
     }
 
     BIX_DEFINE_SCRIPT_CLASS(Player, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
         .name = "Player",
         .moduleName = kPlayerModule,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
+        .category = "Examples",
+        .tooltip = "Controllable sample player actor.",
+        .keywords = "Player,Example,Actor",
+        .metadata = kPlayerMetadata,
+        .metadataCount = std::size(kPlayerMetadata),
     }));
 
     Player::Player() : Actor("Player")

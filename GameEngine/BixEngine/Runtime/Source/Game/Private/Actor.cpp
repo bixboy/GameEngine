@@ -2,6 +2,7 @@
 #include "Bix/Game/Components/Component.h"
 
 #include <algorithm>
+#include <array>
 #include <memory>
 #include <utility>
 
@@ -11,12 +12,22 @@ namespace BixEngine::Game
     namespace
     {
         constexpr const char* kActorModuleName = "Game";
+        constexpr ::BixEngine::Game::Scripting::ScriptMetadataEntry kActorMetadata[] =
+        {
+            {"IncludePath", "Bix/Game/Actor.h"},
+            {"EditorIcon", "Icons/Actor"},
+        };
     }
 
     BIX_DEFINE_SCRIPT_CLASS(Actor, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
         .name = "Actor",
         .moduleName = kActorModuleName,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
+        .category = "Gameplay",
+        .tooltip = "Base gameplay actor class.",
+        .keywords = "Actor,Entity,Gameplay",
+        .metadata = kActorMetadata,
+        .metadataCount = std::size(kActorMetadata),
     }));
 
     Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}

@@ -33,7 +33,7 @@ std::vector<ComponentDescriptor> ComponentRegistry::GetRegisteredComponents() co
     for (const auto& descriptor : descriptors)
         knownNames.insert(descriptor.name);
 
-    const auto scriptComponents = Scripting::ScriptRegistry::Get().GetClasses(Scripting::ScriptKind::Component);
+    const auto scriptComponents = Scripting::ScriptRegistry::Get().GetClassesForEditor(Scripting::ScriptKind::Component);
     descriptors.reserve(descriptors.size() + scriptComponents.size());
 
     for (const auto* scriptClass : scriptComponents)

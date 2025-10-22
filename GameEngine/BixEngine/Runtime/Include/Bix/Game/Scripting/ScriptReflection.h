@@ -1,5 +1,6 @@
 #pragma once
 
+#include <cctype>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -7,6 +8,7 @@
 #include <string_view>
 #include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "Bix/Core/String.h"
@@ -18,6 +20,15 @@ namespace BixEngine::Game
 
 namespace BixEngine::Game::Scripting
 {
+    using ScriptMetadataEntry = std::pair<const char*, const char*>;
+    using ScriptMetadataMap = std::unordered_map<std::string, String>;
+
+    namespace Detail
+    {
+        [[nodiscard]] std::vector<String> ParseKeywordList(const char* keywords);
+        [[nodiscard]] ScriptMetadataMap BuildMetadataMap(const ScriptMetadataEntry* entries, std::size_t count);
+    }
+
     enum class ScriptKind
     {
         Unknown,
@@ -52,6 +63,13 @@ namespace BixEngine::Game::Scripting
         ScriptFactory factory;
         ScriptClass* superClass{nullptr};
         std::vector<ScriptClass*> derivedClasses;
+        String category;
+        String tooltip;
+        std::vector<String> keywords;
+        ScriptMetadataMap metadata;
+        bool editorOnly{false};
+        bool deprecated{false};
+        bool hideInEditor{false};
 
         [[nodiscard]] std::unique_ptr<ScriptBase> Instantiate(const ScriptInstantiationParams& params = {}) const;
 
@@ -68,6 +86,47 @@ namespace BixEngine::Game::Scripting
 
             return std::unique_ptr<T>(typed);
         }
+
+        [[nodiscard]] const String& GetCategory() const noexcept { return category; }
+        [[nodiscard]] const String& GetTooltip() const noexcept { return tooltip; }
+        [[nodiscard]] const std::vector<String>& GetKeywords() const noexcept { return keywords; }
+        [[nodiscard]] const ScriptMetadataMap& GetMetadata() const noexcept { return metadata; }
+        [[nodiscard]] bool IsEditorOnly() const noexcept { return editorOnly; }
+        [[nodiscard]] bool IsDeprecated() const noexcept { return deprecated; }
+        [[nodiscard]] bool IsHiddenInEditor() const noexcept { return hideInEditor; }
+        [[nodiscard]] bool IsEditorVisible() const noexcept { return !hideInEditor; }
+
+        [[nodiscard]] const String* FindMetadata(std::string_view key) const
+        {
+            if (key.empty())
+                return nullptr;
+
+            auto it = metadata.find(std::string(key));
+            if (it != metadata.end())
+                return &it->second;
+            return nullptr;
+        }
+
+        [[nodiscard]] bool MatchesKeyword(std::string_view keyword, bool caseSensitive = false) const
+        {
+            if (keyword.empty())
+                return true;
+
+            for (const auto& entry : keywords)
+            {
+                if (caseSensitive)
+                {
+                    if (entry.View() == keyword)
+                        return true;
+                }
+                else if (entry.EqualsIgnoreCase(keyword))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
     };
 
     struct ScriptClassDescriptor
@@ -80,6 +139,13 @@ namespace BixEngine::Game::Scripting
         std::size_t size{0};
         bool isAbstract{false};
         ScriptFactory factory;
+        String category;
+        String tooltip;
+        std::vector<String> keywords;
+        ScriptMetadataMap metadata;
+        bool editorOnly{false};
+        bool deprecated{false};
+        bool hideInEditor{false};
     };
 
     struct ScriptRegistrationDescriptor
@@ -91,6 +157,14 @@ namespace BixEngine::Game::Scripting
         ScriptKind kind{ScriptKind::Unknown};
         ScriptFactory factory{};
         bool isAbstract{false};
+        const char* category{nullptr};
+        const char* tooltip{nullptr};
+        const char* keywords{nullptr};
+        const ScriptMetadataEntry* metadata{nullptr};
+        std::size_t metadataCount{0};
+        bool editorOnly{false};
+        bool deprecated{false};
+        bool hideInEditor{false};
     };
 
     class ScriptRegistry
@@ -113,6 +187,11 @@ namespace BixEngine::Game::Scripting
 
         [[nodiscard]] std::vector<const ScriptClass*> GetClasses() const;
         [[nodiscard]] std::vector<const ScriptClass*> GetClasses(ScriptKind kind) const;
+        [[nodiscard]] std::vector<const ScriptClass*> GetClassesForEditor(bool includeEditorOnly = false) const;
+        [[nodiscard]] std::vector<const ScriptClass*> GetClassesForEditor(ScriptKind kind, bool includeEditorOnly = false) const;
+        [[nodiscard]] std::vector<const ScriptClass*> GetClassesInModule(std::string_view moduleName, bool includeEditorOnly = false, bool includeHidden = false) const;
+        [[nodiscard]] std::vector<String> GetModuleNames() const;
+        [[nodiscard]] std::vector<const ScriptClass*> GetDerivedClasses(std::string_view name, bool recursive = false) const;
 
         void ForEach(const std::function<void(const ScriptClass&)>& visitor) const;
 
@@ -139,9 +218,12 @@ namespace BixEngine::Game::Scripting
         };
 
         [[nodiscard]] static std::string NormalizeName(std::string_view name);
+        [[nodiscard]] static std::string NormalizeModuleName(std::string_view moduleName);
+        void UpdateModuleCache(const std::string& previousModule, ScriptClass& scriptClass);
 
         mutable std::mutex mutex_;
         std::unordered_map<std::string, std::unique_ptr<Entry>> classes_;
+        std::unordered_map<std::string, std::vector<ScriptClass*>> modules_;
     };
 
     class ScriptBase
@@ -210,6 +292,13 @@ namespace BixEngine::Game::Scripting
                 .size = sizeof(TClass),
                 .isAbstract = isAbstract,
                 .factory = descriptor.factory ? descriptor.factory : MakeDefaultFactory<TClass>(),
+                .category = descriptor.category ? descriptor.category : "",
+                .tooltip = descriptor.tooltip ? descriptor.tooltip : "",
+                .keywords = Detail::ParseKeywordList(descriptor.keywords),
+                .metadata = Detail::BuildMetadataMap(descriptor.metadata, descriptor.metadataCount),
+                .editorOnly = descriptor.editorOnly,
+                .deprecated = descriptor.deprecated,
+                .hideInEditor = descriptor.hideInEditor,
             };
 
             ScriptClass* super = nullptr;
@@ -246,6 +335,58 @@ namespace BixEngine::Game::Scripting
 #else
 #define BIX_GENERATED_BODY(ClassName)
 #endif
+
+namespace BixEngine::Game::Scripting::Detail
+{
+    [[nodiscard]] inline std::vector<String> ParseKeywordList(const char* keywords)
+    {
+        std::vector<String> result;
+        if (!keywords || keywords[0] == '\0')
+            return result;
+
+        std::string_view view{keywords};
+        std::size_t start = 0;
+        while (start < view.size())
+        {
+            std::size_t end = start;
+            while (end < view.size() && view[end] != ',' && view[end] != ';' && view[end] != '|')
+                ++end;
+
+            std::string_view token = view.substr(start, end - start);
+            while (!token.empty() && std::isspace(static_cast<unsigned char>(token.front())) != 0)
+                token.remove_prefix(1);
+            while (!token.empty() && std::isspace(static_cast<unsigned char>(token.back())) != 0)
+                token.remove_suffix(1);
+
+            if (!token.empty())
+                result.emplace_back(token);
+
+            start = (end == view.size()) ? view.size() : end + 1;
+        }
+
+        return result;
+    }
+
+    [[nodiscard]] inline ScriptMetadataMap BuildMetadataMap(const ScriptMetadataEntry* entries, std::size_t count)
+    {
+        ScriptMetadataMap metadata;
+        if (!entries || count == 0)
+            return metadata;
+
+        metadata.reserve(count);
+        for (std::size_t index = 0; index < count; ++index)
+        {
+            const auto& entry = entries[index];
+            if (!entry.first)
+                continue;
+
+            const char* value = entry.second ? entry.second : "";
+            metadata.emplace(entry.first, String(value));
+        }
+
+        return metadata;
+    }
+}
 
 #define BIX_DECLARE_SCRIPT_CLASS(ClassType, BaseType) \
 public: \
