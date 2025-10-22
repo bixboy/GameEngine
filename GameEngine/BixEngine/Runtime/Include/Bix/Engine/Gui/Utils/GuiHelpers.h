@@ -78,6 +78,12 @@ namespace BixEngine::Gui::Utils
     /// Begins a collapsible section with optional default open behaviour.
     bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
 
+    /// Begins a collapsible section whose open state persists using the provided context identifier.
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
+
+    /// Terminates a previously opened persistent section.
+    void EndPersistentSection();
+
     /// Draws a standard search field using the remaining horizontal space by default.
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...", float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
@@ -94,5 +100,8 @@ namespace BixEngine::Gui::Utils
 
     /// Draws a square icon-styled button with an optional tooltip.
     bool IconButton(const char* icon, const char* tooltip = nullptr);
+
+    /// Draws a subtle help marker that shows a tooltip when hovered.
+    void DrawHelpMarker(const char* text);
 }
 
