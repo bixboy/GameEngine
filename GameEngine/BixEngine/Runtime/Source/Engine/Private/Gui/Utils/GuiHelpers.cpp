@@ -1,5 +1,4 @@
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
-
 #include <cfloat>
 
 namespace
@@ -12,28 +11,26 @@ namespace
     ImFont* GetSmallestFont()
     {
         ImGuiIO& io = ImGui::GetIO();
-        ImFont* current = ImGui::GetFont();
-        ImFont* smallest = nullptr;
+        ImFont* current  = ImGui::GetFont();
+        ImFont* smallest = current;
+        float    best    = FLT_MAX;
 
         for (ImFont* font : io.Fonts->Fonts)
         {
-            if (!font || font == current)
-            {
-                continue;
-            }
+            if (!font) continue;
 
-            if (!smallest || font->FontSize < smallest->FontSize)
+            ImGui::PushFont(font);
+            const float sz = ImGui::GetFontSize();
+            ImGui::PopFont();
+
+            if (sz < best)
             {
+                best = sz;
                 smallest = font;
             }
         }
 
-        if (!smallest)
-        {
-            smallest = current;
-        }
-
-        return smallest;
+        return smallest ? smallest : current;
     }
 
     /// Internal recursive drawing helper.

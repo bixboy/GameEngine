@@ -664,6 +664,7 @@
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiSystem.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Utils\GuiHelpers.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp" />
     <ClCompile Include="Runtime\Source\Game\Private\ActorSpawner.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -2222,6 +2223,7 @@
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneViewportPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\StatsPanel.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Utils\GuiHelpers.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiManager.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiDocking.h" />
