@@ -49,6 +49,211 @@ namespace BixEngine::Gui
             return baseParents;
         }
 
+        ParentScriptInfo GetDefaultParentForTemplate(ScriptTemplateType templateType)
+        {
+            switch (templateType)
+            {
+            case ScriptTemplateType::Actor:
+                return ParentScriptInfo{"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h"};
+            case ScriptTemplateType::Component:
+                return ParentScriptInfo{"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h"};
+            case ScriptTemplateType::Utility:
+            default:
+                return ParentScriptInfo{};
+            }
+        }
+
+        ParentScriptInfo ResolveParentForTemplate(ScriptTemplateType templateType, const ParentScriptInfo& selected)
+        {
+            if (selected.IsValid())
+                return selected;
+
+            return GetDefaultParentForTemplate(templateType);
+        }
+
+        std::string BuildDisplayNameFromClass(const std::string& className)
+        {
+            if (className.empty())
+                return className;
+
+            std::string result;
+            result.reserve(className.size() + className.size() / 2);
+
+            char previous = 0;
+            for (std::size_t index = 0; index < className.size(); ++index)
+            {
+                const char current = className[index];
+                const bool isUpper = std::isupper(static_cast<unsigned char>(current)) != 0;
+                const bool prevLower = std::islower(static_cast<unsigned char>(previous)) != 0;
+                const bool nextLower = (index + 1u < className.size())
+                    ? std::islower(static_cast<unsigned char>(className[index + 1u])) != 0
+                    : false;
+
+                if (index > 0 && isUpper && (prevLower || nextLower))
+                    result.push_back(' ');
+
+                result.push_back(current);
+                previous = current;
+            }
+
+            return result;
+        }
+
+        struct ScriptTemplateContent
+        {
+            std::string header;
+            std::string source;
+        };
+
+        std::string BuildParentComment(const ParentScriptInfo& parent)
+        {
+            return parent.IsValid() ? parent.className : std::string("(none)");
+        }
+
+        std::string BuildIncludeDirective(const ParentScriptInfo& parent, ScriptTemplateType templateType)
+        {
+            const ParentScriptInfo effectiveParent = ResolveParentForTemplate(templateType, parent);
+            if (!effectiveParent.includePath.empty())
+                return effectiveParent.includePath;
+
+            const ParentScriptInfo defaultParent = GetDefaultParentForTemplate(templateType);
+            return defaultParent.includePath;
+        }
+
+        ScriptTemplateContent GenerateActorTemplate(
+            const std::string& className,
+            const ParentScriptInfo& parentInfo)
+        {
+            const ParentScriptInfo effectiveParent = ResolveParentForTemplate(ScriptTemplateType::Actor, parentInfo);
+            const std::string includePath = BuildIncludeDirective(parentInfo, ScriptTemplateType::Actor);
+            const std::string baseClass = effectiveParent.IsValid() ? effectiveParent.className : std::string{};
+
+            std::ostringstream header;
+            header << "#pragma once\n\n";
+            if (!includePath.empty())
+                header << "#include \"" << includePath << "\"\n\n";
+
+            header << "// Created automatically from the Content Browser\n";
+            header << "// Parent: " << BuildParentComment(effectiveParent) << "\n";
+            header << "class " << className;
+            if (!baseClass.empty())
+                header << " : public " << baseClass;
+            header << "\n{\npublic:\n";
+            if (!baseClass.empty())
+                header << "    using Super = " << baseClass << ";\n\n";
+            header << "    " << className << "();\n";
+            header << "    void BeginPlay() override;\n";
+            header << "    void Update(float deltaTime) override;\n";
+            header << "};\n";
+
+            std::ostringstream source;
+            source << "#include \"" << className << ".h\"\n\n";
+            source << className << "::" << className << "() = default;\n\n";
+            source << "void " << className << "::BeginPlay()\n";
+            source << "{\n";
+            if (!baseClass.empty())
+                source << "    Super::BeginPlay();\n";
+            source << "}\n\n";
+            source << "void " << className << "::Update(float deltaTime)\n";
+            source << "{\n";
+            if (!baseClass.empty())
+                source << "    Super::Update(deltaTime);\n";
+            source << "}\n";
+
+            return { header.str(), source.str() };
+        }
+
+        ScriptTemplateContent GenerateComponentTemplate(
+            const std::string& className,
+            const ParentScriptInfo& parentInfo)
+        {
+            const ParentScriptInfo effectiveParent = ResolveParentForTemplate(ScriptTemplateType::Component, parentInfo);
+            const std::string includePath = BuildIncludeDirective(parentInfo, ScriptTemplateType::Component);
+            const std::string baseClass = effectiveParent.IsValid()
+                ? effectiveParent.className
+                : std::string("BixEngine::Game::Component");
+
+            std::ostringstream header;
+            header << "#pragma once\n\n";
+            if (!includePath.empty())
+                header << "#include \"" << includePath << "\"\n\n";
+
+            header << "// Created automatically from the Content Browser\n";
+            header << "// Parent: " << BuildParentComment(effectiveParent) << "\n";
+            header << "class " << className << " : public " << baseClass << "\n";
+            header << "{\npublic:\n";
+            header << "    using Super = " << baseClass << ";\n\n";
+            header << "    explicit " << className << "(BixEngine::Game::Actor* owner);\n";
+            header << "    void BeginPlay() override;\n";
+            header << "    void Update(float deltaTime) override;\n";
+            header << "    void DrawInspectorUI() override;\n";
+            header << "};\n";
+
+            const std::string displayName = BuildDisplayNameFromClass(className);
+
+            std::ostringstream source;
+            source << "#include \"" << className << ".h\"\n";
+            source << "#include \"Bix/Game/Components/ComponentRegistry.h\"\n\n";
+            source << "BIX_REGISTER_COMPONENT(" << className << ", \"" << displayName << "\");\n\n";
+            source << className << "::" << className << "(BixEngine::Game::Actor* owner)\n";
+            source << "    : Super(owner)\n";
+            source << "{\n";
+            source << "}\n\n";
+            source << "void " << className << "::BeginPlay()\n";
+            source << "{\n";
+            source << "    Super::BeginPlay();\n";
+            source << "}\n\n";
+            source << "void " << className << "::Update(float deltaTime)\n";
+            source << "{\n";
+            source << "    Super::Update(deltaTime);\n";
+            source << "}\n\n";
+            source << "void " << className << "::DrawInspectorUI()\n";
+            source << "{\n";
+            source << "    Super::DrawInspectorUI();\n";
+            source << "}\n";
+
+            return { header.str(), source.str() };
+        }
+
+        ScriptTemplateContent GenerateUtilityTemplate(const std::string& className)
+        {
+            std::ostringstream header;
+            header << "#pragma once\n\n";
+            header << "// Utility script generated from the Content Browser\n";
+            header << "class " << className << "\n";
+            header << "{\npublic:\n";
+            header << "    " << className << "();\n";
+            header << "    void Execute();\n";
+            header << "};\n";
+
+            std::ostringstream source;
+            source << "#include \"" << className << ".h\"\n\n";
+            source << className << "::" << className << "() = default;\n\n";
+            source << "void " << className << "::Execute()\n";
+            source << "{\n";
+            source << "    // TODO: implement utility behaviour\n";
+            source << "}\n";
+
+            return { header.str(), source.str() };
+        }
+
+        ScriptTemplateContent GenerateScriptTemplate(
+            const std::string& className,
+            const ParentScriptInfo& parentInfo,
+            ScriptTemplateType templateType)
+        {
+            switch (templateType)
+            {
+            case ScriptTemplateType::Actor:
+                return GenerateActorTemplate(className, parentInfo);
+            case ScriptTemplateType::Component:
+                return GenerateComponentTemplate(className, parentInfo);
+            case ScriptTemplateType::Utility:
+            default:
+                return GenerateUtilityTemplate(className);
+            }
+        }
+
         std::string TrimWhitespace(std::string value)
         {
             auto isSpace = [](unsigned char ch) { return std::isspace(ch) != 0; };
@@ -385,6 +590,18 @@ namespace BixEngine::Gui
 
             Utils::DrawSeparatorText("Script details");
 
+            const char* templateLabels[] = { "Actor", "Component", "Utility" };
+            int templateIndex = static_cast<int>(requests.scriptType);
+            if (ImGui::Combo("Template", &templateIndex, templateLabels, IM_ARRAYSIZE(templateLabels)))
+            {
+                const ScriptTemplateType newType = static_cast<ScriptTemplateType>(templateIndex);
+                if (newType != requests.scriptType)
+                {
+                    requests.scriptType = newType;
+                    ClearSelectedParent(requests);
+                }
+            }
+
             fs::path relativeLocation = state.current.lexically_relative(state.root);
             std::string relativeLocationString = relativeLocation.generic_string();
             if (relativeLocationString == ".")
@@ -412,31 +629,39 @@ namespace BixEngine::Gui
             RemoveExtensionIfPresent(baseNamePreview, kScriptHeaderExtension);
             RemoveExtensionIfPresent(baseNamePreview, kScriptSourceExtension);
 
-            ImGui::Spacing();
-            Utils::DrawSeparatorText("Parent (optional)");
-            ImGui::TextDisabled("Pick an inheritance target or leave empty for a standalone script.");
+            ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
 
-            const float parentListHeight = ImGui::GetTextLineHeightWithSpacing() * 7.0f;
-            if (ImGui::BeginTable("ParentSelectionTable", 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter))
+            if (requests.scriptType != ScriptTemplateType::Utility)
             {
-                ImGui::TableSetupColumn("Base classes");
-                ImGui::TableSetupColumn("Existing scripts");
-                ImGui::TableHeadersRow();
+                ImGui::Spacing();
+                Utils::DrawSeparatorText("Parent (optional)");
+                ImGui::TextDisabled("Pick an inheritance target or leave empty to use the default base class.");
 
-                ImGui::TableNextRow();
-                ImGui::TableSetColumnIndex(0);
-                if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, parentListHeight), true))
+                const float parentListHeight = ImGui::GetTextLineHeightWithSpacing() * 7.0f;
+                if (ImGui::BeginTable("ParentSelectionTable", 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter))
                 {
-                    if (baseParents.empty())
+                    ImGui::TableSetupColumn("Base classes");
+                    ImGui::TableSetupColumn("Existing scripts");
+                    ImGui::TableHeadersRow();
+
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, parentListHeight), true))
                     {
-                        ImGui::TextDisabled("No base classes available.");
-                    }
-                    else
-                    {
+                        bool anyBaseShown = false;
                         for (size_t baseIndex = 0; baseIndex < baseParents.size(); ++baseIndex)
                         {
-                            ImGui::PushID(static_cast<int>(baseIndex));
                             const auto& baseParent = baseParents[baseIndex];
+                            const bool isActorTemplate = requests.scriptType == ScriptTemplateType::Actor;
+                            const bool isComponentTemplate = requests.scriptType == ScriptTemplateType::Component;
+                            const bool matchesTemplate =
+                                (isActorTemplate && baseParent.className == "BixEngine::Game::Actor") ||
+                                (isComponentTemplate && baseParent.className == "BixEngine::Game::Component");
+                            if (!matchesTemplate)
+                                continue;
+
+                            anyBaseShown = true;
+                            ImGui::PushID(static_cast<int>(baseIndex));
                             const bool isSelectedBase = requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && requests.selectedParentClass.View() == baseParent.className;
                             if (ImGui::Selectable(baseParent.displayName.c_str(), isSelectedBase))
                             {
@@ -448,47 +673,52 @@ namespace BixEngine::Gui
                             }
                             ImGui::PopID();
                         }
-                    }
-                }
-                ImGui::EndChild();
 
-                ImGui::TableSetColumnIndex(1);
-                if (ImGui::BeginChild("UserScriptList", ImVec2(0.0f, parentListHeight), true, ImGuiWindowFlags_HorizontalScrollbar))
-                {
-                    std::string selectedScript = (!requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty()) ? std::string(requests.selectedParentClass.View()) : std::string{};
-                    const std::string previousSelection = selectedScript;
-                    Utils::DrawScriptHierarchyTree(userScriptTree, selectedScript, "No user scripts detected.");
-                    if (selectedScript != previousSelection)
+                        if (!anyBaseShown)
+                            ImGui::TextDisabled("No base classes available.");
+                    }
+                    ImGui::EndChild();
+
+                    ImGui::TableSetColumnIndex(1);
+                    if (ImGui::BeginChild("UserScriptList", ImVec2(0.0f, parentListHeight), true, ImGuiWindowFlags_HorizontalScrollbar))
                     {
-                        const auto infoIt = userScriptInfo.find(selectedScript);
-                        if (infoIt != userScriptInfo.end())
+                        std::string selectedScript = (!requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty()) ? std::string(requests.selectedParentClass.View()) : std::string{};
+                        const std::string previousSelection = selectedScript;
+                        Utils::DrawScriptHierarchyTree(userScriptTree, selectedScript, "No user scripts detected.");
+                        if (selectedScript != previousSelection)
                         {
-                            SetSelectedParent(requests, infoIt->second, false);
+                            const auto infoIt = userScriptInfo.find(selectedScript);
+                            if (infoIt != userScriptInfo.end())
+                            {
+                                SetSelectedParent(requests, infoIt->second, false);
+                            }
                         }
                     }
-                }
-                ImGui::EndChild();
+                    ImGui::EndChild();
 
-                ImGui::EndTable();
+                    ImGui::EndTable();
+                }
             }
 
             ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
+            ParentScriptInfo effectiveParent = ResolveParentForTemplate(requests.scriptType, parentInfo);
 
             ImGui::Spacing();
-            const std::string parentPreview = parentInfo.IsValid() ? parentInfo.displayName : std::string("None");
+            const std::string parentPreview = effectiveParent.IsValid() ? effectiveParent.displayName : std::string("None");
             Utils::DrawLabelValue("Selected", parentPreview, "None");
             ImGui::SameLine();
             if (Utils::IconButton("x", "Clear parent selection"))
             {
                 ClearSelectedParent(requests);
                 parentInfo = ParentScriptInfo{};
+                effectiveParent = ResolveParentForTemplate(requests.scriptType, parentInfo);
             }
 
-            if (parentInfo.IsValid())
+            if (effectiveParent.IsValid())
             {
-                ImGui::TextDisabled("Class: %s", parentInfo.className.c_str());
-                if (!parentInfo.includePath.empty())
-                    ImGui::TextDisabled("Include: %s", parentInfo.includePath.c_str());
+                ImGui::TextDisabled("Class: %s", effectiveParent.className.c_str());
+                if (!effectiveParent.includePath.empty())
+                    ImGui::TextDisabled("Include: %s", effectiveParent.includePath.c_str());
             }
             else
             {
@@ -512,9 +742,9 @@ namespace BixEngine::Gui
 
                 ImGui::BulletText("Content/%s", headerPreview.c_str());
                 ImGui::BulletText("Content/%s", sourcePreview.c_str());
-                if (parentInfo.IsValid())
+                if (effectiveParent.IsValid())
                 {
-                    ImGui::BulletText("Inherits from %s", parentInfo.className.c_str());
+                    ImGui::BulletText("Inherits from %s", effectiveParent.className.c_str());
                 }
                 else
                 {
@@ -594,50 +824,18 @@ namespace BixEngine::Gui
                                     }
                                     else
                                     {
-                                        const ParentScriptInfo info = GetSelectedParentInfo(requests);
+                                        const ParentScriptInfo selectedParent = GetSelectedParentInfo(requests);
+                                        const ParentScriptInfo resolvedParent = ResolveParentForTemplate(requests.scriptType, selectedParent);
 
-                                        headerFile << "#pragma once\n\n";
-                                        headerFile << "// Parent: " << (info.IsValid() ? info.className : "(none)") << '\n';
-                                        headerFile << "// Created automatically from the Content Browser\n\n";
+                                        const ScriptTemplateContent templateContent = GenerateScriptTemplate(baseName, resolvedParent, requests.scriptType);
 
-                                        if (info.IsValid())
-                                        {
-                                            // Include directive is driven by the selected parent (base class or user script).
-                                            headerFile << "#include \"" << info.includePath << "\"\n\n";
-                                        }
+                                        headerFile << templateContent.header;
+                                        if (!templateContent.header.empty() && templateContent.header.back() != '\n')
+                                            headerFile << '\n';
 
-                                        headerFile << "class " << baseName;
-                                        if (info.IsValid())
-                                            headerFile << " : public " << info.className;
-                                        
-                                        headerFile << '\n';
-                                        headerFile << "{\n";
-                                        headerFile << "public:\n";
-                                        
-                                        if (info.IsValid())
-                                            headerFile << "    using Super = " << info.className << ";\n\n";
-                                        
-                                        headerFile << "    " << baseName << "();\n";
-                                        headerFile << "    void OnCreate();\n";
-                                        headerFile << "    void OnUpdate(float deltaTime);\n";
-                                        headerFile << "};\n\n";
-
-                                        sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
-                                        sourceFile << baseName << "::" << baseName << "() = default;\n\n";
-                                        sourceFile << "void " << baseName << "::OnCreate()\n";
-                                        sourceFile << "{\n";
-                                        
-                                        if (info.IsValid())
-                                            sourceFile << "    // Super::OnCreate();\n";
-                                        
-                                        sourceFile << "}\n\n";
-                                        sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
-                                        sourceFile << "{\n";
-                                        
-                                        if (info.IsValid())
-                                            sourceFile << "    // Super::OnUpdate(deltaTime);\n";
-                                        
-                                        sourceFile << "}\n\n";
+                                        sourceFile << templateContent.source;
+                                        if (!templateContent.source.empty() && templateContent.source.back() != '\n')
+                                            sourceFile << '\n';
 
                                         selectedEntry = headerPath.generic_string();
                                         requests.scriptError.Clear();

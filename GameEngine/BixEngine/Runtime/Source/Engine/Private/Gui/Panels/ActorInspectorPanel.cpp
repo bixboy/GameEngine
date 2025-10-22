@@ -3,6 +3,7 @@
 #include "Bix/Engine/Gui/GuiManager.h"
 #include "Bix/Engine/Gui/GuiPanel.h"
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Bix/Core/Logger.h"
 #include "Bix/Game/Actor.h"
 #include "Bix/Game/Components/Component.h"
 #include "Bix/Game/Components/ComponentRegistry.h"
@@ -260,7 +261,7 @@ namespace BixEngine::Gui
                 return;
             }
             ImGui::PushID("ActorComponents");
-            Game::Component* componentToRemove = nullptr;
+            const Game::Component* componentToRemove = nullptr;
 
             for (std::size_t index = 0; index < components.size(); ++index)
             {
@@ -320,7 +321,10 @@ namespace BixEngine::Gui
 
             if (componentToRemove)
             {
-                actor.RemoveComponent(componentToRemove);
+                if (!actor.RemoveComponent(componentToRemove))
+                {
+                    LOG_WARNING("Failed to remove component from actor: " + ToStdString(actor.GetName()));
+                }
             }
         }
 
