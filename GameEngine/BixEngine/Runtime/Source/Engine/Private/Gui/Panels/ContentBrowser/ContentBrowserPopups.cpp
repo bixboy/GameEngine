@@ -595,34 +595,59 @@ namespace BixEngine::Gui
                                     else
                                     {
                                         const ParentScriptInfo info = GetSelectedParentInfo(requests);
+                                        const bool hasParent = info.IsValid();
+                                        const bool hasParentInclude = hasParent && !info.includePath.empty();
+                                        const std::string baseType = hasParent ? info.className : "::BixEngine::Game::Scripting::ScriptBase";
+
+                                        auto resolveScriptKindLiteral = [&]() -> std::string
+                                        {
+                                            if (requests.selectedParentIsBase)
+                                            {
+                                                if (info.className == "BixEngine::Game::Actor" || info.displayName == "Actor")
+                                                    return "::BixEngine::Game::Scripting::ScriptKind::Actor";
+                                                if (info.className == "BixEngine::Game::Component" || info.displayName == "Component")
+                                                    return "::BixEngine::Game::Scripting::ScriptKind::Component";
+                                            }
+
+                                            switch (requests.scriptType)
+                                            {
+                                                case ScriptTemplateType::Actor:
+                                                    return "::BixEngine::Game::Scripting::ScriptKind::Actor";
+                                                case ScriptTemplateType::Component:
+                                                    return "::BixEngine::Game::Scripting::ScriptKind::Component";
+                                                case ScriptTemplateType::Utility:
+                                                default:
+                                                    break;
+                                            }
+
+                                            return "::BixEngine::Game::Scripting::ScriptKind::Unknown";
+                                        };
 
                                         headerFile << "#pragma once\n\n";
-                                        headerFile << "// Parent: " << (info.IsValid() ? info.className : "(none)") << '\n';
+                                        headerFile << "// Parent: " << (hasParent ? info.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
-
-                                        if (info.IsValid())
-                                        {
-                                            // Include directive is driven by the selected parent (base class or user script).
-                                            headerFile << "#include \"" << info.includePath << "\"\n\n";
-                                        }
-
-                                        headerFile << "class " << baseName;
-                                        if (info.IsValid())
-                                            headerFile << " : public " << info.className;
-                                        
+                                        headerFile << "#include \"Bix/Game/Scripting/ScriptReflection.h\"\n";
+                                        if (hasParentInclude)
+                                            headerFile << "#include \"" << info.includePath << "\"\n";
                                         headerFile << '\n';
+
+                                        headerFile << "class " << baseName << " : public " << baseType << '\n';
                                         headerFile << "{\n";
                                         headerFile << "public:\n";
-                                        
-                                        if (info.IsValid())
-                                            headerFile << "    using Super = " << info.className << ";\n\n";
-                                        
+                                        headerFile << "    BIX_GENERATED_BODY(" << baseName << ");\n";
+                                        headerFile << "    BIX_DECLARE_SCRIPT_CLASS(" << baseName << ", " << baseType << ");\n\n";
+                                        headerFile << "    using Super = " << baseType << ";\n\n";
                                         headerFile << "    " << baseName << "();\n";
                                         headerFile << "    void OnCreate();\n";
                                         headerFile << "    void OnUpdate(float deltaTime);\n";
                                         headerFile << "};\n\n";
 
                                         sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
+                                        sourceFile << "BIX_DEFINE_SCRIPT_CLASS(" << baseName << ", (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{\n";
+                                        sourceFile << "    .name = \"" << baseName << "\",\n";
+                                        sourceFile << "    .moduleName = BIX_SCRIPT_DEFAULT_MODULE,\n";
+                                        sourceFile << "    .kind = " << resolveScriptKindLiteral() << ",\n";
+                                        sourceFile << "}));\n\n";
                                         sourceFile << baseName << "::" << baseName << "() = default;\n\n";
                                         sourceFile << "void " << baseName << "::OnCreate()\n";
                                         sourceFile << "{\n";
