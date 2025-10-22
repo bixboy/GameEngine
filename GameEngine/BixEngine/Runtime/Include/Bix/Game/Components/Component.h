@@ -13,7 +13,7 @@ namespace BixEngine::Game
     public:
         explicit Component(Actor* owner) : owner_(owner) {}
         virtual ~Component() = default;
-
+        
         virtual void BeginPlay() {}
         virtual void Update(float /*deltaTime*/) {}
         virtual void Render(Graphics::Renderer& /*renderer*/) const {}
@@ -30,3 +30,15 @@ namespace BixEngine::Game
         Actor* owner_{nullptr};
     };
 }
+
+#define BIX_AUTO_REGISTER_COMPONENT(ClassType) \
+    namespace { \
+        struct BixAutoRegister_##ClassType { \
+            BixAutoRegister_##ClassType() { \
+                ::BixEngine::Game::ComponentRegistry::GetInstance().RegisterComponent( \
+                    #ClassType, \
+                    [](::BixEngine::Game::Actor& actor) { actor.AddComponent<ClassType>(); }); \
+            } \
+        }; \
+        static BixAutoRegister_##ClassType s_AutoReg_##ClassType; \
+    }

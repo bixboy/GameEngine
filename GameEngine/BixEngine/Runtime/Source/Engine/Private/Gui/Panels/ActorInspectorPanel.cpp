@@ -126,9 +126,7 @@ namespace BixEngine::Gui
         void DrawAddComponentPopup(Game::Actor& actor)
         {
             if (!ImGui::BeginPopup("AddComponentPopup"))
-            {
                 return;
-            }
 
             ImGui::TextUnformatted("Add Component");
             ImGui::Separator();
@@ -204,7 +202,7 @@ namespace BixEngine::Gui
 
             Utils::DrawSeparatorText("Transform");
 
-            ImGui::TextUnformatted("🧭 Transform");
+            ImGui::TextUnformatted("Transform");
             ImGui::SameLine();
             Utils::DrawHelpMarker("Adjust the actor position, rotation, and scale.");
 
@@ -233,22 +231,17 @@ namespace BixEngine::Gui
             const std::string contextId = BuildActorContextId(actor);
             PersistentSectionScope section("Components", contextId);
             if (!section.IsOpen())
-            {
                 return;
-            }
 
             SectionContainer container("ComponentsSection");
             if (!container.IsVisible())
-            {
                 return;
-            }
 
             Utils::DrawSeparatorText("Components");
 
             if (ImGui::Button("+ Add Component"))
-            {
                 ImGui::OpenPopup("AddComponentPopup");
-            }
+
             ImGui::SameLine();
             Utils::DrawHelpMarker("Attach new behaviours to this actor.");
             DrawAddComponentPopup(actor);
@@ -259,68 +252,72 @@ namespace BixEngine::Gui
                 Utils::DrawEmptyStateMessage("Actor has no components.");
                 return;
             }
-            ImGui::PushID("ActorComponents");
-            Game::Component* componentToRemove = nullptr;
 
+            ImGui::PushID("ActorComponents");
+
+            static Game::Component* componentPendingRemoval = nullptr;
             for (std::size_t index = 0; index < components.size(); ++index)
             {
                 auto& component = components[index];
                 if (!component)
-                {
                     continue;
-                }
 
                 ImGui::PushID(static_cast<int>(index));
 
                 const std::string typeLabel = ToStdString(component->GetTypeName());
-                const bool open = ImGui::TreeNodeEx(
+
+                bool open = ImGui::TreeNodeEx(
                     component.get(),
-                    ImGuiTreeNodeFlags_DefaultOpen |
-                    ImGuiTreeNodeFlags_SpanFullWidth |
-                    ImGuiTreeNodeFlags_FramePadding,
+                    ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding,
                     "%s",
                     typeLabel.c_str());
 
-                const ImVec2 headerMin = ImGui::GetItemRectMin();
-                const ImVec2 headerMax = ImGui::GetItemRectMax();
-                const float buttonSize = ImGui::GetFrameHeight();
-                const float buttonYOffset = (headerMax.y - headerMin.y - buttonSize) * 0.5f;
-                const ImVec2 previousCursor = ImGui::GetCursorScreenPos();
-
-                ImVec2 buttonPosition = ImVec2(headerMax.x - buttonSize - ImGui::GetStyle().FramePadding.x, headerMin.y + buttonYOffset);
-                ImGui::SetCursorScreenPos(buttonPosition);
-                if (Utils::IconButton("🗑", "Remove component"))
-                {
-                    componentToRemove = component.get();
-                }
-                ImGui::SetCursorScreenPos(previousCursor);
-                ImGui::Dummy(ImVec2(0.0f, 0.0f));
+                ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeight() - ImGui::GetStyle().FramePadding.x);
+                if (Utils::IconButton("🗑", "Remove this component"))
+                    componentPendingRemoval = component.get();
 
                 if (open)
                 {
                     const float startCursor = ImGui::GetCursorPosY();
                     component->DrawInspectorUI();
                     const float endCursor = ImGui::GetCursorPosY();
+                    
                     if (endCursor <= startCursor + FLT_EPSILON)
-                    {
                         Utils::DrawEmptyStateMessage("No editable properties.");
-                    }
+                    
                     ImGui::TreePop();
                 }
 
                 ImGui::PopID();
-
-                if (componentToRemove)
-                {
-                    break;
-                }
             }
 
             ImGui::PopID();
 
-            if (componentToRemove)
+            // --- popup modale de confirmation ---
+            if (componentPendingRemoval)
+                ImGui::OpenPopup("ConfirmRemoveComponent");
+
+            if (ImGui::BeginPopupModal("ConfirmRemoveComponent", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
             {
-                actor.RemoveComponent(componentToRemove);
+                ImGui::TextUnformatted("Are you sure you want to remove this component?");
+                ImGui::Separator();
+
+                if (ImGui::Button("Remove"))
+                {
+                    actor.RemoveComponent(componentPendingRemoval);
+                    componentPendingRemoval = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::SameLine();
+
+                if (ImGui::Button("Cancel"))
+                {
+                    componentPendingRemoval = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                ImGui::EndPopup();
             }
         }
 

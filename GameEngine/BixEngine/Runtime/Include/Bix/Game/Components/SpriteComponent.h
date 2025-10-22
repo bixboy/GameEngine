@@ -24,7 +24,7 @@ namespace BixEngine::Game
         [[nodiscard]] float GetWidth() const noexcept { return width_; }
         [[nodiscard]] float GetHeight() const noexcept { return height_; }
 
-        [[nodiscard]] BixEngine::String GetTypeName() const override { return "SpriteComponent"; }
+        [[nodiscard]] String GetTypeName() const override { return "SpriteComponent"; }
 
     private:
         SDL_Color color_;

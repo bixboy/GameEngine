@@ -5,14 +5,6 @@
 
 namespace BixEngine::Game
 {
-    BIX_REGISTER_COMPONENT_WITH_FACTORY(
-        SpriteComponent,
-        "Sprite Component",
-        [](Actor& actor)
-        {
-            actor.AddComponent<SpriteComponent>(SDL_Color{ 255, 255, 255, 255 }, 64.0f, 64.0f);
-        });
-
     void SpriteComponent::Render(Graphics::Renderer& renderer) const
     {
         auto pos = owner_->GetPosition();
