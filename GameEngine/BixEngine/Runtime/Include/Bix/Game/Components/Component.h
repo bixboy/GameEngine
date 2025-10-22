@@ -15,10 +15,10 @@ namespace BixEngine::Game
         virtual ~Component() = default;
 
         virtual void BeginPlay() {}
-        virtual void Update(float deltaTime) {}
-        virtual void Render(Graphics::Renderer& renderer) const {}
+        virtual void Update(float /*deltaTime*/) {}
+        virtual void Render(Graphics::Renderer& /*renderer*/) const {}
 
-        [[nodiscard]] virtual BixEngine::String GetTypeName() const { return "Component"; }
+        [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
 
     protected:
         Actor* owner_{nullptr};

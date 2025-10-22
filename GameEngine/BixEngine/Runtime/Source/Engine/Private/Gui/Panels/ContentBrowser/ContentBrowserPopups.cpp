@@ -594,28 +594,28 @@ namespace BixEngine::Gui
                                     }
                                     else
                                     {
-                                        const ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
+                                        const ParentScriptInfo info = GetSelectedParentInfo(requests);
 
                                         headerFile << "#pragma once\n\n";
-                                        headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
+                                        headerFile << "// Parent: " << (info.IsValid() ? info.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
 
-                                        if (parentInfo.IsValid())
+                                        if (info.IsValid())
                                         {
                                             // Include directive is driven by the selected parent (base class or user script).
-                                            headerFile << "#include \"" << parentInfo.includePath << "\"\n\n";
+                                            headerFile << "#include \"" << info.includePath << "\"\n\n";
                                         }
 
                                         headerFile << "class " << baseName;
-                                        if (parentInfo.IsValid())
-                                            headerFile << " : public " << parentInfo.className;
+                                        if (info.IsValid())
+                                            headerFile << " : public " << info.className;
                                         
                                         headerFile << '\n';
                                         headerFile << "{\n";
                                         headerFile << "public:\n";
                                         
-                                        if (parentInfo.IsValid())
-                                            headerFile << "    using Super = " << parentInfo.className << ";\n\n";
+                                        if (info.IsValid())
+                                            headerFile << "    using Super = " << info.className << ";\n\n";
                                         
                                         headerFile << "    " << baseName << "();\n";
                                         headerFile << "    void OnCreate();\n";
@@ -627,14 +627,14 @@ namespace BixEngine::Gui
                                         sourceFile << "void " << baseName << "::OnCreate()\n";
                                         sourceFile << "{\n";
                                         
-                                        if (parentInfo.IsValid())
+                                        if (info.IsValid())
                                             sourceFile << "    // Super::OnCreate();\n";
                                         
                                         sourceFile << "}\n\n";
                                         sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
                                         sourceFile << "{\n";
                                         
-                                        if (parentInfo.IsValid())
+                                        if (info.IsValid())
                                             sourceFile << "    // Super::OnUpdate(deltaTime);\n";
                                         
                                         sourceFile << "}\n\n";
