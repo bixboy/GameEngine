@@ -1,14 +1,43 @@
 #include "Bix/Game/Scripting/ScriptReflection.h"
 
 #include <algorithm>
+#include <filesystem>
+#include <fstream>
 #include <stdexcept>
 #include <utility>
+
+#include "Bix/Core/Logger.h"
+#include "Bix/Core/String.h"
 
 using namespace BixEngine::Game::Scripting;
 
 namespace
 {
     constexpr std::string_view kScriptBaseName{"ScriptBase"};
+
+    const char* ToString(ScriptKind kind)
+    {
+        switch (kind)
+        {
+            case ScriptKind::Actor:
+                return "Actor";
+            case ScriptKind::Component:
+                return "Component";
+            case ScriptKind::Widget:
+                return "Widget";
+            case ScriptKind::Scene:
+                return "Scene";
+            case ScriptKind::Ui:
+                return "Ui";
+            case ScriptKind::Service:
+                return "Service";
+            case ScriptKind::Unknown:
+            default:
+                break;
+        }
+
+        return "Unknown";
+    }
 }
 
 ScriptRegistry::ScriptRegistry() = default;
@@ -73,6 +102,8 @@ ScriptClass& ScriptRegistry::RegisterClass(ScriptClassDescriptor descriptor, Scr
         if (std::find(children.begin(), children.end(), &scriptClass) == children.end())
             children.push_back(&scriptClass);
     }
+
+    SaveManifestLocked_();
 
     return scriptClass;
 }
@@ -175,5 +206,80 @@ std::unique_ptr<ScriptBase> ScriptClass::Instantiate(const ScriptInstantiationPa
         return nullptr;
 
     return factory(params);
+}
+
+void ScriptRegistry::EnableAutoSaveManifest(const std::filesystem::path& manifestPath)
+{
+    std::scoped_lock lock(mutex_);
+    manifestPath_ = manifestPath;
+    autoSaveManifest_ = true;
+    SaveManifestLocked_();
+}
+
+void ScriptRegistry::DisableAutoSaveManifest()
+{
+    std::scoped_lock lock(mutex_);
+    autoSaveManifest_ = false;
+}
+
+void ScriptRegistry::SaveManifestLocked_() const
+{
+    if (!autoSaveManifest_ || manifestPath_.empty())
+        return;
+
+    namespace fs = std::filesystem;
+
+    const fs::path manifestDirectory = manifestPath_.parent_path();
+    if (!manifestDirectory.empty())
+    {
+        std::error_code directoryError;
+        fs::create_directories(manifestDirectory, directoryError);
+        if (directoryError)
+        {
+            LOG_ERROR(String{"Failed to create script manifest directory: "} + manifestDirectory.string()
+                + String{" ("} + directoryError.message() + String{")"});
+            return;
+        }
+    }
+
+    std::ofstream output(manifestPath_, std::ios::trunc);
+    if (!output.is_open())
+    {
+        LOG_ERROR(String{"Failed to open script manifest file for writing: "} + manifestPath_.string());
+        return;
+    }
+
+    output << "{\n  \"scripts\": [\n";
+
+    bool first = true;
+    for (const auto& [_, entry] : classes_)
+    {
+        if (!entry)
+            continue;
+
+        const auto& info = entry->info;
+        if (info.name.View() == kScriptBaseName)
+            continue;
+
+        if (!first)
+            output << ",\n";
+
+        first = false;
+        output << "    {\n";
+        output << "      \"name\": \"" << info.name.Std() << "\",\n";
+        output << "      \"displayName\": \"" << info.displayName.Std() << "\",\n";
+        output << "      \"module\": \"" << info.moduleName.Std() << "\",\n";
+        output << "      \"nativeName\": \"" << info.nativeName.Std() << "\",\n";
+        output << "      \"kind\": \"" << ToString(info.kind) << "\",\n";
+        output << "      \"isAbstract\": " << (info.isAbstract ? "true" : "false") << ",\n";
+        output << "      \"canInstantiate\": " << (info.canInstantiate ? "true" : "false") << "\n";
+        output << "    }";
+    }
+
+    if (!first)
+        output << '\n';
+
+    output << "  ]\n}\n";
+    output.flush();
 }
 

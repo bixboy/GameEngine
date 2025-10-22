@@ -1,6 +1,7 @@
 #include "Bix/Core/Logger.h"
 #include <filesystem>
 #include <system_error>
+#include "Bix/Game/Scripting/ScriptReflection.h"
 #include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
@@ -82,6 +83,16 @@ namespace BixEngine::Gui
             message += createError.message();
             message += ')';
             LOG_ERROR(message);
+        }
+        else
+        {
+            static bool s_manifestConfigured = false;
+            if (!s_manifestConfigured)
+            {
+                const fs::path manifestPath = scriptsDirectory / "ScriptManifest.json";
+                Game::Scripting::ScriptRegistry::Get().EnableAutoSaveManifest(manifestPath);
+                s_manifestConfigured = true;
+            }
         }
     }
 }

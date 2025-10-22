@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -132,6 +133,9 @@ namespace BixEngine::Game::Scripting
             return std::unique_ptr<T>(typed);
         }
 
+        void EnableAutoSaveManifest(const std::filesystem::path& manifestPath);
+        void DisableAutoSaveManifest();
+
     private:
         struct Entry
         {
@@ -139,9 +143,12 @@ namespace BixEngine::Game::Scripting
         };
 
         [[nodiscard]] static std::string NormalizeName(std::string_view name);
+        void SaveManifestLocked_() const;
 
         mutable std::mutex mutex_;
         std::unordered_map<std::string, std::unique_ptr<Entry>> classes_;
+        std::filesystem::path manifestPath_{};
+        bool autoSaveManifest_{false};
     };
 
     class ScriptBase
