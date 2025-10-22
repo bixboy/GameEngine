@@ -23,6 +23,8 @@ namespace BixEngine::Game
 
             Actor(String name, const Math::Transform& transform = Math::Transform());
 
+            ~Actor() override;
+
             virtual void BeginPlay();
             virtual void Update(float deltaTime);
             virtual void Render(Graphics::Renderer& renderer) const;

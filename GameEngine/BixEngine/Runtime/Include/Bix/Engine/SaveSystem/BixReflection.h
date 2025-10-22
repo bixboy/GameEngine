@@ -299,7 +299,8 @@ namespace BixEngine::Engine::SaveSystem
         static ::BixEngine::Engine::SaveSystem::BixClass& StaticClass(); \
         const ::BixEngine::Engine::SaveSystem::BixClass& GetClass() const noexcept override; \
     private: \
-        static ::BixEngine::Engine::SaveSystem::ClassRegistrar<ClassType, void> s_bixClassRegistrar_
+        static ::BixEngine::Engine::SaveSystem::ClassRegistrar<ClassType, void> s_bixClassRegistrar_; \
+    public:
 
     #define BIX_CLASS(ClassType, SuperType) \
     public: \
@@ -308,7 +309,8 @@ namespace BixEngine::Engine::SaveSystem
         static ::BixEngine::Engine::SaveSystem::BixClass& StaticClass(); \
         const ::BixEngine::Engine::SaveSystem::BixClass& GetClass() const noexcept override; \
     private: \
-        static ::BixEngine::Engine::SaveSystem::ClassRegistrar<ClassType, SuperType> s_bixClassRegistrar_
+        static ::BixEngine::Engine::SaveSystem::ClassRegistrar<ClassType, SuperType> s_bixClassRegistrar_; \
+    public:
 
     #define BIX_IMPLEMENT_CLASS(ClassType) \
         ::BixEngine::Engine::SaveSystem::ClassRegistrar<ClassType, ClassType::SuperClass> \
