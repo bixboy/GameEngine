@@ -8,7 +8,7 @@
 
 namespace BixEngine::Gui
 {
-    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
+    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
         guiManager.SetPanelDockingArea(contentPanel, DockSpaceRegion::Bottom);
@@ -18,7 +18,8 @@ namespace BixEngine::Gui
         contentPanel.SetClosable(true);
         contentPanel.SetBackgroundColor(kContentBackground);
         contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        contentPanel.SetDrawFunction([]()
+        const auto scriptEditorOpener = context.openScriptFilesInEditor;
+        contentPanel.SetDrawFunction([scriptEditorOpener]()
         {
             namespace fs = std::filesystem;
 
@@ -26,6 +27,8 @@ namespace BixEngine::Gui
             static char searchBuffer[256] = "";
             static String selectedEntry{};
             static PopupRequestState popupRequests{};
+
+            state.openScriptFilesCallback = scriptEditorOpener;
 
             if (!EnsureContentBrowserInitialized(state))
             {

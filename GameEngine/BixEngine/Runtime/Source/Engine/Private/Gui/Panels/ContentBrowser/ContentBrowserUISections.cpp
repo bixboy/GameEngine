@@ -3,6 +3,8 @@
 #include "imgui_internal.h"
 #include <algorithm>
 #include <filesystem>
+#include <unordered_map>
+#include <utility>
 #include <vector>
 #include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
@@ -27,6 +29,68 @@ namespace BixEngine::Gui
                 clamp(color.y + delta),
                 clamp(color.z + delta),
                 clamp(color.w));
+        }
+
+        struct ScriptEntryInfo
+        {
+            String name{};
+            std::filesystem::path directory{};
+            std::filesystem::path headerPath{};
+            std::filesystem::path sourcePath{};
+
+            [[nodiscard]] bool HasHeader() const noexcept { return !headerPath.empty(); }
+            [[nodiscard]] bool HasSource() const noexcept { return !sourcePath.empty(); }
+        };
+
+        enum class ContentEntryType
+        {
+            Directory = 0,
+            Script,
+            File,
+        };
+
+        struct DisplayEntry
+        {
+            ContentEntryType type{ContentEntryType::File};
+            std::filesystem::path path{};
+            ScriptEntryInfo script{};
+        };
+
+        [[nodiscard]] String BuildScriptSelectionId(const ScriptEntryInfo& script)
+        {
+            std::filesystem::path selectionKey = script.directory / script.name.View();
+            return selectionKey.generic_string();
+        }
+
+        void RequestOpenScriptFiles(const ContentBrowserState& state, const ScriptEntryInfo& script, bool openHeader, bool openSource)
+        {
+            namespace fs = std::filesystem;
+
+            if (!openHeader && !openSource)
+                return;
+
+            std::vector<fs::path> paths{};
+            paths.reserve(2);
+
+            if (openHeader && script.HasHeader())
+                paths.push_back(script.headerPath);
+
+            if (openSource && script.HasSource())
+                paths.push_back(script.sourcePath);
+
+            if (paths.empty())
+                return;
+
+            if (state.openScriptFilesCallback)
+            {
+                state.openScriptFilesCallback(paths);
+            }
+            else
+            {
+                String message = "Code editor integration is not available to open script: ";
+                message += script.name;
+                LOG_WARNING(message);
+            }
         }
     }
 
@@ -207,16 +271,84 @@ namespace BixEngine::Gui
             return;
         }
 
-        std::sort(entries.begin(), entries.end(), [&](const fs::directory_entry& lhs, const fs::directory_entry& rhs)
+        std::unordered_map<String, ScriptEntryInfo> scriptGroups{};
+        std::vector<DisplayEntry> displayEntries{};
+        displayEntries.reserve(entries.size());
+
+        for (const auto& entry : entries)
         {
-            if (lhs.is_directory() && !rhs.is_directory())
-                return true;
+            const fs::path entryPath = entry.path();
 
-            if (!lhs.is_directory() && rhs.is_directory())
-                return false;
+            if (entry.is_directory())
+            {
+                DisplayEntry directoryEntry{};
+                directoryEntry.type = ContentEntryType::Directory;
+                directoryEntry.path = entryPath;
+                displayEntries.push_back(std::move(directoryEntry));
+                continue;
+            }
 
-            const String lhsName = lhs.path().filename().generic_string();
-            const String rhsName = rhs.path().filename().generic_string();
+            const fs::path extension = entryPath.extension();
+            const bool isHeader = extension == ".h";
+            const bool isSource = extension == ".cpp";
+            if (isHeader || isSource)
+            {
+                String groupKey = ToLowerCopy(entryPath.stem().generic_string());
+                auto& group = scriptGroups[groupKey];
+                if (group.name.IsEmpty())
+                    group.name = entryPath.stem().generic_string();
+                group.directory = entryPath.parent_path();
+                if (isHeader)
+                    group.headerPath = entryPath;
+                else
+                    group.sourcePath = entryPath;
+                continue;
+            }
+
+            DisplayEntry fileEntry{};
+            fileEntry.type = ContentEntryType::File;
+            fileEntry.path = entryPath;
+            displayEntries.push_back(std::move(fileEntry));
+        }
+
+        for (auto& [_, script] : scriptGroups)
+        {
+            DisplayEntry scriptEntry{};
+            scriptEntry.type = ContentEntryType::Script;
+            scriptEntry.script = std::move(script);
+            displayEntries.push_back(std::move(scriptEntry));
+        }
+
+        std::sort(displayEntries.begin(), displayEntries.end(), [&](const DisplayEntry& lhs, const DisplayEntry& rhs)
+        {
+            const auto priority = [](ContentEntryType type)
+            {
+                switch (type)
+                {
+                case ContentEntryType::Directory:
+                    return 0;
+                case ContentEntryType::Script:
+                    return 1;
+                case ContentEntryType::File:
+                default:
+                    return 2;
+                }
+            };
+
+            const int lhsPriority = priority(lhs.type);
+            const int rhsPriority = priority(rhs.type);
+            if (lhsPriority != rhsPriority)
+                return lhsPriority < rhsPriority;
+
+            const String lhsName = lhs.type == ContentEntryType::Script
+                ? lhs.script.name
+                : String(lhs.path.filename().generic_string());
+
+            const String rhsName = rhs.type == ContentEntryType::Script
+                ? rhs.script.name
+                : String(rhs.path.filename().generic_string());
+
+
             return CaseInsensitiveLess(lhsName, rhsName);
         });
 
@@ -229,23 +361,23 @@ namespace BixEngine::Gui
         {
             ImGui::TableSetupScrollFreeze(0, 1);
 
-            for (const auto& entry : entries)
+            for (const auto& entry : displayEntries)
             {
-                const fs::path entryPath = entry.path();
-                const String entryName = entryPath.filename().generic_string();
+                const bool isDirectory = entry.type == ContentEntryType::Directory;
+                const bool isScript = entry.type == ContentEntryType::Script;
+                const String entryName = isScript ? entry.script.name : String(entry.path.filename().generic_string());
+                
                 if (!MatchesSearch(entryName, searchQuery))
                     continue;
 
-                const String entryPathString = entryPath.generic_string();
-                const bool isDirectory = entry.is_directory();
-                const bool isScript = !isDirectory && (entryPath.extension() == ".h" || entryPath.extension() == ".cpp");
-                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "\xF0\x9F\x93\x9C" : "\xef\x81\x96");
+                const String selectionId = isScript ? BuildScriptSelectionId(entry.script) : String(entry.path.generic_string());
+                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "<>" : "\xef\x81\x96");
 
                 ImGui::TableNextColumn();
                 ImGui::PushID(entryName.c_str());
                 ImGui::BeginGroup();
 
-                const bool isSelected = selectedEntry == entryPathString;
+                const bool isSelected = selectedEntry == selectionId;
                 const ImVec4 baseColor = isSelected ? ImVec4(0.20f, 0.35f, 0.60f, 0.95f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
                 const ImVec4 hoverColor = AdjustColor(baseColor, 0.10f);
                 const ImVec4 activeColor = AdjustColor(baseColor, 0.20f);
@@ -264,53 +396,131 @@ namespace BixEngine::Gui
                     ImGui::TextDisabled("Actions");
                     ImGui::Separator();
 
-                    if (ImGui::MenuItem("Open"))
+                    if (isDirectory)
                     {
-                        if (isDirectory)
+                        if (ImGui::MenuItem("Open"))
                         {
-                            state.current = entryPath;
+                            state.current = entry.path;
                             selectedEntry.Clear();
                         }
-                        else
+                    }
+                    else if (isScript)
+                    {
+                        const bool hasHeader = entry.script.HasHeader();
+                        const bool hasSource = entry.script.HasSource();
+
+                        if (ImGui::MenuItem("Open Header", nullptr, false, hasHeader))
                         {
-                            selectedEntry = entryPathString;
+                            selectedEntry = selectionId;
+                            RequestOpenScriptFiles(state, entry.script, true, false);
                         }
+
+                        if (ImGui::MenuItem("Open Source", nullptr, false, hasSource))
+                        {
+                            selectedEntry = selectionId;
+                            RequestOpenScriptFiles(state, entry.script, false, true);
+                        }
+
+                        if (ImGui::MenuItem("Open Both", nullptr, false, hasHeader || hasSource))
+                        {
+                            selectedEntry = selectionId;
+                            RequestOpenScriptFiles(state, entry.script, true, true);
+                        }
+                    }
+                    else
+                    {
+                        if (ImGui::MenuItem("Open"))
+                            selectedEntry = selectionId;
                     }
 
                     if (ImGui::MenuItem("Rename..."))
                     {
-                        std::snprintf(requestPopups.renameBuffer, IM_ARRAYSIZE(requestPopups.renameBuffer), "%s", entryName.c_str());
-                        requestPopups.renameError.Clear();
-                        requestPopups.renameTarget = entryPath;
-                        requestPopups.renameEntry = true;
+                        if (isScript)
+                        {
+                            std::snprintf(requestPopups.renameBuffer, IM_ARRAYSIZE(requestPopups.renameBuffer), "%s", entry.script.name.c_str());
+                            requestPopups.renameError.Clear();
+                            requestPopups.renameTarget = entry.script.headerPath;
+                            requestPopups.renameSecondaryTarget = entry.script.sourcePath;
+                            requestPopups.renameTargetIsScriptGroup = true;
+                            requestPopups.renameEntry = true;
+                        }
+                        else
+                        {
+                            std::snprintf(requestPopups.renameBuffer, IM_ARRAYSIZE(requestPopups.renameBuffer), "%s", entryName.c_str());
+                            requestPopups.renameError.Clear();
+                            requestPopups.renameTarget = entry.path;
+                            requestPopups.renameSecondaryTarget.clear();
+                            requestPopups.renameTargetIsScriptGroup = false;
+                            requestPopups.renameEntry = true;
+                        }
                     }
 
                     if (ImGui::MenuItem("Delete"))
                     {
-                        std::error_code removeError;
+                        bool success = true;
                         if (isDirectory)
-                            std::filesystem::remove_all(entryPath, removeError);
-                        else
-                            std::filesystem::remove(entryPath, removeError);
+                        {
+                            std::error_code removeError;
+                            fs::remove_all(entry.path, removeError);
+                            if (removeError)
+                            {
+                                String message = "Unable to delete entry: ";
+                                message += removeError.message();
+                                LOG_ERROR(message);
+                                success = false;
+                            }
+                        }
+                        else if (isScript)
+                        {
+                            const auto removeScriptFile = [&](const fs::path& path)
+                            {
+                                if (path.empty())
+                                    return true;
 
-                        if (removeError)
-                        {
-                            String message = "Unable to delete entry: ";
-                            message += removeError.message();
-                            LOG_ERROR(message);
+                                std::error_code removeError;
+                                fs::remove(path, removeError);
+                                if (removeError)
+                                {
+                                    String message = "Unable to delete entry: ";
+                                    message += removeError.message();
+                                    LOG_ERROR(message);
+                                    return false;
+                                }
+
+                                return true;
+                            };
+
+                            const bool headerResult = removeScriptFile(entry.script.headerPath);
+                            const bool sourceResult = removeScriptFile(entry.script.sourcePath);
+                            success = headerResult && sourceResult;
                         }
-                        else if (selectedEntry == entryPathString)
+                        else
                         {
+                            std::error_code removeError;
+                            fs::remove(entry.path, removeError);
+                            if (removeError)
+                            {
+                                String message = "Unable to delete entry: ";
+                                message += removeError.message();
+                                LOG_ERROR(message);
+                                success = false;
+                            }
+                        }
+
+                        if (success && selectedEntry == selectionId)
                             selectedEntry.Clear();
-                        }
                     }
 
                     ImGui::Separator();
                     ImGui::TextDisabled("Utilities");
                     ImGui::Separator();
 
+                    const fs::path explorerPath = isScript
+                        ? (entry.script.HasHeader() ? entry.script.headerPath : entry.script.sourcePath)
+                        : entry.path;
+
                     if (ImGui::MenuItem("Reveal in Explorer"))
-                        ShowPathInExplorer(entryPath, isDirectory);
+                        ShowPathInExplorer(explorerPath, isDirectory);
 
                     if (ImGui::MenuItem("New folder here..."))
                     {
@@ -318,11 +528,11 @@ namespace BixEngine::Gui
                         requestPopups.folderError.Clear();
                         if (isDirectory)
                         {
-                            requestPopups.folderTarget = entryPath;
+                            requestPopups.folderTarget = entry.path;
                         }
                         else
                         {
-                            std::filesystem::path parent = entryPath.parent_path();
+                            fs::path parent = isScript ? entry.script.directory : entry.path.parent_path();
                             if (parent.empty())
                                 parent = state.current;
                             requestPopups.folderTarget = std::move(parent);
@@ -333,14 +543,23 @@ namespace BixEngine::Gui
                     ImGui::EndPopup();
                 }
 
-                if (clicked && isDirectory)
+                if (clicked)
                 {
-                    state.current = entryPath;
-                    selectedEntry.Clear();
+                    if (isDirectory)
+                    {
+                        state.current = entry.path;
+                        selectedEntry.Clear();
+                    }
+                    else
+                    {
+                        selectedEntry = selectionId;
+                    }
                 }
-                else if (clicked)
+
+                if (isScript && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    selectedEntry = entryPathString;
+                    selectedEntry = selectionId;
+                    RequestOpenScriptFiles(state, entry.script, true, true);
                 }
 
                 if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
@@ -348,7 +567,7 @@ namespace BixEngine::Gui
                     if (isDirectory)
                     {
                         ShowActionTooltip(entryName, {
-                            {"Open", [&, entryPath]()
+                            {"Open", [&, entryPath = entry.path]()
                             {
                                 state.current = entryPath;
                                 selectedEntry.Clear();
@@ -361,7 +580,7 @@ namespace BixEngine::Gui
                                 requestPopups.createScript = true;
                                 requestPopups.selectedParentScript = -1;
                             }},
-                            {"Create folder...", [&, entryPath]()
+                            {"Create folder...", [&, entryPath = entry.path]()
                             {
                                 std::snprintf(requestPopups.folderName, IM_ARRAYSIZE(requestPopups.folderName), "%s", "NewFolder");
                                 requestPopups.folderError.Clear();
@@ -370,12 +589,35 @@ namespace BixEngine::Gui
                             }}
                         });
                     }
+                    else if (isScript)
+                    {
+                        const bool hasSource = entry.script.HasSource();
+                        ShowActionTooltip(entryName, {
+                            {"Open header", [&, script = entry.script, selection = selectionId]()
+                            {
+                                selectedEntry = selection;
+                                RequestOpenScriptFiles(state, script, true, false);
+                            }},
+                            {"Open source", [&, script = entry.script, selection = selectionId, hasSource]()
+                            {
+                                if (!hasSource)
+                                    return;
+                                selectedEntry = selection;
+                                RequestOpenScriptFiles(state, script, false, true);
+                            }},
+                            {"Open both", [&, script = entry.script, selection = selectionId]()
+                            {
+                                selectedEntry = selection;
+                                RequestOpenScriptFiles(state, script, true, true);
+                            }}
+                        });
+                    }
                     else
                     {
                         ShowActionTooltip(entryName, {
-                            {"Open", [&, entryPathString]()
+                            {"Open", [&, selection = selectionId]()
                             {
-                                selectedEntry = entryPathString;
+                                selectedEntry = selection;
                             }}
                         });
                     }

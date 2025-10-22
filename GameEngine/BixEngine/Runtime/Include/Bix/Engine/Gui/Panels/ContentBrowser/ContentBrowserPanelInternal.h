@@ -5,6 +5,7 @@
 #include "imgui.h"
 
 #include <filesystem>
+#include <functional>
 #include <vector>
 
 namespace BixEngine::Gui
@@ -15,6 +16,7 @@ namespace BixEngine::Gui
         std::filesystem::path current{};
         String error{};
         bool initialized{false};
+        std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesCallback{};
     };
 
     enum class ScriptTemplateType
@@ -39,6 +41,8 @@ namespace BixEngine::Gui
         String renameError{};
         std::filesystem::path folderTarget{};
         std::filesystem::path renameTarget{};
+        std::filesystem::path renameSecondaryTarget{};
+        bool renameTargetIsScriptGroup{false};
         std::vector<String> existingScripts{};
         int selectedParentScript{-1};
     };

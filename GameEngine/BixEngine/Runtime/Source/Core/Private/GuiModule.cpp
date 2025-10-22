@@ -1,6 +1,7 @@
 #include "Bix/Core/GuiModule.h"
 
 #include <SDL3/SDL.h>
+#include <filesystem>
 
 #include "Bix/Core/Logger.h"
 #include "Bix/Core/String.h"
@@ -130,6 +131,20 @@ namespace BixEngine::Core
             [this]() -> std::pair<int, int>
             {
                 return {sceneViewportWidth_, sceneViewportHeight_};
+            },
+            [](const std::vector<std::filesystem::path>& paths)
+            {
+                if (paths.empty())
+                    return;
+
+                String message = "Requested to open script files in code editor:";
+                for (const auto& path : paths)
+                {
+                    message += "\n - ";
+                    message += path.generic_string();
+                }
+
+                LOG_INFO(message);
             }
         };
 
