@@ -11,6 +11,17 @@
 
 namespace BixEngine::Game
 {
+    namespace
+    {
+        constexpr const char* kPlayerModule = "Test";
+    }
+
+    BIX_DEFINE_SCRIPT_CLASS(Player, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
+        .name = "Player",
+        .moduleName = kPlayerModule,
+        .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
+    }));
+
     Player::Player() : Actor("Player")
     {
         InitializeSpriteComponent();

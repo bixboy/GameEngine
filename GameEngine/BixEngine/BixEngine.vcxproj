@@ -974,6 +974,7 @@
       <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Scripting\ScriptRegistry.cpp" />
     <ClCompile Include="Runtime\Source\Game\Private\Scene.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -2320,6 +2321,7 @@
     <ClInclude Include="Runtime\Include\Bix\Core\Window.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\EmptyScene.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Actor.h" />
+    <ClInclude Include="Runtime\Include\Bix\Game\Scripting\ScriptReflection.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Test\TestScene.h" />
     <ClInclude Include="Runtime\Include\Bix\Graphics\Renderer.h" />

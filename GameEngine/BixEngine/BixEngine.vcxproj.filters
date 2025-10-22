@@ -99,6 +99,9 @@
     <ClCompile Include="Runtime\Source\Game\Private\Test\TestScene.cpp">
       <Filter>Runtime\Game\Private\Test</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Scripting\ScriptRegistry.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Graphics\Private\Renderer.cpp">
       <Filter>Runtime\Graphics\Private</Filter>
     </ClCompile>
@@ -207,6 +210,9 @@
       <Filter>Runtime\Include\Game</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Actor.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Scripting\ScriptReflection.h">
       <Filter>Runtime\Include\Game</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h">

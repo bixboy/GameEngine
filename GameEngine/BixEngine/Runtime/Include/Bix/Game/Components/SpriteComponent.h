@@ -8,6 +8,10 @@ namespace BixEngine::Game
     class SpriteComponent : public Component
     {
     public:
+        BIX_GENERATED_BODY(SpriteComponent);
+        BIX_DECLARE_SCRIPT_CLASS(SpriteComponent, Component);
+
+        explicit SpriteComponent(Actor* owner);
         SpriteComponent(Actor* owner, SDL_Color color, float w, float h)
             : Component(owner), color_(color), width_(w), height_(h) {}
 

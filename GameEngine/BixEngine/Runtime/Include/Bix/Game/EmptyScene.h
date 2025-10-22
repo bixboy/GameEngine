@@ -9,6 +9,9 @@ namespace BixEngine::Game
     class EmptyScene : public Scene
     {
         public:
+            BIX_GENERATED_BODY(EmptyScene);
+            BIX_DECLARE_SCRIPT_CLASS(EmptyScene, Scene);
+
             EmptyScene();
 
             void HandleEvent(const SDL_Event& event) override;

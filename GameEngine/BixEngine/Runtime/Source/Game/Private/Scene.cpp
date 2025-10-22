@@ -12,6 +12,18 @@
 
 namespace BixEngine::Game
 {
+    namespace
+    {
+        constexpr const char* kSceneModule = "Game";
+    }
+
+    BIX_DEFINE_SCRIPT_CLASS(Scene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
+        .name = "Scene",
+        .moduleName = kSceneModule,
+        .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
+        .isAbstract = true,
+    }));
+
     Scene::Scene(String name) : name_(std::move(name)) {}
 
     void Scene::SetContext(SceneContext context) noexcept

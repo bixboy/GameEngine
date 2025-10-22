@@ -8,6 +8,17 @@
 
 namespace BixEngine::Game
 {
+    namespace
+    {
+        constexpr const char* kActorModuleName = "Game";
+    }
+
+    BIX_DEFINE_SCRIPT_CLASS(Actor, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
+        .name = "Actor",
+        .moduleName = kActorModuleName,
+        .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
+    }));
+
     Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform) {}

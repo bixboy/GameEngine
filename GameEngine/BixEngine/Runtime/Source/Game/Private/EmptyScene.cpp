@@ -6,9 +6,20 @@
 
 namespace BixEngine::Game
 {
+    namespace
+    {
+        constexpr const char* kEmptySceneModule = "Game";
+    }
+
+    BIX_DEFINE_SCRIPT_CLASS(EmptyScene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
+        .name = "EmptyScene",
+        .moduleName = kEmptySceneModule,
+        .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
+    }));
+
     EmptyScene::EmptyScene() : Scene("EmptyScene")
     {
-        
+
     }
 
     void EmptyScene::HandleEvent(const SDL_Event&)

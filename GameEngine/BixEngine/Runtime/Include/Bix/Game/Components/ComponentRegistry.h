@@ -6,12 +6,15 @@
 
 namespace BixEngine::Game
 {
+    namespace Scripting { struct ScriptClass; }
+
     class Actor;
 
     struct ComponentDescriptor
     {
         std::string name;
         std::function<void(Actor&)> createFunction;
+        const Scripting::ScriptClass* scriptClass{nullptr};
     };
 
     class ComponentRegistry

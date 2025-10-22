@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bix/Core/String.h"
+#include "Bix/Game/Scripting/ScriptReflection.h"
 
 namespace BixEngine::Graphics { class Renderer; }
 
@@ -8,9 +9,12 @@ namespace BixEngine::Game
 {
     class Actor;
 
-    class Component
+    class Component : public Scripting::ScriptBase
     {
     public:
+        BIX_GENERATED_BODY(Component);
+        BIX_DECLARE_SCRIPT_CLASS(Component, Scripting::ScriptBase);
+
         explicit Component(Actor* owner) : owner_(owner) {}
         virtual ~Component() = default;
         
