@@ -44,8 +44,19 @@ namespace BixEngine::Gui
         std::filesystem::path renameSecondaryTarget{};
         bool renameTargetIsScriptGroup{false};
         std::vector<String> existingScripts{};
-        int selectedParentScript{-1};
+        String selectedParentClass{};
+        String selectedParentInclude{};
+        String selectedParentDisplay{};
+        bool selectedParentIsBase{false};
     };
+
+    inline void ClearSelectedParent(PopupRequestState& requests)
+    {
+        requests.selectedParentClass.Clear();
+        requests.selectedParentInclude.Clear();
+        requests.selectedParentDisplay.Clear();
+        requests.selectedParentIsBase = false;
+    }
 
     inline constexpr ImVec4 kContentBackground{0.09f, 0.09f, 0.09f, 0.95f};
     inline constexpr ImVec4 kContentTreeBackground{0.13f, 0.13f, 0.13f, 0.95f};

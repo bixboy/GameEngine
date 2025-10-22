@@ -242,7 +242,7 @@ namespace BixEngine::Gui
                 requestPopups.scriptType = ScriptTemplateType::Actor;
                 requestPopups.scriptError.Clear();
                 requestPopups.createScript = true;
-                requestPopups.selectedParentScript = -1;
+                ClearSelectedParent(requestPopups);
             }
 
             if (ImGui::MenuItem("Create folder..."))
@@ -578,7 +578,7 @@ namespace BixEngine::Gui
                                 requestPopups.scriptError.Clear();
                                 requestPopups.scriptType = ScriptTemplateType::Actor;
                                 requestPopups.createScript = true;
-                                requestPopups.selectedParentScript = -1;
+                                ClearSelectedParent(requestPopups);
                             }},
                             {"Create folder...", [&, entryPath = entry.path]()
                             {

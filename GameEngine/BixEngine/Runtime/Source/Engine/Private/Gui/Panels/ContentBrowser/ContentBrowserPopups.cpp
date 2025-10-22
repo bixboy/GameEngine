@@ -6,6 +6,10 @@
 #include <string>
 #include <vector>
 #include <cstring>
+#include <unordered_map>
+#include <unordered_set>
+#include <sstream>
+#include <cctype>
 #include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
@@ -15,20 +19,6 @@ namespace BixEngine::Gui
     {
         constexpr const char* kScriptHeaderExtension = ".h";
         constexpr const char* kScriptSourceExtension = ".cpp";
-
-        const char* GetScriptTypeLabel(ScriptTemplateType type)
-        {
-            switch (type)
-            {
-            case ScriptTemplateType::Actor:
-                return "Actor Script";
-            case ScriptTemplateType::Component:
-                return "Component Script";
-            case ScriptTemplateType::Utility:
-            default:
-                return "Utility Script";
-            }
-        }
 
         void RemoveExtensionIfPresent(std::string& value, const char* extension)
         {
@@ -79,23 +69,340 @@ namespace BixEngine::Gui
 
         struct ParentScriptInfo
         {
+            std::string displayName{};
             std::string className{};
-            std::string includeDirective{};
+            std::string includePath{};
 
             [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
         };
 
-        ParentScriptInfo ResolveDefaultParent(const PopupRequestState& requests)
+        const std::vector<ParentScriptInfo>& GetBaseClassParents()
         {
-            switch (requests.scriptType)
+            static const std::vector<ParentScriptInfo> baseParents = {
+                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h"},
+                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h"},
+            };
+            return baseParents;
+        }
+
+        std::string TrimWhitespace(std::string value)
+        {
+            auto isSpace = [](unsigned char ch) { return std::isspace(ch) != 0; };
+            value.erase(value.begin(), std::find_if(value.begin(), value.end(), [&](unsigned char ch) { return !isSpace(ch); }));
+            value.erase(std::find_if(value.rbegin(), value.rend(), [&](unsigned char ch) { return !isSpace(ch); }).base(), value.end());
+            return value;
+        }
+
+        struct ScriptNode
+        {
+            std::string name{};
+            std::string parentName{};
+            std::string includePath{};
+            std::vector<ScriptNode> children{};
+        };
+
+        bool CaseInsensitiveLess(const std::string& lhs, const std::string& rhs)
+        {
+            auto toLower = [](unsigned char ch) { return static_cast<unsigned char>(std::tolower(ch)); };
+            return std::lexicographical_compare(lhs.begin(), lhs.end(), rhs.begin(), rhs.end(),
+                [&](unsigned char a, unsigned char b)
+                {
+                    return toLower(a) < toLower(b);
+                });
+        }
+
+        std::string BuildIncludePath(const std::filesystem::path& headerPath, const std::filesystem::path& scriptsDirectory, const std::filesystem::path& contentRoot)
+        {
+            std::error_code relativeError;
+            std::filesystem::path relativeScripts = std::filesystem::relative(headerPath, scriptsDirectory, relativeError);
+            if (!relativeError)
+                return relativeScripts.generic_string();
+
+            relativeError.clear();
+            std::filesystem::path relativeContent = std::filesystem::relative(headerPath, contentRoot, relativeError);
+            if (!relativeError)
+                return relativeContent.generic_string();
+
+            return headerPath.filename().generic_string();
+        }
+
+        void ParseClassDeclaration(const std::filesystem::path& headerPath, std::string& outClassName, std::string& outParentName)
+        {
+            std::ifstream file(headerPath);
+            if (!file.is_open())
+                return;
+
+            std::string line;
+            while (std::getline(file, line))
             {
-            case ScriptTemplateType::Actor:
-                return {"BixEngine::Game::Actor", "Bix/Game/Actor.h"};
-            case ScriptTemplateType::Component:
-                return {"BixEngine::Game::Component", "Bix/Game/Components/Component.h"};
-            default:
-                return {};
+                std::string sanitized = line;
+                const size_t commentPos = sanitized.find("//");
+                if (commentPos != std::string::npos)
+                    sanitized = sanitized.substr(0, commentPos);
+
+                sanitized = TrimWhitespace(std::move(sanitized));
+                if (sanitized.empty())
+                    continue;
+
+                const size_t classPos = sanitized.find("class");
+                if (classPos == std::string::npos)
+                    continue;
+
+                if (classPos > 0)
+                {
+                    const char prev = sanitized[classPos - 1];
+                    if (std::isalnum(static_cast<unsigned char>(prev)) || prev == '_')
+                        continue;
+                }
+
+                std::istringstream declarationStream(sanitized.substr(classPos + 5));
+                std::string token;
+                auto isSkippableToken = [](const std::string& value)
+                {
+                    if (value.empty())
+                        return true;
+                    if (value == "final" || value == "abstract")
+                        return true;
+                    if (value.find('(') != std::string::npos)
+                        return true;
+                    return std::all_of(value.begin(), value.end(), [](unsigned char ch)
+                    {
+                        return std::isupper(ch) || std::isdigit(ch) || ch == '_';
+                    });
+                };
+
+                while (declarationStream >> token)
+                {
+                    if (!isSkippableToken(token))
+                    {
+                        outClassName = token;
+                        break;
+                    }
+                }
+
+                const size_t colonPos = sanitized.find(':', classPos);
+                if (colonPos != std::string::npos)
+                {
+                    std::string inheritanceClause = sanitized.substr(colonPos + 1);
+                    const size_t publicPos = inheritanceClause.find("public");
+                    if (publicPos != std::string::npos)
+                    {
+                        size_t parentStart = publicPos + 6;
+                        while (parentStart < inheritanceClause.size() && std::isspace(static_cast<unsigned char>(inheritanceClause[parentStart])))
+                            ++parentStart;
+
+                        size_t parentEnd = parentStart;
+                        int templateDepth = 0;
+                        while (parentEnd < inheritanceClause.size())
+                        {
+                            const char ch = inheritanceClause[parentEnd];
+                            if (ch == '<')
+                            {
+                                ++templateDepth;
+                            }
+                            else if (ch == '>')
+                            {
+                                --templateDepth;
+                            }
+                            else if (templateDepth == 0)
+                            {
+                                if (ch == ',' || ch == '{')
+                                    break;
+                                if (std::isspace(static_cast<unsigned char>(ch)))
+                                    break;
+                            }
+
+                            ++parentEnd;
+                        }
+
+                        std::string parentName = TrimWhitespace(inheritanceClause.substr(parentStart, parentEnd - parentStart));
+                        if (!parentName.empty())
+                            outParentName = std::move(parentName);
+                    }
+                }
+
+                break;
             }
+        }
+
+        std::vector<ScriptNode> ParseScriptHierarchy(const std::filesystem::path& scriptsDirectory, const std::filesystem::path& contentRoot)
+        {
+            namespace fs = std::filesystem;
+
+            std::vector<ScriptNode> roots{};
+            std::error_code existsError;
+            if (!fs::exists(scriptsDirectory, existsError) || existsError)
+                return roots;
+
+            std::unordered_map<std::string, ScriptNode> nodes{};
+            nodes.reserve(32);
+
+            std::error_code iterationError;
+            fs::recursive_directory_iterator it(scriptsDirectory, fs::directory_options::skip_permission_denied, iterationError);
+            fs::recursive_directory_iterator end{};
+
+            for (; it != end; it.increment(iterationError))
+            {
+                if (iterationError)
+                {
+                    iterationError.clear();
+                    continue;
+                }
+
+                const fs::directory_entry& entry = *it;
+                if (!entry.is_regular_file())
+                    continue;
+
+                const fs::path& path = entry.path();
+                if (path.extension() != kScriptHeaderExtension)
+                    continue;
+
+                std::string className = path.stem().generic_string();
+                std::string parentName{};
+                ParseClassDeclaration(path, className, parentName);
+
+                ScriptNode node{};
+                node.name = className;
+                node.parentName = parentName;
+                node.includePath = BuildIncludePath(path, scriptsDirectory, contentRoot);
+
+                auto [existing, inserted] = nodes.emplace(node.name, node);
+                if (!inserted)
+                {
+                    if (!node.parentName.empty() && existing->second.parentName.empty())
+                        existing->second.parentName = node.parentName;
+                    if (!node.includePath.empty())
+                        existing->second.includePath = node.includePath;
+                }
+            }
+
+            if (nodes.empty())
+                return roots;
+
+            std::unordered_map<std::string, std::vector<std::string>> children{};
+            children.reserve(nodes.size());
+            for (const auto& [name, node] : nodes)
+            {
+                if (!node.parentName.empty())
+                    children[node.parentName].push_back(name);
+            }
+
+            for (auto& [_, childList] : children)
+                std::sort(childList.begin(), childList.end(), CaseInsensitiveLess);
+
+            auto buildTree = [&](const auto& self, const std::string& name, std::unordered_set<std::string>& visited) -> ScriptNode
+            {
+                ScriptNode result = nodes.at(name);
+
+                auto childIt = children.find(name);
+                if (childIt != children.end())
+                {
+                    for (const auto& childName : childIt->second)
+                    {
+                        if (visited.insert(childName).second)
+                            result.children.push_back(self(self, childName, visited));
+                    }
+                }
+
+                return result;
+            };
+
+            std::vector<std::string> rootNames{};
+            rootNames.reserve(nodes.size());
+            for (const auto& [name, node] : nodes)
+            {
+                if (node.parentName.empty() || nodes.find(node.parentName) == nodes.end())
+                    rootNames.push_back(name);
+            }
+
+            std::sort(rootNames.begin(), rootNames.end(), CaseInsensitiveLess);
+
+            std::unordered_set<std::string> visited{};
+            visited.reserve(nodes.size());
+
+            for (const auto& rootName : rootNames)
+            {
+                if (visited.insert(rootName).second)
+                    roots.push_back(buildTree(buildTree, rootName, visited));
+            }
+
+            for (const auto& [name, _] : nodes)
+            {
+                if (visited.insert(name).second)
+                    roots.push_back(buildTree(buildTree, name, visited));
+            }
+
+            auto sortChildren = [&](const auto& self, ScriptNode& node) -> void
+            {
+                std::sort(node.children.begin(), node.children.end(), [](const ScriptNode& lhs, const ScriptNode& rhs)
+                {
+                    return CaseInsensitiveLess(lhs.name, rhs.name);
+                });
+                for (auto& child : node.children)
+                    self(self, child);
+            };
+
+            for (auto& root : roots)
+                sortChildren(sortChildren, root);
+
+            std::sort(roots.begin(), roots.end(), [](const ScriptNode& lhs, const ScriptNode& rhs)
+            {
+                return CaseInsensitiveLess(lhs.name, rhs.name);
+            });
+
+            return roots;
+        }
+
+        ParentScriptInfo GetSelectedParentInfo(const PopupRequestState& requests)
+        {
+            ParentScriptInfo info{};
+            if (!requests.selectedParentClass.IsEmpty())
+            {
+                info.displayName = requests.selectedParentDisplay.View();
+                info.className = requests.selectedParentClass.View();
+                info.includePath = requests.selectedParentInclude.View();
+            }
+            return info;
+        }
+
+        void SetSelectedParent(PopupRequestState& requests, const ParentScriptInfo& info, bool isBaseParent)
+        {
+            requests.selectedParentClass = info.className;
+            requests.selectedParentInclude = info.includePath;
+            requests.selectedParentDisplay = info.displayName;
+            requests.selectedParentIsBase = isBaseParent;
+        }
+
+        void RenderScriptTree(const ScriptNode& node, PopupRequestState& requests)
+        {
+            const bool isLeaf = node.children.empty();
+            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
+            if (isLeaf)
+                flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+
+            const bool isSelected = !requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && node.name == requests.selectedParentClass.View();
+            if (isSelected)
+                flags |= ImGuiTreeNodeFlags_Selected;
+
+            const std::string& idSource = node.includePath.empty() ? node.name : node.includePath;
+            ImGui::PushID(idSource.c_str());
+            const bool open = ImGui::TreeNodeEx(node.name.c_str(), flags);
+            if (ImGui::IsItemClicked())
+            {
+                ParentScriptInfo info{};
+                info.displayName = node.name;
+                info.className = node.name;
+                info.includePath = node.includePath;
+                SetSelectedParent(requests, info, false);
+            }
+
+            if (!isLeaf && open)
+            {
+                for (const auto& child : node.children)
+                    RenderScriptTree(child, requests);
+                ImGui::TreePop();
+            }
+            ImGui::PopID();
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -114,8 +421,8 @@ namespace BixEngine::Gui
             const fs::path scriptsDirectory = state.root / "Scripts";
             RefreshExistingScripts(requests, scriptsDirectory);
 
-            if (requests.selectedParentScript >= static_cast<int>(requests.existingScripts.size()))
-                requests.selectedParentScript = -1;
+            const auto& baseParents = GetBaseClassParents();
+            const std::vector<ScriptNode> userScriptRoots = ParseScriptHierarchy(scriptsDirectory, state.root);
 
             ImGui::TextUnformatted("Create a new C++ script in the current directory.");
 
@@ -128,12 +435,6 @@ namespace BixEngine::Gui
 
             bool create = ImGui::InputText("##ScriptName", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue);
 
-            const char* scriptTypes[] = {"Actor Script", "Component Script", "Utility Script"};
-            int selectedType = static_cast<int>(requests.scriptType);
-            ImGui::SetNextItemWidth(200.0f);
-            if (ImGui::Combo("Script type", &selectedType, scriptTypes, IM_ARRAYSIZE(scriptTypes)))
-                requests.scriptType = static_cast<ScriptTemplateType>(selectedType);
-
             if (!requests.scriptError.IsEmpty())
             {
                 ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
@@ -141,35 +442,58 @@ namespace BixEngine::Gui
                 ImGui::PopStyleColor();
             }
 
+            ImGui::Spacing();
+            ImGui::Separator();
+
+            ImGui::TextDisabled("Parent (optional)");
+
+            const std::string parentPreview = requests.selectedParentDisplay.IsEmpty() ? std::string("None") : std::string(requests.selectedParentDisplay.View());
+            ImGui::Text("Selected: %s", parentPreview.c_str());
+            ImGui::SameLine();
+            if (ImGui::SmallButton("Clear"))
+                ClearSelectedParent(requests);
+
+            ImGui::Spacing();
+
+            if (ImGui::CollapsingHeader("Base Classes", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                // Engine-provided base classes live in their own section to mirror Unreal's popup.
+                for (const auto& baseParent : baseParents)
+                {
+                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
+                    if (requests.selectedParentIsBase && requests.selectedParentClass.View() == baseParent.className)
+                        flags |= ImGuiTreeNodeFlags_Selected;
+
+                    ImGui::TreeNodeEx(baseParent.displayName.c_str(), flags);
+                    if (ImGui::IsItemClicked())
+                    {
+                        ParentScriptInfo info = baseParent;
+                        SetSelectedParent(requests, info, true);
+                    }
+                }
+            }
+
+            if (ImGui::CollapsingHeader("User Scripts", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                // Discovered user scripts are rendered as a tree based on their inheritance hierarchy.
+                if (userScriptRoots.empty())
+                {
+                    ImGui::Indent();
+                    ImGui::TextDisabled("No user scripts detected.");
+                    ImGui::Unindent();
+                }
+                else
+                {
+                    for (const auto& root : userScriptRoots)
+                        RenderScriptTree(root, requests);
+                }
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+
             if (!requests.existingScripts.empty())
             {
-                ImGui::Spacing();
-                ImGui::Separator();
-                ImGui::TextDisabled("Parent script (optional)");
-                const char* parentPreview = requests.selectedParentScript >= 0 ? requests.existingScripts[requests.selectedParentScript].c_str() : "None";
-                ImGui::SetNextItemWidth(240.0f);
-                if (ImGui::BeginCombo("##ParentScriptSelection", parentPreview))
-                {
-                    const bool noneSelected = requests.selectedParentScript == -1;
-                    if (ImGui::Selectable("None", noneSelected))
-                        requests.selectedParentScript = -1;
-                    if (noneSelected)
-                        ImGui::SetItemDefaultFocus();
-
-                    for (int i = 0; i < static_cast<int>(requests.existingScripts.size()); ++i)
-                    {
-                        const bool isSelected = requests.selectedParentScript == i;
-                        if (ImGui::Selectable(requests.existingScripts[i].c_str(), isSelected))
-                            requests.selectedParentScript = i;
-                        if (isSelected)
-                            ImGui::SetItemDefaultFocus();
-                    }
-
-                    ImGui::EndCombo();
-                }
-
-                ImGui::Spacing();
-                ImGui::Separator();
                 ImGui::TextDisabled("Existing scripts in Content/Scripts:");
                 ImGui::Spacing();
                 ImGui::BeginChild("ExistingScriptsList", ImVec2(320.0f, 120.0f), true);
@@ -179,8 +503,6 @@ namespace BixEngine::Gui
             }
             else
             {
-                ImGui::Spacing();
-                ImGui::Separator();
                 ImGui::TextDisabled("No scripts found in Content/Scripts.");
             }
 
@@ -192,7 +514,7 @@ namespace BixEngine::Gui
             {
                 ImGui::CloseCurrentPopup();
                 requests.scriptError.Clear();
-                requests.selectedParentScript = -1;
+                ClearSelectedParent(requests);
             }
 
             if (create)
@@ -256,52 +578,54 @@ namespace BixEngine::Gui
                                     }
                                     else
                                     {
-                                        ParentScriptInfo parentInfo{};
-                                        if (requests.selectedParentScript >= 0 && requests.selectedParentScript < static_cast<int>(requests.existingScripts.size()))
-                                        {
-                                            parentInfo.className = std::string(requests.existingScripts[requests.selectedParentScript].View());
-                                            parentInfo.includeDirective = parentInfo.className + kScriptHeaderExtension;
-                                        }
-                                        else
-                                        {
-                                            parentInfo = ResolveDefaultParent(requests);
-                                        }
+                                        const ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
 
                                         headerFile << "#pragma once\n\n";
-                                        headerFile << "// Type: " << GetScriptTypeLabel(requests.scriptType) << '\n';
                                         headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
+
                                         if (parentInfo.IsValid())
-                                            headerFile << "#include \"" << parentInfo.includeDirective << "\"\n\n";
+                                        {
+                                            // Include directive is driven by the selected parent (base class or user script).
+                                            headerFile << "#include \"" << parentInfo.includePath << "\"\n\n";
+                                        }
+
                                         headerFile << "class " << baseName;
                                         if (parentInfo.IsValid())
                                             headerFile << " : public " << parentInfo.className;
+                                        
                                         headerFile << '\n';
                                         headerFile << "{\n";
                                         headerFile << "public:\n";
+                                        
                                         if (parentInfo.IsValid())
                                             headerFile << "    using Super = " << parentInfo.className << ";\n\n";
+                                        
                                         headerFile << "    " << baseName << "();\n";
                                         headerFile << "    void OnCreate();\n";
                                         headerFile << "    void OnUpdate(float deltaTime);\n";
-                                        headerFile << "};\n";
+                                        headerFile << "};\n\n";
 
                                         sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
                                         sourceFile << baseName << "::" << baseName << "() = default;\n\n";
                                         sourceFile << "void " << baseName << "::OnCreate()\n";
                                         sourceFile << "{\n";
+                                        
                                         if (parentInfo.IsValid())
                                             sourceFile << "    // Super::OnCreate();\n";
+                                        
                                         sourceFile << "}\n\n";
                                         sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
                                         sourceFile << "{\n";
+                                        
                                         if (parentInfo.IsValid())
                                             sourceFile << "    // Super::OnUpdate(deltaTime);\n";
-                                        sourceFile << "}\n";
+                                        
+                                        sourceFile << "}\n\n";
 
                                         selectedEntry = headerPath.generic_string();
                                         requests.scriptError.Clear();
-                                        requests.selectedParentScript = -1;
+                                        ClearSelectedParent(requests);
                                         ImGui::CloseCurrentPopup();
                                     }
                                 }
@@ -313,7 +637,6 @@ namespace BixEngine::Gui
 
             ImGui::EndPopup();
         }
-
         void RenderCreateFolderPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
         {
             namespace fs = std::filesystem;
