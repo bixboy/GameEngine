@@ -32,7 +32,15 @@ namespace BixEngine::Gui
                 value.erase(value.length() - extLength, extLength);
         }
 
-        struct ScriptNode;
+        struct ScriptNode
+        {
+            std::string name{};
+            std::string parentName{};
+            std::string includePath{};
+            bool inheritsActor{false};
+            bool inheritsComponent{false};
+            std::vector<ScriptNode> children{};
+        };
 
         struct ParentScriptInfo
         {
@@ -98,16 +106,6 @@ namespace BixEngine::Gui
             value.erase(std::find_if(value.rbegin(), value.rend(), [&](unsigned char ch) { return !isSpace(ch); }).base(), value.end());
             return value;
         }
-
-        struct ScriptNode
-        {
-            std::string name{};
-            std::string parentName{};
-            std::string includePath{};
-            bool inheritsActor{false};
-            bool inheritsComponent{false};
-            std::vector<ScriptNode> children{};
-        };
 
         bool CaseInsensitiveLess(const std::string& lhs, const std::string& rhs)
         {
