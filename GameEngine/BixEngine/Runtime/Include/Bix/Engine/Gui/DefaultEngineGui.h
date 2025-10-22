@@ -2,6 +2,8 @@
 
 #include <functional>
 #include <utility>
+#include <filesystem>
+#include <vector>
 
 namespace BixEngine
 {
@@ -25,6 +27,7 @@ namespace BixEngine::Gui
         std::function<void(Game::Actor*)> selectedActorSetter{};
         std::function<SDL_Texture*()> sceneRenderTextureProvider{};
         std::function<std::pair<int, int>()> sceneRenderTextureSizeProvider{};
+        std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
     };
 
     struct DefaultEngineGuiPanels

@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <vector>
 #include <cstring>
 #include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
@@ -421,7 +422,8 @@ namespace BixEngine::Gui
             if (!ImGui::BeginPopupModal("ContentBrowserRenameEntry", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
                 return;
 
-            const fs::path target = requests.renameTarget;
+            const bool renamingScriptGroup = requests.renameTargetIsScriptGroup;
+            const fs::path target = renamingScriptGroup && requests.renameTarget.empty() ? requests.renameSecondaryTarget : requests.renameTarget;
             if (!target.empty())
             {
                 fs::path relativePath = target.lexically_relative(state.root);
@@ -431,7 +433,7 @@ namespace BixEngine::Gui
                 if (label.IsEmpty() || label == ".")
                     label = target.filename().generic_string();
 
-                String message = "Rename: ";
+                String message = renamingScriptGroup ? String("Rename script: ") : String("Rename: ");
                 message += label;
                 ImGui::TextWrapped("%s", message.c_str());
             }
@@ -461,6 +463,8 @@ namespace BixEngine::Gui
                 ImGui::CloseCurrentPopup();
                 requests.renameError.Clear();
                 requests.renameTarget.clear();
+                requests.renameSecondaryTarget.clear();
+                requests.renameTargetIsScriptGroup = false;
             }
 
             if (rename)
@@ -475,9 +479,156 @@ namespace BixEngine::Gui
                 {
                     LogAndStoreError(requests.renameError, "Name cannot contain path separators.", false);
                 }
-                else if (requests.renameTarget.empty())
+                else if (!renamingScriptGroup && requests.renameTarget.empty())
                 {
                     LogAndStoreError(requests.renameError, "No entry selected for rename.", false);
+                }
+                else if (renamingScriptGroup)
+                {
+                    const fs::path headerOldPath = requests.renameTarget;
+                    const fs::path sourceOldPath = requests.renameSecondaryTarget;
+
+                    if (headerOldPath.empty() && sourceOldPath.empty())
+                    {
+                        LogAndStoreError(requests.renameError, "No entry selected for rename.", false);
+                    }
+                    else
+                    {
+                        fs::path parent = !headerOldPath.empty() ? headerOldPath.parent_path() : sourceOldPath.parent_path();
+                        if (parent.empty())
+                            parent = state.current;
+
+                        std::string newBaseName = std::string(newName.View());
+                        const auto stripExtensionIfNeeded = [&](const fs::path& path)
+                        {
+                            if (path.empty())
+                                return;
+
+                            const std::string extension = path.extension().string();
+                            if (extension.empty())
+                                return;
+
+                            if (newBaseName.length() >= extension.length() && newBaseName.compare(newBaseName.length() - extension.length(), extension.length(), extension) == 0)
+                                newBaseName.erase(newBaseName.length() - extension.length());
+                        };
+
+                        stripExtensionIfNeeded(headerOldPath);
+                        stripExtensionIfNeeded(sourceOldPath);
+
+                        if (newBaseName.empty())
+                        {
+                            LogAndStoreError(requests.renameError, "Name cannot be empty.", false);
+                        }
+                        else
+                        {
+                            const std::string currentBaseName = !headerOldPath.empty()
+                                ? headerOldPath.stem().generic_string()
+                                : (!sourceOldPath.empty() ? sourceOldPath.stem().generic_string() : std::string{});
+
+                            if (currentBaseName == newBaseName)
+                            {
+                                requests.renameError.Clear();
+                                requests.renameTargetIsScriptGroup = false;
+                                requests.renameSecondaryTarget.clear();
+                                ImGui::CloseCurrentPopup();
+                            }
+                            else
+                            {
+                                const auto makeNewPath = [&](const fs::path& oldPath)
+                                {
+                                    if (oldPath.empty())
+                                        return fs::path{};
+
+                                    std::string newFileName = newBaseName;
+                                    newFileName += oldPath.extension().string();
+                                    return parent / newFileName;
+                                };
+
+                                const fs::path newHeaderPath = makeNewPath(headerOldPath);
+                                const fs::path newSourcePath = makeNewPath(sourceOldPath);
+
+                            const auto hasConflict = [&](const fs::path& candidate)
+                            {
+                                if (candidate.empty())
+                                    return false;
+
+                                std::error_code existsError;
+                                const bool exists = fs::exists(candidate, existsError);
+                                if (existsError)
+                                {
+                                    String errorMessage = "Unable to verify entry during rename: ";
+                                    errorMessage += existsError.message();
+                                    LogAndStoreError(requests.renameError, std::move(errorMessage));
+                                    return true;
+                                }
+
+                                if (exists)
+                                {
+                                    LogAndStoreError(requests.renameError, "An entry with this name already exists.", false);
+                                    return true;
+                                }
+
+                                return false;
+                            };
+
+                            if (hasConflict(newHeaderPath) || hasConflict(newSourcePath))
+                            {
+                                // Conflict handled inside hasConflict.
+                            }
+                            else
+                            {
+                                std::vector<std::pair<fs::path, fs::path>> renamePairs{};
+                                if (!headerOldPath.empty())
+                                    renamePairs.emplace_back(headerOldPath, newHeaderPath);
+                                if (!sourceOldPath.empty())
+                                    renamePairs.emplace_back(sourceOldPath, newSourcePath);
+
+                                std::vector<std::pair<fs::path, fs::path>> completedRenames{};
+                                bool renameFailed = false;
+
+                                for (const auto& pair : renamePairs)
+                                {
+                                    std::error_code renameError;
+                                    fs::rename(pair.first, pair.second, renameError);
+                                    if (renameError)
+                                    {
+                                        String errorMessage = "Unable to rename entry: ";
+                                        errorMessage += renameError.message();
+                                        LogAndStoreError(requests.renameError, std::move(errorMessage));
+                                        renameFailed = true;
+                                        break;
+                                    }
+
+                                    completedRenames.push_back(pair);
+                                }
+
+                                if (renameFailed)
+                                {
+                                    for (auto it = completedRenames.rbegin(); it != completedRenames.rend(); ++it)
+                                    {
+                                        std::error_code revertError;
+                                        fs::rename(it->second, it->first, revertError);
+                                        if (revertError)
+                                        {
+                                            String revertMessage = "Unable to restore entry after rename failure: ";
+                                            revertMessage += revertError.message();
+                                            LOG_ERROR(revertMessage);
+                                        }
+                                    }
+                                }
+                                else
+                                {
+                                    fs::path selectionPath = parent / newBaseName;
+                                    selectedEntry = selectionPath.generic_string();
+                                    requests.renameError.Clear();
+                                    requests.renameTarget = newHeaderPath;
+                                    requests.renameSecondaryTarget = newSourcePath;
+                                    requests.renameTargetIsScriptGroup = false;
+                                    ImGui::CloseCurrentPopup();
+                                }
+                            }
+                        }
+                    }
                 }
                 else
                 {
