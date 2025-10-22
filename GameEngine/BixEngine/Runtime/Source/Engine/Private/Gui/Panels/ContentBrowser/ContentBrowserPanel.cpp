@@ -1,5 +1,6 @@
 #include "Bix/Engine/Gui/GuiManager.h"
 #include "Bix/Engine/Gui/GuiPanel.h"
+#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include <filesystem>
 #include "Bix/Engine/Gui/DefaultEngineGui.h"
@@ -32,11 +33,9 @@ namespace BixEngine::Gui
 
             if (!EnsureContentBrowserInitialized(state))
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
-                ImGui::TextWrapped("%s", state.error.c_str());
-                ImGui::PopStyleColor();
+                Utils::DrawErrorMessage(state.error);
                 ImGui::Spacing();
-                ImGui::TextDisabled("The Content Browser requires access to the Content directory.");
+                Utils::DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
                 return;
             }
 

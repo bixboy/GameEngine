@@ -1,5 +1,6 @@
 #include "Bix/Core/Logger.h"
 #include "Bix/Engine/Gui/Widgets/ActionTooltip.h"
+#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui_internal.h"
 #include <algorithm>
 #include <filesystem>
@@ -30,6 +31,8 @@ namespace BixEngine::Gui
                 clamp(color.z + delta),
                 clamp(color.w));
         }
+
+        namespace Utils = BixEngine::Gui::Utils;
 
         struct ScriptEntryInfo
         {
@@ -135,14 +138,13 @@ namespace BixEngine::Gui
             ImGui::EndDisabled();
 
             ImGui::SameLine();
-            ImGui::TextDisabled("%s", atRoot ? "Content" : relativeString.c_str());
+            Utils::DrawEmptyStateMessage(atRoot ? "Content" : relativeString.c_str());
 
             ImGui::SameLine();
-            ImGui::SetNextItemWidth(220.0f);
-            ImGui::InputTextWithHint("##ContentSearch", "Search content...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+            Utils::SearchInput("ContentSearch", searchBuffer, IM_ARRAYSIZE(searchBuffer), "Search content...", 220.0f);
 
             ImGui::Spacing();
-            ImGui::TextDisabled("Right click to create new scripts or folders.");
+            Utils::DrawEmptyStateMessage("Right click to create new scripts or folders.");
         }
 
         ImGui::EndChild();
@@ -191,7 +193,7 @@ namespace BixEngine::Gui
 
                     if (childError)
                     {
-                        ImGui::TextDisabled("Unable to open directory.");
+                        Utils::DrawEmptyStateMessage("Unable to open directory.");
                     }
                     else
                     {
@@ -207,7 +209,7 @@ namespace BixEngine::Gui
                             const int nextDepth = depth + 1;
                             if (nextDepth > 64)
                             {
-                                ImGui::TextDisabled("...");
+                                Utils::DrawEmptyStateMessage("...");
                                 break;
                             }
 
@@ -266,7 +268,7 @@ namespace BixEngine::Gui
             const String errorText = iterationError.message();
             String displayMessage{};
             LogAndStoreError(displayMessage, String("Failed to enumerate content: ") + errorText);
-            ImGui::TextDisabled("%s", displayMessage.c_str());
+            Utils::DrawEmptyStateMessage(displayMessage.c_str());
             ImGui::EndChild();
             return;
         }
@@ -393,7 +395,7 @@ namespace BixEngine::Gui
 
                 if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
                 {
-                    ImGui::TextDisabled("Actions");
+                    Utils::DrawEmptyStateMessage("Actions");
                     ImGui::Separator();
 
                     if (isDirectory)
@@ -512,7 +514,7 @@ namespace BixEngine::Gui
                     }
 
                     ImGui::Separator();
-                    ImGui::TextDisabled("Utilities");
+                    Utils::DrawEmptyStateMessage("Utilities");
                     ImGui::Separator();
 
                     const fs::path explorerPath = isScript
@@ -648,7 +650,7 @@ namespace BixEngine::Gui
         }
         else
         {
-            ImGui::TextDisabled("Nothing to show.");
+            Utils::DrawEmptyStateMessage("Nothing to show.");
         }
 
         ImGui::EndChild();
