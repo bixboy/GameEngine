@@ -300,7 +300,6 @@ namespace BixEngine::Gui
                 Utils::DrawEmptyStateMessage("Actor has no components.");
                 return;
             }
-
             ImGui::PushID("ActorComponents");
             Game::Component* componentToRemove = nullptr;
 

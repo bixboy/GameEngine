@@ -302,12 +302,18 @@ namespace BixEngine::Gui::Utils
     {
         ImGuiTreeNodeFlags flags = additionalFlags;
         if (defaultOpen)
-        {
             flags |= ImGuiTreeNodeFlags_DefaultOpen;
-        }
 
         const char* headerLabel = label ? label : "";
-        return ImGui::CollapsingHeader(headerLabel, flags);
+        const bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+        if (!open)
+        {
+            ImGui::Dummy(ImVec2(0, 0));
+            return false;
+        }
+
+        return true;
     }
 
     bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen, ImGuiTreeNodeFlags additionalFlags)
@@ -329,12 +335,10 @@ namespace BixEngine::Gui::Utils
 
         if (inserted)
         {
-            // Respect the caller-provided default state on the first frame the section appears.
             ImGui::SetNextItemOpen(defaultOpen, ImGuiCond_Once);
         }
         else
         {
-            // Restore the previously stored open state for subsequent frames.
             ImGui::SetNextItemOpen(isOpen, ImGuiCond_Always);
         }
 
@@ -343,6 +347,7 @@ namespace BixEngine::Gui::Utils
 
         if (!visible)
         {
+            ImGui::Dummy(ImVec2(0, 0));
             return false;
         }
 
@@ -354,12 +359,11 @@ namespace BixEngine::Gui::Utils
     void EndPersistentSection()
     {
         if (g_persistentSectionStack.empty())
-        {
             return;
-        }
 
         ImGui::PopID();
         g_persistentSectionStack.pop_back();
+        ImGui::Dummy(ImVec2(0, 0));
     }
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width, ImGuiInputTextFlags flags)
