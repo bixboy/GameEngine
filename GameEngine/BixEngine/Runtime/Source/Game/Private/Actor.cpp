@@ -19,10 +19,25 @@ namespace BixEngine::Game
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
     }));
 
+    BIX_IMPLEMENT_CLASS(Actor);
+
     Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform) {}
     
+    void Actor::OnPostDeserialize()
+    {
+        for (auto& component : components_)
+        {
+            if (component)
+            {
+                component->SetOuter(this);
+                component->SetOwner(this);
+            }
+        }
+        has_begun_play_ = false;
+    }
+
     void Actor::BeginPlay()
     {
         for (auto& c : components_)
@@ -59,6 +74,11 @@ namespace BixEngine::Game
 
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
+        if (!component)
+            return;
+
+        component->SetOuter(this);
+        component->SetOwner(this);
         components_.push_back(std::move(component));
     }
 

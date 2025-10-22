@@ -1,6 +1,5 @@
 #pragma once
 #include <SDL3/SDL.h>
-#include <iosfwd>
 #include <memory>
 #include "Bix/Game/Actor.h"
 
@@ -18,6 +17,7 @@ namespace BixEngine
             public:
                 BIX_GENERATED_BODY(Player);
                 BIX_DECLARE_SCRIPT_CLASS(Player, Actor);
+                BIX_CLASS(Player, Actor);
 
                 Player();
                 Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
@@ -33,9 +33,7 @@ namespace BixEngine
                 [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
 
             private:
-                void SerializeBinaryImpl(std::ostream& stream) const override;
-                void DeserializeBinaryImpl(std::istream& stream) override;
-
+                void OnPostDeserialize() override;
                 void OnComponentRemoved(const Component& component) override;
 
                 void ApplyMovement(float deltaTime);
@@ -43,9 +41,9 @@ namespace BixEngine
                 void RefreshSpriteComponent();
 
                 Math::Vector2 pendingInput_{};
-                float moveSpeed_{200.0f};
-                Math::Vector3 size_{Math::Vector3(32.0f, 32.0f, 1.0f)};
-                SDL_Color color_{255, 255, 255, 255};
+                BIX_PROPERTY(float, moveSpeed_, = 200.0f);
+                BIX_PROPERTY(Math::Vector3, size_, = Math::Vector3(32.0f, 32.0f, 1.0f));
+                BIX_PROPERTY(SDL_Color, color_, = SDL_Color{255, 255, 255, 255});
                 SpriteComponent* spriteComponent_{nullptr};
         };
     }

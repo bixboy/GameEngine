@@ -11,6 +11,7 @@ namespace BixEngine::Game
         public:
             BIX_GENERATED_BODY(EmptyScene);
             BIX_DECLARE_SCRIPT_CLASS(EmptyScene, Scene);
+            BIX_CLASS(EmptyScene, Scene);
 
             EmptyScene();
 

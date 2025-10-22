@@ -5,7 +5,6 @@
 
 #include "Bix/Core/Timer.h"
 #include "Bix/Core/Window.h"
-#include "Bix/Game/SceneSerializer.h"
 #include "Bix/Graphics/Renderer.h"
 #include "Bix/Input/Input.h"
 #include "Bix/Engine/Gui/GuiManager.h"
@@ -24,7 +23,9 @@ namespace BixEngine::Game
         .isAbstract = true,
     }));
 
-    Scene::Scene(String name) : name_(std::move(name)) {}
+    BIX_IMPLEMENT_CLASS(Scene);
+
+    Scene::Scene(String name) : Object(std::move(name)) {}
 
     void Scene::SetContext(SceneContext context) noexcept
     {
@@ -33,8 +34,10 @@ namespace BixEngine::Game
 
     void Scene::AddActor(std::unique_ptr<Actor> actor)
     {
-        if (actor)
-            SceneSerializer::EnsureActorFactory(*actor);
+        if (!actor)
+            return;
+
+        actor->SetOuter(this);
         actors_.push_back(std::move(actor));
     }
 
@@ -45,12 +48,12 @@ namespace BixEngine::Game
 
     void Scene::Rename(String name)
     {
-        name_ = std::move(name);
+        Object::SetName(std::move(name));
     }
 
     void Scene::SetName(String name)
     {
-        name_ = std::move(name);
+        Object::SetName(std::move(name));
     }
 
     Input::InputManager& Scene::GetInputManager() const

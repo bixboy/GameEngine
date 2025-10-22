@@ -18,6 +18,8 @@ namespace BixEngine::Game
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Component,
     }));
 
+    BIX_IMPLEMENT_CLASS(SpriteComponent);
+
     SpriteComponent::SpriteComponent(Actor* owner)
         : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight)
     {

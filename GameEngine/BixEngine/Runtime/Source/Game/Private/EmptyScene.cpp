@@ -17,6 +17,8 @@ namespace BixEngine::Game
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
     }));
 
+    BIX_IMPLEMENT_CLASS(EmptyScene);
+
     EmptyScene::EmptyScene() : Scene("EmptyScene")
     {
 

@@ -1,9 +1,6 @@
 #include "Bix/Game/Test/Player.h"
 
-#include <istream>
 #include <memory>
-#include <ostream>
-#include <stdexcept>
 
 #include "Bix/Game/Components/SpriteComponent.h"
 #include "Bix/Input/InputManager.h"
@@ -21,6 +18,8 @@ namespace BixEngine::Game
         .moduleName = kPlayerModule,
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Actor,
     }));
+
+    BIX_IMPLEMENT_CLASS(Player);
 
     Player::Player() : Actor("Player")
     {
@@ -52,8 +51,16 @@ namespace BixEngine::Game
         inputManager.UnbindAxis("MoveRight", SDLK_W);
     }
 
+    void Player::OnPostDeserialize()
+    {
+        Actor::OnPostDeserialize();
+        RefreshSpriteComponent();
+        SetScale(size_);
+    }
+
     void Player::Update(float deltaTime)
     {
+        RefreshSpriteComponent();
         ApplyMovement(deltaTime);
     }
 
@@ -79,28 +86,6 @@ namespace BixEngine::Game
         SetPosition(GetPosition() + movement);
     }
 
-    void Player::SerializeBinaryImpl(std::ostream& stream) const
-    {
-        WritePrimitive(stream, moveSpeed_);
-        stream.write(reinterpret_cast<const char*>(&color_), sizeof(color_));
-        WritePrimitive(stream, size_.x);
-        WritePrimitive(stream, size_.y);
-        WritePrimitive(stream, size_.z);
-    }
-
-    void Player::DeserializeBinaryImpl(std::istream& stream)
-    {
-        ReadPrimitive(stream, moveSpeed_);
-        stream.read(reinterpret_cast<char*>(&color_), sizeof(color_));
-        if (!stream)
-            throw std::runtime_error("Failed to read player color from stream.");
-        ReadPrimitive(stream, size_.x);
-        ReadPrimitive(stream, size_.y);
-        ReadPrimitive(stream, size_.z);
-
-        RefreshSpriteComponent();
-        SetScale(size_);
-    }
 
     void Player::OnComponentRemoved(const Component& component)
     {
@@ -130,6 +115,7 @@ namespace BixEngine::Game
 
         spriteComponent_->SetColor(color_);
         spriteComponent_->SetDimensions(size_.x, size_.y);
+        SetScale(size_);
     }
 }
 

@@ -2,11 +2,6 @@
 
 namespace BixEngine::Game
 {
-    BIX_DEFINE_SCRIPT_CLASS(Component, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
-        .name = "Component",
-        .moduleName = "Game",
-        .kind = ::BixEngine::Game::Scripting::ScriptKind::Component,
-        .isAbstract = true,
-    }));
+    BIX_IMPLEMENT_CLASS(Component);
 }
 

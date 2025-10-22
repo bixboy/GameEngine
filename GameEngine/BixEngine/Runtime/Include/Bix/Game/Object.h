@@ -1,24 +1,25 @@
 #pragma once
 
-#include <istream>
-#include <ostream>
-#include "Bix/Math/Math.h"
 #include "Bix/Core/String.h"
+#include "Bix/Engine/SaveSystem/BixReflection.h"
+#include "Bix/Math/Math.h"
 
 namespace BixEngine::Game
 {
-    class Object
+    class Object : public Engine::SaveSystem::BixObject
     {
     public:
+        BIX_CLASS(Object, ::BixEngine::Engine::SaveSystem::BixObject);
+
         Object();
         explicit Object(String name);
         Object(String name, const Math::Transform& transform);
-        virtual ~Object() = default;
+        ~Object() override = default;
 
         [[nodiscard]] virtual String GetTypeName() const noexcept;
 
-        [[nodiscard]] const String& GetUUID() const noexcept { return uuid_; }
-        void SetUUID(String uuid);
+        [[nodiscard]] String GetUUID() const { return GetGuid().ToString(); }
+        void SetUUID(const String& uuid);
 
         [[nodiscard]] const String& GetName() const noexcept { return name_; }
         void SetName(String name);
@@ -36,36 +37,12 @@ namespace BixEngine::Game
         [[nodiscard]] const Math::Vector3& GetScale() const noexcept { return transform_.scale; }
         void SetScale(const Math::Vector3& scale) noexcept { transform_.scale = scale; }
 
-        virtual void SerializeBinary(std::ostream& stream) const;
-        virtual void DeserializeBinary(std::istream& stream);
-
     protected:
-        virtual void SerializeBinaryImpl(std::ostream&) const {}
-        virtual void DeserializeBinaryImpl(std::istream&) {}
-
-        template<typename T>
-        static void WritePrimitive(std::ostream& stream, const T& value)
-        {
-            stream.write(reinterpret_cast<const char*>(&value), sizeof(T));
-        }
-
-        template<typename T>
-        static void ReadPrimitive(std::istream& stream, T& value)
-        {
-            stream.read(reinterpret_cast<char*>(&value), sizeof(T));
-        }
-
-        static void WriteString(std::ostream& stream, const String& value);
-        static String ReadString(std::istream& stream);
+        static void RegisterProperties(::BixEngine::Engine::SaveSystem::BixClass& cls);
 
     private:
-        static String GenerateUUID();
-
-        void SerializeTransform(std::ostream& stream) const;
-        void DeserializeTransform(std::istream& stream);
-
-        String uuid_;
-        String name_;
-        Math::Transform transform_{};
+        BIX_PROPERTY(String, name_);
+        BIX_PROPERTY(Math::Transform, transform_, {});
     };
 }
+

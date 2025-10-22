@@ -3,6 +3,7 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 #include "Bix/Game/Actor.h"
+#include "Bix/Game/Object.h"
 #include "Bix/Input/InputManager.h"
 #include "Bix/Core/String.h"
 
@@ -24,11 +25,12 @@ namespace BixEngine
             Gui::GuiManager* guiManager{nullptr};
         };
 
-        class Scene : public Scripting::ScriptBase
+        class Scene : public Object, public Scripting::ScriptBase
         {
             public:
                 BIX_GENERATED_BODY(Scene);
                 BIX_DECLARE_SCRIPT_CLASS(Scene, Scripting::ScriptBase);
+                BIX_CLASS(Scene, Object);
 
                 explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;
@@ -50,20 +52,20 @@ namespace BixEngine
 
                 void Rename(String name);
 
-                [[nodiscard]] const String& Name() const noexcept { return name_; }
+                [[nodiscard]] const String& Name() const noexcept { return GetName(); }
 
             protected:
                 void SetName(String name);
-            
+
                 [[nodiscard]] Input::InputManager& GetInputManager() const;
                 [[nodiscard]] bool HasInputManager() const noexcept { return context_.inputManager != nullptr; }
-            
+
                 [[nodiscard]] Graphics::Renderer& GetRenderer() const;
                 [[nodiscard]] bool HasRenderer() const noexcept { return context_.renderer != nullptr; }
-            
+
                 [[nodiscard]] Core::Window& GetWindow() const;
                 [[nodiscard]] bool HasWindow() const noexcept { return context_.window != nullptr; }
-            
+
                 [[nodiscard]] Core::Timer& GetTimer() const;
                 [[nodiscard]] bool HasTimer() const noexcept { return context_.timer != nullptr; }
 
@@ -71,10 +73,10 @@ namespace BixEngine
                 [[nodiscard]] bool HasGuiManager() const noexcept { return context_.guiManager != nullptr; }
 
             private:
-                String name_;
                 SceneContext context_{};
 
-                std::vector<std::unique_ptr<Actor>> actors_;
+                BIX_PROPERTY(std::vector<std::unique_ptr<Actor>>, actors_);
         };
     }
 }
+

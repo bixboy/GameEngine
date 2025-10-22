@@ -11,17 +11,18 @@ namespace BixEngine::Graphics { class Renderer; }
 namespace BixEngine::Game
 {
     class Component;
-    
+
     class Actor : public Object, public Scripting::ScriptBase
     {
         public:
             BIX_GENERATED_BODY(Actor);
             BIX_DECLARE_SCRIPT_CLASS(Actor, Scripting::ScriptBase);
+            BIX_CLASS(Actor, Object);
 
             explicit Actor(const Math::Transform& transform = Math::Transform());
 
             Actor(String name, const Math::Transform& transform = Math::Transform());
-        
+
             virtual void BeginPlay();
             virtual void Update(float deltaTime);
             virtual void Render(Graphics::Renderer& renderer) const;
@@ -52,12 +53,14 @@ namespace BixEngine::Game
             bool RemoveComponent(const Component* component);
 
         protected:
+            void OnPostDeserialize() override;
             virtual void OnComponentRemoved(const Component& /*component*/) {}
 
         private:
-        std::vector<std::unique_ptr<Component>> components_;
+            BIX_PROPERTY(std::vector<std::unique_ptr<Component>>, components_);
 
-        bool has_begun_play_{false};
-        bool active_{true};
+            bool has_begun_play_{false};
+            BIX_PROPERTY(bool, active_, = true);
     };
 }
+

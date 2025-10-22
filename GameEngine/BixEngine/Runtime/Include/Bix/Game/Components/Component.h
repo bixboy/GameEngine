@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bix/Core/String.h"
+#include "Bix/Game/Object.h"
 #include "Bix/Game/Scripting/ScriptReflection.h"
 
 namespace BixEngine::Graphics { class Renderer; }
@@ -9,26 +10,31 @@ namespace BixEngine::Game
 {
     class Actor;
 
-    class Component : public Scripting::ScriptBase
+    class Component : public Object, public Scripting::ScriptBase
     {
     public:
         BIX_GENERATED_BODY(Component);
         BIX_DECLARE_SCRIPT_CLASS(Component, Scripting::ScriptBase);
+        BIX_CLASS(Component, Object);
 
-        explicit Component(Actor* owner) : owner_(owner) {}
+        Component() : Object("Component") {}
+        explicit Component(Actor* owner) : Object("Component"), owner_(owner) {}
         virtual ~Component() = default;
-        
+
         virtual void BeginPlay() {}
         virtual void Update(float /*deltaTime*/) {}
         virtual void Render(Graphics::Renderer& /*renderer*/) const {}
 
-        [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
+        [[nodiscard]] String GetTypeName() const noexcept override { return "Component"; }
 
         /// Draws the component specific inspector user interface. Override in
         /// derived components to expose editable properties inside the actor
         /// inspector. The default implementation intentionally does nothing so
         /// that callers can detect the absence of custom UI.
         virtual void DrawInspectorUI() {}
+
+        void SetOwner(Actor* owner) noexcept { owner_ = owner; }
+        [[nodiscard]] Actor* GetOwner() const noexcept { return owner_; }
 
     protected:
         Actor* owner_{nullptr};
@@ -46,3 +52,4 @@ namespace BixEngine::Game
         }; \
         static BixAutoRegister_##ClassType s_AutoReg_##ClassType; \
     }
+
