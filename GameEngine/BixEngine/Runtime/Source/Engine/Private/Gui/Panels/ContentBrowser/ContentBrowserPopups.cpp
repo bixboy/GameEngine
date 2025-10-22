@@ -377,8 +377,27 @@ namespace BixEngine::Gui
             const fs::path scriptsDirectory = state.root / "Scripts";
             const auto& baseParents = GetBaseClassParents();
             const std::vector<ScriptNode> userScriptRoots = ParseScriptHierarchy(scriptsDirectory, state.root);
+            std::unordered_map<std::string, ParentScriptInfo> userScriptInfo{};
+            const std::vector<Utils::TreeNodeData> userScriptTree = BuildGuiTreeNodes(userScriptRoots, userScriptInfo);
 
             Utils::DrawDescriptionText("Create a new C++ script in the current directory.");
+            ImGui::Spacing();
+
+            Utils::DrawSeparatorText("Script details");
+
+            fs::path relativeLocation = state.current.lexically_relative(state.root);
+            std::string relativeLocationString = relativeLocation.generic_string();
+            if (relativeLocationString == ".")
+                relativeLocationString.clear();
+
+            std::string locationDisplay = "Content";
+            if (!relativeLocationString.empty())
+            {
+                locationDisplay += '/';
+                locationDisplay += relativeLocationString;
+            }
+
+            Utils::DrawLabelValue("Location", locationDisplay, "Content");
 
             const bool shouldAutofocusName = ImGui::IsWindowAppearing();
             bool create = Utils::InputTextWithLabel("Script name (.h / .cpp)", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocusName);
@@ -388,61 +407,122 @@ namespace BixEngine::Gui
                 Utils::DrawErrorMessage(std::string(requests.scriptError.View()));
             }
 
-            Utils::DrawSeparatorText("Parent (optional)");
+            String trimmedInput = TrimCopy(String(requests.scriptName));
+            std::string baseNamePreview = trimmedInput.IsEmpty() ? std::string{} : std::string(trimmedInput.View());
+            RemoveExtensionIfPresent(baseNamePreview, kScriptHeaderExtension);
+            RemoveExtensionIfPresent(baseNamePreview, kScriptSourceExtension);
 
-            const std::string parentPreview = requests.selectedParentDisplay.IsEmpty() ? std::string("None") : std::string(requests.selectedParentDisplay.View());
+            ImGui::Spacing();
+            Utils::DrawSeparatorText("Parent (optional)");
+            ImGui::TextDisabled("Pick an inheritance target or leave empty for a standalone script.");
+
+            const float parentListHeight = ImGui::GetTextLineHeightWithSpacing() * 7.0f;
+            if (ImGui::BeginTable("ParentSelectionTable", 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_RowBg | ImGuiTableFlags_BordersOuter))
+            {
+                ImGui::TableSetupColumn("Base classes");
+                ImGui::TableSetupColumn("Existing scripts");
+                ImGui::TableHeadersRow();
+
+                ImGui::TableNextRow();
+                ImGui::TableSetColumnIndex(0);
+                if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, parentListHeight), true))
+                {
+                    if (baseParents.empty())
+                    {
+                        ImGui::TextDisabled("No base classes available.");
+                    }
+                    else
+                    {
+                        for (size_t baseIndex = 0; baseIndex < baseParents.size(); ++baseIndex)
+                        {
+                            ImGui::PushID(static_cast<int>(baseIndex));
+                            const auto& baseParent = baseParents[baseIndex];
+                            const bool isSelectedBase = requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && requests.selectedParentClass.View() == baseParent.className;
+                            if (ImGui::Selectable(baseParent.displayName.c_str(), isSelectedBase))
+                            {
+                                SetSelectedParent(requests, baseParent, true);
+                            }
+                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+                            {
+                                ImGui::SetTooltip("%s", baseParent.className.c_str());
+                            }
+                            ImGui::PopID();
+                        }
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::TableSetColumnIndex(1);
+                if (ImGui::BeginChild("UserScriptList", ImVec2(0.0f, parentListHeight), true, ImGuiWindowFlags_HorizontalScrollbar))
+                {
+                    std::string selectedScript = (!requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty()) ? std::string(requests.selectedParentClass.View()) : std::string{};
+                    const std::string previousSelection = selectedScript;
+                    Utils::DrawScriptHierarchyTree(userScriptTree, selectedScript, "No user scripts detected.");
+                    if (selectedScript != previousSelection)
+                    {
+                        const auto infoIt = userScriptInfo.find(selectedScript);
+                        if (infoIt != userScriptInfo.end())
+                        {
+                            SetSelectedParent(requests, infoIt->second, false);
+                        }
+                    }
+                }
+                ImGui::EndChild();
+
+                ImGui::EndTable();
+            }
+
+            ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
+
+            ImGui::Spacing();
+            const std::string parentPreview = parentInfo.IsValid() ? parentInfo.displayName : std::string("None");
             Utils::DrawLabelValue("Selected", parentPreview, "None");
             ImGui::SameLine();
             if (Utils::IconButton("x", "Clear parent selection"))
             {
                 ClearSelectedParent(requests);
+                parentInfo = ParentScriptInfo{};
             }
 
-            const float baseListHeight = ImGui::GetTextLineHeightWithSpacing() * 4.0f;
-
-            if (Utils::BeginCollapsibleSection("Base Classes"))
+            if (parentInfo.IsValid())
             {
-                std::vector<std::string> baseItems{};
-                baseItems.reserve(baseParents.size());
-                for (const auto& baseParent : baseParents)
-                {
-                    baseItems.push_back(baseParent.displayName);
-                }
-
-                std::string baseSelected = requests.selectedParentIsBase ? std::string(requests.selectedParentDisplay.View()) : std::string{};
-                std::string baseSelection = baseSelected;
-                Utils::DrawScrollableList(baseItems, baseListHeight, baseSelected, baseSelection);
-                if (baseSelection != baseSelected)
-                {
-                    const auto infoIt = std::find_if(baseParents.begin(), baseParents.end(), [&](const ParentScriptInfo& info)
-                    {
-                        return info.displayName == baseSelection;
-                    });
-                    if (infoIt != baseParents.end())
-                    {
-                        SetSelectedParent(requests, *infoIt, true);
-                    }
-                }
+                ImGui::TextDisabled("Class: %s", parentInfo.className.c_str());
+                if (!parentInfo.includePath.empty())
+                    ImGui::TextDisabled("Include: %s", parentInfo.includePath.c_str());
             }
-
-            std::unordered_map<std::string, ParentScriptInfo> userScriptInfo{};
-            const std::vector<Utils::TreeNodeData> userScriptTree = BuildGuiTreeNodes(userScriptRoots, userScriptInfo);
-
-            if (Utils::BeginCollapsibleSection("User Scripts"))
+            else
             {
-                std::string selectedScript = (!requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty()) ? std::string(requests.selectedParentClass.View()) : std::string{};
-                const std::string previousSelection = selectedScript;
-                Utils::DrawScriptHierarchyTree(userScriptTree, selectedScript, "No user scripts detected.");
-                if (selectedScript != previousSelection)
+                ImGui::TextDisabled("This script will not inherit from another class.");
+            }
+
+            ImGui::Spacing();
+            Utils::DrawSeparatorText("Preview");
+            if (baseNamePreview.empty())
+            {
+                ImGui::TextDisabled("Enter a script name to preview the generated files.");
+            }
+            else
+            {
+                std::string relativeDirectory = relativeLocationString;
+                if (!relativeDirectory.empty() && relativeDirectory.back() != '/')
+                    relativeDirectory += '/';
+
+                const std::string headerPreview = relativeDirectory + baseNamePreview + kScriptHeaderExtension;
+                const std::string sourcePreview = relativeDirectory + baseNamePreview + kScriptSourceExtension;
+
+                ImGui::BulletText("Content/%s", headerPreview.c_str());
+                ImGui::BulletText("Content/%s", sourcePreview.c_str());
+                if (parentInfo.IsValid())
                 {
-                    const auto infoIt = userScriptInfo.find(selectedScript);
-                    if (infoIt != userScriptInfo.end())
-                    {
-                        SetSelectedParent(requests, infoIt->second, false);
-                    }
+                    ImGui::BulletText("Inherits from %s", parentInfo.className.c_str());
+                }
+                else
+                {
+                    ImGui::BulletText("Standalone class");
                 }
             }
 
+            ImGui::Spacing();
             const bool confirmPressed = Utils::DrawConfirmButtons("Create", "Cancel",
                 []() {},
                 [&]()
