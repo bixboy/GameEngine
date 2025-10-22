@@ -325,21 +325,30 @@ namespace BixEngine::Gui::Utils
         key.append(label);
 
         auto [it, inserted] = g_persistentSections.emplace(key, defaultOpen);
+        bool& isOpen = it->second;
+
         if (inserted)
         {
+            // Respect the caller-provided default state on the first frame the section appears.
             ImGui::SetNextItemOpen(defaultOpen, ImGuiCond_Once);
         }
+        else
+        {
+            // Restore the previously stored open state for subsequent frames.
+            ImGui::SetNextItemOpen(isOpen, ImGuiCond_Always);
+        }
 
-        bool& isOpen = it->second;
-        const bool visible = ImGui::CollapsingHeader(label, &isOpen, additionalFlags);
-        if (!isOpen)
+        const bool visible = ImGui::CollapsingHeader(label, additionalFlags);
+        isOpen = visible;
+
+        if (!visible)
         {
             return false;
         }
 
         g_persistentSectionStack.push_back(key);
         ImGui::PushID(key.c_str());
-        return visible;
+        return true;
     }
 
     void EndPersistentSection()
