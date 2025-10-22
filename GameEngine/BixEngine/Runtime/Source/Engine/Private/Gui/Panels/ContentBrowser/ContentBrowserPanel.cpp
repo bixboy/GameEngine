@@ -8,7 +8,7 @@
 
 namespace BixEngine::Gui
 {
-    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext&)
+    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
         guiManager.SetPanelDockingArea(contentPanel, DockSpaceRegion::Bottom);

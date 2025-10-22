@@ -1,3 +1,4 @@
+#include "Bix/Core/Logger.h"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
