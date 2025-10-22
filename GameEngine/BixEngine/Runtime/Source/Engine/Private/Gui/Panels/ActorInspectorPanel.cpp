@@ -5,6 +5,7 @@
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 #include "Bix/Game/Actor.h"
 #include "Bix/Game/Components/Component.h"
+#include "Bix/Game/Components/ComponentRegistry.h"
 #include "Bix/Game/Scene.h"
 #include "Bix/Game/SceneManager.h"
 
@@ -28,48 +29,6 @@ namespace BixEngine::Gui
         constexpr ImVec4 kSectionBackground{0.18f, 0.18f, 0.18f, 0.65f};
 
         namespace Utils = BixEngine::Gui::Utils;
-
-        struct ComponentDescriptor
-        {
-            std::string name;
-            std::function<void(Game::Actor&)> createFunction;
-        };
-
-        /// Lightweight component registry facade used by the inspector. The real
-        /// engine implementation should populate the registry from the component
-        /// system at start-up.
-        class ComponentRegistry
-        {
-        public:
-            static ComponentRegistry& GetInstance()
-            {
-                static ComponentRegistry instance;
-                return instance;
-            }
-
-            const std::vector<ComponentDescriptor>& GetRegisteredComponents() const noexcept
-            {
-                return descriptors_;
-            }
-
-            template<typename TComponent>
-            void RegisterComponent(const std::string& name)
-            {
-                descriptors_.push_back(ComponentDescriptor
-                {
-                    name,
-                    [](Game::Actor& actor)
-                    {
-                        actor.AddComponent<TComponent>();
-                    }
-                });
-            }
-
-        private:
-            ComponentRegistry() = default;
-
-            std::vector<ComponentDescriptor> descriptors_{}; ///< TODO: hook into the runtime component registry.
-        };
 
         struct ActorInspectorState
         {
@@ -174,14 +133,14 @@ namespace BixEngine::Gui
             ImGui::TextUnformatted("Add Component");
             ImGui::Separator();
 
-            const auto& descriptors = ComponentRegistry::GetInstance().GetRegisteredComponents();
+            const auto descriptors = Game::ComponentRegistry::GetInstance().GetRegisteredComponents();
             if (descriptors.empty())
             {
                 Utils::DrawEmptyStateMessage("No components available.");
             }
             else
             {
-                for (const ComponentDescriptor& descriptor : descriptors)
+                for (const Game::ComponentDescriptor& descriptor : descriptors)
                 {
                     if (ImGui::MenuItem(descriptor.name.c_str()))
                     {
