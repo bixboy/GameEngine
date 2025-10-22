@@ -335,6 +335,7 @@ namespace BixEngine::Gui
                     componentToRemove = component.get();
                 }
                 ImGui::SetCursorScreenPos(previousCursor);
+                ImGui::Dummy(ImVec2(0.0f, 0.0f));
 
                 if (open)
                 {
