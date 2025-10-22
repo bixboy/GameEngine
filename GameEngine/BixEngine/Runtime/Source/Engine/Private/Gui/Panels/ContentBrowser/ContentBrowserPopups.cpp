@@ -580,70 +580,49 @@ namespace BixEngine::Gui
                                     {
                                         const ParentScriptInfo parentInfo = GetSelectedParentInfo(requests);
 
-                                        headerFile << "#pragma once
+                                        headerFile << "#pragma once\n\n";
+                                        headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
+                                        headerFile << "// Created automatically from the Content Browser\n\n";
 
-";
-                                        headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '
-';
-                                        headerFile << "// Created automatically from the Content Browser
-
-";
                                         if (parentInfo.IsValid())
                                         {
                                             // Include directive is driven by the selected parent (base class or user script).
-                                            headerFile << "#include "" << parentInfo.includePath << ""
-
-";
+                                            headerFile << "#include \"" << parentInfo.includePath << "\"\n\n";
                                         }
+
                                         headerFile << "class " << baseName;
                                         if (parentInfo.IsValid())
                                             headerFile << " : public " << parentInfo.className;
-                                        headerFile << '
-';
-                                        headerFile << "{
-";
-                                        headerFile << "public:
-";
+                                        
+                                        headerFile << '\n';
+                                        headerFile << "{\n";
+                                        headerFile << "public:\n";
+                                        
                                         if (parentInfo.IsValid())
-                                            headerFile << "    using Super = " << parentInfo.className << ";
+                                            headerFile << "    using Super = " << parentInfo.className << ";\n\n";
+                                        
+                                        headerFile << "    " << baseName << "();\n";
+                                        headerFile << "    void OnCreate();\n";
+                                        headerFile << "    void OnUpdate(float deltaTime);\n";
+                                        headerFile << "};\n\n";
 
-";
-                                        headerFile << "    " << baseName << "();
-";
-                                        headerFile << "    void OnCreate();
-";
-                                        headerFile << "    void OnUpdate(float deltaTime);
-";
-                                        headerFile << "};
-
-";
-
-                                        sourceFile << "#include "" << baseName << kScriptHeaderExtension << ""
-
-";
-                                        sourceFile << baseName << "::" << baseName << "() = default;
-
-";
-                                        sourceFile << "void " << baseName << "::OnCreate()
-";
-                                        sourceFile << "{
-";
+                                        sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
+                                        sourceFile << baseName << "::" << baseName << "() = default;\n\n";
+                                        sourceFile << "void " << baseName << "::OnCreate()\n";
+                                        sourceFile << "{\n";
+                                        
                                         if (parentInfo.IsValid())
-                                            sourceFile << "    // Super::OnCreate();
-";
-                                        sourceFile << "}
-
-";
-                                        sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)
-";
-                                        sourceFile << "{
-";
+                                            sourceFile << "    // Super::OnCreate();\n";
+                                        
+                                        sourceFile << "}\n\n";
+                                        sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
+                                        sourceFile << "{\n";
+                                        
                                         if (parentInfo.IsValid())
-                                            sourceFile << "    // Super::OnUpdate(deltaTime);
-";
-                                        sourceFile << "}
+                                            sourceFile << "    // Super::OnUpdate(deltaTime);\n";
+                                        
+                                        sourceFile << "}\n\n";
 
-";
                                         selectedEntry = headerPath.generic_string();
                                         requests.scriptError.Clear();
                                         ClearSelectedParent(requests);
