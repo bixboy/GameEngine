@@ -1,5 +1,6 @@
 #pragma once
 #include <memory>
+#include <type_traits>
 #include <vector>
 #include "Bix/Game/Object.h"
 #include "Bix/Math/Math.h"
@@ -21,7 +22,17 @@ namespace BixEngine::Game
             virtual void Update(float deltaTime);
             virtual void Render(Graphics::Renderer& renderer) const;
 
-             void AddComponent(std::unique_ptr<Component> component);
+            void AddComponent(std::unique_ptr<Component> component);
+
+            template<typename TComponent, typename... TArgs>
+            TComponent& AddComponent(TArgs&&... args)
+            {
+                static_assert(std::is_base_of_v<Component, TComponent>, "Component must derive from Game::Component");
+                auto component = std::make_unique<TComponent>(this, std::forward<TArgs>(args)...);
+                TComponent& componentRef = *component;
+                AddComponent(std::move(component));
+                return componentRef;
+            }
 
             [[nodiscard]] String GetTypeName() const noexcept override { return "Actor"; }
 
@@ -29,10 +40,17 @@ namespace BixEngine::Game
 
         public:
             [[nodiscard]] const std::vector<std::unique_ptr<Component>>& GetComponents() const noexcept { return components_; }
+            [[nodiscard]] std::vector<std::unique_ptr<Component>>& GetComponents() noexcept { return components_; }
+
+            [[nodiscard]] bool IsActive() const noexcept { return active_; }
+            void SetActive(bool active) noexcept { active_ = active; }
+
+            bool RemoveComponent(const Component* component);
 
         private:
         std::vector<std::unique_ptr<Component>> components_;
 
         bool has_begun_play_{false};
+        bool active_{true};
     };
 }

@@ -2,12 +2,16 @@
 
 #include <cfloat>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 namespace
 {
     using namespace BixEngine::Gui::Utils;
 
     int g_smallFontPushCount = 0;
+    std::unordered_map<std::string, bool> g_persistentSections;
+    std::vector<std::string> g_persistentSectionStack;
 
     /// Retrieves the smallest available font registered in ImGui.
 	ImFont* GetSmallestFont()
@@ -298,12 +302,68 @@ namespace BixEngine::Gui::Utils
     {
         ImGuiTreeNodeFlags flags = additionalFlags;
         if (defaultOpen)
-        {
             flags |= ImGuiTreeNodeFlags_DefaultOpen;
-        }
 
         const char* headerLabel = label ? label : "";
-        return ImGui::CollapsingHeader(headerLabel, flags);
+        const bool open = ImGui::CollapsingHeader(headerLabel, flags);
+
+        if (!open)
+        {
+            ImGui::Dummy(ImVec2(0, 0));
+            return false;
+        }
+
+        return true;
+    }
+
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen, ImGuiTreeNodeFlags additionalFlags)
+    {
+        if (!label)
+        {
+            return false;
+        }
+
+        std::string key = contextId;
+        if (!key.empty())
+        {
+            key.append("::");
+        }
+        key.append(label);
+
+        auto [it, inserted] = g_persistentSections.emplace(key, defaultOpen);
+        bool& isOpen = it->second;
+
+        if (inserted)
+        {
+            ImGui::SetNextItemOpen(defaultOpen, ImGuiCond_Once);
+        }
+        else
+        {
+            ImGui::SetNextItemOpen(isOpen, ImGuiCond_Always);
+        }
+
+        const bool visible = ImGui::CollapsingHeader(label, additionalFlags);
+        isOpen = visible;
+
+        if (!visible)
+        {
+            ImGui::Dummy(ImVec2(0, 0));
+            return false;
+        }
+
+        g_persistentSectionStack.push_back(key);
+        ImGui::PushID(key.c_str());
+        return true;
+    }
+
+    void EndPersistentSection()
+    {
+        if (g_persistentSectionStack.empty())
+            return;
+
+        ImGui::PopID();
+        g_persistentSectionStack.pop_back();
+        ImGui::Dummy(ImVec2(0, 0));
     }
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width, ImGuiInputTextFlags flags)
@@ -369,6 +429,15 @@ namespace BixEngine::Gui::Utils
             ImGui::SetTooltip("%s", tooltip);
         }
         return pressed;
+    }
+
+    void DrawHelpMarker(const char* text)
+    {
+        ImGui::TextDisabled("%s", "?");
+        if (text && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
+        {
+            ImGui::SetTooltip("%s", text);
+        }
     }
 }
 
