@@ -139,7 +139,7 @@ namespace BixEngine::Gui::Utils
         return confirmed;
     }
 
-    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, bool autoFocus)
+    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags, bool autoFocus)
     {
         if (!buffer || bufferSize == 0)
         {
@@ -159,12 +159,12 @@ namespace BixEngine::Gui::Utils
             ImGui::SetKeyboardFocusHere();
         }
 
-        const bool edited = ImGui::InputText("##Value", buffer, bufferSize, ImGuiInputTextFlags_EnterReturnsTrue);
+        const bool edited = ImGui::InputText("##Value", buffer, bufferSize, flags);
         ImGui::PopID();
         return edited;
     }
 
-    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, bool autoFocus, bool* outIsValid)
+    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, ImGuiInputTextFlags flags, bool autoFocus, bool* outIsValid)
     {
         if (!buffer || bufferSize == 0)
         {
@@ -175,7 +175,7 @@ namespace BixEngine::Gui::Utils
             return false;
         }
 
-        const bool edited = InputTextWithLabel(label, buffer, bufferSize, autoFocus);
+        const bool edited = InputTextWithLabel(label, buffer, bufferSize, flags, autoFocus);
 
         bool isValid = validator ? validator(buffer) : true;
 

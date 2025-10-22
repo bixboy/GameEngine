@@ -1,4 +1,5 @@
 #include "Bix/Core/Logger.h"
+#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -353,6 +354,30 @@ namespace BixEngine::Gui
             return roots;
         }
 
+        std::vector<Utils::TreeNodeData> BuildGuiTreeNodes(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo)
+        {
+            std::vector<Utils::TreeNodeData> guiNodes{};
+            guiNodes.reserve(nodes.size());
+
+            for (const ScriptNode& node : nodes)
+            {
+                ParentScriptInfo info{};
+                info.displayName = node.name;
+                info.className = node.name;
+                info.includePath = node.includePath;
+                outInfo.emplace(info.className, info);
+
+                Utils::TreeNodeData guiNode{};
+                guiNode.name = node.name;
+                guiNode.children = BuildGuiTreeNodes(node.children, outInfo);
+                guiNode.isLeaf = guiNode.children.empty();
+
+                guiNodes.emplace_back(std::move(guiNode));
+            }
+
+            return guiNodes;
+        }
+
         ParentScriptInfo GetSelectedParentInfo(const PopupRequestState& requests)
         {
             ParentScriptInfo info{};
@@ -371,38 +396,6 @@ namespace BixEngine::Gui
             requests.selectedParentInclude = info.includePath;
             requests.selectedParentDisplay = info.displayName;
             requests.selectedParentIsBase = isBaseParent;
-        }
-
-        void RenderScriptTree(const ScriptNode& node, PopupRequestState& requests)
-        {
-            const bool isLeaf = node.children.empty();
-            ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
-            if (isLeaf)
-                flags |= ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-
-            const bool isSelected = !requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && node.name == requests.selectedParentClass.View();
-            if (isSelected)
-                flags |= ImGuiTreeNodeFlags_Selected;
-
-            const std::string& idSource = node.includePath.empty() ? node.name : node.includePath;
-            ImGui::PushID(idSource.c_str());
-            const bool open = ImGui::TreeNodeEx(node.name.c_str(), flags);
-            if (ImGui::IsItemClicked())
-            {
-                ParentScriptInfo info{};
-                info.displayName = node.name;
-                info.className = node.name;
-                info.includePath = node.includePath;
-                SetSelectedParent(requests, info, false);
-            }
-
-            if (!isLeaf && open)
-            {
-                for (const auto& child : node.children)
-                    RenderScriptTree(child, requests);
-                ImGui::TreePop();
-            }
-            ImGui::PopID();
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -426,96 +419,97 @@ namespace BixEngine::Gui
 
             ImGui::TextUnformatted("Create a new C++ script in the current directory.");
 
-            if (ImGui::IsWindowAppearing())
-                ImGui::SetKeyboardFocusHere();
-
-            ImGui::TextUnformatted("Script name");
-            ImGui::SameLine();
-            ImGui::TextDisabled("(.h / .cpp)");
-
-            bool create = ImGui::InputText("##ScriptName", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue);
+            const bool shouldAutofocusName = ImGui::IsWindowAppearing();
+            bool create = Utils::InputTextWithLabel("Script name (.h / .cpp)", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocusName);
 
             if (!requests.scriptError.IsEmpty())
             {
-                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 0.45f, 0.45f, 1.0f));
-                ImGui::TextWrapped("%s", requests.scriptError.c_str());
-                ImGui::PopStyleColor();
+                Utils::DrawErrorMessage(std::string(requests.scriptError.View()));
             }
 
-            ImGui::Spacing();
-            ImGui::Separator();
-
-            ImGui::TextDisabled("Parent (optional)");
+            Utils::DrawSeparatorText("Parent (optional)");
 
             const std::string parentPreview = requests.selectedParentDisplay.IsEmpty() ? std::string("None") : std::string(requests.selectedParentDisplay.View());
             ImGui::Text("Selected: %s", parentPreview.c_str());
             ImGui::SameLine();
-            if (ImGui::SmallButton("Clear"))
+            if (Utils::IconButton("x", "Clear parent selection"))
+            {
                 ClearSelectedParent(requests);
+            }
 
-            ImGui::Spacing();
+            const float baseListHeight = ImGui::GetTextLineHeightWithSpacing() * 4.0f;
 
             if (ImGui::CollapsingHeader("Base Classes", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                // Engine-provided base classes live in their own section to mirror Unreal's popup.
+                std::vector<std::string> baseItems{};
+                baseItems.reserve(baseParents.size());
                 for (const auto& baseParent : baseParents)
                 {
-                    ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_Leaf | ImGuiTreeNodeFlags_NoTreePushOnOpen;
-                    if (requests.selectedParentIsBase && requests.selectedParentClass.View() == baseParent.className)
-                        flags |= ImGuiTreeNodeFlags_Selected;
+                    baseItems.push_back(baseParent.displayName);
+                }
 
-                    ImGui::TreeNodeEx(baseParent.displayName.c_str(), flags);
-                    if (ImGui::IsItemClicked())
+                std::string baseSelected = requests.selectedParentIsBase ? std::string(requests.selectedParentDisplay.View()) : std::string{};
+                std::string baseSelection = baseSelected;
+                Utils::DrawScrollableList(baseItems, baseListHeight, baseSelected, baseSelection);
+                if (baseSelection != baseSelected)
+                {
+                    const auto infoIt = std::find_if(baseParents.begin(), baseParents.end(), [&](const ParentScriptInfo& info)
                     {
-                        ParentScriptInfo info = baseParent;
-                        SetSelectedParent(requests, info, true);
+                        return info.displayName == baseSelection;
+                    });
+                    if (infoIt != baseParents.end())
+                    {
+                        SetSelectedParent(requests, *infoIt, true);
                     }
                 }
             }
 
+            std::unordered_map<std::string, ParentScriptInfo> userScriptInfo{};
+            const std::vector<Utils::TreeNodeData> userScriptTree = BuildGuiTreeNodes(userScriptRoots, userScriptInfo);
+
             if (ImGui::CollapsingHeader("User Scripts", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                // Discovered user scripts are rendered as a tree based on their inheritance hierarchy.
-                if (userScriptRoots.empty())
+                std::string selectedScript = (!requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty()) ? std::string(requests.selectedParentClass.View()) : std::string{};
+                const std::string previousSelection = selectedScript;
+                Utils::DrawScriptHierarchyTree(userScriptTree, selectedScript, "No user scripts detected.");
+                if (selectedScript != previousSelection)
                 {
-                    ImGui::Indent();
-                    ImGui::TextDisabled("No user scripts detected.");
-                    ImGui::Unindent();
-                }
-                else
-                {
-                    for (const auto& root : userScriptRoots)
-                        RenderScriptTree(root, requests);
+                    const auto infoIt = userScriptInfo.find(selectedScript);
+                    if (infoIt != userScriptInfo.end())
+                    {
+                        SetSelectedParent(requests, infoIt->second, false);
+                    }
                 }
             }
 
-            ImGui::Spacing();
-            ImGui::Separator();
+            Utils::DrawSeparatorText("Existing scripts in Content/Scripts");
 
             if (!requests.existingScripts.empty())
             {
-                ImGui::TextDisabled("Existing scripts in Content/Scripts:");
-                ImGui::Spacing();
-                ImGui::BeginChild("ExistingScriptsList", ImVec2(320.0f, 120.0f), true);
+                std::vector<std::string> existingItems{};
+                existingItems.reserve(requests.existingScripts.size());
                 for (const auto& script : requests.existingScripts)
-                    ImGui::BulletText("%s.h", script.c_str());
-                ImGui::EndChild();
+                {
+                    existingItems.emplace_back(std::string(script.View()) + ".h");
+                }
+
+                std::string unusedSelection{};
+                Utils::DrawScrollableList(existingItems, 120.0f, std::string{}, unusedSelection);
             }
             else
             {
                 ImGui::TextDisabled("No scripts found in Content/Scripts.");
             }
 
-            if (ImGui::Button("Create"))
-                create = true;
-
-            ImGui::SameLine();
-            if (ImGui::Button("Cancel"))
-            {
-                ImGui::CloseCurrentPopup();
-                requests.scriptError.Clear();
-                ClearSelectedParent(requests);
-            }
+            const bool confirmPressed = Utils::DrawConfirmButtons("Create", "Cancel",
+                []() {},
+                [&]()
+                {
+                    ImGui::CloseCurrentPopup();
+                    requests.scriptError.Clear();
+                    ClearSelectedParent(requests);
+                });
+            create = create || confirmPressed;
 
             if (create)
             {

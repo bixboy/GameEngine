@@ -38,11 +38,11 @@ namespace BixEngine::Gui::Utils
 
     // --- Text Inputs -------------------------------------------------------------
 
-    /// Draws a text input with a label and optional autofocus.
-    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, bool autoFocus = false);
+    /// Draws a text input with a label, optional flags, and optional autofocus.
+    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
 
     /// Draws a validated text input that highlights invalid content.
-    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, bool autoFocus = false, bool* outIsValid = nullptr);
+    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false, bool* outIsValid = nullptr);
 
     // --- Lists -------------------------------------------------------------------
 
