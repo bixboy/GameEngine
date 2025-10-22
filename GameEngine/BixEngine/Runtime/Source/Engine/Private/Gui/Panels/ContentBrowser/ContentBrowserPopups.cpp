@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <fstream>
 #include <string>
+#include <cstring>
 #include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
@@ -10,7 +11,8 @@ namespace BixEngine::Gui
 {
     namespace
     {
-        constexpr const char* kScriptExtension = ".lua";
+        constexpr const char* kScriptHeaderExtension = ".h";
+        constexpr const char* kScriptSourceExtension = ".cpp";
 
         const char* GetScriptTypeLabel(ScriptTemplateType type)
         {
@@ -24,6 +26,16 @@ namespace BixEngine::Gui
             default:
                 return "Utility Script";
             }
+        }
+
+        void RemoveExtensionIfPresent(std::string& value, const char* extension)
+        {
+            const size_t extLength = std::strlen(extension);
+            if (extLength == 0)
+                return;
+
+            if (value.length() >= extLength && value.compare(value.length() - extLength, extLength, extension) == 0)
+                value.erase(value.length() - extLength, extLength);
         }
 
         void RefreshExistingScripts(PopupRequestState& requests, const std::filesystem::path& scriptsDirectory)
@@ -43,10 +55,10 @@ namespace BixEngine::Gui
                     continue;
 
                 const fs::path& path = entry.path();
-                if (path.extension() != kScriptExtension)
+                if (path.extension() != kScriptHeaderExtension)
                     continue;
 
-                requests.existingScripts.emplace_back(path.filename().generic_string());
+                requests.existingScripts.emplace_back(path.stem().generic_string());
             }
 
             if (iterationError)
@@ -56,6 +68,32 @@ namespace BixEngine::Gui
             {
                 return CaseInsensitiveLess(lhs, rhs);
             });
+
+            requests.existingScripts.erase(std::unique(requests.existingScripts.begin(), requests.existingScripts.end(), [](const String& lhs, const String& rhs)
+            {
+                return ToLowerCopy(lhs) == ToLowerCopy(rhs);
+            }), requests.existingScripts.end());
+        }
+
+        struct ParentScriptInfo
+        {
+            std::string className{};
+            std::string includeDirective{};
+
+            [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
+        };
+
+        ParentScriptInfo ResolveDefaultParent(const PopupRequestState& requests)
+        {
+            switch (requests.scriptType)
+            {
+            case ScriptTemplateType::Actor:
+                return {"BixEngine::Game::Actor", "Bix/Game/Actor.h"};
+            case ScriptTemplateType::Component:
+                return {"BixEngine::Game::Component", "Bix/Game/Components/Component.h"};
+            default:
+                return {};
+            }
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -74,14 +112,17 @@ namespace BixEngine::Gui
             const fs::path scriptsDirectory = state.root / "Scripts";
             RefreshExistingScripts(requests, scriptsDirectory);
 
-            ImGui::TextUnformatted("Create a new Lua script in the current directory.");
+            if (requests.selectedParentScript >= static_cast<int>(requests.existingScripts.size()))
+                requests.selectedParentScript = -1;
+
+            ImGui::TextUnformatted("Create a new C++ script in the current directory.");
 
             if (ImGui::IsWindowAppearing())
                 ImGui::SetKeyboardFocusHere();
 
             ImGui::TextUnformatted("Script name");
             ImGui::SameLine();
-            ImGui::TextDisabled("(.lua)");
+            ImGui::TextDisabled("(.h / .cpp)");
 
             bool create = ImGui::InputText("##ScriptName", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue);
 
@@ -102,11 +143,36 @@ namespace BixEngine::Gui
             {
                 ImGui::Spacing();
                 ImGui::Separator();
+                ImGui::TextDisabled("Parent script (optional)");
+                const char* parentPreview = requests.selectedParentScript >= 0 ? requests.existingScripts[requests.selectedParentScript].c_str() : "None";
+                ImGui::SetNextItemWidth(240.0f);
+                if (ImGui::BeginCombo("##ParentScriptSelection", parentPreview))
+                {
+                    const bool noneSelected = requests.selectedParentScript == -1;
+                    if (ImGui::Selectable("None", noneSelected))
+                        requests.selectedParentScript = -1;
+                    if (noneSelected)
+                        ImGui::SetItemDefaultFocus();
+
+                    for (int i = 0; i < static_cast<int>(requests.existingScripts.size()); ++i)
+                    {
+                        const bool isSelected = requests.selectedParentScript == i;
+                        if (ImGui::Selectable(requests.existingScripts[i].c_str(), isSelected))
+                            requests.selectedParentScript = i;
+                        if (isSelected)
+                            ImGui::SetItemDefaultFocus();
+                    }
+
+                    ImGui::EndCombo();
+                }
+
+                ImGui::Spacing();
+                ImGui::Separator();
                 ImGui::TextDisabled("Existing scripts in Content/Scripts:");
                 ImGui::Spacing();
                 ImGui::BeginChild("ExistingScriptsList", ImVec2(320.0f, 120.0f), true);
                 for (const auto& script : requests.existingScripts)
-                    ImGui::BulletText("%s", script.c_str());
+                    ImGui::BulletText("%s.h", script.c_str());
                 ImGui::EndChild();
             }
             else
@@ -124,6 +190,7 @@ namespace BixEngine::Gui
             {
                 ImGui::CloseCurrentPopup();
                 requests.scriptError.Clear();
+                requests.selectedParentScript = -1;
             }
 
             if (create)
@@ -139,45 +206,103 @@ namespace BixEngine::Gui
                 }
                 else
                 {
-                    const String::size_type nameLength = rawInput.size();
-                    if (nameLength > 4 && rawInput.View().substr(nameLength - 4) == kScriptExtension)
-                        rawInput = rawInput.Mid(0, nameLength - 4);
+                    std::string baseName(rawInput.View());
+                    RemoveExtensionIfPresent(baseName, kScriptHeaderExtension);
+                    RemoveExtensionIfPresent(baseName, kScriptSourceExtension);
 
-                    std::string fileName(rawInput.View());
-                    fileName += kScriptExtension;
-                    const fs::path scriptFileName(fileName);
-                    const fs::path scriptPath = state.current / scriptFileName;
-
-                    if (fs::exists(scriptPath))
+                    if (baseName.empty())
                     {
-                        LogAndStoreError(requests.scriptError, "A file with this name already exists.", false);
+                        LogAndStoreError(requests.scriptError, "Script name cannot be empty.", false);
                     }
                     else
                     {
-                        std::error_code createDirectoryError;
-                        fs::create_directories(scriptPath.parent_path(), createDirectoryError);
-                        if (createDirectoryError)
+                        const fs::path headerFileName = fs::path(baseName + kScriptHeaderExtension);
+                        const fs::path sourceFileName = fs::path(baseName + kScriptSourceExtension);
+                        const fs::path headerPath = state.current / headerFileName;
+                        const fs::path sourcePath = state.current / sourceFileName;
+
+                        if (fs::exists(headerPath) || fs::exists(sourcePath))
                         {
-                            String message = "Unable to ensure directory exists: ";
-                            message += createDirectoryError.message();
-                            LogAndStoreError(requests.scriptError, std::move(message));
+                            LogAndStoreError(requests.scriptError, "A file with this name already exists.", false);
                         }
                         else
                         {
-                            std::ofstream scriptFile(scriptPath);
-                            if (!scriptFile.is_open())
+                            std::error_code createDirectoryError;
+                            fs::create_directories(headerPath.parent_path(), createDirectoryError);
+                            if (createDirectoryError)
                             {
-                                LogAndStoreError(requests.scriptError, "Failed to create the script file.");
+                                String message = "Unable to ensure directory exists: ";
+                                message += createDirectoryError.message();
+                                LogAndStoreError(requests.scriptError, std::move(message));
                             }
                             else
                             {
-                                scriptFile << "-- Type: " << GetScriptTypeLabel(requests.scriptType) << '\n';
-                                scriptFile << "-- Created automatically from the Content Browser\n\n";
-                                scriptFile.close();
+                                std::ofstream headerFile(headerPath);
+                                if (!headerFile.is_open())
+                                {
+                                    LogAndStoreError(requests.scriptError, "Failed to create the header file.");
+                                }
+                                else
+                                {
+                                    std::ofstream sourceFile(sourcePath);
+                                    if (!sourceFile.is_open())
+                                    {
+                                        headerFile.close();
+                                        std::error_code removeHeaderError;
+                                        fs::remove(headerPath, removeHeaderError);
+                                        LogAndStoreError(requests.scriptError, "Failed to create the source file.");
+                                    }
+                                    else
+                                    {
+                                        ParentScriptInfo parentInfo{};
+                                        if (requests.selectedParentScript >= 0 && requests.selectedParentScript < static_cast<int>(requests.existingScripts.size()))
+                                        {
+                                            parentInfo.className = std::string(requests.existingScripts[requests.selectedParentScript].View());
+                                            parentInfo.includeDirective = parentInfo.className + kScriptHeaderExtension;
+                                        }
+                                        else
+                                        {
+                                            parentInfo = ResolveDefaultParent(requests);
+                                        }
 
-                                selectedEntry = scriptPath.generic_string();
-                                requests.scriptError.Clear();
-                                ImGui::CloseCurrentPopup();
+                                        headerFile << "#pragma once\n\n";
+                                        headerFile << "// Type: " << GetScriptTypeLabel(requests.scriptType) << '\n';
+                                        headerFile << "// Parent: " << (parentInfo.IsValid() ? parentInfo.className : "(none)") << '\n';
+                                        headerFile << "// Created automatically from the Content Browser\n\n";
+                                        if (parentInfo.IsValid())
+                                            headerFile << "#include \"" << parentInfo.includeDirective << "\"\n\n";
+                                        headerFile << "class " << baseName;
+                                        if (parentInfo.IsValid())
+                                            headerFile << " : public " << parentInfo.className;
+                                        headerFile << '\n';
+                                        headerFile << "{\n";
+                                        headerFile << "public:\n";
+                                        if (parentInfo.IsValid())
+                                            headerFile << "    using Super = " << parentInfo.className << ";\n\n";
+                                        headerFile << "    " << baseName << "();\n";
+                                        headerFile << "    void OnCreate();\n";
+                                        headerFile << "    void OnUpdate(float deltaTime);\n";
+                                        headerFile << "};\n";
+
+                                        sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
+                                        sourceFile << baseName << "::" << baseName << "() = default;\n\n";
+                                        sourceFile << "void " << baseName << "::OnCreate()\n";
+                                        sourceFile << "{\n";
+                                        if (parentInfo.IsValid())
+                                            sourceFile << "    // Super::OnCreate();\n";
+                                        sourceFile << "}\n\n";
+                                        sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
+                                        sourceFile << "{\n";
+                                        if (parentInfo.IsValid())
+                                            sourceFile << "    // Super::OnUpdate(deltaTime);\n";
+                                        sourceFile << "}\n";
+
+                                        selectedEntry = headerPath.generic_string();
+                                        requests.scriptError.Clear();
+                                        requests.selectedParentScript = -1;
+                                        ImGui::CloseCurrentPopup();
+                                    }
+                                }
                             }
                         }
                     }
