@@ -43,7 +43,6 @@ namespace BixEngine::Gui
         std::filesystem::path renameTarget{};
         std::filesystem::path renameSecondaryTarget{};
         bool renameTargetIsScriptGroup{false};
-        std::vector<String> existingScripts{};
         String selectedParentClass{};
         String selectedParentInclude{};
         String selectedParentDisplay{};
