@@ -6,18 +6,22 @@
 #include "Bix/Game/SceneManager.h"
 #include "Bix/Engine/Gui/GuiManager.h"
 #include "Bix/Engine/Gui/GuiPanel.h"
+#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 
 #include "imgui.h"
 
 #include <algorithm>
 #include <cstddef>
 #include <cstring>
+#include <string>
 
 namespace BixEngine::Gui
 {
     namespace
     {
         constexpr ImVec4 kInspectorBackground{0.12f, 0.12f, 0.12f, 0.95f};
+
+        namespace Utils = BixEngine::Gui::Utils;
 
         bool ActorBelongsToScene(const Game::Scene& scene, const Game::Actor* actor)
         {
@@ -33,7 +37,7 @@ namespace BixEngine::Gui
 
         void DrawTransformSection(Game::Actor& actor)
         {
-            if (!ImGui::CollapsingHeader("Transform", ImGuiTreeNodeFlags_DefaultOpen))
+            if (!Utils::BeginCollapsibleSection("Transform"))
                 return;
 
             Math::Vector3 position = actor.GetPosition();
@@ -53,13 +57,13 @@ namespace BixEngine::Gui
 
         void DrawComponentSection(const Game::Actor& actor)
         {
-            if (!ImGui::CollapsingHeader("Components", ImGuiTreeNodeFlags_DefaultOpen))
+            if (!Utils::BeginCollapsibleSection("Components"))
                 return;
 
             const auto& components = actor.GetComponents();
             if (components.empty())
             {
-                ImGui::TextDisabled("Actor has no components.");
+                Utils::DrawEmptyStateMessage("Actor has no components.");
                 return;
             }
 
@@ -83,7 +87,7 @@ namespace BixEngine::Gui
 
                 if (open)
                 {
-                    ImGui::TextDisabled("No editable properties available.");
+                    Utils::DrawEmptyStateMessage("No editable properties available.");
                     ImGui::TreePop();
                 }
             }
@@ -115,7 +119,7 @@ namespace BixEngine::Gui
             {
                 lastActorForName = nullptr;
                 nameBuffer[0] = '\0';
-                ImGui::TextDisabled("No active scene.");
+                Utils::DrawEmptyStateMessage("No active scene.");
                 ImGui::PopID();
                 return;
             }
@@ -125,7 +129,7 @@ namespace BixEngine::Gui
             {
                 lastActorForName = nullptr;
                 nameBuffer[0] = '\0';
-                ImGui::TextDisabled("No actor selected.");
+                Utils::DrawEmptyStateMessage("No actor selected.");
                 ImGui::PopID();
                 return;
             }
@@ -138,7 +142,7 @@ namespace BixEngine::Gui
                 if (setSelectedActor)
                     setSelectedActor(nullptr);
 
-                ImGui::TextDisabled("The selected actor is no longer available.");
+                Utils::DrawEmptyStateMessage("The selected actor is no longer available.");
                 ImGui::PopID();
                 return;
             }
@@ -155,15 +159,12 @@ namespace BixEngine::Gui
                 lastActorForName = selectedActor;
             }
 
-            if (ImGui::InputText("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer)))
+            if (Utils::InputTextWithLabel("Name", nameBuffer, IM_ARRAYSIZE(nameBuffer), ImGuiInputTextFlags_None))
                 selectedActor->SetName(nameBuffer);
 
             const String typeName = selectedActor->GetTypeName();
             const auto typeNameView = typeName.View();
-            
-            ImGui::TextDisabled("Type: %.*s",
-                static_cast<int>(typeNameView.size()),
-                typeNameView.data());
+            Utils::DrawLabelValue("Type", std::string(typeNameView));
 
             ImGui::Separator();
             DrawTransformSection(*selectedActor);

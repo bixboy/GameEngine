@@ -50,6 +50,9 @@ namespace BixEngine::Gui::Utils
     /// Draws a labelled value pair, substituting a fallback when the value is empty.
     void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-");
 
+    /// Draws a disabled-style message for empty states and contextual hints.
+    void DrawEmptyStateMessage(const char* message);
+
     // --- Lists -------------------------------------------------------------------
 
     /// Renders a scrollable list of selectable string entries.
@@ -74,6 +77,9 @@ namespace BixEngine::Gui::Utils
 
     /// Begins a collapsible section with optional default open behaviour.
     bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
+
+    /// Draws a standard search field using the remaining horizontal space by default.
+    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...", float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
     // --- Style helpers -----------------------------------------------------------
 

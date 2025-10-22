@@ -5,6 +5,7 @@
 #include "Bix/Game/SceneManager.h"
 #include "Bix/Engine/Gui/GuiManager.h"
 #include "Bix/Engine/Gui/GuiPanel.h"
+#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 
 #include "imgui.h"
 
@@ -15,6 +16,8 @@ namespace BixEngine::Gui
     namespace
     {
         constexpr ImVec4 kOutlinerBackground{0.11f, 0.11f, 0.11f, 0.95f};
+
+        namespace Utils = BixEngine::Gui::Utils;
     }
 
     GuiPanel& CreateSceneOutlinerPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
@@ -37,13 +40,13 @@ namespace BixEngine::Gui
             const Game::Scene* activeScene = sceneManager ? sceneManager->GetScene() : nullptr;
             if (!activeScene)
             {
-                ImGui::TextDisabled("No active scene.");
+                Utils::DrawEmptyStateMessage("No active scene.");
                 ImGui::PopID();
                 return;
             }
 
             static char searchBuffer[128] = "";
-            ImGui::InputTextWithHint("##SceneOutlinerSearch", "Search actors...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+            Utils::SearchInput("SceneOutlinerSearch", searchBuffer, IM_ARRAYSIZE(searchBuffer), "Search actors...");
             const String searchQuery(searchBuffer);
             const bool hasSearch = !searchQuery.IsEmpty();
 
@@ -94,7 +97,7 @@ namespace BixEngine::Gui
 
                 if (totalActors == 0)
                 {
-                    ImGui::TextDisabled("No actors in this scene.");
+                    Utils::DrawEmptyStateMessage("No actors in this scene.");
                 }
                 else
                 {
@@ -134,7 +137,7 @@ namespace BixEngine::Gui
                     }
 
                     if (hasSearch && filteredActors == 0)
-                        ImGui::TextDisabled("No actors match the current filter.");
+                        Utils::DrawEmptyStateMessage("No actors match the current filter.");
                 }
 
                 ImGui::TreePop();

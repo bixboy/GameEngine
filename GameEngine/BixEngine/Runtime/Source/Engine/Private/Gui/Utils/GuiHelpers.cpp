@@ -1,6 +1,7 @@
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 
 #include <cfloat>
+#include <string>
 
 namespace
 {
@@ -150,7 +151,8 @@ namespace BixEngine::Gui::Utils
         ImGui::AlignTextToFramePadding();
         ImGui::TextUnformatted(caption);
         ImGui::SameLine();
-        ImGui::SetNextItemWidth(-FLT_MIN);
+        const float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::SetNextItemWidth(availableWidth > 0.0f ? availableWidth : 0.0f);
 
         if (autoFocus && ImGui::IsWindowAppearing())
         {
@@ -214,6 +216,11 @@ namespace BixEngine::Gui::Utils
         const char* caption = label ? label : "";
         const char* displayed = (!value.empty() ? value.c_str() : (emptyFallback ? emptyFallback : ""));
         ImGui::Text("%s: %s", caption, displayed);
+    }
+
+    void DrawEmptyStateMessage(const char* message)
+    {
+        ImGui::TextDisabled("%s", message ? message : "");
     }
 
     void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection)
@@ -297,6 +304,27 @@ namespace BixEngine::Gui::Utils
 
         const char* headerLabel = label ? label : "";
         return ImGui::CollapsingHeader(headerLabel, flags);
+    }
+
+    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width, ImGuiInputTextFlags flags)
+    {
+        if (!buffer || bufferSize == 0)
+        {
+            return false;
+        }
+
+        const std::string label = id ? std::string("##") + id : std::string("##SearchInput");
+
+        if (width >= 0.0f)
+        {
+            ImGui::SetNextItemWidth(width);
+        }
+        else
+        {
+            ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+        }
+
+        return ImGui::InputTextWithHint(label.c_str(), hint ? hint : "", buffer, bufferSize, flags);
     }
 
     void PushSmallFont()
