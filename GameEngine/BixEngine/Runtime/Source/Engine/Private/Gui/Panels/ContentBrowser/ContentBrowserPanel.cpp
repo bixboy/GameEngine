@@ -9,8 +9,6 @@
 
 namespace BixEngine::Gui
 {
-    namespace Utils = BixEngine::Gui::Utils;
-
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
