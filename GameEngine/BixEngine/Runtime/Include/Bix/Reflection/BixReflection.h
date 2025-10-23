@@ -63,7 +63,7 @@ namespace Bix::Reflection
         std::string Name;
         std::string QualifiedName;
         std::size_t Size = 0;
-        const ClassInfo* SuperClass = nullptr;
+        ClassInfo* SuperClass = nullptr;
         std::vector<PropertyInfo> Properties;
 
         [[nodiscard]] const PropertyInfo* FindProperty(std::string_view name) const
@@ -215,7 +215,7 @@ namespace Bix::Reflection
         template<typename ClassType, typename Populator>
         ClassInfo& RegisterClass(const char* name,
                                  const char* qualifiedName,
-                                 const ClassInfo* superClass,
+                                 ClassInfo* superClass,
                                  Populator&& populator)
         {
             static std::once_flag onceFlag;
@@ -262,11 +262,11 @@ namespace Bix::Reflection
             }
 
             info.Size = sizeof(PropertyType);
-            info.Access = [](void* instance) -> void* {
+            info.Access = [member](void* instance) -> void* {
                 auto* object = static_cast<ClassType*>(instance);
                 return &(object->*member);
             };
-            info.ConstAccess = [](const void* instance) -> const void* {
+            info.ConstAccess = [member](const void* instance) -> const void* {
                 auto* object = static_cast<const ClassType*>(instance);
                 return &(object->*member);
             };
