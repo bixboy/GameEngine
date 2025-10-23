@@ -24,10 +24,12 @@ namespace BixEngine
             Gui::GuiManager* guiManager{nullptr};
         };
 
-        class Scene : public Scripting::ScriptBase
+        BCLASS()
+        class Scene : public ::BixEngine::Game::Scripting::ScriptBase
         {
             public:
                 BIX_GENERATED_BODY(Scene);
+                GENERATED_BODY();
                 BIX_DECLARE_SCRIPT_CLASS(Scene, Scripting::ScriptBase);
 
                 explicit Scene(String name = "Unnamed Scene");

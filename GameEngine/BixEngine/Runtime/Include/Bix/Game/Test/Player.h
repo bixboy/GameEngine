@@ -13,10 +13,12 @@ namespace BixEngine
     {
         class SpriteComponent;
 
+        BCLASS()
         class Player : public Actor
         {
             public:
                 BIX_GENERATED_BODY(Player);
+                GENERATED_BODY();
                 BIX_DECLARE_SCRIPT_CLASS(Player, Actor);
 
                 Player();
@@ -43,8 +45,11 @@ namespace BixEngine
                 void RefreshSpriteComponent();
 
                 Math::Vector2 pendingInput_{};
+                BPROPERTY()
                 float moveSpeed_{200.0f};
+                BPROPERTY()
                 Math::Vector3 size_{Math::Vector3(32.0f, 32.0f, 1.0f)};
+                BPROPERTY()
                 SDL_Color color_{255, 255, 255, 255};
                 SpriteComponent* spriteComponent_{nullptr};
         };

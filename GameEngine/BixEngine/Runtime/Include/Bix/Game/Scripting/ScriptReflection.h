@@ -10,6 +10,11 @@
 #include <vector>
 
 #include "Bix/Core/String.h"
+#include "Bix/Reflection/BixReflection.h"
+
+#ifndef BIX_SCRIPT_ENABLE_AUTOGEN
+#define BIX_SCRIPT_ENABLE_AUTOGEN 1
+#endif
 
 namespace BixEngine::Game
 {
@@ -52,8 +57,11 @@ namespace BixEngine::Game::Scripting
         ScriptFactory factory;
         ScriptClass* superClass{nullptr};
         std::vector<ScriptClass*> derivedClasses;
+        const ::Bix::Reflection::ClassInfo* reflectionInfo{nullptr};
 
         [[nodiscard]] std::unique_ptr<ScriptBase> Instantiate(const ScriptInstantiationParams& params = {}) const;
+
+        [[nodiscard]] const ::Bix::Reflection::ClassInfo* GetReflectionInfo() const noexcept { return reflectionInfo; }
 
         template<typename T>
         [[nodiscard]] std::unique_ptr<T> InstantiateAs(const ScriptInstantiationParams& params = {}) const
@@ -219,6 +227,22 @@ namespace BixEngine::Game::Scripting
             }
 
             scriptClass_ = &ScriptRegistry::Get().RegisterClass(std::move(classDescriptor), super);
+
+            if (scriptClass_)
+            {
+                if constexpr (requires { TClass::StaticClass(); })
+                {
+                    scriptClass_->reflectionInfo = &TClass::StaticClass();
+                }
+                else
+                {
+                    scriptClass_->reflectionInfo = ::Bix::Reflection::FindClassByQualifiedName(scriptClass_->nativeName.View());
+                    if (!scriptClass_->reflectionInfo)
+                    {
+                        scriptClass_->reflectionInfo = ::Bix::Reflection::FindClass(scriptClass_->name.View());
+                    }
+                }
+            }
         }
 
         [[nodiscard]] ScriptClass& GetScriptClass() const noexcept { return *scriptClass_; }

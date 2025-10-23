@@ -6,10 +6,12 @@ namespace BixEngine::Game
 {
     class Player;
 
+    BCLASS()
     class EmptyScene : public Scene
     {
         public:
             BIX_GENERATED_BODY(EmptyScene);
+            GENERATED_BODY();
             BIX_DECLARE_SCRIPT_CLASS(EmptyScene, Scene);
 
             EmptyScene();

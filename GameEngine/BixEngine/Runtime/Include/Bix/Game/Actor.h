@@ -16,8 +16,9 @@ namespace BixEngine::Game
     BCLASS()
     class Actor : public Object, public Scripting::ScriptBase
     {
-        BIX_GENERATED_BODY()
-        
+        BIX_GENERATED_BODY(Actor);
+        GENERATED_BODY();
+
         public:
             explicit Actor(const Math::Transform& transform = Math::Transform());
 
@@ -56,13 +57,8 @@ namespace BixEngine::Game
             virtual void OnComponentRemoved(const Component& /*component*/) {}
 
         private:
-            BPROPERTY()
             std::vector<std::unique_ptr<Component>> components_;
-        
-            BPROPERTY()
             bool has_begun_play_{false};
-
-            BPROPERTY()
             bool active_{true};
     };
 }
