@@ -2333,6 +2333,7 @@
     <ClInclude Include="Runtime\Include\Bix\Math\Transform.h" />
     <ClInclude Include="Runtime\Include\Bix\Math\Vector2.h" />
     <ClInclude Include="Runtime\Include\Bix\Math\Vector3.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\BixReflection.h" />
   </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
