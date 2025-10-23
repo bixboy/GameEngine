@@ -25,6 +25,8 @@ namespace BixEngine::Game
         .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
     }));
 
+    BIX_IMPLEMENT_CLASS(TestScene);
+
     TestScene::TestScene() : Scene("TestScene") {}
 
     TestScene::~TestScene() = default;
