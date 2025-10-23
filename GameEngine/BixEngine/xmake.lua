@@ -72,6 +72,120 @@ end
 
 add_defines("SDL_MAIN_HANDLED", {public = true})
 
+-- =========================================
+-- Reflection helpers (HeaderTool integration)
+-- =========================================
+local config = import("core.project.config")
+local project_root = os.scriptdir()
+local include_root = path.join(project_root, "Runtime", "Include")
+local samples_root = path.join(project_root, "Samples")
+
+local function compute_generated_dir(target)
+    if config and config.load then
+        config.load()
+    end
+    local plat = target and target:plat() or config.get("plat") or os.host()
+    local arch = target and target:arch() or config.get("arch") or os.arch()
+    local mode = target and target:mode() or config.get("mode") or "debug"
+    return path.join(project_root, "Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
+end
+
+local function parse_generated_includes(header_path)
+    local results = {}
+    local file = io.open(header_path, "r")
+    if not file then
+        return results
+    end
+    for line in file:lines() do
+        local token = line:match('#include%s+"([%w%._%-%/\]+%.generated%.h)"')
+        if token then
+            token = token:gsub("\\", "/")
+            table.insert(results, token)
+        end
+    end
+    file:close()
+    return results
+end
+
+local function resolve_generated_relpath(header_path, include_token)
+    if include_token:find("/") then
+        return include_token
+    end
+    local relative_header = path.relative(header_path, include_root)
+    local directory = path.directory(relative_header)
+    if directory and directory ~= "." then
+        return path.join(directory, include_token)
+    end
+    return include_token
+end
+
+local function ensure_stub_headers(generated_dir)
+    local created = {}
+    for _, header in ipairs(os.files(path.join(include_root, "**.h"))) do
+        for _, token in ipairs(parse_generated_includes(header)) do
+            local relpath = resolve_generated_relpath(header, token)
+            local out_path = path.join(generated_dir, relpath)
+            local out_dir = path.directory(out_path)
+            if out_dir and out_dir ~= "." and not os.isdir(out_dir) then
+                os.mkdir(out_dir)
+            end
+            if not os.isfile(out_path) then
+                io.writefile(out_path, "")
+            end
+            table.insert(created, out_path)
+        end
+    end
+    return created
+end
+
+local function newest_header_timestamp()
+    local newest = 0
+    for _, header in ipairs(os.files(path.join(include_root, "**.h"))) do
+        local t = os.mtime(header)
+        if t and t > newest then
+            newest = t
+        end
+    end
+    return newest
+end
+
+local function ensure_header_tool()
+    import("core.project.project")
+    local tool = project.target("BixHeaderTool")
+    assert(tool, "Missing target: BixHeaderTool")
+    os.execv("xmake", {"build", "BixHeaderTool"})
+    return tool:targetfile()
+end
+
+local function write_timestamp(stamp_path, value)
+    local file = io.open(stamp_path, "w+")
+    if file then
+        file:write(tostring(value))
+        file:close()
+    end
+end
+
+local function read_timestamp(stamp_path)
+    if not os.isfile(stamp_path) then
+        return 0
+    end
+    local file = io.open(stamp_path, "r")
+    if not file then
+        return 0
+    end
+    local line = file:read("*l")
+    file:close()
+    return tonumber(line or "0") or 0
+end
+
+local function cleanup_empty_generated_files(generated_dir)
+    for _, file in ipairs(os.files(path.join(generated_dir, "**.generated.h"))) do
+        if os.filesize(file) == 0 then
+            os.rm(file)
+        end
+    end
+end
+
 if is_plat("windows") then
     add_syslinks("user32", "gdi32", "shell32", "ole32", "oleaut32", "version", "winmm", "imm32", "advapi32")
 else
@@ -110,65 +224,61 @@ target("bixengine_runtime")
     set_kind("static")
     add_deps("bixengine_imgui", "BixHeaderTool")
 
-    -- Dossier stable pour les headers générés
-    local generated_dir = path.join(os.scriptdir(), "Intermediate", "GeneratedHeaders")
-
-    add_includedirs(".", "Runtime/Include", generated_dir, {public = true})
+    add_includedirs(".", "Runtime/Include",
+        path.join("$(projectdir)", "Build", "$(plat)", "$(arch)", "$(mode)", "Intermediate", "GeneratedHeaders"),
+        {public = true})
     add_headerfiles("Runtime/Include/**.h", "Runtime/Include/**.inl")
     add_files("Runtime/Source/**.cpp")
     add_links("SDL3", {public = true})
 
-    -- ✅ Compat XMake 3.0.4 : on ajoute les dépendances fichiers après le chargement
+    -- =========================================
+    -- Build hooks
+    -- =========================================
     after_load(function (target)
         for _, header in ipairs(os.files("Runtime/Include/**.h")) do
             target:add("dependfiles", header)
         end
-        -- (optionnel) si tu as des headers dans Source :
         for _, header in ipairs(os.files("Runtime/Source/**.h")) do
             target:add("dependfiles", header)
         end
+
+        local generated_dir = compute_generated_dir(target)
+        target:data_set("bix.generated_dir", generated_dir)
     end)
 
     before_build(function (target)
-        import("core.project.project")
-
-        local tool = project.target("BixHeaderTool")
-        assert(tool, "Missing target: BixHeaderTool")
-
-        local tool_path = tool:targetfile()
-        if not os.isfile(tool_path) then
-            print("⚙️  Building BixHeaderTool...")
-            os.execv("xmake", {"build", "BixHeaderTool"})
-            tool_path = tool:targetfile()
-        end
-
+        local generated_dir = target:data("bix.generated_dir") or compute_generated_dir(target)
         if not os.isdir(generated_dir) then
             os.mkdir(generated_dir)
         end
 
-        -- Vérification timestamps
-        local stamp_path = path.join(generated_dir, ".timestamp")
-        local newest_time = 0
-        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
-            local t = os.mtime(header)
-            if t > newest_time then newest_time = t end
-        end
+        -- Step 1: build the header tool if required
+        local tool_path = ensure_header_tool()
 
-        local need_regen = true
-        if os.isfile(stamp_path) then
-            local f = io.open(stamp_path, "r")
-            local last = tonumber(f:read("*l") or "0")
-            f:close()
-            need_regen = newest_time > last
+        -- Step 2: ensure stub files exist prior to the first C++ compilation
+        ensure_stub_headers(generated_dir)
+
+        -- Step 3: determine whether a regeneration is required
+        local stamp_path = path.join(generated_dir, ".timestamp")
+        local newest_time = newest_header_timestamp()
+        local recorded_time = read_timestamp(stamp_path)
+
+        local need_regen = (newest_time > recorded_time)
+        if not need_regen then
+            -- If we only have stubs, force a regeneration
+            for _, file in ipairs(os.files(path.join(generated_dir, "**.generated.h"))) do
+                if os.filesize(file) == 0 then
+                    need_regen = true
+                    break
+                end
+            end
         end
 
         if need_regen then
             print("🔧 Regenerating reflection headers...")
-            -- ❗ os.execv lève l’erreur si ça échoue (ne pas capturer ok/err)
-            os.execv(tool_path, { "Runtime/Include", "Samples", generated_dir })
-
-            local f = io.open(stamp_path, "w+")
-            if f then f:write(tostring(newest_time)) f:close() end
+            os.execv(tool_path, { include_root, samples_root, generated_dir })
+            cleanup_empty_generated_files(generated_dir)
+            write_timestamp(stamp_path, newest_time)
         else
             print("✔ Headers up-to-date.")
         end
@@ -205,45 +315,65 @@ target("BixEngine")
 -- =========================================
 task("regen")
     set_category("plugin")
-    set_menu {
+    set_menu({
         usage = "xmake regen [options]",
         description = "Force regeneration of reflection headers using BixHeaderTool.",
         options = {
-            {'f', "force", "k", nil, "Force regeneration (clears previous generated files)."}
+            {"f", "force", "k", nil, "Force regeneration (cleans previous generated files)."}
         }
-    }
+    })
 
     on_run(function ()
-        import("core.project.project")
+        local option = import("core.base.option")
 
         local force = option.get("force")
-        local generated_dir = path.join(os.scriptdir(), "Intermediate", "GeneratedHeaders")
+        local generated_dir = compute_generated_dir()
 
         if force then
             print("🧹 Cleaning previous generated headers...")
             os.tryrm(generated_dir)
         end
 
-        -- Build HeaderTool si nécessaire
-        os.execv("xmake", {"build", "BixHeaderTool"})
-        local tool = project.target("BixHeaderTool")
-        assert(tool, "Missing target: BixHeaderTool")
+        if not os.isdir(generated_dir) then
+            os.mkdir(generated_dir)
+        end
 
-        local tool_path = tool:targetfile()
-        os.mkdir(generated_dir)
+        local tool_path = ensure_header_tool()
+        ensure_stub_headers(generated_dir)
 
         print("🔧 Regenerating reflection headers...")
-        os.execv(tool_path, { "Runtime/Include", "Samples", generated_dir })
-
-        -- Met à jour le timestamp
-        local newest_time = 0
-        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
-            local t = os.mtime(header)
-            if t > newest_time then newest_time = t end
-        end
-        local stamp_path = path.join(generated_dir, ".timestamp")
-        local f = io.open(stamp_path, "w+")
-        if f then f:write(tostring(newest_time)) f:close() end
+        os.execv(tool_path, { include_root, samples_root, generated_dir })
+        cleanup_empty_generated_files(generated_dir)
+        write_timestamp(path.join(generated_dir, ".timestamp"), newest_header_timestamp())
 
         print("✅ Done.")
+    end)
+
+-- =========================================
+-- 🔨 Custom command: Full build (regen + build)
+-- =========================================
+task("fullbuild")
+    set_category("plugin")
+    set_menu({
+        usage = "xmake fullbuild",
+        description = "Regenerate reflection headers, then build all targets."
+    })
+
+    on_run(function ()
+        local generated_dir = compute_generated_dir()
+
+        if not os.isdir(generated_dir) then
+            os.mkdir(generated_dir)
+        end
+
+        local tool_path = ensure_header_tool()
+        ensure_stub_headers(generated_dir)
+
+        print("🔧 Regenerating reflection headers...")
+        os.execv(tool_path, { include_root, samples_root, generated_dir })
+        cleanup_empty_generated_files(generated_dir)
+        write_timestamp(path.join(generated_dir, ".timestamp"), newest_header_timestamp())
+
+        print("🏗️ Building all targets...")
+        os.execv("xmake", {"build"})
     end)
