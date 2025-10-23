@@ -259,53 +259,54 @@ namespace BixEngine::Game::Scripting
     BIX_SCRIPT_GENERATED_BODY_FROM_PENDING_IMPL()
 
 #define BIX_SCRIPT_GENERATED_BODY_FROM_PENDING_IMPL() \
-    #if !defined(BIX_SCRIPT_PENDING_CLASS) || !defined(BIX_SCRIPT_PENDING_SUPER) \
-        #error "BCLASS(ClassType, ScriptSuperType[, SaveSuperType]) must be declared before BIX_GENERATED_BODY()" \
+    #if !defined(BIX_SCRIPT_PENDING_CLASS) \
+        #error "BCLASS() must be declared before BIX_GENERATED_BODY()" \
     #endif \
     BIX_SCRIPT_INCLUDE_GENERATED_HEADER(BIX_SCRIPT_PENDING_CLASS) \
-    BIX_DECLARE_SCRIPT_CLASS(BIX_SCRIPT_PENDING_CLASS, BIX_SCRIPT_PENDING_SUPER); \
-    BIX_SCRIPT_APPLY_SAVE_METADATA() \
     using ThisScriptClass = BIX_SCRIPT_PENDING_CLASS; \
-    using Super = BIX_SCRIPT_PENDING_SUPER; \
+    using SaveSuper = typename ThisScriptClass::SuperClass; \
+    using Super = std::conditional_t< \
+        std::conjunction_v< \
+            std::negation<std::is_void<SaveSuper>>, \
+            std::is_base_of<::BixEngine::Game::Scripting::ScriptBase, SaveSuper>>, \
+        SaveSuper, \
+        ::BixEngine::Game::Scripting::ScriptBase>; \
+    BIX_DECLARE_SCRIPT_CLASS(ThisScriptClass, Super); \
     BIX_SCRIPT_CLEAR_PENDING()
 
-#define BIX_SCRIPT_APPLY_SAVE_METADATA() \
-    #ifdef BIX_SAVE_PENDING_SUPER \
-        BIX_CLASS(BIX_SCRIPT_PENDING_CLASS, BIX_SAVE_PENDING_SUPER); \
-        using SaveSuper = BIX_SAVE_PENDING_SUPER; \
-    #endif
-
 #define BIX_SCRIPT_CLEAR_PENDING() \
+    #undef BIX_SCRIPT_PENDING_CLASS
+
+#define BCLASS() \
+    BIX_SCRIPT_PREPARE_CLASS_KEYWORD(class) \
+    BIX_SCRIPT_PREPARE_CLASS_KEYWORD(struct)
+
+#define BSTRUCT() BCLASS()
+#define BENUM()
+
+#define BIX_SCRIPT_PREPARE_CLASS_KEYWORD(keyword) \
+    _Pragma("push_macro(\"" #keyword "\")") \
+    #undef keyword \
+    #define keyword BIX_SCRIPT_CAPTURE_##keyword keyword
+
+#define BIX_SCRIPT_CAPTURE_class(ClassName, ...) \
+    BIX_SCRIPT_SET_PENDING_CLASS(ClassName) \
+    _Pragma("pop_macro(\"class\")") \
+    _Pragma("pop_macro(\"struct\")") \
+    class ClassName __VA_ARGS__
+
+#define BIX_SCRIPT_CAPTURE_struct(ClassName, ...) \
+    BIX_SCRIPT_SET_PENDING_CLASS(ClassName) \
+    _Pragma("pop_macro(\"struct\")") \
+    _Pragma("pop_macro(\"class\")") \
+    struct ClassName __VA_ARGS__
+
+#define BIX_SCRIPT_SET_PENDING_CLASS(ClassName) \
+    BIX_SCRIPT_SET_PENDING_CLASS_IMPL(ClassName)
+
+#define BIX_SCRIPT_SET_PENDING_CLASS_IMPL(ClassName) \
     #undef BIX_SCRIPT_PENDING_CLASS \
-    #undef BIX_SCRIPT_PENDING_SUPER \
-    #ifdef BIX_SAVE_PENDING_SUPER \
-        #undef BIX_SAVE_PENDING_SUPER \
-    #endif
-
-#define BIX_DETAIL_BCLASS_SELECT(_1, _2, _3, NAME, ...) NAME
-
-#define BCLASS(...) \
-    BIX_DETAIL_BCLASS_SELECT(__VA_ARGS__, BIX_DETAIL_BCLASS_WITH_SAVE, BIX_DETAIL_BCLASS_WITHOUT_SAVE, /*unused*/)(__VA_ARGS__)
-
-#define BSTRUCT(...) BCLASS(__VA_ARGS__)
-#define BENUM(...)
-
-#define BIX_DETAIL_BCLASS_WITH_SAVE(ClassType, ScriptSuperType, SaveSuperType) \
-    class ClassType; \
-    #undef BIX_SCRIPT_PENDING_CLASS \
-    #undef BIX_SCRIPT_PENDING_SUPER \
-    #undef BIX_SAVE_PENDING_SUPER \
-    #define BIX_SCRIPT_PENDING_CLASS ClassType \
-    #define BIX_SCRIPT_PENDING_SUPER ScriptSuperType \
-    #define BIX_SAVE_PENDING_SUPER SaveSuperType
-
-#define BIX_DETAIL_BCLASS_WITHOUT_SAVE(ClassType, ScriptSuperType) \
-    class ClassType; \
-    #undef BIX_SCRIPT_PENDING_CLASS \
-    #undef BIX_SCRIPT_PENDING_SUPER \
-    #undef BIX_SAVE_PENDING_SUPER \
-    #define BIX_SCRIPT_PENDING_CLASS ClassType \
-    #define BIX_SCRIPT_PENDING_SUPER ScriptSuperType
+    #define BIX_SCRIPT_PENDING_CLASS ClassName
 
 #define BIX_DECLARE_SCRIPT_CLASS(ClassType, BaseType) \
 public: \

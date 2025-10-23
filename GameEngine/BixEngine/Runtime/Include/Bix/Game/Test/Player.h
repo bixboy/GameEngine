@@ -12,10 +12,11 @@ namespace BixEngine
     {
         class SpriteComponent;
 
-        BCLASS(Player, Actor, Actor)
+        BCLASS()
         class Player : public Actor
         {
             public:
+                BIX_CLASS(Player, Actor);
                 BIX_GENERATED_BODY();
 
                 Player();

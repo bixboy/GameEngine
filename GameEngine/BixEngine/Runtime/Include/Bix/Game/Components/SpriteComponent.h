@@ -5,10 +5,11 @@
 
 namespace BixEngine::Game
 {
-    BCLASS(SpriteComponent, Component, Component)
+    BCLASS()
     class SpriteComponent : public Component
     {
     public:
+        BIX_CLASS(SpriteComponent, Component);
         BIX_GENERATED_BODY();
 
         explicit SpriteComponent(Actor* owner);

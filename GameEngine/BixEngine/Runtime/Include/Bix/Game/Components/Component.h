@@ -10,10 +10,11 @@ namespace BixEngine::Game
 {
     class Actor;
 
-    BCLASS(Component, Scripting::ScriptBase, Object)
+    BCLASS()
     class Component : public Object, public Scripting::ScriptBase
     {
     public:
+        BIX_CLASS(Component, Object);
         BIX_GENERATED_BODY();
 
         Component() : Object("Component") {}

@@ -25,10 +25,11 @@ namespace BixEngine
             Gui::GuiManager* guiManager{nullptr};
         };
 
-        BCLASS(Scene, Scripting::ScriptBase, Object)
+        BCLASS()
         class Scene : public Object, public Scripting::ScriptBase
         {
             public:
+                BIX_CLASS(Scene, Object);
                 BIX_GENERATED_BODY();
 
                 explicit Scene(String name = "Unnamed Scene");

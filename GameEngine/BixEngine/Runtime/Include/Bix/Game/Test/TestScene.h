@@ -10,10 +10,11 @@ namespace BixEngine
     {
         class Player;
 
-        BCLASS(TestScene, Scene)
+        BCLASS()
         class TestScene : public Scene
         {
             public:
+                BIX_CLASS(TestScene, Scene);
                 BIX_GENERATED_BODY();
 
                 TestScene();

@@ -12,10 +12,11 @@ namespace BixEngine::Game
 {
     class Component;
 
-    BCLASS(Actor, Scripting::ScriptBase, Object)
+    BCLASS()
     class Actor : public Object, public Scripting::ScriptBase
     {
         public:
+            BIX_CLASS(Actor, Object);
             BIX_GENERATED_BODY();
 
             explicit Actor(const Math::Transform& transform = Math::Transform());

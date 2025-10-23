@@ -692,15 +692,15 @@ namespace BixEngine::Gui
                                             headerFile << "#include \"" << info.includePath << "\"\n";
                                         headerFile << '\n';
 
-                                        const bool hasSaveBase = baseType != "::BixEngine::Game::Scripting::ScriptBase";
-                                        if (hasSaveBase)
-                                            headerFile << "BCLASS(" << baseName << ", " << baseType << ", " << baseType << ")\n";
-                                        else
-                                            headerFile << "BCLASS(" << baseName << ", " << baseType << ")\n";
+                                        headerFile << "BCLASS()\n";
 
                                         headerFile << "class " << baseName << " : public " << baseType << '\n';
                                         headerFile << "{\n";
                                         headerFile << "public:\n";
+                                        if (baseType == "::BixEngine::Game::Scripting::ScriptBase")
+                                            headerFile << "    BIX_CLASS(" << baseName << ", ::BixEngine::Engine::SaveSystem::BixObject);\n";
+                                        else
+                                            headerFile << "    BIX_CLASS(" << baseName << ", " << baseType << ");\n";
                                         headerFile << "    BIX_GENERATED_BODY();\n\n";
                                         if (inheritsComponent)
                                             headerFile << "    explicit " << baseName << "(::BixEngine::Game::Actor* owner);\n";
