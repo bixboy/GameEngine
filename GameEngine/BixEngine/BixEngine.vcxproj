@@ -2321,7 +2321,6 @@
     <ClInclude Include="Runtime\Include\Bix\Core\Window.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\EmptyScene.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Actor.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Scripting\ScriptReflection.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h" />
     <ClInclude Include="Runtime\Include\Bix\Game\Test\TestScene.h" />
     <ClInclude Include="Runtime\Include\Bix\Graphics\Renderer.h" />

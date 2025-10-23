@@ -2,6 +2,7 @@
 #include <memory>
 #include "Bix/Game/Scene.h"
 
+
 namespace BixEngine::Game
 {
     class Player;
@@ -10,9 +11,7 @@ namespace BixEngine::Game
     class EmptyScene : public Scene
     {
         public:
-            BIX_GENERATED_BODY(EmptyScene);
             GENERATED_BODY();
-            BIX_DECLARE_SCRIPT_CLASS(EmptyScene, Scene);
 
             EmptyScene();
 

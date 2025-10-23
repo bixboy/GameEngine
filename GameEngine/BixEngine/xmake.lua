@@ -1,11 +1,16 @@
+-- =========================================
+-- Project
+-- =========================================
 set_project("BixEngine")
 set_version("0.1.0")
-
-add_rules("mode.debug", "mode.release")
 set_languages("c++20")
 set_warnings("allextra")
 set_optimize("faster")
+add_rules("mode.debug", "mode.release")
 
+-- =========================================
+-- SDL3 setup (reprend ton bloc complet)
+-- =========================================
 option("sdl3_dir")
     set_default(os.getenv("SDL3_DIR"))
     set_showmenu(true)
@@ -18,26 +23,13 @@ option("sdl3_lib_dir")
     set_description("Directory containing SDL3 libraries to link against")
 option_end()
 
--- ---------------------------------------------------------------------------
--- SDL3 path resolution
--- ---------------------------------------------------------------------------
-
 local function resolve_library_dir(candidates)
-    local library_markers = {"SDL3.lib", "SDL3.dll", "libSDL3.a", "libSDL3.so"}
-    local subdirs = {"", "x64", "Win64", "x86", "Win32", "x86_64"}
+    local markers = {"SDL3.lib", "SDL3.dll", "libSDL3.a", "libSDL3.so"}
     for _, candidate in ipairs(candidates) do
-        if candidate then
-            for _, subdir in ipairs(subdirs) do
-                local dir = candidate
-                if subdir ~= "" then
-                    dir = path.join(candidate, subdir)
-                end
-                if os.isdir(dir) then
-                    for _, marker in ipairs(library_markers) do
-                        if os.isfile(path.join(dir, marker)) then
-                            return dir
-                        end
-                    end
+        if candidate and os.isdir(candidate) then
+            for _, marker in ipairs(markers) do
+                if os.isfile(path.join(candidate, marker)) then
+                    return candidate
                 end
             end
         end
@@ -48,39 +40,19 @@ local function collect_sdl3_paths()
     local project_root = os.scriptdir()
     local vendor_root = path.join(project_root, "ThirdParty", "SDL3-3.2.22")
 
-    local sdl3_root = get_config("sdl3_dir") or os.getenv("SDL3_DIR")
-    if not sdl3_root and os.isdir(vendor_root) then
-        sdl3_root = vendor_root
-    end
+    local sdl3_root = get_config("sdl3_dir") or os.getenv("SDL3_DIR") or vendor_root
+    local include_dir = sdl3_root and path.join(sdl3_root, "include") or nil
 
-    local include_dir
-    if sdl3_root then
-        local candidate = path.join(sdl3_root, "include")
-        if os.isdir(candidate) then
-            include_dir = candidate
-        end
-    end
+    local candidates = {
+        get_config("sdl3_lib_dir"),
+        os.getenv("SDL3_LIB_DIR"),
+        path.join(sdl3_root, "lib"),
+        path.join(sdl3_root, "lib", "x64"),
+        path.join(sdl3_root, "lib", "Win64"),
+        path.join(sdl3_root, "lib", "Release"),
+    }
 
-    local lib_dir = get_config("sdl3_lib_dir") or os.getenv("SDL3_LIB_DIR")
-    local lib_candidates = {}
-    if lib_dir then
-        table.insert(lib_candidates, lib_dir)
-    end
-    if sdl3_root then
-        table.insert(lib_candidates, path.join(sdl3_root, "lib"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Win64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x86"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Win32"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x86_64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Release"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib64"))
-    end
-    table.insert(lib_candidates, path.join(project_root, "Build", "Release"))
-    table.insert(lib_candidates, path.join(project_root, "Build", "Debug"))
-
-    lib_dir = resolve_library_dir(lib_candidates)
-
+    local lib_dir = resolve_library_dir(candidates)
     return include_dir, lib_dir, sdl3_root
 end
 
@@ -89,13 +61,13 @@ local sdl3_include_dir, sdl3_lib_dir, sdl3_root = collect_sdl3_paths()
 if sdl3_include_dir then
     add_includedirs(sdl3_include_dir, {public = true})
 else
-    wprint("SDL3 include directory not found. Set SDL3_DIR or --sdl3_dir when configuring.")
+    print("⚠️ SDL3 include directory not found. Set SDL3_DIR or --sdl3_dir.")
 end
 
 if sdl3_lib_dir then
     add_linkdirs(sdl3_lib_dir)
 else
-    wprint("SDL3 library directory not found. Set SDL3_LIB_DIR or --sdl3_lib_dir when configuring.")
+    print("⚠️ SDL3 library directory not found. Set SDL3_LIB_DIR or --sdl3_lib_dir.")
 end
 
 add_defines("SDL_MAIN_HANDLED", {public = true})
@@ -106,19 +78,21 @@ else
     add_syslinks("pthread", "dl")
 end
 
+-- =========================================
+-- HeaderTool
+-- =========================================
 target("BixHeaderTool")
     set_kind("binary")
     set_languages("c++20")
-    add_files("Tools/BixHeaderTool/main.cpp")
+    add_files("Tools/BixHeaderTool/**.cpp")
+    -- set_policy("build.auto_depend", false) -- optionnel
 
--- ---------------------------------------------------------------------------
+-- =========================================
 -- ImGui
--- ---------------------------------------------------------------------------
-
+-- =========================================
 target("bixengine_imgui")
     set_kind("static")
     add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", {public = true})
-    add_headerfiles("ThirdParty/ImGui/**.h")
     add_files(
         "ThirdParty/ImGui/imgui.cpp",
         "ThirdParty/ImGui/imgui_draw.cpp",
@@ -129,65 +103,147 @@ target("bixengine_imgui")
         "ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp"
     )
 
--- ---------------------------------------------------------------------------
--- Engine Core
--- ---------------------------------------------------------------------------
-
+-- =========================================
+-- Engine Runtime
+-- =========================================
 target("bixengine_runtime")
     set_kind("static")
     add_deps("bixengine_imgui", "BixHeaderTool")
-    before_build(function (target)
-        import("core.project.project")
 
-        local tool_target = project.target("BixHeaderTool")
-        assert(tool_target, "BixHeaderTool target not found")
+    -- Dossier stable pour les headers générés
+    local generated_dir = path.join(os.scriptdir(), "Intermediate", "GeneratedHeaders")
 
-        local tool_path = tool_target:targetfile()
-        local scriptdir = os.scriptdir()
-        local args = { path.join(scriptdir, "Runtime", "Include") }
-
-        local samples_dir = path.join(scriptdir, "Samples")
-        if os.isdir(samples_dir) then
-            table.insert(args, samples_dir)
-        end
-
-        os.runv(tool_path, args)
-    end)
+    add_includedirs(".", "Runtime/Include", generated_dir, {public = true})
     add_headerfiles("Runtime/Include/**.h", "Runtime/Include/**.inl")
-    add_includedirs("Runtime/Include", {public = true})
     add_files("Runtime/Source/**.cpp")
     add_links("SDL3", {public = true})
 
--- ---------------------------------------------------------------------------
--- Executable
--- ---------------------------------------------------------------------------
+    -- ✅ Compat XMake 3.0.4 : on ajoute les dépendances fichiers après le chargement
+    after_load(function (target)
+        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
+            target:add("dependfiles", header)
+        end
+        -- (optionnel) si tu as des headers dans Source :
+        for _, header in ipairs(os.files("Runtime/Source/**.h")) do
+            target:add("dependfiles", header)
+        end
+    end)
 
+    before_build(function (target)
+        import("core.project.project")
+
+        local tool = project.target("BixHeaderTool")
+        assert(tool, "Missing target: BixHeaderTool")
+
+        local tool_path = tool:targetfile()
+        if not os.isfile(tool_path) then
+            print("⚙️  Building BixHeaderTool...")
+            os.execv("xmake", {"build", "BixHeaderTool"})
+            tool_path = tool:targetfile()
+        end
+
+        if not os.isdir(generated_dir) then
+            os.mkdir(generated_dir)
+        end
+
+        -- Vérification timestamps
+        local stamp_path = path.join(generated_dir, ".timestamp")
+        local newest_time = 0
+        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
+            local t = os.mtime(header)
+            if t > newest_time then newest_time = t end
+        end
+
+        local need_regen = true
+        if os.isfile(stamp_path) then
+            local f = io.open(stamp_path, "r")
+            local last = tonumber(f:read("*l") or "0")
+            f:close()
+            need_regen = newest_time > last
+        end
+
+        if need_regen then
+            print("🔧 Regenerating reflection headers...")
+            -- ❗ os.execv lève l’erreur si ça échoue (ne pas capturer ok/err)
+            os.execv(tool_path, { "Runtime/Include", "Samples", generated_dir })
+
+            local f = io.open(stamp_path, "w+")
+            if f then f:write(tostring(newest_time)) f:close() end
+        else
+            print("✔ Headers up-to-date.")
+        end
+    end)
+
+-- =========================================
+-- Executable
+-- =========================================
 target("BixEngine")
     set_kind("binary")
     add_deps("bixengine_runtime")
     add_files("Samples/main.cpp")
 
-    -- Copie la bonne SDL3.dll dans le bon répertoire après compilation
     after_build(function (target)
-        if not sdl3_root then
-            return
-        end
-
+        if not sdl3_root then return end
         local dll_candidates = {
             path.join(sdl3_root, "bin", "x64", "SDL3.dll"),
             path.join(sdl3_root, "bin", "Win64", "SDL3.dll"),
             path.join(sdl3_root, "lib", "x64", "SDL3.dll"),
             path.join(sdl3_root, "lib", "Win64", "SDL3.dll"),
         }
-
-        for _, dll_path in ipairs(dll_candidates) do
-            if os.isfile(dll_path) then
-                -- 1️⃣ Copie vers le dossier de l’exécutable (xmake run)
-                os.cp(dll_path, path.join(target:targetdir(), "SDL3.dll"))
-                -- 2️⃣ Copie aussi vers la racine du projet (pour le bouton Run)
-                os.cp(dll_path, path.join(os.scriptdir(), "SDL3.dll"))
-                print("✅ Copied SDL3.dll from: " .. dll_path)
+        for _, dll in ipairs(dll_candidates) do
+            if os.isfile(dll) then
+                os.cp(dll, path.join(target:targetdir(), "SDL3.dll"))
+                os.cp(dll, path.join(os.scriptdir(), "SDL3.dll"))
+                print("✅ Copied SDL3.dll from: " .. dll)
                 break
             end
         end
+    end)
+
+-- =========================================
+-- 🔧 Custom command: Regenerate reflection headers
+-- =========================================
+task("regen")
+    set_category("plugin")
+    set_menu {
+        usage = "xmake regen [options]",
+        description = "Force regeneration of reflection headers using BixHeaderTool.",
+        options = {
+            {'f', "force", "k", nil, "Force regeneration (clears previous generated files)."}
+        }
+    }
+
+    on_run(function ()
+        import("core.project.project")
+
+        local force = option.get("force")
+        local generated_dir = path.join(os.scriptdir(), "Intermediate", "GeneratedHeaders")
+
+        if force then
+            print("🧹 Cleaning previous generated headers...")
+            os.tryrm(generated_dir)
+        end
+
+        -- Build HeaderTool si nécessaire
+        os.execv("xmake", {"build", "BixHeaderTool"})
+        local tool = project.target("BixHeaderTool")
+        assert(tool, "Missing target: BixHeaderTool")
+
+        local tool_path = tool:targetfile()
+        os.mkdir(generated_dir)
+
+        print("🔧 Regenerating reflection headers...")
+        os.execv(tool_path, { "Runtime/Include", "Samples", generated_dir })
+
+        -- Met à jour le timestamp
+        local newest_time = 0
+        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
+            local t = os.mtime(header)
+            if t > newest_time then newest_time = t end
+        end
+        local stamp_path = path.join(generated_dir, ".timestamp")
+        local f = io.open(stamp_path, "w+")
+        if f then f:write(tostring(newest_time)) f:close() end
+
+        print("✅ Done.")
     end)

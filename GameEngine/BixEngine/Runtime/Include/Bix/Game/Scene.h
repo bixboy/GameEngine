@@ -6,6 +6,7 @@
 #include "Bix/Input/InputManager.h"
 #include "Bix/Core/String.h"
 
+
 namespace BixEngine
 {
     namespace Graphics { class Renderer; }
@@ -25,12 +26,10 @@ namespace BixEngine
         };
 
         BCLASS()
-        class Scene : public ::BixEngine::Game::Scripting::ScriptBase
+        class Scene
         {
             public:
-                BIX_GENERATED_BODY(Scene);
                 GENERATED_BODY();
-                BIX_DECLARE_SCRIPT_CLASS(Scene, Scripting::ScriptBase);
 
                 explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;
