@@ -106,6 +106,11 @@ else
     add_syslinks("pthread", "dl")
 end
 
+target("BixHeaderTool")
+    set_kind("binary")
+    set_languages("c++20")
+    add_files("Tools/BixHeaderTool/main.cpp")
+
 -- ---------------------------------------------------------------------------
 -- ImGui
 -- ---------------------------------------------------------------------------
@@ -130,7 +135,24 @@ target("bixengine_imgui")
 
 target("bixengine_runtime")
     set_kind("static")
-    add_deps("bixengine_imgui")
+    add_deps("bixengine_imgui", "BixHeaderTool")
+    before_build(function (target)
+        import("core.project.project")
+
+        local tool_target = project.target("BixHeaderTool")
+        assert(tool_target, "BixHeaderTool target not found")
+
+        local tool_path = tool_target:targetfile()
+        local scriptdir = os.scriptdir()
+        local args = { path.join(scriptdir, "Runtime", "Include") }
+
+        local samples_dir = path.join(scriptdir, "Samples")
+        if os.isdir(samples_dir) then
+            table.insert(args, samples_dir)
+        end
+
+        os.runv(tool_path, args)
+    end)
     add_headerfiles("Runtime/Include/**.h", "Runtime/Include/**.inl")
     add_includedirs("Runtime/Include", {public = true})
     add_files("Runtime/Source/**.cpp")
