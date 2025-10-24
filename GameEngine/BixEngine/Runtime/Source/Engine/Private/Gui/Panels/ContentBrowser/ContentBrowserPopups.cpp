@@ -652,90 +652,60 @@ namespace BixEngine::Gui
                                         const ParentScriptInfo info = GetSelectedParentInfo(requests);
                                         const bool hasParent = info.IsValid();
                                         const bool hasParentInclude = hasParent && !info.includePath.empty();
-                                        const bool inheritsComponent = requests.selectedParentIsComponent || info.isComponent;
-                                        const std::string baseType = hasParent ? info.className : "::BixEngine::Game::Scripting::ScriptBase";
-
-                                        auto resolveScriptKindLiteral = [&]() -> std::string
-                                        {
-                                            if (requests.selectedParentIsBase)
-                                            {
-                                                if (info.className == "BixEngine::Game::Actor" || info.displayName == "Actor")
-                                                    return "::BixEngine::Game::Scripting::ScriptKind::Actor";
-                                                if (info.className == "BixEngine::Game::Component" || info.displayName == "Component")
-                                                    return "::BixEngine::Game::Scripting::ScriptKind::Component";
-                                            }
-
-                                            if (requests.selectedParentIsComponent || info.isComponent)
-                                                return "::BixEngine::Game::Scripting::ScriptKind::Component";
-                                            if (requests.selectedParentIsActor || info.isActor)
-                                                return "::BixEngine::Game::Scripting::ScriptKind::Actor";
-
-                                            switch (requests.scriptType)
-                                            {
-                                                case ScriptTemplateType::Actor:
-                                                    return "::BixEngine::Game::Scripting::ScriptKind::Actor";
-                                                case ScriptTemplateType::Component:
-                                                    return "::BixEngine::Game::Scripting::ScriptKind::Component";
-                                                case ScriptTemplateType::Utility:
-                                                default:
-                                                    break;
-                                            }
-
-                                            return "::BixEngine::Game::Scripting::ScriptKind::Unknown";
-                                        };
+                                        const bool defaultComponent = requests.scriptType == ScriptTemplateType::Component;
+                                        const bool inheritsComponent = requests.selectedParentIsComponent || info.isComponent || defaultComponent;
+                                        const std::string defaultBase = inheritsComponent ? "::BixEngine::Game::Component" : "::BixEngine::Game::Actor";
+                                        const std::string baseType = hasParent ? info.className : defaultBase;
+                                        const std::string baseInclude = inheritsComponent ? "Bix/Game/Components/Component.h" : "Bix/Game/Actor.h";
 
                                         headerFile << "#pragma once\n\n";
                                         headerFile << "// Parent: " << (hasParent ? info.className : "(none)") << '\n';
                                         headerFile << "// Created automatically from the Content Browser\n\n";
-                                        headerFile << "#include \"Bix/Game/Scripting/ScriptReflection.h\"\n";
+                                        headerFile << "#include \"" << baseInclude << "\"\n";
                                         if (hasParentInclude)
                                             headerFile << "#include \"" << info.includePath << "\"\n";
-                                        headerFile << '\n';
-
-                                        headerFile << "class " << baseName << " : public " << baseType << '\n';
+                                        headerFile << "#include \"" << baseName << ".generated.h\"\n\n";
+                                        headerFile << "namespace BixEngine::Game\n";
                                         headerFile << "{\n";
-                                        headerFile << "public:\n";
-                                        headerFile << "    BIX_GENERATED_BODY(" << baseName << ");\n";
-                                        headerFile << "    BIX_DECLARE_SCRIPT_CLASS(" << baseName << ", " << baseType << ");\n\n";
-                                        headerFile << "    using Super = " << baseType << ";\n\n";
+                                        headerFile << "    BCLASS()\n";
+                                        headerFile << "    class " << baseName << " : public " << baseType << '\n';
+                                        headerFile << "    {\n";
+                                        headerFile << "        GENERATED_BODY()\n";
+                                        headerFile << "\n";
+                                        headerFile << "    public:\n";
+                                        headerFile << "        using Super = " << baseType << ";\n\n";
                                         if (inheritsComponent)
-                                            headerFile << "    explicit " << baseName << "(::BixEngine::Game::Actor* owner);\n";
+                                            headerFile << "        explicit " << baseName << "(Actor* owner);\n";
                                         else
-                                            headerFile << "    " << baseName << "();\n";
-                                        headerFile << "    void OnCreate();\n";
-                                        headerFile << "    void OnUpdate(float deltaTime);\n";
-                                        headerFile << "};\n\n";
+                                            headerFile << "        " << baseName << "();\n";
+                                        headerFile << "\n";
+                                        headerFile << "        void BeginPlay() override;\n";
+                                        headerFile << "        void Update(float deltaTime) override;\n";
+                                        headerFile << "    };\n";
+                                        headerFile << "}\n\n";
 
                                         sourceFile << "#include \"" << baseName << kScriptHeaderExtension << "\"\n\n";
-                                        sourceFile << "BIX_DEFINE_SCRIPT_CLASS(" << baseName << ", (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{\n";
-                                        sourceFile << "    .name = \"" << baseName << "\",\n";
-                                        sourceFile << "    .moduleName = BIX_SCRIPT_DEFAULT_MODULE,\n";
-                                        sourceFile << "    .kind = " << resolveScriptKindLiteral() << ",\n";
-                                        sourceFile << "}));\n\n";
+                                        sourceFile << "namespace BixEngine::Game\n";
+                                        sourceFile << "{\n";
                                         if (inheritsComponent)
                                         {
-                                            sourceFile << baseName << "::" << baseName << "(::BixEngine::Game::Actor* owner)\n";
-                                            sourceFile << "    : " << baseType << "(owner)\n";
-                                            sourceFile << "{\n";
-                                            sourceFile << "}\n\n";
+                                            sourceFile << "    " << baseName << "::" << baseName << "(Actor* owner)\n";
+                                            sourceFile << "        : " << baseType << "(owner)\n";
+                                            sourceFile << "    {\n";
+                                            sourceFile << "    }\n\n";
                                         }
                                         else
                                         {
-                                            sourceFile << baseName << "::" << baseName << "() = default;\n\n";
+                                            sourceFile << "    " << baseName << "::" << baseName << "() = default;\n\n";
                                         }
-                                        sourceFile << "void " << baseName << "::OnCreate()\n";
-                                        sourceFile << "{\n";
-                                        
-                                        if (info.IsValid())
-                                            sourceFile << "    // Super::OnCreate();\n";
-                                        
-                                        sourceFile << "}\n\n";
-                                        sourceFile << "void " << baseName << "::OnUpdate(float deltaTime)\n";
-                                        sourceFile << "{\n";
-                                        
-                                        if (info.IsValid())
-                                            sourceFile << "    // Super::OnUpdate(deltaTime);\n";
-                                        
+                                        sourceFile << "    void " << baseName << "::BeginPlay()\n";
+                                        sourceFile << "    {\n";
+                                        sourceFile << "        Super::BeginPlay();\n";
+                                        sourceFile << "    }\n\n";
+                                        sourceFile << "    void " << baseName << "::Update(float deltaTime)\n";
+                                        sourceFile << "    {\n";
+                                        sourceFile << "        Super::Update(deltaTime);\n";
+                                        sourceFile << "    }\n";
                                         sourceFile << "}\n\n";
 
                                         selectedEntry = headerPath.generic_string();

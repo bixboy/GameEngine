@@ -28,7 +28,7 @@ local sdl3_lib = get_config("sdl3_lib_dir") or ""
 if (sdl3_inc == nil or sdl3_inc == "") and (sdl3_lib == nil or sdl3_lib == "") then
 
     sdl3_inc = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include")
-    sdl3_lib = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/lib")
+    sdl3_lib = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/lib/x64")
 
 elseif (sdl3_inc == nil or sdl3_inc == "") or (sdl3_lib == nil or sdl3_lib == "") then
 
@@ -49,8 +49,6 @@ local generated_dir = path.join(
     "GeneratedHeaders"
 )
 
-print("[IncludeDir] Added generated header path:", path.join(os.projectdir(), generated_dir))
-
 -- ✅ Target: BixHeaderTool
 target("BixHeaderTool")
     set_kind("binary")
@@ -65,31 +63,72 @@ target("BixHeaderTool")
 -- ✅ Target: BixEngine
 target("BixEngine")
     set_kind("static")
+    set_default(false)
     add_deps("BixHeaderTool")
 
-    -- Include paths
-    add_includedirs("Runtime/Include", { public = true })
-    add_includedirs("ThirdParty/ImGui", { public = true })
-    add_includedirs("ThirdParty/ImGui/backends", { public = true })
-    add_includedirs(sdl3_inc)
-    add_includedirs(path.join(os.projectdir(), generated_dir), { public = true })
-    add_includedirs(generated_dir, { public = true })
-
-
-    -- Source files
     add_files("Runtime/Source/**.cpp")
 
-    -- Libs
+    add_includedirs("Runtime/Include", { public = true })
+
+    -- 🔹 Fichiers ImGui
+    add_files("ThirdParty/ImGui/*.cpp")
+    add_files("ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp")
+    add_files("ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp")
+    add_includedirs("ThirdParty/ImGui", { public = true })
+    add_includedirs("ThirdParty/ImGui/backends", { public = true })
+
+
+    add_includedirs(path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include"), { public = true })
+    add_includedirs(path.join(os.projectdir(), generated_dir), { public = true })
     add_linkdirs(sdl3_lib)
     add_links("SDL3")
 
-    -- Auto-regeneration
-    before_build(function(target)
+    -- ✅ Auto-génération AVANT build
+    on_load(function(target)
+        import("core.project.config")
         local reflection = import("Tools.xmake.reflection")
+        local generated_dir = path.join(
+            "Build", os.host(), os.arch(),
+            config.get("mode") or "debug",
+            "Intermediate", "GeneratedHeaders"
+        )
 
-        if not os.isdir(generated_dir) or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
-            print("[BixEngine] Génération initiale des headers manquants...")
-            reflection.generate_headers(false, generated_dir)
+        print("[BixEngine] Vérification des headers générés…")
+        if not os.isdir(generated_dir)
+            or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
+            print("[BixEngine] → Génération initiale des headers manquants…")
+            os.exec("xmake build BixHeaderTool")
+            reflection.generate_headers(true, generated_dir)
+        else
+            print("[BixEngine] Headers déjà présents, aucune génération requise.")
+        end
+    end)
+
+
+------------------------------------------------------------
+-- ✅ Target: BixRun (exécutable principal)
+------------------------------------------------------------
+target("BixRun")
+    set_kind("binary")
+    set_default(true)
+
+    -- Fichier d'entrée (main)
+    add_files("BixRun/main.cpp")
+    add_deps("BixEngine")
+
+    -- Include + libs
+    add_includedirs("Runtime/Include")
+    add_includedirs(path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include"))
+    add_includedirs(path.join(os.projectdir(), generated_dir))
+    add_linkdirs(sdl3_lib)
+    add_links("SDL3")
+
+    -- Copie automatique de SDL3.dll
+    after_build(function(target)
+        local exe_dir = path.directory(target:targetfile())
+        local dll_path = path.join(sdl3_lib, "SDL3.dll")
+        if os.isfile(dll_path) then
+            os.cp(dll_path, exe_dir)
         end
     end)
 
