@@ -10,12 +10,12 @@ namespace BixEngine::Game
     BCLASS()
     class SpriteComponent : public Component
     {
+        GENERATED_BODY()
+        
     public:
-        GENERATED_BODY();
 
         explicit SpriteComponent(Actor* owner);
-        SpriteComponent(Actor* owner, SDL_Color color, float w, float h)
-            : Component(owner), color_(color), width_(w), height_(h) {}
+        SpriteComponent(Actor* owner, SDL_Color color, float w, float h) : Component(owner), color_(color), width_(w), height_(h) {}
 
         void Render(Graphics::Renderer& renderer) const override;
 

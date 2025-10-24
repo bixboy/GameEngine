@@ -3,7 +3,6 @@
 #include "Bix/Game/Scene.h"
 #include "TestScene.generated.h"
 
-
 namespace BixEngine
 {
     namespace Graphics { class Renderer; }
@@ -15,9 +14,9 @@ namespace BixEngine
         BCLASS()
         class TestScene : public Scene
         {
+            GENERATED_BODY()
+            
             public:
-                GENERATED_BODY();
-
                 TestScene();
                 ~TestScene() override;
 

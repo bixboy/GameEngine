@@ -5,7 +5,6 @@
 #include "Bix/Game/Actor.h"
 #include "Player.generated.h"
 
-
 namespace BixEngine
 {
     namespace Graphics { class Renderer; }
@@ -18,9 +17,9 @@ namespace BixEngine
         BCLASS()
         class Player : public Actor
         {
+            GENERATED_BODY()
+            
             public:
-                GENERATED_BODY();
-
                 Player();
                 Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
 

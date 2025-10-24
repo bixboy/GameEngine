@@ -70,6 +70,7 @@ target("BixEngine")
     -- Include paths
     add_includedirs("Runtime/Include", { public = true })
     add_includedirs("ThirdParty/ImGui", { public = true })
+    add_includedirs("ThirdParty/ImGui/backends", { public = true })
     add_includedirs(sdl3_inc)
     add_includedirs(path.join(os.projectdir(), generated_dir), { public = true })
     add_includedirs(generated_dir, { public = true })

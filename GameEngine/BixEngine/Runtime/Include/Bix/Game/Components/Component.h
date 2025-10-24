@@ -4,7 +4,6 @@
 #include "Bix/Reflection/BixReflection.h"
 #include "Component.generated.h"
 
-
 namespace BixEngine::Graphics { class Renderer; }
 
 namespace BixEngine::Game
@@ -14,9 +13,9 @@ namespace BixEngine::Game
     BCLASS()
     class Component
     {
+        GENERATED_BODY()
+        
     public:
-        GENERATED_BODY();
-
         explicit Component(Actor* owner) : owner_(owner) {}
         virtual ~Component() = default;
         
@@ -25,11 +24,7 @@ namespace BixEngine::Game
         virtual void Render(Graphics::Renderer& /*renderer*/) const {}
 
         [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
-
-        /// Draws the component specific inspector user interface. Override in
-        /// derived components to expose editable properties inside the actor
-        /// inspector. The default implementation intentionally does nothing so
-        /// that callers can detect the absence of custom UI.
+        
         virtual void DrawInspectorUI() {}
 
     protected:

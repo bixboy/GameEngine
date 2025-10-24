@@ -29,10 +29,17 @@ namespace BixTool
         const std::string scoped    = MakeScopedName(cls.Namespaces, cls.Name);
 
         std::string baseScoped;
-        if (!cls.BaseType.empty()) {
+        if (!baseScoped.empty()) 
+        {
             baseScoped = Trim(cls.BaseType);
-            if (!baseScoped.empty() && baseScoped.rfind("::", 0) != 0)
+
+            if (!baseScoped.empty() && baseScoped.find("::") == std::string::npos) 
+            {
+                baseScoped = MakeScopedName(cls.Namespaces, baseScoped);
+            } else if (baseScoped.rfind("::", 0) != 0) 
+            {
                 baseScoped = "::" + baseScoped;
+            }
         }
 
         oss << "#define GENERATED_BODY() \\\n";

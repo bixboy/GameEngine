@@ -3,7 +3,6 @@
 #include "Bix/Game/Scene.h"
 #include "EmptyScene.generated.h"
 
-
 namespace BixEngine::Game
 {
     class Player;
@@ -11,9 +10,9 @@ namespace BixEngine::Game
     BCLASS()
     class EmptyScene : public Scene
     {
+        GENERATED_BODY()
+        
         public:
-            GENERATED_BODY();
-
             EmptyScene();
 
             void HandleEvent(const SDL_Event& event) override;

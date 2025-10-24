@@ -16,14 +16,7 @@ namespace BixEngine::Game
         constexpr Math::Vector3 kPlayerStart{320.0f, 240.0f, 0.0f};
         constexpr Math::Vector3 kPlayerSize{50.0f, 50.0f, 1.0f};
         constexpr SDL_Color kPlayerColor{255, 165, 0, 255};
-        constexpr const char* kTestSceneModule = "Test";
     }
-
-    BIX_DEFINE_SCRIPT_CLASS(TestScene, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
-        .name = "TestScene",
-        .moduleName = kTestSceneModule,
-        .kind = ::BixEngine::Game::Scripting::ScriptKind::Scene,
-    }));
 
     TestScene::TestScene() : Scene("TestScene") {}
 

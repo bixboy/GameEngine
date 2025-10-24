@@ -7,7 +7,6 @@
 #include "Bix/Core/String.h"
 #include "Scene.generated.h"
 
-
 namespace BixEngine
 {
     namespace Graphics { class Renderer; }
@@ -29,8 +28,9 @@ namespace BixEngine
         BCLASS()
         class Scene
         {
+            GENERATED_BODY()
+            
             public:
-                GENERATED_BODY();
 
                 explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;

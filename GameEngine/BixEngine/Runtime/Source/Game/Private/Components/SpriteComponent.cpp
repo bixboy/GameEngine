@@ -12,14 +12,7 @@ namespace BixEngine::Game
         constexpr float kDefaultSpriteHeight = 32.0f;
     }
 
-    BIX_DEFINE_SCRIPT_CLASS(SpriteComponent, (::BixEngine::Game::Scripting::ScriptRegistrationDescriptor{
-        .name = "SpriteComponent",
-        .moduleName = "Game",
-        .kind = ::BixEngine::Game::Scripting::ScriptKind::Component,
-    }));
-
-    SpriteComponent::SpriteComponent(Actor* owner)
-        : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight)
+    SpriteComponent::SpriteComponent(Actor* owner) : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight)
     {
     }
 

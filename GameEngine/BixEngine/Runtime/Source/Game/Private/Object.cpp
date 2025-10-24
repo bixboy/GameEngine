@@ -80,7 +80,7 @@ namespace BixEngine::Game
         ReadPrimitive(stream, length);
 
         String result(length, '\0');
-        stream.read(result.data(), static_cast<std::streamsize>(length));
+        stream.read(result.data(), length);
 
         if (!stream)
             throw std::runtime_error("Failed to read string from stream.");
