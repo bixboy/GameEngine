@@ -4,11 +4,16 @@
 #include <ostream>
 #include "Bix/Math/Math.h"
 #include "Bix/Core/String.h"
+#include "Bix/Reflection/BixReflection.h"
+#include "Object.generated.h"
 
 namespace BixEngine::Game
 {
+    BCLASS()
     class Object
     {
+        GENERATED_BODY()
+
     public:
         Object();
         explicit Object(String name);
