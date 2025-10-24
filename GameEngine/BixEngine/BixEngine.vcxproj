@@ -115,7 +115,19 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>
+        $(ProjectDir)Runtime\Include;
+        $(ProjectDir)Runtime\Source\Core\Private;
+        $(ProjectDir)Runtime\Source\Game\Private;
+        $(ProjectDir)Runtime\Source\Graphics\Private;
+        $(ProjectDir)Runtime\Source\Input\Private;
+        $(ProjectDir)Runtime\Source\Math\Private;
+        $(ProjectDir)Build\windows\x64\debug\Intermediate\GeneratedHeaders;
+        $(BixEngineSDL3Include);
+        $(BixEngineThirdParty)ImGui;
+        $(BixEngineThirdParty)ImGui\backends;
+        %(AdditionalIncludeDirectories)
+      </AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>

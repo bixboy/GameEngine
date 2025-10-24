@@ -76,12 +76,9 @@ function generate_headers(force, generated_dir)
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
 
     local builddir = os.isdir(path.join(os.projectdir(), "Build")) and "Build" or "build"
-    local mode = config.get("mode") or "release"
-    local tool_exe = path.join(os.projectdir(), builddir, os.host(), os.arch(), mode, "BixHeaderTool.exe")
+    local mode = get_config("mode") or "debug"
 
-    if is_plat("windows") then
-        tool_exe = tool_exe .. ".exe"
-    end
+    local tool_exe = path.join(os.projectdir(), builddir, os.host(), os.arch(), mode, "BixHeaderTool.exe")
 
     cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
     if not os.isfile(tool_exe) then

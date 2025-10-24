@@ -35,7 +35,21 @@ elseif (sdl3_inc == nil or sdl3_inc == "") or (sdl3_lib == nil or sdl3_lib == ""
     raise("Veuillez définir *à la fois* sdl3_dir et sdl3_lib_dir pour utiliser SDL3 externe.")
 end
 
-local generated_dir = path.join("$(builddir)", "Intermediate", "GeneratedHeaders")
+-- Dossier de génération dynamique
+local plat = get_config("plat") or os.host()
+local arch = get_config("arch") or os.arch()
+local mode = get_config("mode") or "debug"
+
+local generated_dir = path.join(
+    "Build",
+    plat,
+    arch,
+    mode,
+    "Intermediate",
+    "GeneratedHeaders"
+)
+
+print("[IncludeDir] Added generated header path:", path.join(os.projectdir(), generated_dir))
 
 -- ✅ Target: BixHeaderTool
 target("BixHeaderTool")
@@ -57,7 +71,9 @@ target("BixEngine")
     add_includedirs("Runtime/Include", { public = true })
     add_includedirs("ThirdParty/ImGui", { public = true })
     add_includedirs(sdl3_inc)
-    add_includedirs(generated_dir, { public = true })  -- ✅ <<--- AJOUT ICI
+    add_includedirs(path.join(os.projectdir(), generated_dir), { public = true })
+    add_includedirs(generated_dir, { public = true })
+
 
     -- Source files
     add_files("Runtime/Source/**.cpp")
@@ -68,10 +84,9 @@ target("BixEngine")
 
     -- Auto-regeneration
     before_build(function(target)
-
         local reflection = import("Tools.xmake.reflection")
-        if not os.isdir(generated_dir) or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
 
+        if not os.isdir(generated_dir) or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
             print("[BixEngine] Génération initiale des headers manquants...")
             reflection.generate_headers(false, generated_dir)
         end
