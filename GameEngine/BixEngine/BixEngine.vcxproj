@@ -988,7 +988,6 @@
       <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Scripting\ScriptRegistry.cpp" />
     <ClCompile Include="Runtime\Source\Game\Private\Scene.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
