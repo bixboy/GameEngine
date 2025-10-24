@@ -5,7 +5,6 @@
 #include "Bix/Engine/Gui/Utils/GuiHelpers.h"
 #include "Bix/Game/Actor.h"
 #include "Bix/Game/Components/Component.h"
-#include "Bix/Game/Components/ComponentRegistry.h"
 #include "Bix/Game/Scene.h"
 #include "Bix/Game/SceneManager.h"
 #include "Bix/Math/Vector2.h"
@@ -21,7 +20,7 @@
 #include <cfloat>
 #include <cctype>
 #include <cstring>
-#include <functional>
+#include <memory>
 #include <string>
 #include <unordered_map>
 #include <utility>
@@ -405,26 +404,50 @@ namespace BixEngine::Gui
             }
         }
 
-        bool DrawScriptObjectProperties(Game::Scripting::ScriptBase& scriptObject, bool includeHeader)
+        bool IsSubclassOf(const ReflectionClass& type, const ReflectionClass& base)
         {
-            const auto* classInfo = scriptObject.GetScriptClass().GetReflectionInfo();
-            if (!classInfo)
+            const ReflectionClass* current = &type;
+            while (current)
             {
-                return false;
+                if (current == &base)
+                {
+                    return true;
+                }
+
+                current = current->SuperClass;
             }
 
+            return false;
+        }
+
+        bool DrawClassProperties(const ReflectionClass& classInfo,
+                                 void* instance,
+                                 bool includeHeader,
+                                 const char* headerLabel,
+                                 bool showEmptyMessage)
+        {
             std::vector<const ReflectionProperty*> properties;
-            properties.reserve(classInfo->Properties.size());
-            GatherClassProperties(*classInfo, properties);
+            properties.reserve(classInfo.Properties.size());
+            GatherClassProperties(classInfo, properties);
 
             if (properties.empty())
             {
+                if (includeHeader && headerLabel && headerLabel[0] != '\0')
+                {
+                    Utils::DrawSeparatorText(headerLabel);
+                }
+
+                if (showEmptyMessage)
+                {
+                    Utils::DrawEmptyStateMessage("No editable properties.");
+                }
+
                 return false;
             }
 
-            if (includeHeader)
+            if (includeHeader && headerLabel && headerLabel[0] != '\0')
             {
-                Utils::DrawSeparatorText("Properties");
+                Utils::DrawSeparatorText(headerLabel);
             }
 
             bool anyDrawn = false;
@@ -435,7 +458,7 @@ namespace BixEngine::Gui
                     continue;
                 }
 
-                anyDrawn = DrawReflectedProperty(*property, &scriptObject) || anyDrawn;
+                anyDrawn = DrawReflectedProperty(*property, instance) || anyDrawn;
             }
 
             return anyDrawn;
@@ -444,54 +467,95 @@ namespace BixEngine::Gui
         void DrawAddComponentPopup(Game::Actor& actor)
         {
             if (!ImGui::BeginPopup("AddComponentPopup"))
+            {
                 return;
+            }
 
             ImGui::TextUnformatted("Add Component");
             ImGui::Separator();
 
-            const auto descriptors = Game::ComponentRegistry::GetInstance().GetRegisteredComponents();
-            if (descriptors.empty())
+            const ReflectionClass& componentClass = Game::Component::StaticClass();
+
+            struct ComponentClassEntry
+            {
+                const ReflectionClass* info{nullptr};
+                std::string label;
+            };
+
+            std::vector<ComponentClassEntry> entries;
+            entries.reserve(32);
+
+            for (ReflectionClass* classInfo : ::Bix::Reflection::GetAllClasses())
+            {
+                if (!classInfo || classInfo == &componentClass)
+                {
+                    continue;
+                }
+
+                if (!IsSubclassOf(*classInfo, componentClass))
+                {
+                    continue;
+                }
+
+                if (classInfo->IsAbstract || !classInfo->CanConstruct())
+                {
+                    continue;
+                }
+
+                ComponentClassEntry entry{};
+                entry.info = classInfo;
+                entry.label = !classInfo->Name.empty() ? classInfo->Name : classInfo->QualifiedName;
+                if (entry.label.empty())
+                {
+                    entry.label = "Component";
+                }
+
+                entries.push_back(std::move(entry));
+            }
+
+            std::sort(entries.begin(), entries.end(), [](const ComponentClassEntry& lhs, const ComponentClassEntry& rhs)
+            {
+                return lhs.label < rhs.label;
+            });
+
+            if (entries.empty())
             {
                 Utils::DrawEmptyStateMessage("No components available.");
             }
             else
             {
-                for (const Game::ComponentDescriptor& descriptor : descriptors)
+                for (const ComponentClassEntry& entry : entries)
                 {
-                    std::string label = descriptor.name;
-                    std::string moduleName;
-                    std::string scriptName;
-
-                    if (descriptor.scriptClass)
+                    if (!entry.info)
                     {
-                        const auto& scriptInfo = *descriptor.scriptClass;
-                        if (!scriptInfo.displayName.IsEmpty())
-                        {
-                            label = scriptInfo.displayName.Std();
-                        }
-                        moduleName = scriptInfo.moduleName.Std();
-                        scriptName = scriptInfo.name.Std();
+                        continue;
                     }
 
-                    if (ImGui::MenuItem(label.c_str()))
+                    if (ImGui::MenuItem(entry.label.c_str()))
                     {
-                        if (descriptor.createFunction)
+                        std::unique_ptr<Game::Component> ownedComponent;
+                        if (void* instance = entry.info->Construct(&actor))
                         {
-                            descriptor.createFunction(actor);
+                            ownedComponent.reset(static_cast<Game::Component*>(instance));
                         }
-                        ImGui::CloseCurrentPopup();
+
+                        if (ownedComponent)
+                        {
+                            actor.AddComponent(std::move(ownedComponent));
+                            ImGui::CloseCurrentPopup();
+                        }
                     }
 
-                    if (descriptor.scriptClass && ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                    if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
                     {
                         ImGui::BeginTooltip();
-                        if (!moduleName.empty())
+                        if (!entry.info->QualifiedName.empty())
                         {
-                            ImGui::Text("Module: %s", moduleName.c_str());
+                            ImGui::TextUnformatted(entry.info->QualifiedName.c_str());
                         }
-                        if (!scriptName.empty())
+                        else
                         {
-                            ImGui::Text("Class: %s", scriptName.c_str());
+                            ImGui::TextUnformatted(entry.label.c_str());
                         }
                         ImGui::EndTooltip();
                     }
@@ -531,7 +595,7 @@ namespace BixEngine::Gui
             Utils::DrawLabelValue("Type", ToStdString(actor.GetTypeName()));
             Utils::DrawLabelValue("ID", ToStdString(actor.GetUUID()));
 
-            DrawScriptObjectProperties(actor, true);
+            DrawClassProperties(actor.GetClass(), &actor, true, "Properties", false);
         }
 
         void DrawTransformSection(Game::Actor& actor)
@@ -627,14 +691,8 @@ namespace BixEngine::Gui
 
                 if (open)
                 {
-                    const float startCursor = ImGui::GetCursorPosY();
-                    component->DrawInspectorUI();
-                    DrawScriptObjectProperties(*component, false);
-                    const float endCursor = ImGui::GetCursorPosY();
+                    DrawClassProperties(component->GetClass(), component.get(), false, nullptr, true);
 
-                    if (endCursor <= startCursor + FLT_EPSILON)
-                        Utils::DrawEmptyStateMessage("No editable properties.");
-                    
                     ImGui::TreePop();
                 }
 

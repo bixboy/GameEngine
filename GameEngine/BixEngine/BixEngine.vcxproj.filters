@@ -60,12 +60,6 @@
     <ClCompile Include="Runtime\Source\Game\Private\ActorSpawner.cpp">
       <Filter>Runtime\Game\Private</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Components\Component.cpp">
-      <Filter>Runtime\Game\Private\Components</Filter>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Components\ComponentRegistry.cpp">
-      <Filter>Runtime\Game\Private\Components</Filter>
-    </ClCompile>
     <ClCompile Include="Runtime\Source\Game\Private\Components\SpriteComponent.cpp">
       <Filter>Runtime\Game\Private\Components</Filter>
     </ClCompile>
@@ -183,9 +177,6 @@
       <Filter>Runtime\Include\Game</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Components\Component.h">
-      <Filter>Runtime\Include\Game\Components</Filter>
-    </ClInclude>
-    <ClInclude Include="Runtime\Include\Bix\Game\Components\ComponentRegistry.h">
       <Filter>Runtime\Include\Game\Components</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Game\Components\SpriteComponent.h">

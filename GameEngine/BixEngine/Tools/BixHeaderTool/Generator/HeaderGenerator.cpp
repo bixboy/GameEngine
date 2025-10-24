@@ -28,15 +28,14 @@ namespace BixTool
         const std::string qualified = MakeQualifiedName(cls.Namespaces, cls.Name);
         const std::string scoped    = MakeScopedName(cls.Namespaces, cls.Name);
 
-        std::string baseScoped;
-        if (!baseScoped.empty()) 
+        std::string baseScoped = Trim(cls.BaseType);
+        if (!baseScoped.empty())
         {
-            baseScoped = Trim(cls.BaseType);
-
-            if (!baseScoped.empty() && baseScoped.find("::") == std::string::npos) 
+            if (baseScoped.find("::") == std::string::npos)
             {
                 baseScoped = MakeScopedName(cls.Namespaces, baseScoped);
-            } else if (baseScoped.rfind("::", 0) != 0) 
+            }
+            else if (baseScoped.rfind("::", 0) != 0)
             {
                 baseScoped = "::" + baseScoped;
             }
@@ -64,6 +63,43 @@ namespace BixTool
                     << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
                     << property.Name << ", \"" << property.Type << "\"); \\\n";
         }
+        oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    info.ConstructorFn = nullptr; \\\n";
+        oss << "                } \\\n";
+        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Component, ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
+        oss << "                    { \\\n";
+        oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
+        oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
+        oss << "                        { \\\n";
+        oss << "                            if (!owner) \\\n";
+        oss << "                            { \\\n";
+        oss << "                                return nullptr; \\\n";
+        oss << "                            } \\\n";
+        oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
+        oss << "                        } \\\n";
+        oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+        oss << "                        { \\\n";
+        oss << "                            (void)owner; \\\n";
+        oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
+        oss << "                        } \\\n";
+        oss << "                        else \\\n";
+        oss << "                        { \\\n";
+        oss << "                            (void)owner; \\\n";
+        oss << "                            return nullptr; \\\n";
+        oss << "                        } \\\n";
+        oss << "                    }; \\\n";
+        oss << "                } \\\n";
+        oss << "                else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+        oss << "                } \\\n";
+        oss << "                else \\\n";
+        oss << "                { \\\n";
+        oss << "                    info.ConstructorFn = nullptr; \\\n";
+        oss << "                } \\\n";
         oss << "            }); \\\n";
         oss << "        return classInfo; \\\n";
         oss << "    } \\\n";

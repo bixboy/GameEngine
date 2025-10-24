@@ -12,6 +12,12 @@
 #include <utility>
 #include <vector>
 
+namespace BixEngine::Game
+{
+    class Actor;
+    class Component;
+}
+
 namespace Bix::Reflection
 {
     struct ClassInfo;
@@ -65,6 +71,10 @@ namespace Bix::Reflection
         std::size_t Size = 0;
         ClassInfo* SuperClass = nullptr;
         std::vector<PropertyInfo> Properties;
+        bool IsAbstract = false;
+
+        using Constructor = void* (*)(void* context);
+        Constructor ConstructorFn = nullptr;
 
         [[nodiscard]] const PropertyInfo* FindProperty(std::string_view name) const
         {
@@ -100,6 +110,22 @@ namespace Bix::Reflection
             }
 
             return nullptr;
+        }
+
+        [[nodiscard]] bool CanConstruct() const noexcept
+        {
+            return ConstructorFn != nullptr;
+        }
+
+        void* Construct(void* context = nullptr) const
+        {
+            return ConstructorFn ? ConstructorFn(context) : nullptr;
+        }
+
+        template<typename T>
+        T* ConstructTyped(void* context = nullptr) const
+        {
+            return static_cast<T*>(Construct(context));
         }
     };
 
@@ -227,6 +253,7 @@ namespace Bix::Reflection
                 classInfo.Size = sizeof(ClassType);
                 classInfo.SuperClass = superClass;
                 classInfo.Properties.clear();
+                classInfo.ConstructorFn = nullptr;
 
                 populator(classInfo);
 
@@ -234,6 +261,8 @@ namespace Bix::Reflection
                 {
                     property.Owner = &classInfo;
                 }
+
+                classInfo.IsAbstract = std::is_abstract_v<ClassType>;
 
                 Registry::Get().Register(&classInfo);
             });
