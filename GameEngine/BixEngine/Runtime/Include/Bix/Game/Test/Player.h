@@ -3,6 +3,7 @@
 #include <iosfwd>
 #include <memory>
 #include "Bix/Game/Actor.h"
+#include "Player.generated.h"
 
 
 namespace BixEngine

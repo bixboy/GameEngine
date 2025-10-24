@@ -1,7 +1,9 @@
 #pragma once
 
 #include "Bix/Game/Components/Component.h"
+#include "Bix/Reflection/BixReflection.h"
 #include "SDL3/SDL.h"
+#include "SpriteComponent.generated.h"
 
 namespace BixEngine::Game
 {

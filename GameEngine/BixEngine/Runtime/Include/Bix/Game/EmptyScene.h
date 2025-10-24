@@ -1,6 +1,7 @@
 #pragma once
 #include <memory>
 #include "Bix/Game/Scene.h"
+#include "EmptyScene.generated.h"
 
 
 namespace BixEngine::Game

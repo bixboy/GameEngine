@@ -1,6 +1,9 @@
 #pragma once
 
 #include "Bix/Core/String.h"
+#include "Bix/Reflection/BixReflection.h"
+#include "Component.generated.h"
+
 
 namespace BixEngine::Graphics { class Renderer; }
 

@@ -5,6 +5,7 @@
 #include "Bix/Game/Actor.h"
 #include "Bix/Input/InputManager.h"
 #include "Bix/Core/String.h"
+#include "Scene.generated.h"
 
 
 namespace BixEngine
