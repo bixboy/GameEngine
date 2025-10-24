@@ -2134,7 +2134,7 @@
       <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Exemple\main.cpp" />
+    <ClCompile Include="BixRun\main.cpp" />
   <ClCompile Include="ThirdParty\ImGui\imgui.cpp" />
     <ClCompile Include="ThirdParty\ImGui\imgui_demo.cpp" />
     <ClCompile Include="ThirdParty\ImGui\imgui_draw.cpp" />

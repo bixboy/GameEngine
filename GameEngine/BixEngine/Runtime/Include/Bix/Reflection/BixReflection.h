@@ -2,6 +2,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <functional>   // ✅ important pour std::function
 #include <mutex>
 #include <new>
 #include <string>
@@ -24,21 +25,24 @@ namespace Bix::Reflection
 
     struct PropertyInfo
     {
-        using Getter = void* (*)(void*);
-        using ConstGetter = const void* (*)(const void*);
+        // ✅ Passe en std::function pour supporter les lambdas capturées
+        using Getter     = std::function<void*(void*)>;
+        using ConstGetter= std::function<const void*(const void*)>;
 
         std::string Name;
         std::string TypeName;
-        std::size_t Offset = 0;
-        bool HasOffset = false;
-        std::size_t Size = 0;
+        std::size_t Offset   = 0;
+        bool        HasOffset= false;
+        std::size_t Size     = 0;
         const ClassInfo* Owner = nullptr;
-        Getter Access = nullptr;
-        ConstGetter ConstAccess = nullptr;
+
+        // ✅ Noms inchangés, mais types mis à jour
+        Getter     Access;
+        ConstGetter ConstAccess;
 
         [[nodiscard]] bool IsValid() const noexcept
         {
-            return Access != nullptr && ConstAccess != nullptr;
+            return static_cast<bool>(Access) && static_cast<bool>(ConstAccess);
         }
 
         void* GetRaw(void* instance) const
@@ -69,7 +73,7 @@ namespace Bix::Reflection
         std::string Name;
         std::string QualifiedName;
         std::size_t Size = 0;
-        ClassInfo* SuperClass = nullptr;
+        ClassInfo*  SuperClass = nullptr;
         std::vector<PropertyInfo> Properties;
         bool IsAbstract = false;
 
@@ -81,17 +85,9 @@ namespace Bix::Reflection
             for (const auto& property : Properties)
             {
                 if (property.Name == name)
-                {
                     return &property;
-                }
             }
-
-            if (SuperClass)
-            {
-                return SuperClass->FindProperty(name);
-            }
-
-            return nullptr;
+            return SuperClass ? SuperClass->FindProperty(name) : nullptr;
         }
 
         PropertyInfo* FindProperty(std::string_view name)
@@ -99,23 +95,12 @@ namespace Bix::Reflection
             for (auto& property : Properties)
             {
                 if (property.Name == name)
-                {
                     return &property;
-                }
             }
-
-            if (SuperClass)
-            {
-                return SuperClass->FindProperty(name);
-            }
-
-            return nullptr;
+            return SuperClass ? SuperClass->FindProperty(name) : nullptr;
         }
 
-        [[nodiscard]] bool CanConstruct() const noexcept
-        {
-            return ConstructorFn != nullptr;
-        }
+        [[nodiscard]] bool CanConstruct() const noexcept { return ConstructorFn != nullptr; }
 
         void* Construct(void* context = nullptr) const
         {
@@ -140,61 +125,39 @@ namespace Bix::Reflection
 
         void Register(ClassInfo* classInfo)
         {
-            if (!classInfo)
-            {
-                return;
-            }
-
+            if (!classInfo) return;
             std::lock_guard<std::mutex> lock(mutex_);
 
             if (!classInfo->QualifiedName.empty())
             {
                 if (byQualifiedName_.find(classInfo->QualifiedName) != byQualifiedName_.end())
-                {
                     return;
-                }
             }
             else if (!classInfo->Name.empty())
             {
                 if (byName_.find(classInfo->Name) != byName_.end())
-                {
                     return;
-                }
             }
 
             classes_.push_back(classInfo);
-
             if (!classInfo->Name.empty())
-            {
                 byName_.emplace(classInfo->Name, classInfo);
-            }
-
             if (!classInfo->QualifiedName.empty())
-            {
                 byQualifiedName_.emplace(classInfo->QualifiedName, classInfo);
-            }
         }
 
         ClassInfo* Find(std::string_view name)
         {
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = byName_.find(std::string{name});
-            if (it != byName_.end())
-            {
-                return it->second;
-            }
-            return nullptr;
+            return it != byName_.end() ? it->second : nullptr;
         }
 
         ClassInfo* FindByQualifiedName(std::string_view name)
         {
             std::lock_guard<std::mutex> lock(mutex_);
             auto it = byQualifiedName_.find(std::string{name});
-            if (it != byQualifiedName_.end())
-            {
-                return it->second;
-            }
-            return nullptr;
+            return it != byQualifiedName_.end() ? it->second : nullptr;
         }
 
         std::vector<ClassInfo*> GetClasses()
@@ -212,20 +175,9 @@ namespace Bix::Reflection
         std::unordered_map<std::string, ClassInfo*> byQualifiedName_;
     };
 
-    inline ClassInfo* FindClass(std::string_view name)
-    {
-        return Registry::Get().Find(name);
-    }
-
-    inline ClassInfo* FindClassByQualifiedName(std::string_view name)
-    {
-        return Registry::Get().FindByQualifiedName(name);
-    }
-
-    inline std::vector<ClassInfo*> GetAllClasses()
-    {
-        return Registry::Get().GetClasses();
-    }
+    inline ClassInfo* FindClass(std::string_view name) { return Registry::Get().Find(name); }
+    inline ClassInfo* FindClassByQualifiedName(std::string_view name) { return Registry::Get().FindByQualifiedName(name); }
+    inline std::vector<ClassInfo*> GetAllClasses() { return Registry::Get().GetClasses(); }
 
     namespace detail
     {
@@ -248,22 +200,19 @@ namespace Bix::Reflection
             static ClassInfo classInfo;
 
             std::call_once(onceFlag, [&]() {
-                classInfo.Name = name ? name : "";
+                classInfo.Name          = name ? name : "";
                 classInfo.QualifiedName = qualifiedName ? qualifiedName : classInfo.Name;
-                classInfo.Size = sizeof(ClassType);
-                classInfo.SuperClass = superClass;
+                classInfo.Size          = sizeof(ClassType);
+                classInfo.SuperClass    = superClass;
                 classInfo.Properties.clear();
                 classInfo.ConstructorFn = nullptr;
 
                 populator(classInfo);
 
                 for (auto& property : classInfo.Properties)
-                {
                     property.Owner = &classInfo;
-                }
 
                 classInfo.IsAbstract = std::is_abstract_v<ClassType>;
-
                 Registry::Get().Register(&classInfo);
             });
 
@@ -277,42 +226,38 @@ namespace Bix::Reflection
                                        const char* displayTypeName)
         {
             PropertyInfo& info = classInfo.Properties.emplace_back();
-            if (name)
-            {
-                info.Name = name;
-            }
-            if (displayTypeName)
-            {
-                info.TypeName = displayTypeName;
-            }
-            else
-            {
-                info.TypeName = typeid(PropertyType).name();
-            }
 
-            info.Size = sizeof(PropertyType);
-            info.Access = [member](void* instance) -> void* {
+            if (name) info.Name = name;
+            info.TypeName = displayTypeName ? displayTypeName : typeid(PropertyType).name();
+            info.Size     = sizeof(PropertyType);
+
+            // ✅ Lambdas capturées, maintenant compatibles avec std::function
+            info.Access = [member](void* instance) -> void*
+            {
                 auto* object = static_cast<ClassType*>(instance);
                 return &(object->*member);
             };
-            info.ConstAccess = [member](const void* instance) -> const void* {
+            info.ConstAccess = [member](const void* instance) -> const void*
+            {
                 auto* object = static_cast<const ClassType*>(instance);
                 return &(object->*member);
             };
 
+            // Calcul d'offset quand c'est sans danger
             if constexpr (std::is_standard_layout_v<ClassType> && std::is_default_constructible_v<ClassType>)
             {
-                std::aligned_storage_t<sizeof(ClassType), alignof(ClassType)> storage{};
+                using Storage = std::aligned_storage_t<sizeof(ClassType), alignof(ClassType)>;
+                Storage storage{};
                 ClassType* instance = new (&storage) ClassType();
-                auto* base = reinterpret_cast<std::byte*>(static_cast<void*>(instance));
+                auto* base      = reinterpret_cast<std::byte*>(static_cast<void*>(instance));
                 auto* memberPtr = reinterpret_cast<std::byte*>(&(instance->*member));
-                info.Offset = static_cast<std::size_t>(memberPtr - base);
-                info.HasOffset = true;
+                info.Offset     = static_cast<std::size_t>(memberPtr - base);
+                info.HasOffset  = true;
                 instance->~ClassType();
             }
             else
             {
-                info.Offset = 0;
+                info.Offset    = 0;
                 info.HasOffset = false;
             }
 
@@ -327,4 +272,3 @@ namespace Bix::Reflection
 #ifndef GENERATED_BODY
 #    define GENERATED_BODY(...) static_assert(false, "Missing generated header for this class. Did you run BixHeaderTool?")
 #endif
-

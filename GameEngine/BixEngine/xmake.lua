@@ -49,8 +49,6 @@ local generated_dir = path.join(
     "GeneratedHeaders"
 )
 
-print("[IncludeDir] Added generated header path:", path.join(os.projectdir(), generated_dir))
-
 -- ✅ Target: BixHeaderTool
 target("BixHeaderTool")
     set_kind("binary")
@@ -66,6 +64,8 @@ target("BixHeaderTool")
 target("BixEngine")
     set_kind("static")
     add_deps("BixHeaderTool")
+       add_deps("bixengine_runtime")
+    add_files("Samples/main.cpp")
 
     -- Include paths
     add_includedirs("Runtime/Include", { public = true })
@@ -90,6 +90,31 @@ target("BixEngine")
         if not os.isdir(generated_dir) or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
             print("[BixEngine] Génération initiale des headers manquants...")
             reflection.generate_headers(false, generated_dir)
+        end
+    end)
+
+------------------------------------------------------------
+-- ✅ Target: BixRun (exécutable principal)
+------------------------------------------------------------
+target("BixRun")
+    set_kind("binary")
+    set_default(true) -- le "xmake run" lancera celui-ci
+    add_deps("bixengine_runtime")
+
+    -- Fichier d'entrée (main)
+    add_files("BixRun/main.cpp")
+
+    -- Include + libs
+    add_includedirs("Runtime/Include")
+    add_linkdirs(sdl3_lib)
+    add_links("SDL3")
+
+    -- Copie automatique de SDL3.dll
+    after_build(function(target)
+        local exe_dir = path.directory(target:targetfile())
+        local dll_path = path.join(sdl3_lib, "SDL3.dll")
+        if os.isfile(dll_path) then
+            os.cp(dll_path, exe_dir)
         end
     end)
 
