@@ -1,171 +1,133 @@
-set_project("BixEngine")
-set_version("0.1.0")
+-- XMake build script for BixEngine
 
+set_xmakever("3.0.4")
 add_rules("mode.debug", "mode.release")
-set_languages("c++20")
+
+add_moduledirs(path.join(os.projectdir(), "Tools/xmake"))
+
+set_languages("cxx20")
 set_warnings("allextra")
 set_optimize("faster")
 
+-- SDL3 configuration
 option("sdl3_dir")
-    set_default(os.getenv("SDL3_DIR"))
     set_showmenu(true)
-    set_description("Root directory of the SDL3 SDK (expects include/ and lib/ subfolders)")
+    set_description("Chemin vers le répertoire include de SDL3")
+    set_default(os.getenv("SDL3_DIR") or "")
 option_end()
 
 option("sdl3_lib_dir")
-    set_default(os.getenv("SDL3_LIB_DIR"))
     set_showmenu(true)
-    set_description("Directory containing SDL3 libraries to link against")
+    set_description("Chemin vers le répertoire lib de SDL3")
+    set_default(os.getenv("SDL3_LIB_DIR") or "")
 option_end()
 
--- ---------------------------------------------------------------------------
--- SDL3 path resolution
--- ---------------------------------------------------------------------------
+local sdl3_inc = get_config("sdl3_dir") or ""
+local sdl3_lib = get_config("sdl3_lib_dir") or ""
 
-local function resolve_library_dir(candidates)
-    local library_markers = {"SDL3.lib", "SDL3.dll", "libSDL3.a", "libSDL3.so"}
-    local subdirs = {"", "x64", "Win64", "x86", "Win32", "x86_64"}
-    for _, candidate in ipairs(candidates) do
-        if candidate then
-            for _, subdir in ipairs(subdirs) do
-                local dir = candidate
-                if subdir ~= "" then
-                    dir = path.join(candidate, subdir)
-                end
-                if os.isdir(dir) then
-                    for _, marker in ipairs(library_markers) do
-                        if os.isfile(path.join(dir, marker)) then
-                            return dir
-                        end
-                    end
-                end
-            end
-        end
-    end
+if (sdl3_inc == nil or sdl3_inc == "") and (sdl3_lib == nil or sdl3_lib == "") then
+
+    sdl3_inc = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include")
+    sdl3_lib = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/lib")
+
+elseif (sdl3_inc == nil or sdl3_inc == "") or (sdl3_lib == nil or sdl3_lib == "") then
+
+    raise("Veuillez définir *à la fois* sdl3_dir et sdl3_lib_dir pour utiliser SDL3 externe.")
 end
 
-local function collect_sdl3_paths()
-    local project_root = os.scriptdir()
-    local vendor_root = path.join(project_root, "ThirdParty", "SDL3-3.2.22")
+-- Dossier de génération dynamique
+local plat = get_config("plat") or os.host()
+local arch = get_config("arch") or os.arch()
+local mode = get_config("mode") or "debug"
 
-    local sdl3_root = get_config("sdl3_dir") or os.getenv("SDL3_DIR")
-    if not sdl3_root and os.isdir(vendor_root) then
-        sdl3_root = vendor_root
-    end
+local generated_dir = path.join(
+    "Build",
+    plat,
+    arch,
+    mode,
+    "Intermediate",
+    "GeneratedHeaders"
+)
 
-    local include_dir
-    if sdl3_root then
-        local candidate = path.join(sdl3_root, "include")
-        if os.isdir(candidate) then
-            include_dir = candidate
-        end
-    end
+print("[IncludeDir] Added generated header path:", path.join(os.projectdir(), generated_dir))
 
-    local lib_dir = get_config("sdl3_lib_dir") or os.getenv("SDL3_LIB_DIR")
-    local lib_candidates = {}
-    if lib_dir then
-        table.insert(lib_candidates, lib_dir)
-    end
-    if sdl3_root then
-        table.insert(lib_candidates, path.join(sdl3_root, "lib"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Win64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x86"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Win32"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "x86_64"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib", "Release"))
-        table.insert(lib_candidates, path.join(sdl3_root, "lib64"))
-    end
-    table.insert(lib_candidates, path.join(project_root, "Build", "Release"))
-    table.insert(lib_candidates, path.join(project_root, "Build", "Debug"))
-
-    lib_dir = resolve_library_dir(lib_candidates)
-
-    return include_dir, lib_dir, sdl3_root
-end
-
-local sdl3_include_dir, sdl3_lib_dir, sdl3_root = collect_sdl3_paths()
-
-if sdl3_include_dir then
-    add_includedirs(sdl3_include_dir, {public = true})
-else
-    wprint("SDL3 include directory not found. Set SDL3_DIR or --sdl3_dir when configuring.")
-end
-
-if sdl3_lib_dir then
-    add_linkdirs(sdl3_lib_dir)
-else
-    wprint("SDL3 library directory not found. Set SDL3_LIB_DIR or --sdl3_lib_dir when configuring.")
-end
-
-add_defines("SDL_MAIN_HANDLED", {public = true})
-
-if is_plat("windows") then
-    add_syslinks("user32", "gdi32", "shell32", "ole32", "oleaut32", "version", "winmm", "imm32", "advapi32")
-else
-    add_syslinks("pthread", "dl")
-end
-
--- ---------------------------------------------------------------------------
--- ImGui
--- ---------------------------------------------------------------------------
-
-target("bixengine_imgui")
-    set_kind("static")
-    add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", {public = true})
-    add_headerfiles("ThirdParty/ImGui/**.h")
-    add_files(
-        "ThirdParty/ImGui/imgui.cpp",
-        "ThirdParty/ImGui/imgui_draw.cpp",
-        "ThirdParty/ImGui/imgui_widgets.cpp",
-        "ThirdParty/ImGui/imgui_tables.cpp",
-        "ThirdParty/ImGui/imgui_demo.cpp",
-        "ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp",
-        "ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp"
-    )
-
--- ---------------------------------------------------------------------------
--- Engine Core
--- ---------------------------------------------------------------------------
-
-target("bixengine_runtime")
-    set_kind("static")
-    add_deps("bixengine_imgui")
-    add_headerfiles("Runtime/Include/**.h", "Runtime/Include/**.inl")
-    add_includedirs("Runtime/Include", {public = true})
-    add_files("Runtime/Source/**.cpp")
-    add_links("SDL3", {public = true})
-
--- ---------------------------------------------------------------------------
--- Executable
--- ---------------------------------------------------------------------------
-
-target("BixEngine")
+-- ✅ Target: BixHeaderTool
+target("BixHeaderTool")
     set_kind("binary")
-    add_deps("bixengine_runtime")
-    add_files("Samples/main.cpp")
+    set_default(false)
+    set_plat(os.host())
+    set_arch(os.arch())
+    set_policy("build.fence", true)
 
-    -- Copie la bonne SDL3.dll dans le bon répertoire après compilation
-    after_build(function (target)
-        if not sdl3_root then
-            return
-        end
+    add_includedirs("Tools/BixHeaderTool", { public = true })
+    add_files("Tools/BixHeaderTool/**.cpp")
 
-        local dll_candidates = {
-            path.join(sdl3_root, "bin", "x64", "SDL3.dll"),
-            path.join(sdl3_root, "bin", "Win64", "SDL3.dll"),
-            path.join(sdl3_root, "lib", "x64", "SDL3.dll"),
-            path.join(sdl3_root, "lib", "Win64", "SDL3.dll"),
-        }
+-- ✅ Target: BixEngine
+target("BixEngine")
+    set_kind("static")
+    add_deps("BixHeaderTool")
 
-        for _, dll_path in ipairs(dll_candidates) do
-            if os.isfile(dll_path) then
-                -- 1️⃣ Copie vers le dossier de l’exécutable (xmake run)
-                os.cp(dll_path, path.join(target:targetdir(), "SDL3.dll"))
-                -- 2️⃣ Copie aussi vers la racine du projet (pour le bouton Run)
-                os.cp(dll_path, path.join(os.scriptdir(), "SDL3.dll"))
-                print("✅ Copied SDL3.dll from: " .. dll_path)
-                break
-            end
+    -- Include paths
+    add_includedirs("Runtime/Include", { public = true })
+    add_includedirs("ThirdParty/ImGui", { public = true })
+    add_includedirs("ThirdParty/ImGui/backends", { public = true })
+    add_includedirs(sdl3_inc)
+    add_includedirs(path.join(os.projectdir(), generated_dir), { public = true })
+    add_includedirs(generated_dir, { public = true })
+
+
+    -- Source files
+    add_files("Runtime/Source/**.cpp")
+
+    -- Libs
+    add_linkdirs(sdl3_lib)
+    add_links("SDL3")
+
+    -- Auto-regeneration
+    before_build(function(target)
+        local reflection = import("Tools.xmake.reflection")
+
+        if not os.isdir(generated_dir) or #os.files(path.join(generated_dir, "*.generated.h")) == 0 then
+            print("[BixEngine] Génération initiale des headers manquants...")
+            reflection.generate_headers(false, generated_dir)
         end
     end)
+
+-- ✅ Task: regen
+task("regen")
+    set_category("action")
+
+    on_run(function()
+        import("core.base.option")
+        local reflection = import("Tools.xmake.reflection")
+        
+        os.exec("xmake build BixHeaderTool")
+        reflection.generate_headers(option.get("force") or false, generated_dir)
+    end)
+
+    set_menu {
+        usage = "xmake regen [options]",
+        description = "Regénérer les fichiers d'en-tête générés (reflection)",
+        options = {
+            { nil, "force", "k", nil, "Supprimer tous les headers générés avant la régénération" }
+        }
+    }
+
+-- ✅ Task: fullbuild
+task("fullbuild")
+    set_category("action")
+
+    on_run(function()
+        import("core.base.option")
+        import("core.project.task")
+        task.run("regen", { force = option.get("force") or false })
+        os.exec("xmake build")
+    end)
+
+    set_menu {
+        usage = "xmake fullbuild [options]",
+        description = "Régénérer les headers puis construire entièrement BixEngine",
+        options = {
+            { nil, "force", "k", nil, "Forcer la régénération complète avant la compilation" }
+        }
+    }

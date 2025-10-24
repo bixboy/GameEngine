@@ -1,19 +1,21 @@
 #pragma once
 
 #include "Bix/Game/Components/Component.h"
+#include "Bix/Reflection/BixReflection.h"
 #include "SDL3/SDL.h"
+#include "SpriteComponent.generated.h"
 
 namespace BixEngine::Game
 {
+    BCLASS()
     class SpriteComponent : public Component
     {
+        GENERATED_BODY()
+        
     public:
-        BIX_GENERATED_BODY(SpriteComponent);
-        BIX_DECLARE_SCRIPT_CLASS(SpriteComponent, Component);
 
         explicit SpriteComponent(Actor* owner);
-        SpriteComponent(Actor* owner, SDL_Color color, float w, float h)
-            : Component(owner), color_(color), width_(w), height_(h) {}
+        SpriteComponent(Actor* owner, SDL_Color color, float w, float h) : Component(owner), color_(color), width_(w), height_(h) {}
 
         void Render(Graphics::Renderer& renderer) const override;
 
@@ -31,8 +33,13 @@ namespace BixEngine::Game
         [[nodiscard]] String GetTypeName() const override { return "SpriteComponent"; }
 
     private:
+        BPROPERTY()
         SDL_Color color_;
+
+        BPROPERTY()
         float width_;
+
+        BPROPERTY()
         float height_;
     };
 }

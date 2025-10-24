@@ -16,8 +16,7 @@ namespace
 
 namespace BixEngine::Core
 {
-    EngineBootstrap::EngineBootstrap(ApplicationConfig config)
-        : config_(std::move(config))
+    EngineBootstrap::EngineBootstrap(ApplicationConfig config) : config_(std::move(config))
     {
     }
 

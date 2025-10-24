@@ -1,13 +1,9 @@
 #include "Bix/Core/RenderLoop.h"
-
-#include <SDL3/SDL.h>
-
 #include "Bix/Core/GuiModule.h"
 #include "Bix/Core/String.h"
 #include "Bix/Core/SubsystemManager.h"
 #include "Bix/Core/Timer.h"
 #include "Bix/Game/Scene.h"
-#include "Bix/Game/SceneManager.h"
 #include "Bix/Graphics/Renderer.h"
 
 namespace BixEngine::Core
@@ -35,7 +31,7 @@ namespace BixEngine::Core
         if (!subsystems_)
             return lastDeltaTime_;
 
-        if (Core::Timer* timer = subsystems_->GetTimer())
+        if (Timer* timer = subsystems_->GetTimer())
         {
             timer->Tick();
             lastDeltaTime_ = timer->GetDeltaTime();

@@ -1,17 +1,18 @@
 #pragma once
 #include <memory>
 #include "Bix/Game/Scene.h"
+#include "EmptyScene.generated.h"
 
 namespace BixEngine::Game
 {
     class Player;
 
+    BCLASS()
     class EmptyScene : public Scene
     {
+        GENERATED_BODY()
+        
         public:
-            BIX_GENERATED_BODY(EmptyScene);
-            BIX_DECLARE_SCRIPT_CLASS(EmptyScene, Scene);
-
             EmptyScene();
 
             void HandleEvent(const SDL_Event& event) override;

@@ -12,6 +12,7 @@ namespace BixEngine::Game
     public:
         Object();
         explicit Object(String name);
+        
         Object(String name, const Math::Transform& transform);
         virtual ~Object() = default;
 

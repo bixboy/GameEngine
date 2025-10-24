@@ -5,6 +5,7 @@
 #include "Bix/Game/Actor.h"
 #include "Bix/Input/InputManager.h"
 #include "Bix/Core/String.h"
+#include "Scene.generated.h"
 
 namespace BixEngine
 {
@@ -24,11 +25,12 @@ namespace BixEngine
             Gui::GuiManager* guiManager{nullptr};
         };
 
-        class Scene : public Scripting::ScriptBase
+        BCLASS()
+        class Scene
         {
+            GENERATED_BODY()
+            
             public:
-                BIX_GENERATED_BODY(Scene);
-                BIX_DECLARE_SCRIPT_CLASS(Scene, Scripting::ScriptBase);
 
                 explicit Scene(String name = "Unnamed Scene");
                 virtual ~Scene() = default;

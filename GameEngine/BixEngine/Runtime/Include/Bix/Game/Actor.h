@@ -3,21 +3,22 @@
 #include <type_traits>
 #include <vector>
 #include "Bix/Game/Object.h"
-#include "Bix/Game/Scripting/ScriptReflection.h"
 #include "Bix/Math/Math.h"
+#include "Bix/Reflection/BixReflection.h"
+#include "Actor.generated.h"
 
 namespace BixEngine::Graphics { class Renderer; }
 
 namespace BixEngine::Game
 {
     class Component;
-    
-    class Actor : public Object, public Scripting::ScriptBase
-    {
-        public:
-            BIX_GENERATED_BODY(Actor);
-            BIX_DECLARE_SCRIPT_CLASS(Actor, Scripting::ScriptBase);
 
+    BCLASS()
+    class Actor : public Object
+    {
+        GENERATED_BODY()
+        
+        public:
             explicit Actor(const Math::Transform& transform = Math::Transform());
 
             Actor(String name, const Math::Transform& transform = Math::Transform());
@@ -55,9 +56,8 @@ namespace BixEngine::Game
             virtual void OnComponentRemoved(const Component& /*component*/) {}
 
         private:
-        std::vector<std::unique_ptr<Component>> components_;
-
-        bool has_begun_play_{false};
-        bool active_{true};
+            std::vector<std::unique_ptr<Component>> components_;
+            bool has_begun_play_{false};
+            bool active_{true};
     };
 }

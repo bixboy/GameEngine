@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Bix/Game/Scene.h"
+#include "TestScene.generated.h"
 
 namespace BixEngine
 {
@@ -10,12 +11,12 @@ namespace BixEngine
     {
         class Player;
 
+        BCLASS()
         class TestScene : public Scene
         {
+            GENERATED_BODY()
+            
             public:
-                BIX_GENERATED_BODY(TestScene);
-                BIX_DECLARE_SCRIPT_CLASS(TestScene, Scene);
-
                 TestScene();
                 ~TestScene() override;
 
