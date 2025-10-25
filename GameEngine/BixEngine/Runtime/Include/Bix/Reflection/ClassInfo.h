@@ -6,10 +6,10 @@
 #include <string_view>
 #include <vector>
 
+#include "Bix/Reflection/PropertyInfo.h"
+
 namespace Bix::Reflection
 {
-    struct PropertyInfo;
-
     /**
      * @brief Holds metadata about a reflected class.
      */
