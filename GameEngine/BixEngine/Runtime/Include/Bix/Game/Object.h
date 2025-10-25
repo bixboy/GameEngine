@@ -7,6 +7,7 @@
 #include "Bix/Reflection/BixReflection.h"
 #include "Object.generated.h"
 
+
 namespace BixEngine::Game
 {
     BCLASS()
