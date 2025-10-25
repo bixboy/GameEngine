@@ -274,6 +274,13 @@
     <ClCompile Include="Runtime\Source\Core\Private\SdlSystem.cpp" />
     <ClCompile Include="Runtime\Source\Core\Private\SubsystemManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorOverviewUI.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ComponentSectionUI.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ImGuiControls.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ReflectionDrawer.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\TransformSectionUI.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -676,7 +683,6 @@
     </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\StatsPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiPanel.cpp" />
@@ -2157,6 +2163,13 @@
     <ClInclude Include="Runtime\Include\Bix\Core\String.h" />
     <ClInclude Include="Runtime\Include\Bix\Core\SubsystemManager.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ActorInspectorState.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ComponentSectionUI.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ImGuiControls.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ReflectionDrawer.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\TransformSectionUI.h" />
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\Utils\ActorInspectorHelpers.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h" />
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h" />
