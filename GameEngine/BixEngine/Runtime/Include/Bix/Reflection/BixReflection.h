@@ -11,4 +11,3 @@
 #include "Bix/Reflection/ReflectionDetail.h"
 #include "Bix/Reflection/ReflectionHelpers.h"
 #include "Bix/Reflection/ReflectionMacros.h"
-

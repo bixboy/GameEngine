@@ -188,6 +188,9 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+<ClCompile Include="Runtime\Source\Bix\Reflection\ClassInfo.cpp" />
+<ClCompile Include="Runtime\Source\Bix\Reflection\PropertyInfo.cpp" />
+<ClCompile Include="Runtime\Source\Bix\Reflection\Registry.cpp" />
 <ClCompile Include="Runtime\Source\Core\Private\Application.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -2191,6 +2194,12 @@
     <ClInclude Include="Runtime\Include\Bix\Math\Vector2.h" />
     <ClInclude Include="Runtime\Include\Bix\Math\Vector3.h" />
     <ClInclude Include="Runtime\Include\Bix\Reflection\BixReflection.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\ClassInfo.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\PropertyInfo.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionDetail.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionHelpers.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionMacros.h" />
+    <ClInclude Include="Runtime\Include\Bix\Reflection\Registry.h" />
   </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -22,40 +22,18 @@ namespace Bix::Reflection
         bool HasOffset = false;
         std::size_t Size = 0;
         const ClassInfo* Owner = nullptr;
+
         Getter Access;
         ConstGetter ConstAccess;
 
-        /**
-         * @brief Checks that both accessors are valid.
-         */
         [[nodiscard]] bool IsValid() const noexcept;
-
-        /**
-         * @brief Retrieves the property pointer from a mutable instance.
-         */
         void* GetRaw(void* instance) const;
-
-        /**
-         * @brief Retrieves the property pointer from an immutable instance.
-         */
         const void* GetRaw(const void* instance) const;
 
         template<typename T>
-        /**
-         * @brief Convenience helper that returns a typed reference for mutable access.
-         */
-        T& Get(void* instance) const
-        {
-            return *static_cast<T*>(GetRaw(instance));
-        }
+        T& Get(void* instance) const { return *static_cast<T*>(GetRaw(instance)); }
 
         template<typename T>
-        /**
-         * @brief Convenience helper that returns a typed reference for immutable access.
-         */
-        const T& Get(const void* instance) const
-        {
-            return *static_cast<const T*>(GetRaw(instance));
-        }
+        const T& Get(const void* instance) const { return *static_cast<const T*>(GetRaw(instance)); }
     };
 }

@@ -12,6 +12,21 @@
 
 namespace Bix::Reflection::detail
 {
+
+    template<typename ClassType, typename Populator>
+        inline ClassInfo& RegisterReflectedClass(const char* name,
+                                                 const char* qualifiedName,
+                                                 ClassInfo* superClass,
+                                                 Populator&& populator)
+    {
+        return RegisterClass<ClassType, Populator>(
+            name,
+            qualifiedName,
+            superClass,
+            std::forward<Populator>(populator)
+        );
+    }
+    
     /**
      * @brief Forces the registration of a class at static initialization time.
      */
@@ -65,9 +80,7 @@ namespace Bix::Reflection::detail
         PropertyInfo& info = classInfo.Properties.emplace_back();
 
         if (name)
-        {
             info.Name = name;
-        }
 
         info.TypeName = displayTypeName ? displayTypeName : typeid(PropertyType).name();
         info.Size = sizeof(PropertyType);

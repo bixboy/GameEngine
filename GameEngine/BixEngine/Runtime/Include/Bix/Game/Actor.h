@@ -4,7 +4,6 @@
 #include <vector>
 #include "Bix/Game/Object.h"
 #include "Bix/Math/Math.h"
-#include "Bix/Reflection/BixReflection.h"
 #include "Actor.generated.h"
 
 namespace BixEngine::Graphics { class Renderer; }

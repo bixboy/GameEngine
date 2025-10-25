@@ -19,7 +19,8 @@ namespace BixTool
         oss << "#undef GENERATED_BODY\n";
         oss << "#endif\n\n";
 
-        if (result.Classes.empty()) {
+        if (result.Classes.empty())
+        {
             oss << "#define GENERATED_BODY(...) static_assert(false, \"No reflected class found.\")\n";
             return oss.str();
         }
@@ -32,15 +33,14 @@ namespace BixTool
         if (!baseScoped.empty())
         {
             if (baseScoped.find("::") == std::string::npos)
-            {
                 baseScoped = MakeScopedName(cls.Namespaces, baseScoped);
-            }
             else if (baseScoped.rfind("::", 0) != 0)
-            {
                 baseScoped = "::" + baseScoped;
-            }
         }
 
+        // --------------------------
+        // Begin macro generation
+        // --------------------------
         oss << "#define GENERATED_BODY() \\\n";
         oss << "public: \\\n";
         oss << "    static ::Bix::Reflection::ClassInfo& StaticClass() \\\n";
@@ -49,57 +49,86 @@ namespace BixTool
         oss << "        ::Bix::Reflection::ClassInfo* superClass = nullptr; \\\n";
         if (!baseScoped.empty())
             oss << "        superClass = &" << baseScoped << "::StaticClass(); \\\n";
-        oss << "        auto& classInfo = ::Bix::Reflection::detail::RegisterClass<ThisClass>( \\\n";
+        oss << "        auto& classInfo = ::Bix::Reflection::detail::RegisterReflectedClass<ThisClass>( \\\n";
         oss << "            \"" << cls.Name << "\", \\\n";
         oss << "            \"" << qualified << "\", \\\n";
         oss << "            superClass, \\\n";
         oss << "            [](::Bix::Reflection::ClassInfo& info) \\\n";
         oss << "            { \\\n";
-        if (cls.Properties.empty()) {
+
+        // --------------------------
+        // Properties
+        // --------------------------
+        if (cls.Properties.empty())
+        {
             oss << "                (void)info; \\\n";
-        } else {
+        }
+        else
+        {
             for (const Property& property : cls.Properties)
+            {
                 oss << "                ::Bix::Reflection::detail::RegisterProperty<ThisClass, "
                     << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
                     << property.Name << ", \"" << property.Type << "\"); \\\n";
+            }
         }
+
+        // --------------------------
+        // Constructor logic (conditional generation)
+        // --------------------------
         oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    info.ConstructorFn = nullptr; \\\n";
-        oss << "                } \\\n";
-        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Component, ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
-        oss << "                    { \\\n";
-        oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
-        oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
-        oss << "                        { \\\n";
-        oss << "                            if (!owner) \\\n";
-        oss << "                            { \\\n";
-        oss << "                                return nullptr; \\\n";
-        oss << "                            } \\\n";
-        oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
-        oss << "                        } \\\n";
-        oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-        oss << "                        { \\\n";
-        oss << "                            (void)owner; \\\n";
-        oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
-        oss << "                        } \\\n";
-        oss << "                        else \\\n";
-        oss << "                        { \\\n";
-        oss << "                            (void)owner; \\\n";
-        oss << "                            return nullptr; \\\n";
-        oss << "                        } \\\n";
-        oss << "                    }; \\\n";
-        oss << "                } \\\n";
-        oss << "                else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-        oss << "                } \\\n";
-        oss << "                else \\\n";
-        oss << "                { \\\n";
-        oss << "                    info.ConstructorFn = nullptr; \\\n";
-        oss << "                } \\\n";
+        oss << "                { info.ConstructorFn = nullptr; } \\\n";
+
+        // ✅ Génération conditionnelle selon la hiérarchie détectée
+        if (cls.BaseType == "Component")
+        {
+            oss << "                else \\\n";
+            oss << "                { \\\n";
+            oss << "                    /* Component: construction liée à un Actor */ \\\n";
+            oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
+            oss << "                    { \\\n";
+            oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
+            oss << "                        if (!owner) return nullptr; \\\n";
+            oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
+            oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
+            oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
+            oss << "                        else return nullptr; \\\n";
+            oss << "                    }; \\\n";
+            oss << "                } \\\n";
+        }
+        else if (cls.BaseType == "Actor")
+        {
+            oss << "                else \\\n";
+            oss << "                { \\\n";
+            oss << "                    /* Actor: simple construction par défaut */ \\\n";
+            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+            oss << "                    else info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+        }
+        else if (cls.BaseType == "Object" || baseScoped.find("Object") != std::string::npos)
+        {
+            oss << "                else \\\n";
+            oss << "                { \\\n";
+            oss << "                    /* Object: construction simple */ \\\n";
+            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+            oss << "                    else info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+        }
+        else
+        {
+            oss << "                else \\\n";
+            oss << "                { \\\n";
+            oss << "                    /* Type externe ou non géré */ \\\n";
+            oss << "                    info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+        }
+
+        // --------------------------
+        // End lambda & registration
+        // --------------------------
         oss << "            }); \\\n";
         oss << "        return classInfo; \\\n";
         oss << "    } \\\n";
