@@ -20,6 +20,7 @@
 #include <cfloat>
 #include <cctype>
 #include <cstring>
+#include <imgui_internal.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -32,6 +33,10 @@ namespace BixEngine::Gui
     {
         constexpr ImVec4 kInspectorBackground{0.12f, 0.12f, 0.12f, 0.95f};
         constexpr ImVec4 kSectionBackground{0.18f, 0.18f, 0.18f, 0.65f};
+        constexpr ImVec4 kOverviewBackground{0.16f, 0.16f, 0.19f, 0.85f};
+        constexpr ImVec4 kAxisXColor{0.80f, 0.28f, 0.28f, 1.0f};
+        constexpr ImVec4 kAxisYColor{0.32f, 0.72f, 0.45f, 1.0f};
+        constexpr ImVec4 kAxisZColor{0.26f, 0.45f, 0.86f, 1.0f};
 
         namespace Utils = BixEngine::Gui::Utils;
 
@@ -44,6 +49,100 @@ namespace BixEngine::Gui
         {
             static std::unordered_map<std::string, ActorInspectorState> states;
             return states;
+        }
+
+        ImVec4 AdjustColor(const ImVec4& color, float delta)
+        {
+            const auto clamp = [](float value)
+            {
+                return std::clamp(value, 0.0f, 1.0f);
+            };
+
+            return ImVec4(
+                clamp(color.x + delta),
+                clamp(color.y + delta),
+                clamp(color.z + delta),
+                color.w);
+        }
+
+        ImVec2 DrawBadge(const char* label, const ImVec4& backgroundColor, const ImVec4& textColor)
+        {
+            if (!label || label[0] == '\0')
+            {
+                return ImVec2(0.0f, 0.0f);
+            }
+
+            ImDrawList* drawList = ImGui::GetWindowDrawList();
+            const ImVec2 position = ImGui::GetCursorScreenPos();
+            const ImVec2 textSize = ImGui::CalcTextSize(label);
+            const ImVec2 padding(6.0f, 3.0f);
+            const ImVec2 size(textSize.x + padding.x * 2.0f, textSize.y + padding.y * 2.0f);
+            const float rounding = textSize.y * 0.45f;
+
+            drawList->AddRectFilled(position, ImVec2(position.x + size.x, position.y + size.y), ImGui::GetColorU32(backgroundColor), rounding);
+            drawList->AddText(ImVec2(position.x + padding.x, position.y + padding.y), ImGui::GetColorU32(textColor), label);
+
+            ImGui::Dummy(size);
+            return size;
+        }
+
+        bool DrawVector3Control(const char* label, float* values, float resetValue, float speed, const char* format)
+        {
+            if (!values)
+            {
+                return false;
+            }
+
+            bool changed = false;
+            ImGui::PushID(label);
+            ImGui::Columns(2, nullptr, false);
+            ImGui::SetColumnWidth(0, 120.0f);
+            ImGui::AlignTextToFramePadding();
+            ImGui::TextUnformatted(label ? label : "");
+            ImGui::NextColumn();
+
+            ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+
+            const char* axisLabels[3] = {"X", "Y", "Z"};
+            const ImVec4 axisColors[3] = {kAxisXColor, kAxisYColor, kAxisZColor};
+
+            for (int index = 0; index < 3; ++index)
+            {
+                ImGui::PushID(index);
+
+                if (index > 0)
+                {
+                    ImGui::SameLine(0.0f, 4.0f);
+                }
+
+                const ImVec4 baseColor = axisColors[index];
+                ImGui::PushStyleColor(ImGuiCol_Button, baseColor);
+                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AdjustColor(baseColor, 0.12f));
+                ImGui::PushStyleColor(ImGuiCol_ButtonActive, AdjustColor(baseColor, -0.10f));
+                if (ImGui::Button(axisLabels[index], ImVec2(26.0f, 26.0f)))
+                {
+                    values[index] = resetValue;
+                    changed = true;
+                }
+                ImGui::PopStyleColor(3);
+
+                ImGui::SameLine(0.0f, 4.0f);
+                std::string dragId = std::string("##") + axisLabels[index];
+                if (ImGui::DragFloat(dragId.c_str(), &values[index], speed, 0.0f, 0.0f, format))
+                {
+                    changed = true;
+                }
+                ImGui::PopItemWidth();
+                ImGui::PopID();
+            }
+
+            ImGui::PopStyleVar();
+            ImGui::Columns(1);
+            ImGui::PopID();
+            ImGui::Spacing();
+
+            return changed;
         }
 
         std::string ToStdString(const String& value)
@@ -103,30 +202,37 @@ namespace BixEngine::Gui
             bool open_{false};
         };
 
-        class SectionContainer
-        {
+        class SectionContainer {
         public:
-            explicit SectionContainer(const char* id)
-            {
+            explicit SectionContainer(const char* id) {
+                ImGui::PushID(id);
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, kSectionBackground);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
-                visible_ = ImGui::BeginChild(id, ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
+                ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 6.0f)); // padding réduit
+
+                // On dessine DIRECTEMENT dedans, auto-resize vertical
+                ImGui::BeginChild(
+                    "section",
+                    ImVec2(-FLT_MIN, 0.0f),                // largeur = toute la ligne, hauteur = calculée
+                    ImGuiChildFlags_AutoResizeY,
+                    ImGuiWindowFlags_AlwaysUseWindowPadding |
+                    ImGuiWindowFlags_NoScrollbar
+                );
             }
 
-            ~SectionContainer()
-            {
+            ~SectionContainer() {
                 ImGui::EndChild();
                 ImGui::PopStyleVar(2);
                 ImGui::PopStyleColor();
-                ImGui::Spacing();
+
+                // micro-espace entre sections, au lieu de Spacing() large
+                ImGui::Dummy(ImVec2(1.0f, 4.0f));
+                ImGui::PopID();
             }
 
-            [[nodiscard]] bool IsVisible() const noexcept { return visible_; }
-
-        private:
-            bool visible_{false};
+            [[nodiscard]] bool IsVisible() const noexcept { return true; }
         };
+
 
         using ReflectionClass = ::Bix::Reflection::ClassInfo;
         using ReflectionProperty = ::Bix::Reflection::PropertyInfo;
@@ -565,6 +671,81 @@ namespace BixEngine::Gui
             ImGui::EndPopup();
         }
 
+        void DrawActorOverview(Game::Actor& actor, ActorInspectorState& state)
+        {
+            ImGui::PushID("ActorOverview");
+            ImGui::PushStyleColor(ImGuiCol_ChildBg, kOverviewBackground);
+            ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 8.0f)); // un peu plus compact
+        
+            if (ImGui::BeginChild(
+                    "OverviewCard",
+                    ImVec2(-FLT_MIN, 0.0f),
+                    ImGuiChildFlags_AutoResizeY,
+                    ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+            {
+                ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f)); // spacing plus serré
+        
+                if (ImGui::BeginTable("ActorOverviewTable", 2,
+                                      ImGuiTableFlags_SizingStretchProp |
+                                      ImGuiTableFlags_PadOuterX |
+                                      ImGuiTableFlags_NoSavedSettings))
+                {
+                    ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
+                    ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+        
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0); ImGui::TextDisabled("Name");
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::SetNextItemWidth(-1.0f);
+                    if (ImGui::InputText("##ActorName", state.nameBuffer.data(), state.nameBuffer.size()))
+                        actor.SetName(state.nameBuffer.data());
+        
+                    bool isActive = actor.IsActive();
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0); ImGui::TextDisabled("Status");
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::BeginGroup();
+                    if (ImGui::Checkbox("##ActorActive", &isActive)) actor.SetActive(isActive);
+                    ImGui::SameLine(0.0f, 6.0f);
+                    const ImVec4 statusColor = isActive ? ImVec4(0.27f, 0.58f, 0.32f, 1.0f) : ImVec4(0.45f, 0.45f, 0.45f, 1.0f);
+                    const ImVec4 statusTextColor = ImVec4(0.95f, 0.98f, 0.96f, 1.0f);
+                    DrawBadge(isActive ? "Active" : "Inactive", statusColor, statusTextColor);
+                    ImGui::EndGroup();
+        
+                    const std::string typeName = ToStdString(actor.GetTypeName());
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0); ImGui::TextDisabled("Type");
+                    ImGui::TableSetColumnIndex(1); ImGui::TextUnformatted(typeName.c_str());
+        
+                    const std::string uuid = ToStdString(actor.GetUUID());
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0); ImGui::TextDisabled("ID");
+                    ImGui::TableSetColumnIndex(1); ImGui::TextUnformatted(uuid.c_str());
+        
+                    const auto& components = actor.GetComponents();
+                    std::string componentLabel = std::to_string(components.size());
+                    componentLabel += components.size() == 1 ? " component" : " components";
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0); ImGui::TextDisabled("Composition");
+                    ImGui::TableSetColumnIndex(1);
+                    DrawBadge(componentLabel.c_str(), ImVec4(0.28f, 0.44f, 0.72f, 1.0f), ImVec4(0.95f, 0.97f, 1.0f, 1.0f));
+        
+                    ImGui::EndTable();
+                }
+        
+                ImGui::PopStyleVar(); // ItemSpacing
+            }
+            ImGui::EndChild();
+        
+            ImGui::PopStyleVar(2);
+            ImGui::PopStyleColor();
+            ImGui::PopID();
+        
+            // ⚠️ NE RAJOUTE PAS ImGui::Spacing() ici
+        }
+
+
         void DrawGeneralSection(Game::Actor& actor)
         {
             const std::string contextId = BuildActorContextId(actor);
@@ -581,20 +762,7 @@ namespace BixEngine::Gui
             }
 
             ActorInspectorState& state = GetActorState(actor);
-            if (Utils::InputTextWithLabel("Name", state.nameBuffer.data(), state.nameBuffer.size()))
-            {
-                actor.SetName(state.nameBuffer.data());
-            }
-
-            bool isActive = actor.IsActive();
-            if (ImGui::Checkbox("Active", &isActive))
-            {
-                actor.SetActive(isActive);
-            }
-
-            Utils::DrawLabelValue("Type", ToStdString(actor.GetTypeName()));
-            Utils::DrawLabelValue("ID", ToStdString(actor.GetUUID()));
-
+            DrawActorOverview(actor, state);
             DrawClassProperties(actor.GetClass(), &actor, true, "Properties", false);
         }
 
@@ -615,26 +783,37 @@ namespace BixEngine::Gui
 
             Utils::DrawSeparatorText("Transform");
 
-            ImGui::TextUnformatted("Transform");
+            ImGui::TextUnformatted("Transform Controls");
             ImGui::SameLine();
-            Utils::DrawHelpMarker("Adjust the actor position, rotation, and scale.");
+            Utils::DrawHelpMarker("Reset axes with the coloured buttons or drag values to fine tune the transform.");
 
             Math::Vector3 position = actor.GetPosition();
-            if (ImGui::DragFloat3("Location", &position.x, 0.1f, -FLT_MAX, FLT_MAX, "%.3f"))
+            float positionValues[3] = { position.x, position.y, position.z };
+            if (DrawVector3Control("Location", positionValues, 0.0f, 0.1f, "%.3f"))
             {
+                position.x = positionValues[0];
+                position.y = positionValues[1];
+                position.z = positionValues[2];
                 actor.SetPosition(position);
             }
 
             Math::Rotator rotation = actor.GetRotation();
             float rotationValues[3] = { rotation.pitch, rotation.yaw, rotation.roll };
-            if (ImGui::DragFloat3("Rotation", rotationValues, 0.1f, -360.0f, 360.0f, "%.2f"))
+            if (DrawVector3Control("Rotation", rotationValues, 0.0f, 0.1f, "%.2f"))
             {
-                actor.SetRotation(Math::Rotator(rotationValues[0], rotationValues[1], rotationValues[2]));
+                rotation.pitch = std::clamp(rotationValues[0], -360.0f, 360.0f);
+                rotation.yaw = std::clamp(rotationValues[1], -360.0f, 360.0f);
+                rotation.roll = std::clamp(rotationValues[2], -360.0f, 360.0f);
+                actor.SetRotation(rotation);
             }
 
             Math::Vector3 scale = actor.GetScale();
-            if (ImGui::DragFloat3("Scale", &scale.x, 0.05f, 0.0f, 0.0f, "%.3f"))
+            float scaleValues[3] = { scale.x, scale.y, scale.z };
+            if (DrawVector3Control("Scale", scaleValues, 1.0f, 0.05f, "%.3f"))
             {
+                scale.x = scaleValues[0];
+                scale.y = scaleValues[1];
+                scale.z = scaleValues[2];
                 actor.SetScale(scale);
             }
         }
@@ -667,6 +846,10 @@ namespace BixEngine::Gui
             }
 
             ImGui::PushID("ActorComponents");
+            ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.33f, 0.45f, 0.65f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.55f, 0.75f));
+            ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.32f, 0.52f, 0.85f));
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 6.0f));
 
             static Game::Component* componentPendingRemoval = nullptr;
             for (std::size_t index = 0; index < components.size(); ++index)
@@ -679,11 +862,12 @@ namespace BixEngine::Gui
 
                 const std::string typeLabel = ToStdString(component->GetTypeName());
 
+                const std::string treeLabel = "🧩 " + typeLabel;
                 bool open = ImGui::TreeNodeEx(
                     component.get(),
                     ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding,
                     "%s",
-                    typeLabel.c_str());
+                    treeLabel.c_str());
 
                 ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeight() - ImGui::GetStyle().FramePadding.x);
                 if (Utils::IconButton("🗑", "Remove this component"))
@@ -699,6 +883,8 @@ namespace BixEngine::Gui
                 ImGui::PopID();
             }
 
+            ImGui::PopStyleVar();
+            ImGui::PopStyleColor(3);
             ImGui::PopID();
 
             // --- popup modale de confirmation ---
