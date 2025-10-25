@@ -206,10 +206,19 @@ namespace BixEngine::Gui
         public:
             explicit SectionContainer(const char* id)
             {
+                const float availableWidth = std::max(ImGui::GetContentRegionAvail().x, 1.0f);
+                ImGui::SetNextWindowSizeConstraints(ImVec2(availableWidth, 0.0f), ImVec2(availableWidth, FLT_MAX));
                 ImGui::PushStyleColor(ImGuiCol_ChildBg, kSectionBackground);
                 ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
                 ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 8.0f));
-                visible_ = ImGui::BeginChild(id, ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysUseWindowPadding | ImGuiWindowFlags_NoScrollbar);
+                visible_ = ImGui::BeginChild(
+                    id,
+                    ImVec2(availableWidth, 0.0f),
+                    false,
+                    ImGuiWindowFlags_AlwaysUseWindowPadding |
+                        ImGuiWindowFlags_NoScrollbar |
+                        ImGuiWindowFlags_NoScrollWithMouse |
+                        ImGuiWindowFlags_AlwaysAutoResize);
             }
 
             ~SectionContainer()
