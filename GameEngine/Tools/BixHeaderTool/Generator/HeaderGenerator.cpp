@@ -223,7 +223,7 @@ namespace BixTool
 
         if (hasRegisteredRoot)
         {
-            oss << "namespace ::Bix::Reflection::detail { template<> struct EngineBaseTypeTrait<" << scoped
+            oss << "namespace Bix::Reflection::detail { template<> struct EngineBaseTypeTrait<" << scoped
                 << "> : std::true_type {}; }\n";
         }
 
