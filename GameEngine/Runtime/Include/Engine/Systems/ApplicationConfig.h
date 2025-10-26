@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Bix/Math/Color.h"
-#include "Bix/Core/String.h"
+#include "Core/Math/Color.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Core
 {

@@ -1,14 +1,14 @@
-#include "Bix/Game/Scene.h"
+#include "Game/Scene.h"
 
 #include <stdexcept>
 #include <utility>
 
-#include "Bix/Core/Timer.h"
-#include "Bix/Core/Window.h"
-#include "Bix/Game/SceneSerializer.h"
-#include "Bix/Graphics/Renderer.h"
-#include "Bix/Input/Input.h"
-#include "Bix/Engine/Gui/GuiManager.h"
+#include "Core/Timer.h"
+#include "Engine/Systems/Window.h"
+#include "Game/SceneSerializer.h"
+#include "Graphics/Renderer.h"
+#include "Input/Input.h"
+#include "Engine/Gui/GuiManager.h"
 
 namespace BixEngine::Game
 {

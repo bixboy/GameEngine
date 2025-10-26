@@ -6,7 +6,7 @@
 #include <string_view>
 #include <vector>
 
-#include "Bix/Reflection/PropertyInfo.h"
+#include "Reflection/PropertyInfo.h"
 
 namespace Bix::Reflection
 {

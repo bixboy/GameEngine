@@ -2,8 +2,8 @@
 #include <memory>
 #include <type_traits>
 #include <utility>
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/SceneManager.h"
+#include "Game/Actor.h"
+#include "Game/SceneManager.h"
 
 namespace BixEngine::Game
 {

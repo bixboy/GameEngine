@@ -1,14 +1,14 @@
-#include "Bix/Core/SubsystemManager.h"
+#include "Engine/Systems/SubsystemManager.h"
 
 #include <SDL3/SDL_keycode.h>
 
-#include "Bix/Core/Timer.h"
-#include "Bix/Core/Window.h"
-#include "Bix/Game/Scene.h"
-#include "Bix/Game/SceneManager.h"
-#include "Bix/Graphics/Renderer.h"
-#include "Bix/Input/Input.h"
-#include "Bix/Input/InputManager.h"
+#include "Core/Timer.h"
+#include "Engine/Systems/Window.h"
+#include "Game/Scene.h"
+#include "Game/SceneManager.h"
+#include "Graphics/Renderer.h"
+#include "Input/Input.h"
+#include "Input/InputManager.h"
 
 namespace BixEngine::Core
 {

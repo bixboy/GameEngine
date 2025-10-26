@@ -5,7 +5,7 @@
 #include <memory>
 #include <unordered_map>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Game
 {

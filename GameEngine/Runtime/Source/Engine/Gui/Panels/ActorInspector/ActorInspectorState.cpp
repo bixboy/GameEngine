@@ -1,8 +1,8 @@
-#include "Bix/Engine/Gui/Panels/ActorInspector/ActorInspectorState.h"
+#include "Engine/Gui/Panels/ActorInspector/ActorInspectorState.h"
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
+#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Bix/Game/Actor.h"
+#include "Game/Actor.h"
 
 #include <algorithm>
 #include <cstring>

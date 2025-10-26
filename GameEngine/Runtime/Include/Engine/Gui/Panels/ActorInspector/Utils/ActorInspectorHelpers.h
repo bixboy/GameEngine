@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Bix/Core/String.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/Scene.h"
+#include "Core/Containers/String.h"
+#include "Game/Actor.h"
+#include "Game/Scene.h"
 
 #include <algorithm>
 #include <string>

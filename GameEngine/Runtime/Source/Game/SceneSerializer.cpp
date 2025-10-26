@@ -1,4 +1,4 @@
-#include "Bix/Game/SceneSerializer.h"
+#include "Game/SceneSerializer.h"
 
 #include <cstdint>
 #include <filesystem>
@@ -8,10 +8,10 @@
 #include <stdexcept>
 #include <utility>
 
-#include "Bix/Core/Logger.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/Object.h"
-#include "Bix/Game/Scene.h"
+#include "Core/Logger.h"
+#include "Game/Actor.h"
+#include "Game/Object.h"
+#include "Game/Scene.h"
 
 namespace BixEngine::Game
 {

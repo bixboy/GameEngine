@@ -1,7 +1,7 @@
 #pragma once
 #include <cmath>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Math
 {

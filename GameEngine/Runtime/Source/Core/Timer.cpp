@@ -1,4 +1,4 @@
-#include "Bix/Core/Timer.h"
+#include "Core/Timer.h"
 #include <SDL3/SDL_timer.h>
 
 namespace BixEngine::Core

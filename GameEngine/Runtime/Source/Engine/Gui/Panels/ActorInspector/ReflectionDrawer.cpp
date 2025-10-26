@@ -1,12 +1,12 @@
-#include "Bix/Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
+#include "Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 
-#include "Bix/Math/Rotator.h"
-#include "Bix/Math/Vector2.h"
-#include "Bix/Math/Vector3.h"
-#include "Bix/Core/String.h"
+#include "Core/Math/Rotator.h"
+#include "Core/Math/Vector2.h"
+#include "Core/Math/Vector3.h"
+#include "Core/Containers/String.h"
 
 #include "SDL3/SDL.h"
 

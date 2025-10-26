@@ -1,12 +1,12 @@
-#include "Bix/Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
+#include "Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
+#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Math/Rotator.h"
-#include "Bix/Math/Vector3.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Game/Actor.h"
+#include "Core/Math/Rotator.h"
+#include "Core/Math/Vector3.h"
 
 #include <algorithm>
 #include <string>

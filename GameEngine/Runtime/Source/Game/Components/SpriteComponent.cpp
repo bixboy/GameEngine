@@ -1,6 +1,6 @@
-#include "Bix/Game/Components/SpriteComponent.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Graphics/Renderer.h"
+#include "Game/Components/SpriteComponent.h"
+#include "Game/Actor.h"
+#include "Graphics/Renderer.h"
 
 namespace BixEngine::Game
 {

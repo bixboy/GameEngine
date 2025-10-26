@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 #include "imgui.h"
 
@@ -89,6 +89,8 @@ namespace BixEngine::Gui
     void RenderHeader(ContentBrowserState& state, String& selectedEntry, char (&searchBuffer)[256]);
     void RenderDirectoryTree(ContentBrowserState& state, String& selectedEntry);
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery);
+
+    void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath);
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups);
 }

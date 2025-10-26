@@ -1,4 +1,4 @@
-#include "Bix/Input/Input.h"
+#include "Input/Input.h"
 
 namespace BixEngine::Input
 {

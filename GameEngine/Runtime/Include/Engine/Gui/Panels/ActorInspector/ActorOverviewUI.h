@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/ActorInspectorState.h"
+#include "Engine/Gui/Panels/ActorInspector/ActorInspectorState.h"
 
 namespace BixEngine::Game
 {

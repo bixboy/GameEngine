@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL3/SDL_pixels.h>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Math
 {

@@ -233,6 +233,7 @@ namespace BixTool
 
                 std::size_t pos = i + kBClassMacro.size();
                 pos = SkipWhitespaceAndComments(content, pos);
+                
                 std::string keyword = ReadToken(content, pos);
                 if (keyword != "class" && keyword != "struct")
                 {

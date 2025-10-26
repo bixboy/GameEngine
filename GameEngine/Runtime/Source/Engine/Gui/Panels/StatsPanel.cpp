@@ -1,10 +1,10 @@
-#include "Bix/Engine/Gui/Panels/StatsPanel.h"
+#include "Engine/Gui/Panels/StatsPanel.h"
 
-#include "Bix/Core/Timer.h"
-#include "Bix/Game/Scene.h"
-#include "Bix/Game/SceneManager.h"
-#include "Bix/Engine/Gui/GuiManager.h"
-#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Core/Timer.h"
+#include "Game/Scene.h"
+#include "Game/SceneManager.h"
+#include "Engine/Gui/GuiManager.h"
+#include "Engine/Gui/GuiPanel.h"
 
 #include "imgui.h"
 #include <cmath>

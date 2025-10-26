@@ -5,7 +5,7 @@
 #include <initializer_list>
 #include <utility>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Gui
 {

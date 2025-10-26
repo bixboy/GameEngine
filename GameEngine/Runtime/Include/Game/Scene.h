@@ -2,9 +2,9 @@
 #include <memory>
 #include <vector>
 #include <SDL3/SDL_events.h>
-#include "Bix/Game/Actor.h"
-#include "Bix/Input/InputManager.h"
-#include "Bix/Core/String.h"
+#include "Game/Actor.h"
+#include "Input/InputManager.h"
+#include "Core/Containers/String.h"
 #include "Scene.generated.h"
 
 namespace BixEngine

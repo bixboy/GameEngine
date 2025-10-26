@@ -1,4 +1,4 @@
-#include "Bix/Game/Object.h"
+#include "Game/Object.h"
 
 #include <array>
 #include <cstdint>

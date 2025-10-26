@@ -1,7 +1,7 @@
 #pragma once
 #include <string_view>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Core
 {

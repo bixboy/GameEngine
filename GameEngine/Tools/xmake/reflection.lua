@@ -59,52 +59,44 @@ function generate_headers(force, generated_dir)
     end
 
     -- 4️⃣ Création des fichiers stub manquants
-    cprint("${bright yellow}[*] Vérification / création des fichiers stub manquants...")
-    for gen_file, _ in pairs(gen_names) do
-
-        local gen_path = path.join(generated_dir, gen_file)
-        if not os.isfile(gen_path) then
-
-            io.writefile(gen_path, "")
-            cprint(string.format("${dim green}   + Stub créé : %s", gen_path))
-        else
-            cprint(string.format("${dim blue}   = Déjà existant : %s", gen_path))
-        end
-    end
-
-    -- 5️⃣ Exécution du BixHeaderTool
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
-
-    local builddir = os.isdir(path.join(os.projectdir(), "Build")) and "Build" or "build"
+    
+    -- Recherche automatique du binaire
+    local tool_target = "BixHeaderTool"
     local mode = get_config("mode") or "debug"
-
-    local tool_exe = path.join(os.projectdir(), builddir, os.host(), os.arch(), mode, "BixHeaderTool.exe")
-
-    cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
+    
+    -- XMake place les binaires ici par défaut :
+    local tool_exe = path.join(os.projectdir(), "build", mode, tool_target .. ".exe")
+    
     if not os.isfile(tool_exe) then
-
-        cprint("${bright red}[!] Erreur : BixHeaderTool introuvable au chemin ci-dessus.")
+        -- Fallback : version alternative si tu utilises ton dossier Build personnalisé
+        tool_exe = path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, tool_target .. ".exe")
+    end
+    
+    cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
+    
+    if not os.isfile(tool_exe) then
+        cprint("${bright red}[!] Erreur : BixHeaderTool introuvable, impossible de générer les headers.")
         return
     end
-
-    cprint(string.format("${dim blue}→ Commande : %s Runtime/Include Samples %s", tool_exe, generated_dir))
     
+    -- Arguments
     local args = {
         path.join(os.projectdir(), "Runtime/Include"),
         path.join(os.projectdir(), "Samples"),
         path.join(os.projectdir(), generated_dir)
     }
-
-    cprint(string.format("${dim blue}→ Lancement de : %s %s", tool_exe, table.concat(args, " ")))
-
-    local ok, err = os.iorunv(tool_exe, args)  -- capture la sortie complète
-    if not ok then
-        cprint("${bright red}[!] Erreur pendant l'exécution du BixHeaderTool :")
-        print(err or "Aucune sortie capturée.")
+    
+    -- Exécution
+    local ok, out, err = os.execv(tool_exe, args)
+    if ok ~= 0 then
+        cprint("${bright red}[!] Échec de l'exécution de BixHeaderTool :")
+        print(err or "Erreur inconnue")
         return
     end
+    
+    cprint("${bright green}[✓] BixHeaderTool exécuté avec succès.")
 
-    print(ok)
 
     -- 6️⃣ Nettoyage des fichiers vides
     cprint("${bright yellow}[*] Nettoyage des fichiers vides...")

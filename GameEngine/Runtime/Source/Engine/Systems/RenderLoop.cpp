@@ -1,10 +1,10 @@
-#include "Bix/Core/RenderLoop.h"
-#include "Bix/Core/GuiModule.h"
-#include "Bix/Core/String.h"
-#include "Bix/Core/SubsystemManager.h"
-#include "Bix/Core/Timer.h"
-#include "Bix/Game/Scene.h"
-#include "Bix/Graphics/Renderer.h"
+#include "Engine/Systems/RenderLoop.h"
+#include "Engine/Gui/GuiModule.h"
+#include "Core/Containers/String.h"
+#include "Engine/Systems/SubsystemManager.h"
+#include "Core/Timer.h"
+#include "Game/Scene.h"
+#include "Graphics/Renderer.h"
 
 namespace BixEngine::Core
 {

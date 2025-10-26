@@ -1,4 +1,4 @@
-#include "Bix/Reflection/PropertyInfo.h"
+#include "Reflection/PropertyInfo.h"
 
 namespace Bix::Reflection
 {

@@ -2,9 +2,9 @@
 
 #include <functional>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
-#include "Bix/Engine/Gui/GuiDocking.h"
+#include "Engine/Gui/GuiDocking.h"
 
 #include "imgui.h"
 

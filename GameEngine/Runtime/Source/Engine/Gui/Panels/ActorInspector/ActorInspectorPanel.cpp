@@ -1,17 +1,17 @@
-#include "Bix/Engine/Gui/Panels/ActorInspectorPanel.h"
+#include "Engine/Gui/Panels/ActorInspectorPanel.h"
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/ActorOverviewUI.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/ComponentSectionUI.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
+#include "Engine/Gui/Panels/ActorInspector/ActorOverviewUI.h"
+#include "Engine/Gui/Panels/ActorInspector/ComponentSectionUI.h"
+#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
+#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Bix/Engine/Gui/GuiManager.h"
-#include "Bix/Engine/Gui/GuiPanel.h"
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/Scene.h"
-#include "Bix/Game/SceneManager.h"
+#include "Engine/Gui/GuiManager.h"
+#include "Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Game/Actor.h"
+#include "Game/Scene.h"
+#include "Game/SceneManager.h"
 
 #include <imgui.h>
 

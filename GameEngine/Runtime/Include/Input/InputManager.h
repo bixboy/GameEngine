@@ -7,7 +7,7 @@
 #include <vector>
 #include <SDL3/SDL.h>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Input
 {

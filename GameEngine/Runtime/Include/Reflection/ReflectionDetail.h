@@ -1,8 +1,8 @@
 #pragma once
 
-#include "Bix/Reflection/ClassInfo.h"
-#include "Bix/Reflection/PropertyInfo.h"
-#include "Bix/Reflection/Registry.h"
+#include "Reflection/ClassInfo.h"
+#include "Reflection/PropertyInfo.h"
+#include "Reflection/Registry.h"
 
 #include <cstddef>
 #include <mutex>

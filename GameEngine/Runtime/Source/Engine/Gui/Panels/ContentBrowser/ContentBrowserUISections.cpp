@@ -1,13 +1,13 @@
-#include "Bix/Core/Logger.h"
-#include "Bix/Engine/Gui/Widgets/ActionTooltip.h"
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Core/Logger.h"
+#include "Engine/Gui/Widgets/ActionTooltip.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui_internal.h"
 #include <algorithm>
 #include <filesystem>
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
 namespace BixEngine::Gui

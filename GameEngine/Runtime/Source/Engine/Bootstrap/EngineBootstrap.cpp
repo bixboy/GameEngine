@@ -1,11 +1,11 @@
-#include "Bix/Core/EngineBootstrap.h"
+#include "Engine/Bootstrap/EngineBootstrap.h"
 
 #include <SDL3/SDL.h>
 
-#include "Bix/Core/Logger.h"
-#include "Bix/Core/String.h"
-#include "Bix/Core/Window.h"
-#include "Bix/Graphics/Renderer.h"
+#include "Core/Logger.h"
+#include "Core/Containers/String.h"
+#include "Engine/Systems/Window.h"
+#include "Graphics/Renderer.h"
 
 namespace
 {

@@ -1,9 +1,9 @@
-#include "Bix/Engine/Gui/DefaultEngineGui.h"
-#include "Bix/Engine/Gui/Panels/ActorInspectorPanel.h"
-#include "Bix/Engine/Gui/Panels/SceneOutlinerPanel.h"
-#include "Bix/Engine/Gui/Panels/SceneViewportPanel.h"
-#include "Bix/Engine/Gui/Panels/StatsPanel.h"
-#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
+#include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/Panels/ActorInspectorPanel.h"
+#include "Engine/Gui/Panels/SceneOutlinerPanel.h"
+#include "Engine/Gui/Panels/SceneViewportPanel.h"
+#include "Engine/Gui/Panels/StatsPanel.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 
 namespace BixEngine::Gui
 {

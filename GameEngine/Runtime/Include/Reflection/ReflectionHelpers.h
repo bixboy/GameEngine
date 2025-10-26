@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Reflection/Registry.h"
+#include "Reflection/Registry.h"
 
 #include <string_view>
 #include <vector>

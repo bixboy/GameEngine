@@ -1,9 +1,9 @@
-#include "Bix/Core/SdlSystem.h"
+#include "Engine/Systems/SdlSystem.h"
 
 #include <SDL3/SDL.h>
 
-#include "Bix/Core/Logger.h"
-#include "Bix/Core/String.h"
+#include "Core/Logger.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Core
 {

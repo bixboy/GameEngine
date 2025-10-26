@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Reflection/BixReflection.h"
+#include "Reflection/BixReflection.h"
 
 #include <string>
 #include <string_view>

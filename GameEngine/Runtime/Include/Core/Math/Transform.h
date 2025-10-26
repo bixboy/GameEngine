@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Bix/Math/Rotator.h"
-#include "Bix/Math/Vector3.h"
+#include "Core/Math/Rotator.h"
+#include "Core/Math/Vector3.h"
 
 namespace BixEngine::Math
 {
