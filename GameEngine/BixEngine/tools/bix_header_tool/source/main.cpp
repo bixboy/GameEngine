@@ -1,8 +1,9 @@
 #include <iostream>
 #include <filesystem>
-#include "Parser/HeaderParser.h"
-#include "Generator/HeaderGenerator.h"
-#include "FileSystem/FileUtils.h"
+#include <string>
+#include "BixHeaderTool/Parser/HeaderParser.h"
+#include "BixHeaderTool/Generator/HeaderGenerator.h"
+#include "BixHeaderTool/FileSystem/FileUtils.h"
 
 using namespace BixTool;
 namespace fs = std::filesystem;
@@ -40,12 +41,6 @@ int main(int argc, char* argv[])
         return 0;
     }
 
-    // ✅ Nettoie le dossier avant génération
-    std::error_code cleanupErr;
-    fs::remove_all(generatedOutputDir, cleanupErr);
-    if (cleanupErr)
-        std::cerr << "[BixHeaderTool] Warning: failed to clean " << generatedOutputDir << "\n";
-
     // ✅ Crée le dossier s’il n’existe pas encore
     std::error_code createErr;
     fs::create_directories(generatedOutputDir, createErr);
@@ -53,6 +48,31 @@ int main(int argc, char* argv[])
     {
         std::cerr << "[BixHeaderTool] Error: cannot create output dir " << generatedOutputDir << "\n";
         return 2;
+    }
+
+    // ✅ Nettoie les anciens fichiers générés sans supprimer les stubs persistants
+    std::error_code cleanupErr;
+    for (fs::directory_iterator it{generatedOutputDir, cleanupErr}; it != fs::directory_iterator(); it.increment(cleanupErr))
+    {
+        if (cleanupErr)
+        {
+            std::cerr << "[BixHeaderTool] Warning: failed while iterating " << generatedOutputDir << "\n";
+            cleanupErr.clear();
+            break;
+        }
+
+        const fs::path& entryPath = it->path();
+        if (!it->is_regular_file())
+            continue;
+
+        const std::string filename = entryPath.filename().string();
+        if (!filename.ends_with(".generated.h"))
+            continue;
+
+        std::error_code removeErr;
+        fs::remove(entryPath, removeErr);
+        if (removeErr)
+            std::cerr << "[BixHeaderTool] Warning: failed to remove " << entryPath << "\n";
     }
 
     bool anyUpdated = false;

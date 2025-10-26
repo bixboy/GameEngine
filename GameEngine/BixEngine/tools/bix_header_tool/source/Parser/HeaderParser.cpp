@@ -1,5 +1,5 @@
-#include "HeaderParser.h"
-#include "TokenUtils.h"
+#include "BixHeaderTool/Parser/HeaderParser.h"
+#include "BixHeaderTool/Parser/TokenUtils.h"
 #include <fstream>
 #include <filesystem>
 #include <sstream>

@@ -1,16 +1,23 @@
 # Build artifacts
-Build/
-Binaries/
+/build/
+/out/
+
+# XMake cache
+/.xmake/
 
 # IDE caches
 .vs/
 .idea/
 
-# xmake cache
-.xmake/
+# Generated reflection headers
+engine/include/Bix/Generated/*.generated.h
 
-# SDL runtime libraries downloaded at build time
-ThirdParty/SDL3-3.2.22/lib/
-!ThirdParty/SDL3-3.2.22/lib/.gitkeep
-ThirdParty/SDL3-3.2.22/bin/
-!ThirdParty/SDL3-3.2.22/bin/.gitkeep
+# SDL runtime binaries downloaded locally
+third_party/sdl3/lib/*
+!third_party/sdl3/lib/.gitkeep
+third_party/sdl3/bin/*
+!third_party/sdl3/bin/.gitkeep
+
+# Tools
+/compile_commands.json
+*.log

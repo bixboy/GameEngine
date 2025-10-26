@@ -1,6 +1,6 @@
-#include "HeaderGenerator.h"
-#include "Parser/TokenUtils.h"
-#include "Parser/HeaderParser.h"
+#include "BixHeaderTool/Generator/HeaderGenerator.h"
+#include "BixHeaderTool/Parser/TokenUtils.h"
+#include "BixHeaderTool/Parser/HeaderParser.h"
 #include <sstream>
 #include <iostream>
 

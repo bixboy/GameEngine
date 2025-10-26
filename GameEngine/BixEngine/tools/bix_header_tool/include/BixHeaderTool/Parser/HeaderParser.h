@@ -1,6 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "Types.h"
+#include "BixHeaderTool/Types.h"
 
 namespace BixTool
 {

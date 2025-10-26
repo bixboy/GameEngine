@@ -1,5 +1,5 @@
 #pragma once
-#include "../Types.h"
+#include "BixHeaderTool/Types.h"
 #include <string>
 #include <filesystem>
 
