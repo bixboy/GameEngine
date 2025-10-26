@@ -119,7 +119,7 @@ namespace BixTool
         if (hasRegisteredRoot)
         {
             oss << "    using __BixReflection_RootTag = ::Bix::Reflection::detail::RootTag<" << *rootIndexForClass
-                << ">; \\\n";
+                << ", " << scoped << ">; \\\n";
         }
         if (isActorType)
         {
@@ -220,12 +220,6 @@ namespace BixTool
         oss << "private: \\\n";
         oss << "    static inline ::Bix::Reflection::detail::ClassRegistrationInvoker<" << scoped
             << "> __BixReflection_AutoRegister{};\n";
-
-        if (hasRegisteredRoot)
-        {
-            oss << "namespace Bix::Reflection::detail { template<> struct EngineBaseTypeTrait<" << scoped
-                << "> : std::true_type {}; }\n";
-        }
 
         return oss.str();
     }

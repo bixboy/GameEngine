@@ -30,27 +30,35 @@ namespace Bix::Reflection::detail
 
     inline constexpr std::size_t kInvalidRootIndex = static_cast<std::size_t>(-1);
 
-    template<std::size_t Index>
+    template<std::size_t Index, typename DeclaringTypeT>
     struct RootTag : std::integral_constant<std::size_t, Index>
     {
+        using DeclaringType = DeclaringTypeT;
     };
 
     template<typename T, typename = void>
-    struct RootTagExtractor : std::integral_constant<std::size_t, kInvalidRootIndex>
+    struct RootTagTraits
     {
+        static constexpr std::size_t Index = kInvalidRootIndex;
+        using DeclaringType = void;
+        static constexpr bool HasTag = false;
     };
 
     template<typename T>
-    struct RootTagExtractor<T, std::void_t<typename T::__BixReflection_RootTag>>
-        : std::integral_constant<std::size_t, T::__BixReflection_RootTag::value>
+    struct RootTagTraits<T, std::void_t<typename T::__BixReflection_RootTag>>
     {
+        using TagType = typename T::__BixReflection_RootTag;
+        static constexpr std::size_t Index = TagType::value;
+        using DeclaringType = typename TagType::DeclaringType;
+        static constexpr bool HasTag = true;
     };
 
     template<typename T, std::size_t Index>
-    inline constexpr bool HasRootTag_v = RootTagExtractor<std::remove_cv_t<T>>::value == Index;
+    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag
+                                      && RootTagTraits<std::remove_cv_t<T>>::Index == Index;
 
     template<typename T>
-    inline constexpr bool HasAnyRootTag_v = RootTagExtractor<std::remove_cv_t<T>>::value != kInvalidRootIndex;
+    inline constexpr bool HasAnyRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag;
 
     template<typename T, typename = void>
     struct HasActorTag : std::false_type
@@ -66,14 +74,17 @@ namespace Bix::Reflection::detail
     inline constexpr bool HasActorTag_v = HasActorTag<std::remove_cv_t<T>>::value;
 
     template<typename T>
-    struct EngineBaseTypeTrait : std::false_type
-    {
-    };
-
-    template<typename T>
     constexpr bool IsEngineBaseType()
     {
-        return EngineBaseTypeTrait<std::remove_cv_t<T>>::value;
+        using Traits = RootTagTraits<std::remove_cv_t<T>>;
+        if constexpr (!Traits::HasTag)
+        {
+            return false;
+        }
+        else
+        {
+            return std::is_same_v<std::remove_cv_t<T>, typename Traits::DeclaringType>;
+        }
     }
 
     template<typename T>
