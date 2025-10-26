@@ -3,6 +3,70 @@
 #include "Parser/HeaderParser.h"
 #include <sstream>
 #include <iostream>
+#include <optional>
+#include <vector>
+
+namespace
+{
+    struct RootTypeDescriptor
+    {
+        std::string QualifiedName;
+        bool RequiresActorContext = false;
+    };
+
+    constexpr const char* kActorTypeName = "::BixEngine::Game::Actor";
+
+    static const std::vector<RootTypeDescriptor> kRootBaseTypes = {
+        { "::BixEngine::Game::Object", false },
+        { "::BixEngine::Game::Component", true },
+        { "::BixEngine::Game::Resource", false },
+    };
+
+    [[nodiscard]] std::string NormalizeQualifiedName(std::string name)
+    {
+        name = BixTool::Trim(name);
+        if (name.empty())
+        {
+            return name;
+        }
+
+        if (name.find("::") == std::string::npos)
+        {
+            return "::" + name;
+        }
+
+        if (name.rfind("::", 0) != 0)
+        {
+            return "::" + name;
+        }
+
+        return name;
+    }
+
+    [[nodiscard]] std::optional<std::size_t> FindRootIndex(const std::string& qualified)
+    {
+        for (std::size_t i = 0; i < kRootBaseTypes.size(); ++i)
+        {
+            if (kRootBaseTypes[i].QualifiedName == qualified)
+            {
+                return i;
+            }
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]] std::optional<std::size_t> FindComponentRootIndex()
+    {
+        for (std::size_t i = 0; i < kRootBaseTypes.size(); ++i)
+        {
+            if (kRootBaseTypes[i].RequiresActorContext)
+            {
+                return i;
+            }
+        }
+        return std::nullopt;
+    }
+}
 
 namespace BixTool
 {
@@ -25,7 +89,7 @@ namespace BixTool
             return oss.str();
         }
 
-        const ParsedClass& cls = result.Classes.front();
+        const ParsedClass& cls      = result.Classes.front();
         const std::string qualified = MakeQualifiedName(cls.Namespaces, cls.Name);
         const std::string scoped    = MakeScopedName(cls.Namespaces, cls.Name);
 
@@ -38,11 +102,29 @@ namespace BixTool
                 baseScoped = "::" + baseScoped;
         }
 
+        const std::string normalizedScoped = NormalizeQualifiedName(scoped);
+        const auto rootIndexForClass       = FindRootIndex(normalizedScoped);
+        const bool hasRegisteredRoot       = rootIndexForClass.has_value();
+        const bool isExplicitRoot          = baseScoped.empty() || hasRegisteredRoot;
+        const auto componentRootIndex      = FindComponentRootIndex();
+        const bool isActorType             = normalizedScoped == kActorTypeName;
+
+        (void)headerPath;
+
         // --------------------------
         // Begin macro generation
         // --------------------------
         oss << "#define GENERATED_BODY() \\\n";
         oss << "public: \\\n";
+        if (hasRegisteredRoot)
+        {
+            oss << "    using __BixReflection_RootTag = ::Bix::Reflection::detail::RootTag<" << *rootIndexForClass
+                << ">; \\\n";
+        }
+        if (isActorType)
+        {
+            oss << "    using __BixReflection_ActorTag = void; \\\n";
+        }
         oss << "    static ::Bix::Reflection::ClassInfo& StaticClass() \\\n";
         oss << "    { \\\n";
         oss << "        using ThisClass = " << scoped << "; \\\n";
@@ -76,43 +158,57 @@ namespace BixTool
         // --------------------------
         // Constructor logic (conditional generation)
         // --------------------------
-        oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
-        oss << "                { info.ConstructorFn = nullptr; } \\\n";
-
-        // ✅ Génération conditionnelle selon la hiérarchie détectée
-        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Component, ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    /* Component: construction liée à un Actor */ \\\n";
-        oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
-        oss << "                    { \\\n";
-        oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
-        oss << "                        if (!owner) return nullptr; \\\n";
-        oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
-        oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
-        oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-        oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
-        oss << "                        else return nullptr; \\\n";
-        oss << "                    }; \\\n";
-        oss << "                } \\\n";
-        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Actor, ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    /* Actor: simple construction par défaut */ \\\n";
-        oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-        oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-        oss << "                    else info.ConstructorFn = nullptr; \\\n";
-        oss << "                } \\\n";
-        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Object, ThisClass>) \\\n";
-        oss << "                { \\\n";
-        oss << "                    /* Object: construction simple */ \\\n";
-        oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-        oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-        oss << "                    else info.ConstructorFn = nullptr; \\\n";
-        oss << "                } \\\n";
-        oss << "                else \\\n";
-        oss << "                { \\\n";
-        oss << "                    /* Type externe ou non géré */ \\\n";
-        oss << "                    info.ConstructorFn = nullptr; \\\n";
-        oss << "                } \\\n";
+        if (isExplicitRoot)
+        {
+            oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
+            oss << "                { info.ConstructorFn = nullptr; } \\\n";
+            oss << "                else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                { info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; } \\\n";
+            oss << "                else \\\n";
+            oss << "                { info.ConstructorFn = nullptr; } \\\n";
+            if (hasRegisteredRoot)
+            {
+                oss << "                ::Bix::Reflection::RegisterBaseType<ThisClass>(info); \\\n";
+            }
+        }
+        else
+        {
+            oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
+            oss << "                { info.ConstructorFn = nullptr; } \\\n";
+            if (componentRootIndex.has_value())
+            {
+                oss << "                else if constexpr (::Bix::Reflection::detail::HasRootTag_v<ThisClass, " << *componentRootIndex
+                    << ">) \\\n";
+                oss << "                { \\\n";
+                oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
+                oss << "                    { \\\n";
+                oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
+                oss << "                        if (!owner) return nullptr; \\\n";
+                oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
+                oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
+                oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+                oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
+                oss << "                        else return nullptr; \\\n";
+                oss << "                    }; \\\n";
+                oss << "                } \\\n";
+            }
+            oss << "                else if constexpr (::Bix::Reflection::detail::HasActorTag_v<ThisClass>) \\\n";
+            oss << "                { \\\n";
+            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+            oss << "                    else info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+            oss << "                else if constexpr (::Bix::Reflection::detail::HasAnyRootTag_v<ThisClass>) \\\n";
+            oss << "                { \\\n";
+            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+            oss << "                    else info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+            oss << "                else \\\n";
+            oss << "                { \\\n";
+            oss << "                    info.ConstructorFn = nullptr; \\\n";
+            oss << "                } \\\n";
+        }
 
         // --------------------------
         // End lambda & registration
@@ -124,6 +220,12 @@ namespace BixTool
         oss << "private: \\\n";
         oss << "    static inline ::Bix::Reflection::detail::ClassRegistrationInvoker<" << scoped
             << "> __BixReflection_AutoRegister{};\n";
+
+        if (hasRegisteredRoot)
+        {
+            oss << "namespace ::Bix::Reflection::detail { template<> struct EngineBaseTypeTrait<" << scoped
+                << "> : std::true_type {}; }\n";
+        }
 
         return oss.str();
     }

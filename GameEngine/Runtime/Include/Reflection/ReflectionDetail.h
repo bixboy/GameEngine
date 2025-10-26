@@ -9,9 +9,78 @@
 #include <new>
 #include <type_traits>
 #include <typeinfo>
+#include <utility>
 
 namespace Bix::Reflection::detail
 {
+
+    template<typename Base, typename Derived, typename = void>
+    struct SafeIsBaseOf : std::false_type
+    {
+    };
+
+    template<typename Base, typename Derived>
+    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base))>>
+        : std::bool_constant<std::is_base_of_v<Base, Derived>>
+    {
+    };
+
+    template<typename Base, typename Derived>
+    inline constexpr bool SafeIsBaseOf_v = SafeIsBaseOf<Base, Derived>::value;
+
+    inline constexpr std::size_t kInvalidRootIndex = static_cast<std::size_t>(-1);
+
+    template<std::size_t Index>
+    struct RootTag : std::integral_constant<std::size_t, Index>
+    {
+    };
+
+    template<typename T, typename = void>
+    struct RootTagExtractor : std::integral_constant<std::size_t, kInvalidRootIndex>
+    {
+    };
+
+    template<typename T>
+    struct RootTagExtractor<T, std::void_t<typename T::__BixReflection_RootTag>>
+        : std::integral_constant<std::size_t, T::__BixReflection_RootTag::value>
+    {
+    };
+
+    template<typename T, std::size_t Index>
+    inline constexpr bool HasRootTag_v = RootTagExtractor<std::remove_cv_t<T>>::value == Index;
+
+    template<typename T>
+    inline constexpr bool HasAnyRootTag_v = RootTagExtractor<std::remove_cv_t<T>>::value != kInvalidRootIndex;
+
+    template<typename T, typename = void>
+    struct HasActorTag : std::false_type
+    {
+    };
+
+    template<typename T>
+    struct HasActorTag<T, std::void_t<typename T::__BixReflection_ActorTag>> : std::true_type
+    {
+    };
+
+    template<typename T>
+    inline constexpr bool HasActorTag_v = HasActorTag<std::remove_cv_t<T>>::value;
+
+    template<typename T>
+    struct EngineBaseTypeTrait : std::false_type
+    {
+    };
+
+    template<typename T>
+    constexpr bool IsEngineBaseType()
+    {
+        return EngineBaseTypeTrait<std::remove_cv_t<T>>::value;
+    }
+
+    template<typename T>
+    constexpr bool IsRegisteredBaseType()
+    {
+        return IsEngineBaseType<T>();
+    }
 
     template<typename ClassType, typename Populator>
         inline ClassInfo& RegisterReflectedClass(const char* name,
