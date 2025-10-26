@@ -1,0 +1,16 @@
+# Build artifacts
+build/
+binaries/
+
+# IDE caches
+.vs/
+.idea/
+
+# xmake cache
+.xmake/
+
+# SDL runtime libraries downloaded at build time
+third_party/SDL3-3.2.22/lib/
+!third_party/SDL3-3.2.22/lib/.gitkeep
+third_party/SDL3-3.2.22/bin/
+!third_party/SDL3-3.2.22/bin/.gitkeep

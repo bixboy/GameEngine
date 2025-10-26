@@ -57,7 +57,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Label="BixEnginePaths">
     <BixEngineRoot>$(ProjectDir)</BixEngineRoot>
-    <BixEngineThirdParty>$(BixEngineRoot)ThirdParty\</BixEngineThirdParty>
+    <BixEngineThirdParty>$(BixEngineRoot)third_party\</BixEngineThirdParty>
     <BixEngineSDL3Version>SDL3-3.2.22</BixEngineSDL3Version>
     <BixEngineSDL3Root Condition="'$(SDL3_DIR)' != ''">$(SDL3_DIR)\</BixEngineSDL3Root>
     <BixEngineSDL3Root Condition="'$(BixEngineSDL3Root)' == ''">$(BixEngineThirdParty)$(BixEngineSDL3Version)\</BixEngineSDL3Root>
@@ -96,7 +96,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -119,12 +119,12 @@
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
       <AdditionalIncludeDirectories>
         $(GeneratedHeadersAdditionalIncludeDirs);
-        $(ProjectDir)Runtime\Include;
-        $(ProjectDir)Runtime\Source\Core\Private;
-        $(ProjectDir)Runtime\Source\Game\Private;
-        $(ProjectDir)Runtime\Source\Graphics\Private;
-        $(ProjectDir)Runtime\Source\Input\Private;
-        $(ProjectDir)Runtime\Source\Math\Private;
+        $(ProjectDir)engine\include;
+        $(ProjectDir)engine\src\Core\Private;
+        $(ProjectDir)engine\src\Game\Private;
+        $(ProjectDir)engine\src\Graphics\Private;
+        $(ProjectDir)engine\src\Input\Private;
+        $(ProjectDir)engine\src\Math\Private;
         $(BixEngineSDL3Include);
         $(BixEngineThirdParty)ImGui;
         $(BixEngineThirdParty)ImGui\backends;
@@ -152,7 +152,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -175,7 +175,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)engine\include;$(ProjectDir)engine\src\Core\Private;$(ProjectDir)engine\src\Game\Private;$(ProjectDir)engine\src\Graphics\Private;$(ProjectDir)engine\src\Input\Private;$(ProjectDir)engine\src\Math\Private;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -188,10 +188,10 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-<ClCompile Include="Runtime\Source\Bix\Reflection\ClassInfo.cpp" />
-<ClCompile Include="Runtime\Source\Bix\Reflection\PropertyInfo.cpp" />
-<ClCompile Include="Runtime\Source\Bix\Reflection\Registry.cpp" />
-<ClCompile Include="Runtime\Source\Core\Private\Application.cpp">
+<ClCompile Include="engine\src\Bix\Reflection\ClassInfo.cpp" />
+<ClCompile Include="engine\src\Bix\Reflection\PropertyInfo.cpp" />
+<ClCompile Include="engine\src\Bix\Reflection\Registry.cpp" />
+<ClCompile Include="engine\src\Core\Private\Application.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -263,34 +263,34 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-<ClCompile Include="Runtime\Source\Core\Private\EngineBootstrap.cpp" />
-<ClCompile Include="Runtime\Source\Core\Private\EventDispatcher.cpp" />
-<ClCompile Include="Runtime\Source\Core\Private\GuiModule.cpp" />
-    <ClCompile Include="Runtime\Source\Core\Private\Logger.cpp" />
-    <ClCompile Include="Runtime\Source\Core\Private\RenderLoop.cpp" />
-    <ClCompile Include="Runtime\Source\Core\Private\SdlSystem.cpp" />
-    <ClCompile Include="Runtime\Source\Core\Private\SubsystemManager.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ActorOverviewUI.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ComponentSectionUI.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ImGuiControls.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\ReflectionDrawer.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspector\TransformSectionUI.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp">
+<ClCompile Include="engine\src\Core\Private\EngineBootstrap.cpp" />
+<ClCompile Include="engine\src\Core\Private\EventDispatcher.cpp" />
+<ClCompile Include="engine\src\Core\Private\GuiModule.cpp" />
+    <ClCompile Include="engine\src\Core\Private\Logger.cpp" />
+    <ClCompile Include="engine\src\Core\Private\RenderLoop.cpp" />
+    <ClCompile Include="engine\src\Core\Private\SdlSystem.cpp" />
+    <ClCompile Include="engine\src\Core\Private\SubsystemManager.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\DefaultEngineGui.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ActorOverviewUI.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ComponentSectionUI.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ImGuiControls.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\ReflectionDrawer.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ActorInspector\TransformSectionUI.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
       <CompileAs>Default</CompileAs>
       <UseDynamicDebugging>false</UseDynamicDebugging>
       <ConformanceMode>true</ConformanceMode>
@@ -315,37 +315,37 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
       <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <SpectreMitigation>false</SpectreMitigation>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
       <TranslateIncludes>false</TranslateIncludes>
       <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
       <TreatWarningAsError>false</TreatWarningAsError>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <UseFullPaths>true</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <IntelJCCErratum>false</IntelJCCErratum>
       <BuildStlModules>false</BuildStlModules>
@@ -357,20 +357,20 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\BixEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\engine\include;C:\App\CustomEngine\GameEngine\third_party\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\third_party\ImGui;C:\App\CustomEngine\GameEngine\third_party\ImGui\backends;</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp">
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
       <CompileAs>Default</CompileAs>
       <UseDynamicDebugging>false</UseDynamicDebugging>
       <ConformanceMode>true</ConformanceMode>
@@ -395,37 +395,37 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
       <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <SpectreMitigation>false</SpectreMitigation>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
       <TranslateIncludes>false</TranslateIncludes>
       <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
       <TreatWarningAsError>false</TreatWarningAsError>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <UseFullPaths>true</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <IntelJCCErratum>false</IntelJCCErratum>
       <BuildStlModules>false</BuildStlModules>
@@ -437,20 +437,20 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\BixEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\engine\include;C:\App\CustomEngine\GameEngine\third_party\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\third_party\ImGui;C:\App\CustomEngine\GameEngine\third_party\ImGui\backends;</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserState.cpp">
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserState.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
       <CompileAs>Default</CompileAs>
       <UseDynamicDebugging>false</UseDynamicDebugging>
       <ConformanceMode>true</ConformanceMode>
@@ -475,37 +475,37 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
       <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <SpectreMitigation>false</SpectreMitigation>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
       <TranslateIncludes>false</TranslateIncludes>
       <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
       <TreatWarningAsError>false</TreatWarningAsError>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <UseFullPaths>true</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <IntelJCCErratum>false</IntelJCCErratum>
       <BuildStlModules>false</BuildStlModules>
@@ -517,20 +517,20 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\BixEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\engine\include;C:\App\CustomEngine\GameEngine\third_party\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\third_party\ImGui;C:\App\CustomEngine\GameEngine\third_party\ImGui\backends;</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp">
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
       <CompileAs>Default</CompileAs>
       <UseDynamicDebugging>false</UseDynamicDebugging>
       <ConformanceMode>true</ConformanceMode>
@@ -555,37 +555,37 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
       <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <SpectreMitigation>false</SpectreMitigation>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
       <TranslateIncludes>false</TranslateIncludes>
       <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
       <TreatWarningAsError>false</TreatWarningAsError>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <UseFullPaths>true</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <IntelJCCErratum>false</IntelJCCErratum>
       <BuildStlModules>false</BuildStlModules>
@@ -597,20 +597,20 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\BixEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\engine\include;C:\App\CustomEngine\GameEngine\third_party\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\third_party\ImGui;C:\App\CustomEngine\GameEngine\third_party\ImGui\backends;</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp">
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
       <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
       <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
       <CompileAs>Default</CompileAs>
       <UseDynamicDebugging>false</UseDynamicDebugging>
       <ConformanceMode>true</ConformanceMode>
@@ -635,37 +635,37 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <LanguageStandard_C>Default</LanguageStandard_C>
       <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
       <OmitDefaultLibName>false</OmitDefaultLibName>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
       <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
       <PrecompiledHeader>NotUsing</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
       <PreprocessToFile>false</PreprocessToFile>
       <PreprocessKeepComments>false</PreprocessKeepComments>
       <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
       <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
       <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
       <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
       <SuppressStartupBanner>true</SuppressStartupBanner>
       <BufferSecurityCheck>true</BufferSecurityCheck>
       <SmallerTypeCheck>false</SmallerTypeCheck>
       <SpectreMitigation>false</SpectreMitigation>
       <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
       <TranslateIncludes>false</TranslateIncludes>
       <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
       <TreatWarningAsError>false</TreatWarningAsError>
       <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
       <UseFullPaths>true</UseFullPaths>
       <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\BixEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <IntelJCCErratum>false</IntelJCCErratum>
       <BuildStlModules>false</BuildStlModules>
@@ -677,19 +677,19 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\BixEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\BixEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);C:\App\CustomEngine\GameEngine\engine\include;C:\App\CustomEngine\GameEngine\third_party\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\third_party\ImGui;C:\App\CustomEngine\GameEngine\third_party\ImGui\backends;</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\StatsPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiPanel.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiSystem.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Utils\GuiHelpers.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp" />
-    <ClCompile Include="Runtime\Source\Game\Private\ActorSpawner.cpp">
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\SceneViewportPanel.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Panels\StatsPanel.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\GuiManager.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\GuiPanel.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\GuiSystem.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Utils\GuiHelpers.cpp" />
+    <ClCompile Include="engine\src\Engine\Private\Gui\Widgets\ActionTooltip.cpp" />
+    <ClCompile Include="engine\src\Game\Private\ActorSpawner.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -763,10 +763,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Components\SpriteComponent.cpp">
+    <ClCompile Include="engine\src\Game\Private\Components\SpriteComponent.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -840,10 +840,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Scene.cpp">
+    <ClCompile Include="engine\src\Game\Private\Scene.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -917,10 +917,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\SceneManager.cpp">
+    <ClCompile Include="engine\src\Game\Private\SceneManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -994,10 +994,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\SceneSerializer.cpp">
+    <ClCompile Include="engine\src\Game\Private\SceneSerializer.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1071,11 +1071,11 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Core\Private\Timer.cpp" />
-    <ClCompile Include="Runtime\Source\Core\Private\Window.cpp">
+    <ClCompile Include="engine\src\Core\Private\Timer.cpp" />
+    <ClCompile Include="engine\src\Core\Private\Window.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1147,237 +1147,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\EmptyScene.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <UseDynamicDebugging>false</UseDynamicDebugging>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <EnableVectorLength>NotSet</EnableVectorLength>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
-      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Object.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
-      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Actor.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
-      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Test\Player.cpp">
+    <ClCompile Include="engine\src\Game\Private\EmptyScene.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1451,10 +1224,160 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Game\Private\Test\TestScene.cpp">
+    <ClCompile Include="engine\src\Game\Private\Object.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="engine\src\Game\Private\Actor.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="engine\src\Game\Private\Test\Player.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1528,160 +1451,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Graphics\Private\Renderer.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
-      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Input\Private\Input.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
-      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>$(IntDir)</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
-    <ClCompile Include="Runtime\Source\Input\Private\InputManager.cpp">
+    <ClCompile Include="engine\src\Game\Private\Test\TestScene.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1755,10 +1528,160 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Math\Private\Color.cpp">
+    <ClCompile Include="engine\src\Graphics\Private\Renderer.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="engine\src\Input\Private\Input.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="engine\src\Input\Private\InputManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1832,10 +1755,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Math\Private\Rotator.cpp">
+    <ClCompile Include="engine\src\Math\Private\Color.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1909,10 +1832,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Math\Private\Transform.cpp">
+    <ClCompile Include="engine\src\Math\Private\Rotator.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1986,10 +1909,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Math\Private\Vector2.cpp">
+    <ClCompile Include="engine\src\Math\Private\Transform.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -2063,10 +1986,10 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Math\Private\Vector3.cpp">
+    <ClCompile Include="engine\src\Math\Private\Vector2.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -2140,79 +2063,156 @@
       <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)Runtime\Include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="BixRun\main.cpp" />
-  <ClCompile Include="ThirdParty\ImGui\imgui.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\imgui_demo.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\imgui_draw.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\imgui_tables.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\imgui_widgets.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_sdl3.cpp" />
-    <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
+    <ClCompile Include="engine\src\Math\Private\Vector3.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>$(IntDir)</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>$(IntDir)</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>$(IntDir)</ModuleDependenciesFile>
+      <ModuleOutputFile>$(IntDir)</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>$(IntDir)</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>$(IntDir)vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>$(IntDir)BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>$(IntDir)</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>$(IntDir)BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>$(IntDir)</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(GeneratedHeadersAdditionalIncludeDirs);$(ProjectDir)engine\include;$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="apps\bix_run\main.cpp" />
+  <ClCompile Include="third_party\ImGui\imgui.cpp" />
+    <ClCompile Include="third_party\ImGui\imgui_demo.cpp" />
+    <ClCompile Include="third_party\ImGui\imgui_draw.cpp" />
+    <ClCompile Include="third_party\ImGui\imgui_tables.cpp" />
+    <ClCompile Include="third_party\ImGui\imgui_widgets.cpp" />
+    <ClCompile Include="third_party\ImGui\backends\imgui_impl_sdl3.cpp" />
+    <ClCompile Include="third_party\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
     </ItemGroup>
 <ItemGroup>
-<ClInclude Include="Runtime\Include\Bix\Core\Application.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\ApplicationConfig.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\EngineBootstrap.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\EventDispatcher.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\GuiModule.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\RenderLoop.h" />
-<ClInclude Include="Runtime\Include\Bix\Core\SdlSystem.h" />
-    <ClInclude Include="Runtime\Include\Bix\Core\String.h" />
-    <ClInclude Include="Runtime\Include\Bix\Core\SubsystemManager.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ActorInspectorState.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ComponentSectionUI.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ImGuiControls.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\ReflectionDrawer.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\TransformSectionUI.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspector\Utils\ActorInspectorHelpers.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneViewportPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\StatsPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Utils\GuiHelpers.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Widgets\ActionTooltip.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiManager.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiDocking.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\BixEngine.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiPanel.h" />
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiSystem.h" />
-    <ClInclude Include="Runtime\Include\Bix\Core\Logger.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\ActorSpawner.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Object.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Components\Component.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Components\SpriteComponent.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Scene.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\SceneManager.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\SceneSerializer.h" />
-    <ClInclude Include="Runtime\Include\Bix\Core\Timer.h" />
-    <ClInclude Include="Runtime\Include\Bix\Core\Window.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\EmptyScene.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Actor.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h" />
-    <ClInclude Include="Runtime\Include\Bix\Game\Test\TestScene.h" />
-    <ClInclude Include="Runtime\Include\Bix\Graphics\Renderer.h" />
-    <ClInclude Include="Runtime\Include\Bix\Input\Input.h" />
-    <ClInclude Include="Runtime\Include\Bix\Input\InputManager.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Color.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Math.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Rotator.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Transform.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Vector2.h" />
-    <ClInclude Include="Runtime\Include\Bix\Math\Vector3.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\BixReflection.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\ClassInfo.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\PropertyInfo.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionDetail.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionHelpers.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\ReflectionMacros.h" />
-    <ClInclude Include="Runtime\Include\Bix\Reflection\Registry.h" />
+<ClInclude Include="engine\include\Bix\Core\Application.h" />
+<ClInclude Include="engine\include\Bix\Core\ApplicationConfig.h" />
+<ClInclude Include="engine\include\Bix\Core\EngineBootstrap.h" />
+<ClInclude Include="engine\include\Bix\Core\EventDispatcher.h" />
+<ClInclude Include="engine\include\Bix\Core\GuiModule.h" />
+<ClInclude Include="engine\include\Bix\Core\RenderLoop.h" />
+<ClInclude Include="engine\include\Bix\Core\SdlSystem.h" />
+    <ClInclude Include="engine\include\Bix\Core\String.h" />
+    <ClInclude Include="engine\include\Bix\Core\SubsystemManager.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\DefaultEngineGui.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\ActorInspectorState.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\ComponentSectionUI.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\ImGuiControls.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\ReflectionDrawer.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\TransformSectionUI.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspector\Utils\ActorInspectorHelpers.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\SceneViewportPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Panels\StatsPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Utils\GuiHelpers.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\Widgets\ActionTooltip.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\GuiManager.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\GuiDocking.h" />
+    <ClInclude Include="engine\include\Bix\Engine\BixEngine.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\GuiPanel.h" />
+    <ClInclude Include="engine\include\Bix\Engine\Gui\GuiSystem.h" />
+    <ClInclude Include="engine\include\Bix\Core\Logger.h" />
+    <ClInclude Include="engine\include\Bix\Game\ActorSpawner.h" />
+    <ClInclude Include="engine\include\Bix\Game\Object.h" />
+    <ClInclude Include="engine\include\Bix\Game\Components\Component.h" />
+    <ClInclude Include="engine\include\Bix\Game\Components\SpriteComponent.h" />
+    <ClInclude Include="engine\include\Bix\Game\Scene.h" />
+    <ClInclude Include="engine\include\Bix\Game\SceneManager.h" />
+    <ClInclude Include="engine\include\Bix\Game\SceneSerializer.h" />
+    <ClInclude Include="engine\include\Bix\Core\Timer.h" />
+    <ClInclude Include="engine\include\Bix\Core\Window.h" />
+    <ClInclude Include="engine\include\Bix\Game\EmptyScene.h" />
+    <ClInclude Include="engine\include\Bix\Game\Actor.h" />
+    <ClInclude Include="engine\include\Bix\Game\Test\Player.h" />
+    <ClInclude Include="engine\include\Bix\Game\Test\TestScene.h" />
+    <ClInclude Include="engine\include\Bix\Graphics\Renderer.h" />
+    <ClInclude Include="engine\include\Bix\Input\Input.h" />
+    <ClInclude Include="engine\include\Bix\Input\InputManager.h" />
+    <ClInclude Include="engine\include\Bix\Math\Color.h" />
+    <ClInclude Include="engine\include\Bix\Math\Math.h" />
+    <ClInclude Include="engine\include\Bix\Math\Rotator.h" />
+    <ClInclude Include="engine\include\Bix\Math\Transform.h" />
+    <ClInclude Include="engine\include\Bix\Math\Vector2.h" />
+    <ClInclude Include="engine\include\Bix\Math\Vector3.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\BixReflection.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\ClassInfo.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\PropertyInfo.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\ReflectionDetail.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\ReflectionHelpers.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\ReflectionMacros.h" />
+    <ClInclude Include="engine\include\Bix\Reflection\Registry.h" />
   </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

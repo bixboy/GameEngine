@@ -45,8 +45,8 @@ function generate_headers(force, generated_dir)
         end
     end
 
-    scan_headers("Runtime/Include/**.h")
-    scan_headers("Samples/**.h")
+    scan_headers("engine/include/**.h")
+    scan_headers("samples/**.h")
 
     local count = 0
     for _ in pairs(gen_names) do count = count + 1 end
@@ -87,11 +87,11 @@ function generate_headers(force, generated_dir)
         return
     end
 
-    cprint(string.format("${dim blue}→ Commande : %s Runtime/Include Samples %s", tool_exe, generated_dir))
+    cprint(string.format("${dim blue}→ Commande : %s engine/include samples %s", tool_exe, generated_dir))
     
     local args = {
-        path.join(os.projectdir(), "Runtime/Include"),
-        path.join(os.projectdir(), "Samples"),
+        path.join(os.projectdir(), "engine/include"),
+        path.join(os.projectdir(), "samples"),
         path.join(os.projectdir(), generated_dir)
     }
 
