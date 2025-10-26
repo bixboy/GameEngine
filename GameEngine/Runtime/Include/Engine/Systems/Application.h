@@ -3,8 +3,8 @@
 #include <memory>
 #include <type_traits>
 
-#include "Bix/Core/ApplicationConfig.h"
-#include "Bix/Core/EngineBootstrap.h"
+#include "Engine/Systems/ApplicationConfig.h"
+#include "Engine/Bootstrap/EngineBootstrap.h"
 
 namespace BixEngine
 {
@@ -40,7 +40,7 @@ namespace BixEngine::Core
     };
 }
 
-#include "Bix/Game/Scene.h"
+#include "Game/Scene.h"
 
 namespace BixEngine::Core
 {

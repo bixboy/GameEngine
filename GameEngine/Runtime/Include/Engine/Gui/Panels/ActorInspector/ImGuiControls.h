@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 
 #include <cfloat>
 #include <imgui.h>

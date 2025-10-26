@@ -1,5 +1,5 @@
-#include "Bix/Core/Logger.h"
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Core/Logger.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -12,7 +12,7 @@
 #include <unordered_set>
 #include <sstream>
 #include <cctype>
-#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
 namespace BixEngine::Gui
@@ -56,8 +56,8 @@ namespace BixEngine::Gui
         const std::vector<ParentScriptInfo>& GetBaseClassParents()
         {
             static const std::vector<ParentScriptInfo> baseParents = {
-                {"Actor", "BixEngine::Game::Actor", "Bix/Game/Actor.h", true, false},
-                {"Component", "BixEngine::Game::Component", "Bix/Game/Components/Component.h", false, true},
+                {"Actor", "BixEngine::Game::Actor", "Game/Actor.h", true, false},
+                {"Component", "BixEngine::Game::Component", "Game/Components/Component.h", false, true},
             };
             return baseParents;
         }
@@ -656,7 +656,7 @@ namespace BixEngine::Gui
                                         const bool inheritsComponent = requests.selectedParentIsComponent || info.isComponent || defaultComponent;
                                         const std::string defaultBase = inheritsComponent ? "::BixEngine::Game::Component" : "::BixEngine::Game::Actor";
                                         const std::string baseType = hasParent ? info.className : defaultBase;
-                                        const std::string baseInclude = inheritsComponent ? "Bix/Game/Components/Component.h" : "Bix/Game/Actor.h";
+                                        const std::string baseInclude = inheritsComponent ? "Game/Components/Component.h" : "Game/Actor.h";
 
                                         headerFile << "#pragma once\n\n";
                                         headerFile << "// Parent: " << (hasParent ? info.className : "(none)") << '\n';

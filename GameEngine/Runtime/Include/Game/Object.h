@@ -2,9 +2,9 @@
 
 #include <istream>
 #include <ostream>
-#include "Bix/Math/Math.h"
-#include "Bix/Core/String.h"
-#include "Bix/Reflection/BixReflection.h"
+#include "Core/Math/Math.h"
+#include "Core/Containers/String.h"
+#include "Reflection/BixReflection.h"
 #include "Object.generated.h"
 
 

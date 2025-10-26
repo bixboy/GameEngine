@@ -7,7 +7,7 @@
 
 #include "imgui.h"
 
-#include "Bix/Engine/Gui/GuiDocking.h"
+#include "Engine/Gui/GuiDocking.h"
 
 struct SDL_Window;
 struct SDL_Renderer;

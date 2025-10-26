@@ -1,7 +1,7 @@
 #pragma once
 #include <SDL3/SDL_render.h>
 #include <SDL3/SDL_video.h>
-#include "Bix/Math/Color.h"
+#include "Core/Math/Color.h"
 
 namespace BixEngine::Graphics
 {

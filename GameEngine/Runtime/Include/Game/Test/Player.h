@@ -2,7 +2,7 @@
 #include <SDL3/SDL.h>
 #include <iosfwd>
 #include <memory>
-#include "Bix/Game/Actor.h"
+#include "Game/Actor.h"
 #include "Player.generated.h"
 
 namespace BixEngine

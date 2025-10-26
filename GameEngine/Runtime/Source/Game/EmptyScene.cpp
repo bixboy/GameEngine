@@ -1,8 +1,8 @@
-#include "Bix/Game/EmptyScene.h"
-#include "Bix/Game/ActorSpawner.h"
-#include "Bix/Game/Test/Player.h"
-#include "Bix/Input/Input.h"
-#include "Bix/Math/Color.h"
+#include "Game/EmptyScene.h"
+#include "Game/ActorSpawner.h"
+#include "Game/Test/Player.h"
+#include "Input/Input.h"
+#include "Core/Math/Color.h"
 
 namespace BixEngine::Game
 {

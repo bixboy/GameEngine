@@ -1,9 +1,9 @@
-#include "Bix/Engine/Gui/Panels/SceneViewportPanel.h"
+#include "Engine/Gui/Panels/SceneViewportPanel.h"
 
 #include <SDL3/SDL_render.h>
 
-#include "Bix/Engine/Gui/GuiManager.h"
-#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/GuiManager.h"
+#include "Engine/Gui/GuiPanel.h"
 
 #include "imgui.h"
 

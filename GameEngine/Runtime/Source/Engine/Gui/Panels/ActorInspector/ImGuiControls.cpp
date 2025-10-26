@@ -1,4 +1,4 @@
-#include "Bix/Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
 
 #include <algorithm>
 #include <string>

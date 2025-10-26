@@ -1,10 +1,10 @@
-#include "Bix/Engine/Gui/GuiManager.h"
-#include "Bix/Engine/Gui/GuiPanel.h"
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/GuiManager.h"
+#include "Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include <filesystem>
-#include "Bix/Engine/Gui/DefaultEngineGui.h"
-#include "Bix/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 
 namespace BixEngine::Gui

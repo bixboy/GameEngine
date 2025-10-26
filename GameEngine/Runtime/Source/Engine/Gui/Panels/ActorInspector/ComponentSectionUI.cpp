@@ -1,12 +1,12 @@
-#include "Bix/Engine/Gui/Panels/ActorInspector/ComponentSectionUI.h"
+#include "Engine/Gui/Panels/ActorInspector/ComponentSectionUI.h"
 
-#include "Bix/Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
-#include "Bix/Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
+#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
+#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Bix/Engine/Gui/Utils/GuiHelpers.h"
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/Components/Component.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Game/Actor.h"
+#include "Game/Components/Component.h"
 
 #include <algorithm>
 #include <memory>

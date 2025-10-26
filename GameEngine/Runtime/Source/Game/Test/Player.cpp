@@ -1,13 +1,13 @@
-#include "Bix/Game/Test/Player.h"
+#include "Game/Test/Player.h"
 
 #include <istream>
 #include <memory>
 #include <ostream>
 #include <stdexcept>
 
-#include "Bix/Game/Components/SpriteComponent.h"
-#include "Bix/Input/InputManager.h"
-#include "Bix/Math/Math.h"
+#include "Game/Components/SpriteComponent.h"
+#include "Input/InputManager.h"
+#include "Core/Math/Math.h"
 
 namespace BixEngine::Game
 {

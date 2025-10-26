@@ -1,21 +1,21 @@
 #pragma once
-#include "Bix/Core/Application.h"
-#include "Bix/Core/Logger.h"
-#include "Bix/Core/Timer.h"
-#include "Bix/Core/Window.h"
+#include "Engine/Systems/Application.h"
+#include "Core/Logger.h"
+#include "Core/Timer.h"
+#include "Engine/Systems/Window.h"
 
-#include "Bix/Graphics/Renderer.h"
+#include "Graphics/Renderer.h"
 
-#include "Bix/Input/Input.h"
-#include "Bix/Input/InputManager.h"
+#include "Input/Input.h"
+#include "Input/InputManager.h"
 
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/EmptyScene.h"
-#include "Bix/Game/Scene.h"
-#include "Bix/Game/SceneManager.h"
-#include "Bix/Game/Test/TestScene.h"
+#include "Game/Actor.h"
+#include "Game/EmptyScene.h"
+#include "Game/Scene.h"
+#include "Game/SceneManager.h"
+#include "Game/Test/TestScene.h"
 
-#include "Bix/Math/Math.h"
+#include "Core/Math/Math.h"
 
 namespace BixEngine
 {

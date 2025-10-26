@@ -1,5 +1,5 @@
-#include "Bix/Game/Actor.h"
-#include "Bix/Game/Components/Component.h"
+#include "Game/Actor.h"
+#include "Game/Components/Component.h"
 
 #include <algorithm>
 #include <memory>

@@ -3,12 +3,12 @@
 #include <memory>
 #include <utility>
 
-#include "Bix/Core/ApplicationConfig.h"
-#include "Bix/Core/SdlSystem.h"
-#include "Bix/Core/GuiModule.h"
-#include "Bix/Core/SubsystemManager.h"
-#include "Bix/Core/EventDispatcher.h"
-#include "Bix/Core/RenderLoop.h"
+#include "Engine/Systems/ApplicationConfig.h"
+#include "Engine/Systems/SdlSystem.h"
+#include "Engine/Gui/GuiModule.h"
+#include "Engine/Systems/SubsystemManager.h"
+#include "Core/EventDispatcher.h"
+#include "Engine/Systems/RenderLoop.h"
 
 namespace BixEngine
 {

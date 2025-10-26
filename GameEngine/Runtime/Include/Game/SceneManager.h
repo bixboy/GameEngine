@@ -3,7 +3,7 @@
 #include <type_traits>
 #include <utility>
 
-#include "Bix/Game/Scene.h"
+#include "Game/Scene.h"
 
 namespace BixEngine::Game
 {

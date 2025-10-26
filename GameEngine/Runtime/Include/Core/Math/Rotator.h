@@ -2,9 +2,9 @@
 #include <algorithm>
 #include <cmath>
 
-#include "Bix/Core/String.h"
+#include "Core/Containers/String.h"
 
-#include "Bix/Math/Vector3.h"
+#include "Core/Math/Vector3.h"
 
 namespace BixEngine::Math
 {

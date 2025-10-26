@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Math/Color.h"
+#include "Core/Math/Color.h"
 
 namespace BixEngine
 {

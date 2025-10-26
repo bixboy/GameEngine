@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Bix/Game/Scene.h"
+#include "Game/Scene.h"
 #include "TestScene.generated.h"
 
 namespace BixEngine

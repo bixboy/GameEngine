@@ -1,6 +1,6 @@
-#include "Bix/Input/InputManager.h"
+#include "Input/InputManager.h"
 #include "unordered_map"
-#include "Bix/Input/Input.h"
+#include "Input/Input.h"
 
 namespace BixEngine::Input
 {

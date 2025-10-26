@@ -2,8 +2,8 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
-#include "Bix/Game/Object.h"
-#include "Bix/Math/Math.h"
+#include "Game/Object.h"
+#include "Core/Math/Math.h"
 #include "Actor.generated.h"
 
 namespace BixEngine::Graphics { class Renderer; }

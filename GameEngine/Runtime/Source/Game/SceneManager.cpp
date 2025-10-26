@@ -1,4 +1,4 @@
-#include "Bix/Game/SceneManager.h"
+#include "Game/SceneManager.h"
 #include <utility>
 
 namespace BixEngine::Game

@@ -1,6 +1,6 @@
-#include "Bix/Reflection/ClassInfo.h"
+#include "Reflection/ClassInfo.h"
 
-#include "Bix/Reflection/PropertyInfo.h"
+#include "Reflection/PropertyInfo.h"
 
 namespace Bix::Reflection
 {

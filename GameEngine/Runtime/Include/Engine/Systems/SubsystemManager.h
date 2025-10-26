@@ -12,9 +12,9 @@ namespace BixEngine
     namespace Core { class Window; class Timer; }
 }
 
-#include "Bix/Input/Input.h"
-#include "Bix/Input/InputManager.h"
-#include "Bix/Core/Timer.h"
+#include "Input/Input.h"
+#include "Input/InputManager.h"
+#include "Core/Timer.h"
 
 namespace BixEngine::Core
 {
@@ -48,8 +48,8 @@ namespace BixEngine::Core
     };
 }
 
-#include "Bix/Game/SceneManager.h"
-#include "Bix/Game/Scene.h"
+#include "Game/SceneManager.h"
+#include "Game/Scene.h"
 
 namespace BixEngine::Core
 {

@@ -1,4 +1,4 @@
-#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/GuiPanel.h"
 
 #include <utility>
 

@@ -1,4 +1,4 @@
-#include "Bix/Engine/Gui/GuiSystem.h"
+#include "Engine/Gui/GuiSystem.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -9,8 +9,8 @@
 
 #include <SDL3/SDL.h>
 
-#include "Bix/Core/Logger.h"
-#include "Bix/Engine/Gui/GuiPanel.h"
+#include "Core/Logger.h"
+#include "Engine/Gui/GuiPanel.h"
 
 #include "imgui.h"
 #include "imgui_impl_sdl3.h"

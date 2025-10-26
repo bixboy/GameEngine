@@ -1,5 +1,5 @@
-#include "Bix/Graphics/Renderer.h"
-#include "Bix/Core/Logger.h"
+#include "Graphics/Renderer.h"
+#include "Core/Logger.h"
 
 namespace BixEngine::Graphics
 {

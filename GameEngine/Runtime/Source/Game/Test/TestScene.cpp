@@ -1,13 +1,13 @@
-#include "Bix/Game/Test/TestScene.h"
+#include "Game/Test/TestScene.h"
 
 #include <algorithm>
 #include <memory>
 
-#include "Bix/Game/Test/Player.h"
-#include "Bix/Graphics/Renderer.h"
-#include "Bix/Input/InputManager.h"
-#include "Bix/Math/Color.h"
-#include "Bix/Math/Math.h"
+#include "Game/Test/Player.h"
+#include "Graphics/Renderer.h"
+#include "Input/InputManager.h"
+#include "Core/Math/Color.h"
+#include "Core/Math/Math.h"
 
 namespace BixEngine::Game
 {
