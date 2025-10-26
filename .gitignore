@@ -1,43 +1,145 @@
-# Prerequisites
-*.d
+# ===============================================
+# 🧠  BixEngine / C++ Game Engine GitIgnore
+# ===============================================
 
-# Compiled Object files
-*.slo
-*.lo
-*.o
+# --- Core build artifacts ---
+build/
+Build/
+bin/
+Bin/
+binaries/
+Binaries/
+intermediate/
+Intermediate/
+obj/
 *.obj
-
-# Precompiled Headers
-*.gch
-*.pch
-
-# Linker files
+*.o
+*.lo
+*.slo
+*.d
+*.idb
 *.ilk
-
-# Debugger Files
 *.pdb
-
-# Compiled Dynamic libraries
-*.so
-*.dylib
-*.dll
-
-# Fortran module files
+*.dwo
 *.mod
 *.smod
 
-# Compiled Static libraries
-*.lai
-*.la
-*.a
+# --- Compiled libraries / binaries ---
 *.lib
-
-# Executables
+*.a
+*.la
+*.lai
+*.so
+*.dylib
+*.dll
 *.exe
 *.out
 *.app
+*.msi
 
-# debug information files
-*.dwo
+# --- Precompiled headers ---
+*.gch
+*.pch
 
-.vcxproj
+# --- Static analyzer & coverage output ---
+*.gcno
+*.gcda
+*.gcov
+*.profraw
+*.profdata
+
+# --- Linker / temp files ---
+*.map
+*.exp
+*.log
+*.tlog
+
+# --- xmake / cmake / msbuild generated ---
+.xmake/
+xmake.lua.bak
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.user
+*.opensdf
+*.sdf
+*.suo
+*.cache
+*.db
+*.VC.db
+*.VC.VC.opendb
+*.ipch
+
+# --- IDE-specific files ---
+.vscode/
+.vs/
+.idea/
+*.swp
+*.swo
+*.bak
+*.tmp
+*.temp
+*.log
+*.userprefs
+*.DS_Store
+Thumbs.db
+
+# --- Generated reflection headers / auto-code ---
+*.generated.h
+*.gen.h
+*_Reflection.h
+*_autogen/
+autogen/
+Generated/
+generated/
+BixGenerated/
+BixHeaderToolOutput/
+
+# --- Engine / Tool caches ---
+.cache/
+.temp/
+logs/
+output/
+out/
+dist/
+dump/
+crashlogs/
+crash_reports/
+profiling/
+memory_dumps/
+
+# --- Third-party or external ---
+third_party/build/
+third_party/bin/
+third_party/lib/
+third_party/tmp/
+third_party/*/obj/
+third_party/*/bin/
+third_party/*/build/
+third_party/*/CMakeFiles/
+
+# --- Project-specific ---
+*.ini
+*.cfg
+*.iml
+*.db-journal
+*.manifest
+*.ipdb
+*.iobj
+
+# --- Editor autosaves ---
+*.autosave
+*.backup
+*.old
+*.orig
+
+# --- System files ---
+.DS_Store
+Thumbs.db
+ehthumbs.db
+desktop.ini
