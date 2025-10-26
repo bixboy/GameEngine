@@ -80,51 +80,39 @@ namespace BixTool
         oss << "                { info.ConstructorFn = nullptr; } \\\n";
 
         // ✅ Génération conditionnelle selon la hiérarchie détectée
-        if (cls.BaseType == "Component")
-        {
-            oss << "                else \\\n";
-            oss << "                { \\\n";
-            oss << "                    /* Component: construction liée à un Actor */ \\\n";
-            oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
-            oss << "                    { \\\n";
-            oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
-            oss << "                        if (!owner) return nullptr; \\\n";
-            oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
-            oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
-            oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-            oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
-            oss << "                        else return nullptr; \\\n";
-            oss << "                    }; \\\n";
-            oss << "                } \\\n";
-        }
-        else if (cls.BaseType == "Actor")
-        {
-            oss << "                else \\\n";
-            oss << "                { \\\n";
-            oss << "                    /* Actor: simple construction par défaut */ \\\n";
-            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-            oss << "                    else info.ConstructorFn = nullptr; \\\n";
-            oss << "                } \\\n";
-        }
-        else if (cls.BaseType == "Object" || baseScoped.find("Object") != std::string::npos)
-        {
-            oss << "                else \\\n";
-            oss << "                { \\\n";
-            oss << "                    /* Object: construction simple */ \\\n";
-            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-            oss << "                    else info.ConstructorFn = nullptr; \\\n";
-            oss << "                } \\\n";
-        }
-        else
-        {
-            oss << "                else \\\n";
-            oss << "                { \\\n";
-            oss << "                    /* Type externe ou non géré */ \\\n";
-            oss << "                    info.ConstructorFn = nullptr; \\\n";
-            oss << "                } \\\n";
-        }
+        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Component, ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    /* Component: construction liée à un Actor */ \\\n";
+        oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
+        oss << "                    { \\\n";
+        oss << "                        auto* owner = static_cast<::BixEngine::Game::Actor*>(context); \\\n";
+        oss << "                        if (!owner) return nullptr; \\\n";
+        oss << "                        if constexpr (std::is_constructible_v<ThisClass, ::BixEngine::Game::Actor*>) \\\n";
+        oss << "                            return static_cast<void*>(new ThisClass(owner)); \\\n";
+        oss << "                        else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+        oss << "                            return static_cast<void*>(new ThisClass()); \\\n";
+        oss << "                        else return nullptr; \\\n";
+        oss << "                    }; \\\n";
+        oss << "                } \\\n";
+        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Actor, ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    /* Actor: simple construction par défaut */ \\\n";
+        oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+        oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+        oss << "                    else info.ConstructorFn = nullptr; \\\n";
+        oss << "                } \\\n";
+        oss << "                else if constexpr (std::is_base_of_v<::BixEngine::Game::Object, ThisClass>) \\\n";
+        oss << "                { \\\n";
+        oss << "                    /* Object: construction simple */ \\\n";
+        oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
+        oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
+        oss << "                    else info.ConstructorFn = nullptr; \\\n";
+        oss << "                } \\\n";
+        oss << "                else \\\n";
+        oss << "                { \\\n";
+        oss << "                    /* Type externe ou non géré */ \\\n";
+        oss << "                    info.ConstructorFn = nullptr; \\\n";
+        oss << "                } \\\n";
 
         // --------------------------
         // End lambda & registration

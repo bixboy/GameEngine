@@ -4,6 +4,9 @@
         "xmake build BixRun",
         "xmake run BixRun",
         "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake regen --force",
         "xmake run"
     }
 }
