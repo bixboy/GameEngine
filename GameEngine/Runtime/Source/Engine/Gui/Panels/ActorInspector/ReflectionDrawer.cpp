@@ -288,12 +288,35 @@ namespace BixEngine::Gui::ActorInspector
         }
     }
 
+    namespace
+    {
+        bool AreEquivalent(const ::Bix::Reflection::ClassInfo& lhs, const ::Bix::Reflection::ClassInfo& rhs)
+        {
+            if (&lhs == &rhs)
+            {
+                return true;
+            }
+
+            if (!lhs.QualifiedName.empty() && !rhs.QualifiedName.empty())
+            {
+                return lhs.QualifiedName == rhs.QualifiedName;
+            }
+
+            if (!lhs.Name.empty() && !rhs.Name.empty())
+            {
+                return lhs.Name == rhs.Name;
+            }
+
+            return false;
+        }
+    }
+
     bool IsSubclassOf(const ::Bix::Reflection::ClassInfo& type, const ::Bix::Reflection::ClassInfo& base)
     {
         const ::Bix::Reflection::ClassInfo* current = &type;
         while (current)
         {
-            if (current == &base)
+            if (AreEquivalent(*current, base))
             {
                 return true;
             }
