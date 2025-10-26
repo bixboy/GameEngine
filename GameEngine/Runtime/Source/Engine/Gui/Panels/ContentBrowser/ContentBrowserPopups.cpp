@@ -711,15 +711,36 @@ namespace BixEngine::Gui
                                         sourceFile << "    }\n";
                                         sourceFile << "}\n\n";
 
-                                        selectedEntry = headerPath.generic_string();
-                                        requests.scriptError.Clear();
-                                        ClearSelectedParent(requests);
-                                        ImGui::CloseCurrentPopup();
+                                        headerFile.flush();
+                                        sourceFile.flush();
 
-                                        std::filesystem::path toolPath = Core::FindToolExecutable("BixHeaderTool.exe");
-                                        std::filesystem::path headerPathAbs = std::filesystem::weakly_canonical(headerPath);
+                                        if (!headerFile.good() || !sourceFile.good())
+                                        {
+                                            headerFile.close();
+                                            sourceFile.close();
 
-                                        RunBixHeaderTool(toolPath, headerPathAbs);
+                                            std::error_code removeHeaderError;
+                                            std::error_code removeSourceError;
+                                            fs::remove(headerPath, removeHeaderError);
+                                            fs::remove(sourcePath, removeSourceError);
+
+                                            LogAndStoreError(requests.scriptError, "Failed to write the script files to disk.");
+                                        }
+                                        else
+                                        {
+                                            headerFile.close();
+                                            sourceFile.close();
+
+                                            selectedEntry = headerPath.generic_string();
+                                            requests.scriptError.Clear();
+                                            ClearSelectedParent(requests);
+                                            ImGui::CloseCurrentPopup();
+
+                                            std::filesystem::path toolPath = Core::FindToolExecutable("BixHeaderTool.exe");
+                                            std::filesystem::path headerPathAbs = std::filesystem::weakly_canonical(headerPath);
+
+                                            RunBixHeaderTool(toolPath, headerPathAbs);
+                                        }
                                     }
                                 }
                             }

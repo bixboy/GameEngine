@@ -2,6 +2,21 @@
     cmdlines = {
         "xmake build BixHeaderTool",
         "xmake build BixRun",
-        "xmake run BixRun"
+        "xmake run BixRun",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake regen --force",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
+        [[xmake lua "C:\\\\Program Files\\\\xmake\\\\modules\\\\private\\\\utils\\\\statistics.lua"]],
+        [[xmake lua "C:\\\\Program Files\\\\xmake\\\\actions\\\\build\\\\cleaner.lua"]],
+        "xmake run"
     }
 }

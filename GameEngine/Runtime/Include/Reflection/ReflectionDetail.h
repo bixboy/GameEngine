@@ -9,9 +9,89 @@
 #include <new>
 #include <type_traits>
 #include <typeinfo>
+#include <utility>
 
 namespace Bix::Reflection::detail
 {
+
+    template<typename Base, typename Derived, typename = void>
+    struct SafeIsBaseOf : std::false_type
+    {
+    };
+
+    template<typename Base, typename Derived>
+    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base))>>
+        : std::bool_constant<std::is_base_of_v<Base, Derived>>
+    {
+    };
+
+    template<typename Base, typename Derived>
+    inline constexpr bool SafeIsBaseOf_v = SafeIsBaseOf<Base, Derived>::value;
+
+    inline constexpr std::size_t kInvalidRootIndex = static_cast<std::size_t>(-1);
+
+    template<std::size_t Index, typename DeclaringTypeT>
+    struct RootTag : std::integral_constant<std::size_t, Index>
+    {
+        using DeclaringType = DeclaringTypeT;
+    };
+
+    template<typename T, typename = void>
+    struct RootTagTraits
+    {
+        static constexpr std::size_t Index = kInvalidRootIndex;
+        using DeclaringType = void;
+        static constexpr bool HasTag = false;
+    };
+
+    template<typename T>
+    struct RootTagTraits<T, std::void_t<typename T::__BixReflection_RootTag>>
+    {
+        using TagType = typename T::__BixReflection_RootTag;
+        static constexpr std::size_t Index = TagType::value;
+        using DeclaringType = typename TagType::DeclaringType;
+        static constexpr bool HasTag = true;
+    };
+
+    template<typename T, std::size_t Index>
+    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag
+                                      && RootTagTraits<std::remove_cv_t<T>>::Index == Index;
+
+    template<typename T>
+    inline constexpr bool HasAnyRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag;
+
+    template<typename T, typename = void>
+    struct HasActorTag : std::false_type
+    {
+    };
+
+    template<typename T>
+    struct HasActorTag<T, std::void_t<typename T::__BixReflection_ActorTag>> : std::true_type
+    {
+    };
+
+    template<typename T>
+    inline constexpr bool HasActorTag_v = HasActorTag<std::remove_cv_t<T>>::value;
+
+    template<typename T>
+    constexpr bool IsEngineBaseType()
+    {
+        using Traits = RootTagTraits<std::remove_cv_t<T>>;
+        if constexpr (!Traits::HasTag)
+        {
+            return false;
+        }
+        else
+        {
+            return std::is_same_v<std::remove_cv_t<T>, typename Traits::DeclaringType>;
+        }
+    }
+
+    template<typename T>
+    constexpr bool IsRegisteredBaseType()
+    {
+        return IsEngineBaseType<T>();
+    }
 
     template<typename ClassType, typename Populator>
         inline ClassInfo& RegisterReflectedClass(const char* name,
