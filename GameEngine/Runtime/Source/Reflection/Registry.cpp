@@ -1,5 +1,7 @@
 #include "Reflection/Registry.h"
 
+#include <iostream>
+
 #include "Reflection/ClassInfo.h"
 
 namespace Bix::Reflection
@@ -16,6 +18,9 @@ namespace Bix::Reflection
         {
             return;
         }
+
+        std::cout << "[REGISTER] " << classInfo->QualifiedName << std::endl;
+
 
         std::lock_guard<std::mutex> lock(mutex_);
 

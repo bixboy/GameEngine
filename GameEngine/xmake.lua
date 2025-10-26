@@ -162,6 +162,15 @@ target("BixRun")
     add_includedirs("Runtime/Include", sdl3_inc, generated_dir)
     add_linkdirs(sdl3_lib)
     add_links("SDL3")
+    
+    local content_dir = path.join("Build", plat, arch, mode, "Content")
+    if os.isdir(content_dir) then
+        add_files(path.join(content_dir, "**.cpp"))
+        add_includedirs(content_dir, { public = true })
+        print("[BixEngine] 🧩 Inclusion des scripts utilisateur depuis : " .. content_dir)
+    else
+        print("[BixEngine] ⚠️ Aucun dossier Content trouvé à : " .. content_dir)
+    end
 
     after_build(function(target)
         local exe_dir = path.directory(target:targetfile())
