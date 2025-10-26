@@ -2,6 +2,8 @@
     cmdlines = {
         "xmake build BixHeaderTool",
         "xmake build BixRun",
-        "xmake run BixRun"
+        "xmake run BixRun",
+        "xmake run",
+        "xmake run"
     }
 }
