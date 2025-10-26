@@ -55,17 +55,6 @@ namespace
         return std::nullopt;
     }
 
-    [[nodiscard]] std::optional<std::size_t> FindComponentRootIndex()
-    {
-        for (std::size_t i = 0; i < kRootBaseTypes.size(); ++i)
-        {
-            if (kRootBaseTypes[i].RequiresActorContext)
-            {
-                return i;
-            }
-        }
-        return std::nullopt;
-    }
 }
 
 namespace BixTool
@@ -106,7 +95,6 @@ namespace BixTool
         const auto rootIndexForClass       = FindRootIndex(normalizedScoped);
         const bool hasRegisteredRoot       = rootIndexForClass.has_value();
         const bool isExplicitRoot          = baseScoped.empty() || hasRegisteredRoot;
-        const auto componentRootIndex      = FindComponentRootIndex();
         const bool isActorType             = normalizedScoped == kActorTypeName;
 
         (void)headerPath;
@@ -175,10 +163,16 @@ namespace BixTool
         {
             oss << "                if constexpr (std::is_abstract_v<ThisClass>) \\\n";
             oss << "                { info.ConstructorFn = nullptr; } \\\n";
-            if (componentRootIndex.has_value())
+
+            for (const auto& rootType : kRootBaseTypes)
             {
-                oss << "                else if constexpr (::Bix::Reflection::detail::HasRootTag_v<ThisClass, " << *componentRootIndex
-                    << ">) \\\n";
+                if (!rootType.RequiresActorContext)
+                {
+                    continue;
+                }
+
+                oss << "                else if constexpr (::Bix::Reflection::detail::SafeIsBaseOf_v<" << rootType.QualifiedName
+                    << ", ThisClass>) \\\n";
                 oss << "                { \\\n";
                 oss << "                    info.ConstructorFn = +[](void* context) -> void* \\\n";
                 oss << "                    { \\\n";
@@ -192,17 +186,17 @@ namespace BixTool
                 oss << "                    }; \\\n";
                 oss << "                } \\\n";
             }
-            oss << "                else if constexpr (::Bix::Reflection::detail::HasActorTag_v<ThisClass>) \\\n";
+
+            oss << "                else if constexpr (::Bix::Reflection::detail::SafeIsBaseOf_v<" << kActorTypeName
+                << ", ThisClass>) \\\n";
             oss << "                { \\\n";
             oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
             oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
             oss << "                    else info.ConstructorFn = nullptr; \\\n";
             oss << "                } \\\n";
-            oss << "                else if constexpr (::Bix::Reflection::detail::HasAnyRootTag_v<ThisClass>) \\\n";
+            oss << "                else if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
             oss << "                { \\\n";
-            oss << "                    if constexpr (std::is_default_constructible_v<ThisClass>) \\\n";
-            oss << "                        info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
-            oss << "                    else info.ConstructorFn = nullptr; \\\n";
+            oss << "                    info.ConstructorFn = +[](void*) -> void* { return static_cast<void*>(new ThisClass()); }; \\\n";
             oss << "                } \\\n";
             oss << "                else \\\n";
             oss << "                { \\\n";
