@@ -12,7 +12,10 @@
 #include <unordered_set>
 #include <sstream>
 #include <cctype>
+
+#include "Core/FileUtils.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "SDL3/SDL_egl.h"
 
 
 namespace BixEngine::Gui
@@ -712,6 +715,11 @@ namespace BixEngine::Gui
                                         requests.scriptError.Clear();
                                         ClearSelectedParent(requests);
                                         ImGui::CloseCurrentPopup();
+
+                                        std::filesystem::path toolPath = Core::FindToolExecutable("BixHeaderTool.exe");
+                                        std::filesystem::path headerPathAbs = std::filesystem::weakly_canonical(headerPath);
+
+                                        RunBixHeaderTool(toolPath, headerPathAbs);
                                     }
                                 }
                             }
@@ -1074,6 +1082,44 @@ namespace BixEngine::Gui
                 }
             }
         }
+    }
+
+    void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath)
+    {
+        std::wstring tool = L"\"" + toolPath.wstring() + L"\"";
+        std::wstring header = L"\"" + headerPath.wstring() + L"\"";
+        std::wstring cmdLine = tool + L" --single " + header;
+
+        LOG_INFO("Launching BixHeaderTool: " + String(std::string(cmdLine.begin(), cmdLine.end()).c_str()));
+
+        STARTUPINFOW si{};
+        PROCESS_INFORMATION pi{};
+        si.cb = sizeof(si);
+
+        if (!CreateProcessW(
+            nullptr,
+            cmdLine.data(),
+            nullptr, nullptr, FALSE, 0,
+            nullptr, nullptr,
+            &si, &pi))
+        {
+            LOG_ERROR("Failed to launch BixHeaderTool.exe");
+            return;
+        }
+
+        // Attend la fin du processus
+        WaitForSingleObject(pi.hProcess, INFINITE);
+
+        DWORD exitCode = 0;
+        GetExitCodeProcess(pi.hProcess, &exitCode);
+
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+
+        if (exitCode != 0)
+            LOG_WARNING("BixHeaderTool exited with code " + String::FromInt(exitCode));
+        else
+            LOG_INFO("BixHeaderTool finished successfully.");
     }
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups)

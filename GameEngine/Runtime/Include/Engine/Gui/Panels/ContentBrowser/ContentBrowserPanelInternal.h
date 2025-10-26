@@ -90,5 +90,7 @@ namespace BixEngine::Gui
     void RenderDirectoryTree(ContentBrowserState& state, String& selectedEntry);
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery);
 
+    void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath);
+
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups);
 }
