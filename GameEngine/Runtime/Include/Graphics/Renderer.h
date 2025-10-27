@@ -5,27 +5,48 @@
 
 namespace BixEngine::Graphics
 {
+    /**
+     * @brief Wrapper RAII autour de SDL_Renderer.
+     * Gère la création, destruction et configuration du moteur de rendu.
+     */
     class Renderer
     {
-        public:
-            explicit Renderer(SDL_Window* window);
-            ~Renderer();
+    public:
+        /**
+         * @brief Crée un renderer associé à une fenêtre SDL.
+         * @param window Fenêtre SDL valide.
+         * @param driverName Nom du driver de rendu (nullptr = auto).
+         * @param useVSync Active la synchronisation verticale.
+         */
+        explicit Renderer(SDL_Window* window, const char* driverName = nullptr, bool useVSync = false);
 
-            Renderer(const Renderer&) = delete;
-            Renderer& operator=(const Renderer&) = delete;
-        
-            Renderer(Renderer&&) noexcept = delete;
-            Renderer& operator=(Renderer&&) noexcept = delete;
+        ~Renderer();
 
-            [[nodiscard]] bool IsValid() const noexcept { return renderer_ != nullptr; }
+        Renderer(const Renderer&) = delete;
+        Renderer& operator=(const Renderer&) = delete;
+        Renderer(Renderer&&) noexcept = delete;
+        Renderer& operator=(Renderer&&) noexcept = delete;
 
-            void Clear(Math::Color color) const;
-            void Present() const;
-            void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) const;
+        [[nodiscard]] bool IsValid() const noexcept { return renderer_ != nullptr; }
 
-            [[nodiscard]] SDL_Renderer* GetSDLRenderer() const noexcept { return renderer_; }
+        /** Efface le backbuffer avec une couleur donnée. */
+        void Clear(Math::Color color) const noexcept;
 
-        private:
-            SDL_Renderer* renderer_{nullptr};
+        /** Affiche le contenu du backbuffer à l’écran. */
+        void Present() const noexcept;
+
+        /** Définit la couleur de dessin actuelle. */
+        void SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) const noexcept;
+
+        /** Met à jour le viewport lors d’un redimensionnement de fenêtre. */
+        void UpdateViewport() const noexcept;
+
+        /** Définit une résolution interne stable (facultatif). */
+        void SetLogicalSize(int width, int height) const noexcept;
+
+        [[nodiscard]] SDL_Renderer* GetSDLRenderer() const noexcept { return renderer_; }
+
+    private:
+        SDL_Renderer* renderer_{nullptr};
     };
 }

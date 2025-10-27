@@ -9,11 +9,14 @@
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
 #include "Engine/Gui/GuiManager.h"
+#include "Core/Logger.h"
 
 namespace BixEngine::Game
 {
-
-    Scene::Scene(String name) : name_(std::move(name)) {}
+    Scene::Scene(String name): name_(std::move(name))
+    {
+        LOG_INFO("Scene created: " + name_);
+    }
 
     void Scene::SetContext(SceneContext context) noexcept
     {
@@ -22,14 +25,36 @@ namespace BixEngine::Game
 
     void Scene::AddActor(std::unique_ptr<Actor> actor)
     {
-        if (actor)
-            SceneSerializer::EnsureActorFactory(*actor);
+        if (!actor)
+            return;
+
+        SceneSerializer::EnsureActorFactory(*actor);
         actors_.push_back(std::move(actor));
+    }
+
+    void Scene::RemoveActor(Actor* actor)
+    {
+        if (!actor) return;
+
+        std::erase_if(actors_, [&](const std::unique_ptr<Actor>& ptr)
+        {
+            return ptr.get() == actor;
+        });
     }
 
     void Scene::ClearActors() noexcept
     {
         actors_.clear();
+    }
+
+    Actor* Scene::FindActorByName(const String& name) noexcept
+    {
+        for (auto& a : actors_)
+        {
+            if (a && a->GetName() == name)
+                return a.get();
+        }
+        return nullptr;
     }
 
     void Scene::Rename(String name)
@@ -42,11 +67,15 @@ namespace BixEngine::Game
         name_ = std::move(name);
     }
 
+    // ────────────────────────────────────────────────
+    // 🧠 Accès aux sous-systèmes
+    // ────────────────────────────────────────────────
+    
     Input::InputManager& Scene::GetInputManager() const
     {
         if (!context_.inputManager)
             throw std::runtime_error("Scene context does not provide an input subsystem.");
-
+        
         return *context_.inputManager;
     }
 
@@ -54,7 +83,7 @@ namespace BixEngine::Game
     {
         if (!context_.renderer)
             throw std::runtime_error("Scene context does not provide a renderer.");
-
+        
         return *context_.renderer;
     }
 
@@ -62,7 +91,7 @@ namespace BixEngine::Game
     {
         if (!context_.window)
             throw std::runtime_error("Scene context does not provide a window.");
-
+        
         return *context_.window;
     }
 
@@ -70,7 +99,7 @@ namespace BixEngine::Game
     {
         if (!context_.timer)
             throw std::runtime_error("Scene context does not provide a timer.");
-
+        
         return *context_.timer;
     }
 
@@ -78,7 +107,7 @@ namespace BixEngine::Game
     {
         if (!context_.guiManager)
             throw std::runtime_error("Scene context does not provide a GUI manager.");
-
+        
         return *context_.guiManager;
     }
 }

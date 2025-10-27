@@ -2,6 +2,10 @@
 
 #include <memory>
 #include <SDL3/SDL_events.h>
+#include "Game/SceneManager.h"
+#include "Input/Input.h"
+#include "Input/InputManager.h"
+#include "Core/Timer.h"
 
 namespace BixEngine
 {
@@ -12,10 +16,6 @@ namespace BixEngine
     namespace Core { class Window; class Timer; }
 }
 
-#include "Input/Input.h"
-#include "Input/InputManager.h"
-#include "Core/Timer.h"
-
 namespace BixEngine::Core
 {
     class SubsystemManager
@@ -24,32 +24,60 @@ namespace BixEngine::Core
         SubsystemManager() = default;
         ~SubsystemManager();
 
+        
+        // Initialise tous les sous-systèmes principaux du moteur.
         bool Initialize(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager);
+
+        
+        // Ferme proprement tous les sous-systèmes.
         void Shutdown() noexcept;
 
+        
+        // Redémarre entièrement les sous-systèmes.
+        bool Restart(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager);
+
+
+        // Reset la valeur des inputs
+        void ResetInput() noexcept;
+
+
+        // Distribue un événement SDL à tous les modules concernés.
         void ProcessEvent(const SDL_Event& event);
+
+        
+        // Met à jour les entrées et la scène active.
         void UpdateAll(float deltaTime);
+
+        
+        // Retourne true si l’utilisateur demande à quitter (ESC ou close).
         bool ShouldQuit() const noexcept;
 
+        
+        // Accès utilitaires
         Timer* GetTimer() noexcept;
         const Timer* GetTimer() const noexcept;
         Input::InputManager* GetInputManager() noexcept;
         Game::SceneManager* GetSceneManager() noexcept;
         Game::Scene* GetActiveScene() noexcept;
 
+        
+        // Crée une nouvelle scène active de type TScene.
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args);
 
+        
+        // Indique si les sous-systèmes sont initialisés.
+        bool IsInitialized() const noexcept { return initialized_; }
+
     private:
+        bool initialized_{ false };
+        
         std::unique_ptr<Timer> timer_{};
         std::unique_ptr<Input::Input> input_{};
         std::unique_ptr<Input::InputManager> inputManager_{};
         std::unique_ptr<Game::SceneManager> sceneManager_{};
     };
 }
-
-#include "Game/SceneManager.h"
-#include "Game/Scene.h"
 
 namespace BixEngine::Core
 {

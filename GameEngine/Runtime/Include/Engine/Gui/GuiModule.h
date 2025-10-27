@@ -26,10 +26,11 @@ namespace BixEngine::Core
         void Shutdown() noexcept;
         bool IsInitialized() const noexcept;
 
-        void ProcessEvent(const SDL_Event& event);
+        bool ProcessEvent(const SDL_Event& event);
         void BeginFrame();
         void Render(SubsystemManager& subsystems);
         void SetupDefaultGuiPanels(SubsystemManager& subsystems, const float* lastDeltaTimePointer);
+        bool IsMouseOverViewport() const noexcept;
 
         bool EnsureSceneViewportTexture(Graphics::Renderer& renderer);
         void DestroySceneViewportTexture() noexcept;

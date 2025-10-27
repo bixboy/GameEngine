@@ -28,6 +28,7 @@ namespace BixEngine::Core
     float RenderLoop::CalculateDeltaTime()
     {
         lastDeltaTime_ = 0.0f;
+        
         if (!subsystems_)
             return lastDeltaTime_;
 
@@ -79,24 +80,6 @@ namespace BixEngine::Core
 
             if (activeScene)
                 activeScene->Render(*renderer_);
-        }
-
-        if (subsystems_)
-        {
-            if (Core::Timer* timer = subsystems_->GetTimer())
-                SDL_RenderDebugTextFormat(renderer_->GetSDLRenderer(), 10, 10, "FPS: %.0f", timer->GetFPS());
-        }
-
-        if (activeScene)
-        {
-            const String& sceneName = activeScene->Name();
-            SDL_RenderDebugTextFormat(
-                renderer_->GetSDLRenderer(),
-                10,
-                30,
-                "Scene: %.*s",
-                static_cast<int>(sceneName.size()),
-                sceneName.c_str());
         }
 
         if (guiModule_ && subsystems_)

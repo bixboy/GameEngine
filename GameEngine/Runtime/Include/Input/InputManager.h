@@ -30,6 +30,9 @@ namespace BixEngine::Input
             void ProcessEvent(const SDL_Event& event);
             void Update();
 
+            void Reset() noexcept;
+
+
         
         // ======= Bind Action =======
             template <typename T>

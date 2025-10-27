@@ -3,9 +3,10 @@
 int main(int, char**)
 {
     BixEngine::Application app;
+    
     if (app.Initialize())
     {
-        app.EmplaceScene<BixEngine::TestScene>();
+        app.EmplaceScene<BixEngine::EmptyScene>();
         app.Run();
     }
 

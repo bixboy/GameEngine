@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL.h>
 #include <filesystem>
+#include <imgui_internal.h>
 
 #include "Core/Logger.h"
 #include "Core/Containers/String.h"
@@ -68,10 +69,37 @@ namespace BixEngine::Core
         return guiSystem_ && guiSystem_->IsInitialized();
     }
 
-    void GuiModule::ProcessEvent(const SDL_Event& event)
+    bool GuiModule::ProcessEvent(const SDL_Event& event)
     {
-        if (IsInitialized())
-            guiSystem_->ProcessEvent(event);
+        if (!IsInitialized() || !guiSystem_)
+            return false;
+
+        guiSystem_->ProcessEvent(event);
+
+        const ImGuiIO& io = ImGui::GetIO();
+        const bool overViewport = IsMouseOverViewport();
+
+        switch (event.type)
+        {
+            case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            
+            case SDL_EVENT_MOUSE_BUTTON_UP:
+            
+            case SDL_EVENT_MOUSE_MOTION:
+            
+            case SDL_EVENT_MOUSE_WHEEL:
+                return io.WantCaptureMouse && !overViewport;
+
+            case SDL_EVENT_KEY_DOWN:
+            
+            case SDL_EVENT_KEY_UP:
+            
+            case SDL_EVENT_TEXT_INPUT:
+                return io.WantCaptureKeyboard && !overViewport;
+
+        default:
+            return false;
+        }
     }
 
     void GuiModule::BeginFrame()
@@ -155,6 +183,23 @@ namespace BixEngine::Core
         contentBrowserPanel_ = panels.contentBrowserPanel;
         inspectorPanel_ = panels.actorInspectorPanel;
     }
+
+    bool GuiModule::IsMouseOverViewport() const noexcept
+    {
+        if (!viewportPanel_)
+            return false;
+
+        const ImVec2 mousePos = ImGui::GetMousePos();
+
+        const ImVec2 windowPos = viewportPanel_->GetPosition();
+        const ImVec2 windowSize = viewportPanel_->GetSize();
+
+        return (
+            mousePos.x >= windowPos.x && mousePos.x <= windowPos.x + windowSize.x &&
+            mousePos.y >= windowPos.y && mousePos.y <= windowPos.y + windowSize.y
+        );
+    }
+
 
     bool GuiModule::EnsureSceneViewportTexture(Graphics::Renderer& renderer)
     {

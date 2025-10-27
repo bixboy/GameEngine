@@ -1,7 +1,4 @@
 #include "Core/EventDispatcher.h"
-
-#include <SDL3/SDL.h>
-
 #include "Engine/Gui/GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
 
@@ -24,12 +21,25 @@ namespace BixEngine::Core
         SDL_Event event{};
         while (SDL_PollEvent(&event))
         {
+            bool consumed = false;
+
+            // GUI reçoit l'événement
             if (guiModule_)
-                guiModule_->ProcessEvent(event);
+            {
+                consumed = guiModule_->ProcessEvent(event);
+            }
 
-            if (subsystems_)
+            // Si non consommé
+            if (!consumed && subsystems_)
+            {
                 subsystems_->ProcessEvent(event);
+            }
+            else if (subsystems_)
+            {
+                subsystems_->ResetInput();
+            }
 
+            // Gestion de la fermeture SDL
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
         }

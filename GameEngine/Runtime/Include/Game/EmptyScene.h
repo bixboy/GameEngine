@@ -1,5 +1,4 @@
 #pragma once
-#include <memory>
 #include "Game/Scene.h"
 #include "EmptyScene.generated.h"
 
@@ -11,17 +10,18 @@ namespace BixEngine::Game
     class EmptyScene : public Scene
     {
         GENERATED_BODY()
-        
-        public:
-            EmptyScene();
 
-            void HandleEvent(const SDL_Event& event) override;
-            void Update(float deltaTime) override;
-            void Render(Graphics::Renderer& renderer) override;
+    public:
+        EmptyScene();
 
-             void OnEnter() override;
+        void HandleEvent(const SDL_Event& event) override;
+        void Update(float deltaTime) override;
+        void Render(Graphics::Renderer& renderer) override;
 
-        private:
-            Player* player_{nullptr};
+        void OnEnter() override;
+        void OnExit() override;
+
+    private:
+        Player* player_{nullptr};
     };
 }

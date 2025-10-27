@@ -14,7 +14,7 @@ namespace BixEngine::Core
 
         SDL_SetAppMetadata(appName, appVersion, appId);
 
-        if (SDL_Init(SDL_INIT_VIDEO) < 0)
+        if (!SDL_Init(SDL_INIT_VIDEO))
         {
             LOG_ERROR(String{"Couldn't initialize SDL: "} + SDL_GetError());
             return false;

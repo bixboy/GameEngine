@@ -56,6 +56,9 @@ namespace BixEngine::Gui
 
             void Draw();
 
+            [[nodiscard]] ImVec2 GetPosition() const noexcept { return windowPos_; }
+            [[nodiscard]] ImVec2 GetSize() const noexcept { return windowSize_; }
+
         private:
             String name_;
             String title_;
@@ -90,5 +93,8 @@ namespace BixEngine::Gui
             ImGuiCond dockFallbackCondition_{ImGuiCond_FirstUseEver};
 
             DrawFunction drawFunction_{};
+
+            ImVec2 windowPos_{0.0f, 0.0f};
+            ImVec2 windowSize_{0.0f, 0.0f};
     };
 }

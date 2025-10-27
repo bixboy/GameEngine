@@ -2,6 +2,7 @@
 
 #include <SDL3/SDL_keycode.h>
 
+#include "Core/Logger.h"
 #include "Core/Timer.h"
 #include "Engine/Systems/Window.h"
 #include "Game/Scene.h"
@@ -12,10 +13,22 @@
 
 namespace BixEngine::Core
 {
-    SubsystemManager::~SubsystemManager() = default;
+    SubsystemManager::~SubsystemManager()
+    {
+        if (initialized_)
+            Shutdown();
+    }
 
     bool SubsystemManager::Initialize(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager)
     {
+        if (initialized_)
+        {
+            LOG_WARNING("SubsystemManager already initialized.");
+            return true;
+        }
+
+        LOG_INFO("Initializing SubsystemManager...");
+        
         timer_ = std::make_unique<Timer>();
         input_ = std::make_unique<Input::Input>();
         inputManager_ = std::make_unique<Input::InputManager>();
@@ -25,6 +38,12 @@ namespace BixEngine::Core
 
         if (!sceneManager_)
             sceneManager_ = std::make_unique<Game::SceneManager>();
+
+        if (!sceneManager_)
+        {
+            LOG_ERROR("Failed to create SceneManager.");
+            return false;
+        }
 
         if (sceneManager_)
         {
@@ -37,11 +56,18 @@ namespace BixEngine::Core
             });
         }
 
+        initialized_ = true;
+        LOG_INFO("SubsystemManager initialized successfully.");
         return true;
     }
 
     void SubsystemManager::Shutdown() noexcept
     {
+        if (!initialized_)
+            return;
+
+        LOG_INFO("Shutting down SubsystemManager...");
+        
         if (sceneManager_)
             sceneManager_->SetScene(nullptr);
 
@@ -53,6 +79,25 @@ namespace BixEngine::Core
         inputManager_.reset();
         input_.reset();
         timer_.reset();
+
+        initialized_ = false;
+        LOG_INFO("SubsystemManager shut down.");
+    }
+
+    bool SubsystemManager::Restart(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager)
+    {
+        LOG_INFO("Restarting SubsystemManager...");
+        Shutdown();
+        return Initialize(renderer, window, guiManager);
+    }
+
+    void SubsystemManager::ResetInput() noexcept
+    {
+        if (input_)
+            input_->ResetState();
+
+        if (inputManager_)
+            inputManager_->Reset();
     }
 
     void SubsystemManager::ProcessEvent(const SDL_Event& event)

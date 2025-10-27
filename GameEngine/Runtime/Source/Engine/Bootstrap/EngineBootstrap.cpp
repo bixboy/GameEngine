@@ -1,7 +1,5 @@
 #include "Engine/Bootstrap/EngineBootstrap.h"
 
-#include <SDL3/SDL.h>
-
 #include "Core/Logger.h"
 #include "Core/Containers/String.h"
 #include "Engine/Systems/Window.h"
@@ -16,53 +14,83 @@ namespace
 
 namespace BixEngine::Core
 {
-    EngineBootstrap::EngineBootstrap(ApplicationConfig config) : config_(std::move(config))
+    EngineBootstrap::EngineBootstrap(ApplicationConfig config): config_(std::move(config))
     {
     }
 
     EngineBootstrap::~EngineBootstrap()
     {
-        ShutdownAll();
+        if (initialized_)
+            ShutdownAll();
     }
 
     bool EngineBootstrap::InitializeAll()
     {
         if (initialized_)
+        {
+            LOG_WARNING("EngineBootstrap already initialized.");
             return true;
+        }
 
+        LOG_INFO("=== Initializing EngineBootstrap ===");
+
+        // --- SDL ---
+        LOG_INFO("Initializing SDL system...");
         if (!sdlSystem_.Initialize(kDefaultAppName, kDefaultAppId, kDefaultAppVersion))
+        {
+            LOG_ERROR("SDL system initialization failed.");
             return false;
+        }
 
+        // --- Window ---
+        LOG_INFO("Creating main window...");
         if (!CreateWindow())
         {
+            LOG_ERROR("Failed to create SDL window.");
             ShutdownAll();
             return false;
         }
 
+        // --- Renderer ---
+        LOG_INFO("Creating renderer...");
         if (!CreateRenderer())
         {
+            LOG_ERROR("Failed to create renderer.");
             ShutdownAll();
             return false;
         }
 
+        // --- GUI ---
+        LOG_INFO("Initializing GUI module...");
         if (!guiModule_.Initialize(*window_, *renderer_))
         {
+            LOG_ERROR("GUI module initialization failed.");
             ShutdownAll();
             return false;
         }
 
+        // --- Subsystems ---
+        LOG_INFO("Initializing SubsystemManager...");
         if (!subsystems_.Initialize(*renderer_, *window_, guiModule_.GetGuiManager()))
         {
+            LOG_ERROR("SubsystemManager initialization failed.");
             ShutdownAll();
             return false;
         }
 
+        // --- Event dispatcher + render loop ---
+        LOG_INFO("Configuring event dispatcher and render loop...");
         eventDispatcher_.Configure(&guiModule_, &subsystems_);
         renderLoop_.Configure(&subsystems_, &guiModule_, renderer_.get(), config_.clearColor);
+
+        // --- Default GUI panels (debug overlay, FPS counter, etc.) ---
         guiModule_.SetupDefaultGuiPanels(subsystems_, renderLoop_.GetLastDeltaTimePointer());
 
         initialized_ = true;
         running_ = true;
+
+        LOG_INFO("EngineBootstrap initialized successfully.");
+        LOG_INFO("=======================================");
         return true;
     }
 
@@ -82,11 +110,16 @@ namespace BixEngine::Core
             return;
 
         const float deltaTime = renderLoop_.CalculateDeltaTime();
+
+        // Récupère les événements SDL (fermeture, clavier, etc.)
         eventDispatcher_.PumpEvents(running_);
-
         if (!running_)
+        {
+            LOG_INFO("Quit event received. Stopping engine loop.");
             return;
+        }
 
+        // --- Frame sequence ---
         renderLoop_.BeginFrame();
         renderLoop_.Update(deltaTime);
         renderLoop_.Render();
@@ -94,27 +127,61 @@ namespace BixEngine::Core
 
     void EngineBootstrap::ShutdownAll() noexcept
     {
+        if (!initialized_)
+            return;
+
+        LOG_INFO("Shutting down EngineBootstrap...");
+
         running_ = false;
+
         renderLoop_.Reset();
         eventDispatcher_.Reset();
         subsystems_.Shutdown();
         guiModule_.Shutdown();
-        renderer_.reset();
-        window_.reset();
+
+        if (renderer_)
+        {
+            LOG_INFO("Destroying renderer...");
+            renderer_.reset();
+        }
+
+        if (window_)
+        {
+            LOG_INFO("Destroying window...");
+            window_.reset();
+        }
+
         sdlSystem_.Shutdown();
         initialized_ = false;
+
+        LOG_INFO("EngineBootstrap shut down successfully.");
+    }
+
+    bool EngineBootstrap::Restart()
+    {
+        LOG_INFO("Restarting EngineBootstrap...");
+        ShutdownAll();
+        return InitializeAll();
     }
 
     bool EngineBootstrap::CreateWindow()
     {
-        window_ = std::make_unique<Window>(config_.windowTitle, config_.width, config_.height, config_.resizable);
+        window_ = std::make_unique<Window>(
+            config_.windowTitle,
+            config_.width,
+            config_.height,
+            config_.resizable
+        );
+
         if (!window_ || !window_->IsValid())
         {
             LOG_ERROR(String{"Couldn't create window: "} + SDL_GetError());
             window_.reset();
+            
             return false;
         }
 
+        LOG_INFO("Main window created successfully.");
         return true;
     }
 
@@ -124,12 +191,14 @@ namespace BixEngine::Core
         if (!renderer_ || !renderer_->IsValid())
         {
             LOG_ERROR(String{"Couldn't create renderer: "} + SDL_GetError());
+            
             renderer_.reset();
             window_.reset();
+            
             return false;
         }
 
+        LOG_INFO("Renderer created successfully.");
         return true;
     }
-
 }

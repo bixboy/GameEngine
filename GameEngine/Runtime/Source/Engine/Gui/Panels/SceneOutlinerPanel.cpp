@@ -81,7 +81,7 @@ namespace BixEngine::Gui
 
             ImGui::Separator();
 
-            const BixEngine::String& sceneName = activeScene->Name();
+            const BixEngine::String& sceneName = activeScene->GetName();
             const auto sceneNameView = sceneName.View();
             const ImGuiTreeNodeFlags sceneFlags =
                 ImGuiTreeNodeFlags_DefaultOpen |

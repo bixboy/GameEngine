@@ -78,7 +78,7 @@ namespace BixEngine::Gui
 
             if (const auto* activeScene = sceneManager->GetScene())
             {
-                const String& sceneName = activeScene->Name();
+                const String& sceneName = activeScene->GetName();
                 const auto sceneNameView = sceneName.View();
 
                 ImGui::Separator();

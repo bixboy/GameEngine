@@ -89,5 +89,12 @@ namespace BixEngine::Input
             binding.callback(value);
         }
     }
+
+
+    void InputManager::Reset() noexcept
+    {
+        if (input_)
+            input_->ResetState();
+    }
 }
 

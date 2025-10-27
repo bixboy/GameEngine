@@ -103,7 +103,7 @@ namespace BixEngine::Game
         if (!writer.WriteUint32(kSceneBinaryVersion))
             return LogStreamFailure(filePath, "write scene header");
 
-        if (!writer.WriteString(scene.Name()))
+        if (!writer.WriteString(scene.GetName()))
             return LogStreamFailure(filePath, "write scene name");
 
         const auto actorCount = static_cast<std::uint32_t>(scene.GetActors().size());

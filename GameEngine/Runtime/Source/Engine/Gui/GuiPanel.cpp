@@ -120,6 +120,9 @@ namespace BixEngine::Gui
 
         if (closable_)
             visible_ = open;
+
+        windowPos_ = ImGui::GetWindowPos();
+        windowSize_ = ImGui::GetWindowSize();
         
         if (shouldShow && drawFunction_)
             drawFunction_();

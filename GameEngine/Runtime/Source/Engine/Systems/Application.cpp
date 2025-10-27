@@ -4,36 +4,28 @@
 
 namespace BixEngine::Core
 {
-    Application::Application(Config config)
-        : config_(std::move(config))
-        , bootstrap_(std::make_unique<EngineBootstrap>(config_))
+    Application::Application(Config config) : config_(std::move(config)), bootstrap_(std::make_unique<EngineBootstrap>(config_))
     {
     }
 
-    Application::~Application() = default;
+    Application::~Application()
+    {
+        Shutdown();
+    }
 
     bool Application::Initialize()
     {
-        if (!bootstrap_)
-            bootstrap_ = std::make_unique<EngineBootstrap>(config_);
-
-        if (!bootstrap_->InitializeAll())
-            return false;
-
-        return bootstrap_->IsReady();
+        return EnsureInitialized() && bootstrap_->IsReady();
     }
 
     void Application::Run()
     {
-        if (!bootstrap_)
-            bootstrap_ = std::make_unique<EngineBootstrap>(config_);
-
-        if (!bootstrap_->IsReady() && !bootstrap_->InitializeAll())
+        if (!EnsureInitialized())
             return;
-
+        
         while (bootstrap_->IsRunning())
             bootstrap_->Tick();
-
+        
         bootstrap_->ShutdownAll();
     }
 
@@ -42,4 +34,16 @@ namespace BixEngine::Core
         if (bootstrap_)
             bootstrap_->ShutdownAll();
     }
+
+    bool Application::EnsureInitialized()
+    {
+        if (!bootstrap_)
+            bootstrap_ = std::make_unique<EngineBootstrap>(config_);
+        
+        if (!bootstrap_->IsReady())
+            return bootstrap_->InitializeAll();
+        
+        return true;
+    }
+
 }
