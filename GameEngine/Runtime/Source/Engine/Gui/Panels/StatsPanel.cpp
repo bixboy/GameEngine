@@ -28,8 +28,10 @@ namespace BixEngine::Gui
         {
             if (fps < 30.0f)
                 return {1.0f, 0.2f, 0.2f, 1.0f};
+            
             if (fps < 60.0f)
                 return {1.0f, 1.0f, 0.2f, 1.0f};
+            
             return {0.2f, 1.0f, 0.2f, 1.0f};
         }
 
@@ -37,6 +39,7 @@ namespace BixEngine::Gui
         {
             char buffer[64];
             std::snprintf(buffer, sizeof(buffer), format, value);
+            
             return std::string(buffer);
         }
 

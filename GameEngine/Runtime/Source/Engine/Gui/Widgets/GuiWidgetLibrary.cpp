@@ -1,8 +1,6 @@
 #include "Engine/Gui/Widgets/GuiWidgetLibrary.h"
-
 #include "Engine/Gui/Utils/GuiHelpers.h"
 
-#include <algorithm>
 
 namespace BixEngine::Gui::Widgets
 {
@@ -11,27 +9,32 @@ namespace BixEngine::Gui::Widgets
         constexpr float kHeaderSpacing = 4.0f;
     }
 
+    // ─────────────────────────────────────────────
+    // 🎨  En-tête de panneau (titre + sous-titre)
+    // ─────────────────────────────────────────────
+    
     void DrawPanelHeader(const PanelHeaderOptions& options)
     {
         if (options.title.empty())
             return;
 
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(kHeaderSpacing, kHeaderSpacing));
+        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kHeaderSpacing, kHeaderSpacing));
         ImGui::TextUnformatted(options.title.c_str());
 
         if (!options.subtitle.empty())
         {
-            ImGui::PushStyleColor(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
+            ScopedColor disabled(ImGuiCol_Text, ImGui::GetStyleColorVec4(ImGuiCol_TextDisabled));
             ImGui::TextWrapped("%s", options.subtitle.c_str());
-            ImGui::PopStyleColor();
         }
 
         if (options.showSeparator)
             ImGui::Separator();
-
-        ImGui::PopStyleVar();
     }
 
+    // ─────────────────────────────────────────────
+    // 📊  Ligne d'une métrique dans le tableau
+    // ─────────────────────────────────────────────
+    
     void DrawMetricRow(const MetricDisplay& metric)
     {
         if (metric.label.empty())
@@ -47,30 +50,44 @@ namespace BixEngine::Gui::Widgets
         if (!metric.hint.empty())
         {
             ImGui::SameLine();
-            Gui::Utils::DrawHelpMarker(metric.hint.c_str());
+            Utils::DrawHelpMarker(metric.hint.c_str());
         }
     }
 
-    void DrawMetricsTable(const std::vector<MetricDisplay>& metrics, float columnWidth)
+    // ─────────────────────────────────────────────
+    // 📋  Tableau complet de métriques
+    // ─────────────────────────────────────────────
+    
+    void DrawMetricsTable(const std::vector<MetricDisplay>& metrics, float columnWidth, const char* id)
     {
         if (metrics.empty())
             return;
 
-        if (!ImGui::BeginTable("MetricsTable", 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg))
-            return;
+        ImGui::PushID(id);
 
-        ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, columnWidth);
-        ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+        if (ImGui::BeginTable("MetricsTable", 2,
+            ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_NoSavedSettings | ImGuiTableFlags_RowBg))
+        {
+            ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, columnWidth);
+            ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
-        for (const auto& metric : metrics)
-            DrawMetricRow(metric);
+            for (const auto& metric : metrics)
+                DrawMetricRow(metric);
 
-        ImGui::EndTable();
+            ImGui::EndTable();
+        }
+
+        ImGui::PopID();
     }
 
+    // ─────────────────────────────────────────────
+    // 📦  Section repliable (RAII)
+    // ─────────────────────────────────────────────
+    
     PanelSection::PanelSection(const char* label, bool defaultOpen, ImGuiTreeNodeFlags flags)
     {
         ImGuiTreeNodeFlags localFlags = flags;
+        
         if (defaultOpen)
             localFlags |= ImGuiTreeNodeFlags_DefaultOpen;
         else
@@ -85,6 +102,10 @@ namespace BixEngine::Gui::Widgets
             ImGui::Spacing();
     }
 
+    // ─────────────────────────────────────────────
+    // 🧰  Barre d’outils horizontale (RAII)
+    // ─────────────────────────────────────────────
+    
     PanelToolbar::PanelToolbar()
     {
         ImGui::PushID(this);
@@ -114,14 +135,29 @@ namespace BixEngine::Gui::Widgets
     {
         if (committed_)
             return;
-
         committed_ = true;
 
-        bool drewAny = false;
         bool firstInRow = true;
+        bool drewAny = false;
 
+        // 🔹 Côté gauche
         ImGui::BeginGroup();
         for (const auto& draw : leftElements_)
+        {
+            if (!draw)
+                continue;
+            
+            if (!firstInRow)
+                ImGui::SameLine();
+
+            draw();
+            firstInRow = false;
+            drewAny = true;
+        }
+        ImGui::EndGroup();
+
+        // 🔹 Côté droit
+        for (const auto& draw : rightElements_)
         {
             if (!draw)
                 continue;
@@ -133,25 +169,6 @@ namespace BixEngine::Gui::Widgets
             firstInRow = false;
             drewAny = true;
         }
-        ImGui::EndGroup();
-
-        for (const auto& draw : rightElements_)
-        {
-            if (!draw)
-                continue;
-
-            if (!drewAny)
-            {
-                drewAny = true;
-                firstInRow = true;
-            }
-
-            if (!firstInRow)
-                ImGui::SameLine();
-
-            draw();
-            firstInRow = false;
-        }
 
         if (drewAny)
         {
@@ -160,14 +177,13 @@ namespace BixEngine::Gui::Widgets
         }
     }
 
-    namespace Builder
+    // ─────────────────────────────────────────────
+    // 🧱  Builder::Section (inline namespace)
+    // ─────────────────────────────────────────────
+    
+    Section::Section(const char* label, bool defaultOpen, ImGuiTreeNodeFlags flags): section_(label, defaultOpen, flags)
     {
-        Section::Section(const char* label, bool defaultOpen, ImGuiTreeNodeFlags flags)
-            : section_(label, defaultOpen, flags)
-        {
-        }
-
-        Section::~Section() = default;
     }
-}
 
+    Section::~Section() = default;
+}

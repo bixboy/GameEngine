@@ -13,7 +13,6 @@
 #include "Game/EmptyScene.h"
 #include "Game/Scene.h"
 #include "Game/SceneManager.h"
-#include "Game/Test/TestScene.h"
 
 #include "Core/Math/Math.h"
 
@@ -33,5 +32,4 @@ namespace BixEngine
     using SceneManager = Game::SceneManager;
     using Actor = Game::Actor;
     using EmptyScene = Game::EmptyScene;
-    using TestScene = Game::TestScene;
 }
