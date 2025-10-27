@@ -15,8 +15,7 @@ namespace BixEngine::Gui
         std::function<void()> Callback{};
 
         ActionTooltipAction() = default;
-        ActionTooltipAction(String label, std::function<void()> callback)
-            : Label(std::move(label)), Callback(std::move(callback))
+        ActionTooltipAction(String label, std::function<void()> callback): Label(std::move(label)), Callback(std::move(callback))
         {
         }
     };

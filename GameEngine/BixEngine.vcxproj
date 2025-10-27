@@ -298,6 +298,7 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\StatsPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Utils\GuiHelpers.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\ActionTooltip.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\GuiWidgetLibrary.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\Application.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\RenderLoop.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\SdlSystem.cpp" />
@@ -312,7 +313,6 @@
     <ClCompile Include="Runtime\Source\Game\SceneManager.cpp" />
     <ClCompile Include="Runtime\Source\Game\SceneSerializer.cpp" />
     <ClCompile Include="Runtime\Source\Game\Test\Player.cpp" />
-    <ClCompile Include="Runtime\Source\Game\Test\TestScene.cpp" />
     <ClCompile Include="Runtime\Source\Graphics\Renderer.cpp" />
     <ClCompile Include="Runtime\Source\Input\Input.cpp" />
     <ClCompile Include="Runtime\Source\Input\InputManager.cpp" />
@@ -354,10 +354,12 @@
     <ClInclude Include="Runtime\Include\Core\Timer.h" />
     <ClInclude Include="Runtime\Include\Engine\Bootstrap\EngineBootstrap.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\DefaultEngineGui.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\GuiContextFactory.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiDocking.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiModule.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiPanel.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\GuiPanelController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiSystem.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspectorPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\ActorInspectorState.h" />
@@ -374,6 +376,7 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Utils\GuiHelpers.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\ActionTooltip.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\GuiWidgetLibrary.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Application.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\ApplicationConfig.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\BixEngine.h" />
@@ -391,7 +394,6 @@
     <ClInclude Include="Runtime\Include\Game\SceneManager.h" />
     <ClInclude Include="Runtime\Include\Game\SceneSerializer.h" />
     <ClInclude Include="Runtime\Include\Game\Test\Player.h" />
-    <ClInclude Include="Runtime\Include\Game\Test\TestScene.h" />
     <ClInclude Include="Runtime\Include\Graphics\Renderer.h" />
     <ClInclude Include="Runtime\Include\Input\Input.h" />
     <ClInclude Include="Runtime\Include\Input\InputManager.h" />

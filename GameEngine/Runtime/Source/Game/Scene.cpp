@@ -29,6 +29,7 @@ namespace BixEngine::Game
             return;
 
         SceneSerializer::EnsureActorFactory(*actor);
+        actor->SetOwningScene(this);
         actors_.push_back(std::move(actor));
     }
 
@@ -38,12 +39,23 @@ namespace BixEngine::Game
 
         std::erase_if(actors_, [&](const std::unique_ptr<Actor>& ptr)
         {
-            return ptr.get() == actor;
+            if (ptr.get() == actor)
+            {
+                actor->SetOwningScene(nullptr);
+                return true;
+            }
+            return false;
         });
     }
 
     void Scene::ClearActors() noexcept
     {
+        for (auto& actor : actors_)
+        {
+            if (actor)
+                actor->SetOwningScene(nullptr);
+        }
+
         actors_.clear();
     }
 

@@ -10,6 +10,7 @@
 #include "Core/Timer.h"
 #include "Engine/Systems/Window.h"
 #include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/GuiContextFactory.h"
 #include "Engine/Gui/GuiManager.h"
 #include "Engine/Gui/GuiPanel.h"
 #include "Engine/Gui/GuiSystem.h"
@@ -137,45 +138,35 @@ namespace BixEngine::Core
 
         selectedActor_ = nullptr;
 
-        const Gui::DefaultEngineGuiContext context{
-            subsystems.GetTimer(),
-            [&subsystems]() -> Game::SceneManager*
-            {
-                return subsystems.GetSceneManager();
-            },
+        Gui::DefaultEngineGuiContextFactory contextFactory(subsystems);
+
+        Gui::DefaultEngineGuiContextArgs contextArgs{
+            subsystems,
             lastDeltaTime_,
-            [this]() -> Game::Actor*
-            {
-                return selectedActor_;
-            },
-            [this](Game::Actor* actor)
-            {
-                selectedActor_ = actor;
-            },
-            [this]() -> SDL_Texture*
-            {
-                return sceneViewportTexture_;
-            },
+            &selectedActor_,
+            &sceneViewportTexture_,
             [this]() -> std::pair<int, int>
             {
                 return {sceneViewportWidth_, sceneViewportHeight_};
-            },
-            [](const std::vector<std::filesystem::path>& paths)
-            {
-                if (paths.empty())
-                    return;
-
-                String message = "Requested to open script files in code editor:";
-                for (const auto& path : paths)
-                {
-                    message += "\n - ";
-                    message += path.generic_string();
-                }
-
-                LOG_INFO(message);
             }
         };
 
+        contextArgs.openScriptFilesInEditor = [](const std::vector<std::filesystem::path>& paths)
+        {
+            if (paths.empty())
+                return;
+
+            String message = "Requested to open script files in code editor:";
+            for (const auto& path : paths)
+            {
+                message += "\n - ";
+                message += path.generic_string();
+            }
+
+            LOG_INFO(message);
+        };
+
+        const Gui::DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
         const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
         viewportPanel_ = panels.sceneViewportPanel;
         statsPanel_ = panels.statsPanel;

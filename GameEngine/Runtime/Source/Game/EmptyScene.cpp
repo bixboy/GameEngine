@@ -1,5 +1,6 @@
 #include "Game/EmptyScene.h"
 #include "Game/ActorSpawner.h"
+#include "Game/SceneRegistry.h"
 #include "Game/Test/Player.h"
 #include "Input/Input.h"
 #include "Core/Math/Color.h"
@@ -8,6 +9,8 @@
 
 namespace BixEngine::Game
 {
+    REGISTER_SCENE(EmptyScene);
+
     namespace
     {
         constexpr Math::Vector3 kPlayerStart{320.0f, 240.0f, 0.0f};
@@ -42,8 +45,6 @@ namespace BixEngine::Game
     {
         Scene::OnEnter();
         
-        LOG_INFO("Entering " + GetName());
-
         if (!HasRenderer() || !HasInputManager())
             LOG_WARNING("EmptyScene started without full context (renderer or input missing)");
 
@@ -59,7 +60,6 @@ namespace BixEngine::Game
 
     void EmptyScene::OnExit()
     {
-        LOG_INFO("Exiting " + GetName());
         player_ = nullptr;
         Scene::OnExit();
     }
