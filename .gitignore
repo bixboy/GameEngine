@@ -54,8 +54,10 @@ obj/
 *.log
 *.tlog
 
-# --- xmake / cmake / msbuild generated ---
+# --- Build system generated files ---
+# (XMake / CMake / MSBuild)
 .xmake/
+.xmake/**
 xmake.lua.bak
 CMakeFiles/
 CMakeCache.txt
