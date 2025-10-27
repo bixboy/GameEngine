@@ -312,7 +312,6 @@
     <ClCompile Include="Runtime\Source\Game\SceneManager.cpp" />
     <ClCompile Include="Runtime\Source\Game\SceneSerializer.cpp" />
     <ClCompile Include="Runtime\Source\Game\Test\Player.cpp" />
-    <ClCompile Include="Runtime\Source\Game\Test\TestScene.cpp" />
     <ClCompile Include="Runtime\Source\Graphics\Renderer.cpp" />
     <ClCompile Include="Runtime\Source\Input\Input.cpp" />
     <ClCompile Include="Runtime\Source\Input\InputManager.cpp" />
@@ -391,7 +390,6 @@
     <ClInclude Include="Runtime\Include\Game\SceneManager.h" />
     <ClInclude Include="Runtime\Include\Game\SceneSerializer.h" />
     <ClInclude Include="Runtime\Include\Game\Test\Player.h" />
-    <ClInclude Include="Runtime\Include\Game\Test\TestScene.h" />
     <ClInclude Include="Runtime\Include\Graphics\Renderer.h" />
     <ClInclude Include="Runtime\Include\Input\Input.h" />
     <ClInclude Include="Runtime\Include\Input\InputManager.h" />

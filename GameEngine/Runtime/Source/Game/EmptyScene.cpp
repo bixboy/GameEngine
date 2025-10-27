@@ -45,8 +45,6 @@ namespace BixEngine::Game
     {
         Scene::OnEnter();
         
-        LOG_INFO("Entering " + GetName());
-
         if (!HasRenderer() || !HasInputManager())
             LOG_WARNING("EmptyScene started without full context (renderer or input missing)");
 
@@ -62,7 +60,6 @@ namespace BixEngine::Game
 
     void EmptyScene::OnExit()
     {
-        LOG_INFO("Exiting " + GetName());
         player_ = nullptr;
         Scene::OnExit();
     }

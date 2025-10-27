@@ -40,6 +40,9 @@
         "xmake run",
         "xmake run",
         "xmake run",
+        "xmake run",
+        "xmake run",
+        "xmake run",
         "xmake run"
     }
 }
