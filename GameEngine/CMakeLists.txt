@@ -108,12 +108,14 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Systems/SubsystemManager.cpp
     Runtime/Source/Engine/Systems/Window.cpp
     Runtime/Source/Game/Actor.cpp
+    Runtime/Source/Game/BGameplayStatics.cpp
     Runtime/Source/Game/ActorSpawner.cpp
     Runtime/Source/Game/Components/SpriteComponent.cpp
     Runtime/Source/Game/EmptyScene.cpp
     Runtime/Source/Game/Object.cpp
     Runtime/Source/Game/Scene.cpp
     Runtime/Source/Game/SceneManager.cpp
+    Runtime/Source/Game/SceneRegistry.cpp
     Runtime/Source/Game/SceneSerializer.cpp
     Runtime/Source/Game/Test/Player.cpp
     Runtime/Source/Game/Test/TestScene.cpp

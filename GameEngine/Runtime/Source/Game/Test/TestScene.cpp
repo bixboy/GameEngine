@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <memory>
 
+#include "Game/SceneRegistry.h"
 #include "Game/Test/Player.h"
 #include "Graphics/Renderer.h"
 #include "Input/InputManager.h"
@@ -11,6 +12,8 @@
 
 namespace BixEngine::Game
 {
+    REGISTER_SCENE(TestScene);
+
     namespace
     {
         constexpr Math::Vector3 kPlayerStart{320.0f, 240.0f, 0.0f};

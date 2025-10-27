@@ -2,9 +2,10 @@
 
 #include <memory>
 #include <type_traits>
+#include <unordered_map>
 #include <utility>
-#include <stack>
 
+#include "Core/Containers/String.h"
 #include "Game/Scene.h"
 
 namespace BixEngine::Game
@@ -12,7 +13,7 @@ namespace BixEngine::Game
     class SceneManager
     {
     public:
-        SceneManager() = default;
+        SceneManager();
         ~SceneManager();
 
         SceneManager(const SceneManager&) = delete;
@@ -27,11 +28,17 @@ namespace BixEngine::Game
         void SetScene(std::unique_ptr<Scene> newScene) noexcept;
         void SetContext(SceneContext context) noexcept;
 
-        [[nodiscard]] Scene* GetScene() noexcept { return scene_.get(); }
-        [[nodiscard]] const Scene* GetScene() const noexcept { return scene_.get(); }
+        [[nodiscard]] Scene* GetScene() noexcept { return activeScene_.get(); }
+        [[nodiscard]] const Scene* GetScene() const noexcept { return activeScene_.get(); }
 
-        [[nodiscard]] static Scene* GetActiveScene() noexcept { return activeScene_; }
-        [[nodiscard]] bool HasScene() const noexcept { return scene_ != nullptr; }
+        [[nodiscard]] bool HasScene() const noexcept { return activeScene_ != nullptr; }
+
+        [[nodiscard]] static Scene* GetActiveScene() noexcept
+        {
+            return activeManager_ ? activeManager_->GetScene() : nullptr;
+        }
+
+        [[nodiscard]] static SceneManager* GetActiveSceneManager() noexcept { return activeManager_; }
 
         // ────────────────────────────────────────────────
         // 🧩  Création et activation directe
@@ -45,7 +52,7 @@ namespace BixEngine::Game
             auto newScene = std::make_unique<TScene>(std::forward<Args>(args)...);
             TScene& sceneRef = *newScene;
 
-            ActivateScene(std::move(newScene));
+            ActivateScene(std::move(newScene), sceneRef.GetName(), false);
             return sceneRef;
         }
 
@@ -53,27 +60,32 @@ namespace BixEngine::Game
         // 🔁  Contrôle du cycle de vie
         // ────────────────────────────────────────────────
 
-        // Recrée la scène active
+        void ChangeSceneByName(const String& name);
+        void LoadScene(const String& name);
+        void UnloadScene(const String& name);
         void ReloadScene();
+        void PreloadScene(const String& name) { LoadScene(name); }
 
-        // Empile une scène
-        void PushScene(std::unique_ptr<Scene> newScene);
-
-        // Retour à la scène précédente
-        void PopScene();
-
-        // Vide tout l’historique
-        void ClearHistory();
+        [[nodiscard]] const String& GetActiveSceneName() const noexcept { return activeSceneName_; }
 
     private:
-        void ActivateScene(std::unique_ptr<Scene> newScene) noexcept;
+        struct LoadedScene
+        {
+            std::unique_ptr<Scene> instance{};
+            bool initialized{false};
+        };
 
-        inline static Scene* activeScene_ = nullptr;
+        void ActivateScene(std::unique_ptr<Scene> newScene, const String& name, bool alreadyInitialized);
+        void DestroyActiveScene() noexcept;
+        [[nodiscard]] LoadedScene AcquireScene(const String& name);
+        void ApplyContext(Scene& scene) const noexcept;
 
-        std::unique_ptr<Scene> scene_{};
-        
+        inline static SceneManager* activeManager_{nullptr};
+
+        std::unique_ptr<Scene> activeScene_{};
+        bool activeSceneInitialized_{false};
+        String activeSceneName_{};
+        std::unordered_map<String, LoadedScene> loadedScenes_{};
         SceneContext context_{};
-        
-        std::stack<std::unique_ptr<Scene>> history_{};
     };
 }

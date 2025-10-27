@@ -6,6 +6,7 @@
 #include "Core/Math/Math.h"
 #include "Actor.generated.h"
 
+namespace BixEngine::Game { class Scene; }
 namespace BixEngine::Graphics { class Renderer; }
 
 namespace BixEngine::Game
@@ -51,6 +52,9 @@ namespace BixEngine::Game
 
             bool RemoveComponent(const Component* component);
 
+            void SetOwningScene(Scene* scene) noexcept { owningScene_ = scene; }
+            [[nodiscard]] Scene* GetOwningScene() const noexcept { return owningScene_; }
+
         protected:
             virtual void OnComponentRemoved(const Component& /*component*/) {}
 
@@ -58,5 +62,6 @@ namespace BixEngine::Game
             std::vector<std::unique_ptr<Component>> components_;
             bool has_begun_play_{false};
             bool active_{true};
+            Scene* owningScene_{nullptr};
     };
 }
