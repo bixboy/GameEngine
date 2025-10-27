@@ -7,7 +7,7 @@
 
 namespace
 {
-    using FactoryMap = std::unordered_map<BixEngine::Core::String, BixEngine::Game::SceneFactory>;
+    using FactoryMap = std::unordered_map<BixEngine::String, BixEngine::Game::SceneFactory>;
 
     FactoryMap& GetSceneFactoryMap()
     {
