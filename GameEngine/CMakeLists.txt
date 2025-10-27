@@ -81,8 +81,10 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Core/Timer.cpp
     Runtime/Source/Engine/Bootstrap/EngineBootstrap.cpp
     Runtime/Source/Engine/Gui/DefaultEngineGui.cpp
+    Runtime/Source/Engine/Gui/GuiContextFactory.cpp
     Runtime/Source/Engine/Gui/GuiManager.cpp
     Runtime/Source/Engine/Gui/GuiModule.cpp
+    Runtime/Source/Engine/Gui/GuiPanelController.cpp
     Runtime/Source/Engine/Gui/GuiPanel.cpp
     Runtime/Source/Engine/Gui/GuiSystem.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorPanel.cpp
@@ -101,6 +103,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Panels/SceneViewportPanel.cpp
     Runtime/Source/Engine/Gui/Panels/StatsPanel.cpp
     Runtime/Source/Engine/Gui/Utils/GuiHelpers.cpp
+    Runtime/Source/Engine/Gui/Widgets/GuiWidgetLibrary.cpp
     Runtime/Source/Engine/Gui/Widgets/ActionTooltip.cpp
     Runtime/Source/Engine/Systems/Application.cpp
     Runtime/Source/Engine/Systems/RenderLoop.cpp
