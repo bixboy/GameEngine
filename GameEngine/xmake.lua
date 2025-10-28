@@ -79,62 +79,64 @@ target("GenerateHeaders")
     before_build(function(target)
         import("core.project.config")
         import("Tools.xmake.reflection")
-
+    
         local mode = config.get("mode") or "debug"
         print(string.format("[GenerateHeaders] 🚀 Mode de génération détecté : %s", mode))
-
+    
         if not os.isdir(generated_dir) then
             os.mkdir(generated_dir)
         end
-
+    
         -- 🔍 Vérifie si un .h a changé depuis la dernière génération
         local newest_header_time = 0
-        local header_paths = 
-        {
+        local header_paths = {
             "Runtime/Include/**.h",
             path.join("Build", os.host(), os.arch(), mode, "Content", "**.h")
         }
-
+    
         for _, pattern in ipairs(header_paths) do
-
             for _, header in ipairs(os.files(pattern)) do
-            
                 local mtime = os.mtime(header)
                 if mtime > newest_header_time then
                     newest_header_time = mtime
                 end
             end
         end
-
-        -- 🔍 Vérifie si un .generated.h existe et récupère le plus récent
+    
+        -- 🔍 Vérifie les .generated.h existants
         local newest_generated_time = 0
         local has_generated = false
-
         for _, gen in ipairs(os.files(path.join(generated_dir, "*.generated.h"))) do
-
             has_generated = true
             local mtime = os.mtime(gen)
-
             if mtime > newest_generated_time then
                 newest_generated_time = mtime
             end
         end
-
-        -- 🧠 Décision : régénérer ou pas ?
-        local need_regen = false
-        local missing_generated = {}
-
-        -- 🧩 Vérifie si chaque .h a un équivalent .generated.h
+    
+        -- 🧩 Recherche uniquement les headers qui contiennent un include .generated.h
+        local headers_with_generated = {}
         for _, pattern in ipairs(header_paths) do
             for _, header in ipairs(os.files(pattern)) do
-                local name = path.basename(header)
-                local gen_path = path.join(generated_dir, name .. ".generated.h")
-                if not os.isfile(gen_path) then
-                    table.insert(missing_generated, gen_path)
+                local content = io.readfile(header)
+                if content and content:find('#include%s+"[%w_]+%.generated%.h"') then
+                    table.insert(headers_with_generated, header)
                 end
             end
         end
-
+    
+        -- 🧠 Vérifie uniquement pour ces headers si un .generated.h manque
+        local missing_generated = {}
+        for _, header in ipairs(headers_with_generated) do
+            local stem = path.basename(header):gsub("%.h$", "")
+            local gen_path = path.join(generated_dir, stem .. ".generated.h")
+            if not os.isfile(gen_path) then
+                table.insert(missing_generated, gen_path)
+            end
+        end
+    
+        -- 🧠 Décision
+        local need_regen = false
         if not has_generated then
             print("[GenerateHeaders] ⚠️ Aucun fichier généré trouvé — première génération requise.")
             need_regen = true
@@ -145,12 +147,12 @@ target("GenerateHeaders")
             end
             need_regen = true
         elseif newest_header_time > newest_generated_time then
-            print("[GenerateHeaders] 🔄 Des headers ont été modifiés — régénération nécessaire.")
+            print("[GenerateHeaders] 🔄 Des headers contenant du reflection ont été modifiés — régénération nécessaire.")
             need_regen = true
         else
             print("[GenerateHeaders] ⏩ Aucun changement détecté — génération sautée.")
         end
-
+    
         -- 🚀 Génération seulement si besoin
         if need_regen then
             local reflection = import("Tools.xmake.reflection")

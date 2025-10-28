@@ -1,4 +1,4 @@
-#include "Engine/Gui/GuiModule.h"
+#include "Engine/Gui/Core/GuiModule.h"
 
 #include <SDL3/SDL.h>
 #include <filesystem>
@@ -7,15 +7,13 @@
 #include "Core/Logger.h"
 #include "Core/Containers/String.h"
 #include "Engine/Systems/SubsystemManager.h"
-#include "Core/Timer.h"
 #include "Engine/Systems/Window.h"
 #include "Engine/Gui/DefaultEngineGui.h"
 #include "Engine/Gui/GuiContextFactory.h"
-#include "Engine/Gui/GuiManager.h"
-#include "Engine/Gui/GuiPanel.h"
-#include "Engine/Gui/GuiSystem.h"
+#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Core/GuiSystem.h"
 #include "Game/Actor.h"
-#include "Game/SceneManager.h"
 #include "Graphics/Renderer.h"
 
 namespace BixEngine::Core

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/Core/GuiPanel.h"
 
 namespace BixEngine::Gui
 {

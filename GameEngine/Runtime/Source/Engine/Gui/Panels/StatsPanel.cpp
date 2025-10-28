@@ -3,18 +3,19 @@
 #include "Core/Timer.h"
 #include "Game/Scene.h"
 #include "Game/SceneManager.h"
-#include "Engine/Gui/GuiManager.h"
-#include "Engine/Gui/GuiPanel.h"
-#include "Engine/Gui/GuiPanelController.h"
+#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Utils/GuiPanelController.h"
 #include "Engine/Gui/Widgets/GuiWidgetLibrary.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 
 #include "imgui.h"
-#include <cmath>
 #include <cstdio>
 #include <functional>
 #include <string>
 #include <vector>
+
+#include "Engine/Gui/Core/GuiDocking.h"
 
 namespace BixEngine::Gui
 {

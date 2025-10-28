@@ -1,9 +1,10 @@
-#include "Engine/Gui/GuiManager.h"
-#include "Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Core/GuiPanel.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include <filesystem>
 #include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/Core/GuiDocking.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
 

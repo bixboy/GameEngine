@@ -2,10 +2,11 @@
 
 #include <SDL3/SDL_render.h>
 
-#include "Engine/Gui/GuiManager.h"
-#include "Engine/Gui/GuiPanel.h"
+#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Core/GuiPanel.h"
 
 #include "imgui.h"
+#include "Engine/Gui/Core/GuiDocking.h"
 
 namespace BixEngine::Gui
 {
@@ -43,7 +44,7 @@ namespace BixEngine::Gui
             ImVec2 max = ImVec2{cursorScreenPos.x + size.x, cursorScreenPos.y + size.y};
 
             ImDrawList* drawList = ImGui::GetWindowDrawList();
-            drawList->AddImage(reinterpret_cast<ImTextureID>(texture), min, max);
+            drawList->AddImage(texture, min, max);
         }
     }
 
@@ -72,7 +73,7 @@ namespace BixEngine::Gui
             }
 
             SDL_Texture* texture = textureProvider ? textureProvider() : nullptr;
-            std::pair<int, int> size = sizeProvider ? sizeProvider() : std::pair<int, int>{0, 0};
+            std::pair<int, int> size = sizeProvider ? sizeProvider() : std::pair{0, 0};
 
             if (!texture || size.first <= 0 || size.second <= 0)
             {

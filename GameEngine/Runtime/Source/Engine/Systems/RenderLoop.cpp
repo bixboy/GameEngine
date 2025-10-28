@@ -1,6 +1,5 @@
 #include "Engine/Systems/RenderLoop.h"
-#include "Engine/Gui/GuiModule.h"
-#include "Core/Containers/String.h"
+#include "Engine/Gui/Core/GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
 #include "Core/Timer.h"
 #include "Game/Scene.h"

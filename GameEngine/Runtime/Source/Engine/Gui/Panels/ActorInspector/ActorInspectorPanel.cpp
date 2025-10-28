@@ -6,9 +6,9 @@
 #include "Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
 #include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Engine/Gui/GuiManager.h"
-#include "Engine/Gui/GuiPanel.h"
-#include "Engine/Gui/GuiPanelController.h"
+#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Utils/GuiPanelController.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Game/Actor.h"
 #include "Game/Scene.h"
@@ -16,6 +16,8 @@
 
 #include <imgui.h>
 #include <functional>
+
+#include "Engine/Gui/Core/GuiDocking.h"
 
 namespace BixEngine::Gui
 {

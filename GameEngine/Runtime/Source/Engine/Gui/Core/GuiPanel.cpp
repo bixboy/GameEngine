@@ -1,11 +1,10 @@
-#include "Engine/Gui/GuiPanel.h"
-
+#include "Engine/Gui/Core/GuiPanel.h"
+#include "Core/Logger.h"
 #include <utility>
 
 namespace BixEngine::Gui
 {
-    GuiPanel::GuiPanel(String name, String title)
-        : name_(std::move(name)), title_(std::move(title))
+    GuiPanel::GuiPanel(String name, String title) : name_(std::move(name)), title_(std::move(title))
     {
     }
 
@@ -73,10 +72,22 @@ namespace BixEngine::Gui
         dockFallbackCondition_ = ImGuiCond_FirstUseEver;
     }
 
+    bool GuiPanel::IsFocused() const noexcept
+    {
+        return ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows);
+    }
+
+    bool GuiPanel::IsHovered() const noexcept
+    {
+        return ImGui::IsWindowHovered(ImGuiHoveredFlags_RootAndChildWindows);
+    }
+
     void GuiPanel::Draw()
     {
         if (!visible_)
             return;
+
+        ImGui::PushID(name_.c_str());
 
         if (usePosition_)
             ImGui::SetNextWindowPos(position_, positionCondition_);
@@ -87,49 +98,93 @@ namespace BixEngine::Gui
         if (useDockId_ && dockId_ != 0)
         {
             ImGui::SetNextWindowDockID(dockId_, dockCondition_);
-
             if (applyDockFallback_)
             {
                 dockCondition_ = dockFallbackCondition_;
                 applyDockFallback_ = false;
+                
                 if (dockFallbackCondition_ == ImGuiCond_None)
                     useDockId_ = false;
             }
         }
 
-        if (useBackgroundColor_)
+        if (style_.override)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style_.rounding);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style_.border);
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, style_.bgColor);
+        }
+        else if (useBackgroundColor_)
+        {
             ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
+        }
 
         ImGuiWindowFlags finalFlags = windowFlags_;
-
+        
         if (!resizable_)
             finalFlags |= ImGuiWindowFlags_NoResize;
         
         if (!movable_)
             finalFlags |= ImGuiWindowFlags_NoMove;
-
+        
         if (!collapsable_)
             finalFlags |= ImGuiWindowFlags_NoCollapse;
-        else
-            finalFlags &= ~ImGuiWindowFlags_NoCollapse;
+        
+        else finalFlags &= ~ImGuiWindowFlags_NoCollapse;
 
+        bool wasVisible = visible_;
         bool open = visible_;
-        const bool shouldShow = closable_
-            ? ImGui::Begin(title_.c_str(), &open, finalFlags)
-            : ImGui::Begin(title_.c_str(), nullptr, finalFlags);
 
-        if (closable_)
-            visible_ = open;
+        bool shouldShow = closable_ ? ImGui::Begin(title_.c_str(), &open, finalFlags) : ImGui::Begin(title_.c_str(), nullptr, finalFlags);
+
+        if (!wasVisible && open && OnOpen)
+            OnOpen();
+        
+        if (wasVisible && !open && OnClose)
+            OnClose();
+        
+        visible_ = open;
+
+        if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+        {
+            if (OnFocus) OnFocus();
+        }
+        else
+        {
+            if (OnUnfocus) OnUnfocus();
+        }
 
         windowPos_ = ImGui::GetWindowPos();
         windowSize_ = ImGui::GetWindowSize();
-        
-        if (shouldShow && drawFunction_)
-            drawFunction_();
+
+        try
+        {
+            if (shouldShow && drawFunction_)
+                drawFunction_();
+        }
+        catch (const std::exception& e)
+        {
+            LOG_ERROR(String{"GuiPanel "} + name_ + " draw exception: " + e.what());
+        }
+
+        if (contextMenu_ && ImGui::BeginPopupContextWindow())
+        {
+            contextMenu_();
+            ImGui::EndPopup();
+        }
 
         ImGui::End();
 
-        if (useBackgroundColor_)
+        if (style_.override)
+        {
             ImGui::PopStyleColor();
+            ImGui::PopStyleVar(2);
+        }
+        else if (useBackgroundColor_)
+        {
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::PopID();
     }
 }
