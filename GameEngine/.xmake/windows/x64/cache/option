@@ -1,40 +1,40 @@
 {
     sdl3_lib_dir = {
+        __scriptdir = [[C:\Apps\CustomEngine\BixEngine\GameEngine]],
+        description = "Chemin vers le répertoire lib de SDL3",
+        showmenu = true,
         __sourceinfo_default = {
             [""] = {
-                line = 29,
-                file = [[.\xmake.lua]]
+                file = [[.\xmake.lua]],
+                line = 29
             }
         },
-        description = "Chemin vers le répertoire lib de SDL3",
         default = "",
-        __scriptdir = [[C:\Apps\CustomEngine\BixEngine\GameEngine]],
+        __sourceinfo_showmenu = { },
         __sourceinfo_description = {
             ["Chemin vers le répertoire lib de SDL3"] = {
-                line = 28,
-                file = [[.\xmake.lua]]
+                file = [[.\xmake.lua]],
+                line = 28
             }
-        },
-        showmenu = true,
-        __sourceinfo_showmenu = { }
+        }
     },
     sdl3_dir = {
+        __scriptdir = [[C:\Apps\CustomEngine\BixEngine\GameEngine]],
+        description = "Chemin vers le répertoire include de SDL3",
+        showmenu = true,
         __sourceinfo_default = {
             [""] = {
-                line = 23,
-                file = [[.\xmake.lua]]
+                file = [[.\xmake.lua]],
+                line = 23
             }
         },
-        description = "Chemin vers le répertoire include de SDL3",
         default = "",
-        __scriptdir = [[C:\Apps\CustomEngine\BixEngine\GameEngine]],
+        __sourceinfo_showmenu = { },
         __sourceinfo_description = {
             ["Chemin vers le répertoire include de SDL3"] = {
-                line = 22,
-                file = [[.\xmake.lua]]
+                file = [[.\xmake.lua]],
+                line = 22
             }
-        },
-        showmenu = true,
-        __sourceinfo_showmenu = { }
+        }
     }
 }

@@ -2,6 +2,8 @@
 #include <SDL3/SDL_timer.h>
 #include <algorithm>
 
+#include "Core/Math/Vector2.h"
+
 namespace BixEngine::Core
 {
     void Timer::Tick()
@@ -17,7 +19,7 @@ namespace BixEngine::Core
         {
             deltaTime_ = std::clamp(static_cast<float>(current - lastCounter_) * invFrequency, 0.0f, 0.25f);   
         }
-
+        
         totalTime_ += deltaTime_;
         lastCounter_ = current;
     }

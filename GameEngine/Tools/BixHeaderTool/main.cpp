@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include <vector>
 #include "Parser/HeaderParser.h"
 #include "Generator/HeaderGenerator.h"
 #include "FileSystem/FileUtils.h"
@@ -10,7 +11,6 @@ namespace fs = std::filesystem;
 int main(int argc, char* argv[])
 {
     std::cout << "[BixHeaderTool] Launching tool...\n";
-
     for (int i = 0; i < argc; ++i)
         std::cout << "  argv[" << i << "] = " << argv[i] << "\n";
 
@@ -33,7 +33,6 @@ int main(int argc, char* argv[])
             return 2;
         }
 
-        // ✅ Crée le dossier si nécessaire
         std::error_code ec;
         fs::create_directories(generatedDir, ec);
         if (ec)
@@ -59,46 +58,63 @@ int main(int argc, char* argv[])
         fs::path outputPath = generatedDir / (headerPath.stem().string() + ".generated.h");
 
         if (WriteFileIfDifferent(outputPath, generated))
-        {
             std::cout << "[BixHeaderTool] ✅ Generated " << outputPath << "\n";
-        }
         else
-        {
             std::cout << "[BixHeaderTool] ⏩ No changes for " << outputPath << "\n";
-        }
 
         return 0;
     }
 
     // ─────────────────────────────────────────────
-    // 🎯 Mode 2 : Génération complète
+    // 🎯 Mode 2 : Génération complète (multi dossiers)
     // ─────────────────────────────────────────────
     if (argc < 4)
     {
         std::cerr << "[BixHeaderTool] Usage:\n";
-        std::cerr << "  BixHeaderTool <include_root> <samples_root> <output_dir>\n";
+        std::cerr << "  BixHeaderTool <include_root> <samples_root> [extra_roots...] <output_dir>\n";
         std::cerr << "  or BixHeaderTool --single <header_path>\n";
         return 1;
     }
 
-    const fs::path includeRoot = argv[1];
-    const fs::path samplesRoot = argv[2];
-    const fs::path generatedOutputDir = argv[3];
+    // Tous les arguments sauf le dernier sont des dossiers sources
+    const int outputIndex = argc - 1;
+    const fs::path generatedOutputDir = fs::weakly_canonical(argv[outputIndex]);
 
-    std::vector roots = { includeRoot, samplesRoot };
-    for (int i = 4; i < argc; ++i)
-        roots.emplace_back(argv[i]);
+    std::vector<fs::path> roots;
+    for (int i = 1; i < outputIndex; ++i)
+    {
+        fs::path root = fs::weakly_canonical(argv[i]);
+        if (fs::exists(root))
+        {
+            roots.push_back(root);
+            std::cout << "[BixHeaderTool] + Include root: " << root << "\n";
+        }
+        else
+        {
+            std::cout << "[BixHeaderTool] ⚠️ Skipped missing root: " << root << "\n";
+        }
+    }
 
+    if (roots.empty())
+    {
+        std::cerr << "[BixHeaderTool] ❌ No valid header roots to process.\n";
+        return 2;
+    }
+
+    std::cout << "[BixHeaderTool] → Output directory: " << generatedOutputDir << "\n";
+
+    // 🔄 Prépare le dossier de sortie
+    std::error_code ec;
+    fs::remove_all(generatedOutputDir, ec);
+    fs::create_directories(generatedOutputDir, ec);
+
+    // 🔍 Collecte les headers
     std::vector<fs::path> headers = CollectHeaderFiles(roots);
     if (headers.empty())
     {
         std::cout << "[BixHeaderTool] No headers to process.\n";
         return 0;
     }
-
-    std::error_code cleanupErr;
-    fs::remove_all(generatedOutputDir, cleanupErr);
-    fs::create_directories(generatedOutputDir, cleanupErr);
 
     bool anyUpdated = false;
     for (const auto& header : headers)
@@ -112,7 +128,6 @@ int main(int argc, char* argv[])
             continue;
 
         fs::path generatedPath = generatedOutputDir / (header.stem().string() + ".generated.h");
-
         if (WriteFileIfDifferent(generatedPath, generated))
         {
             std::cout << "[BixHeaderTool] Generated " << generatedPath.filename().string() << "\n";

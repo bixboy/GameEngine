@@ -43,7 +43,7 @@ namespace BixEngine
                 void InitializeSpriteComponent();
                 void RefreshSpriteComponent();
 
-                Math::Vector2 pendingInput_{};
+                Math::Vector2<float> pendingInput_{};
             
                 BPROPERTY()
                 float moveSpeed_{200.0f};

@@ -89,19 +89,32 @@ target("GenerateHeaders")
 
         -- 🔍 Vérifie si un .h a changé depuis la dernière génération
         local newest_header_time = 0
-        for _, header in ipairs(os.files("Runtime/Include/**.h")) do
-            local mtime = os.mtime(header)
-            if mtime > newest_header_time then
-                newest_header_time = mtime
+        local header_paths = 
+        {
+            "Runtime/Include/**.h",
+            path.join("Build", os.host(), os.arch(), mode, "Content", "**.h")
+        }
+
+        for _, pattern in ipairs(header_paths) do
+
+            for _, header in ipairs(os.files(pattern)) do
+            
+                local mtime = os.mtime(header)
+                if mtime > newest_header_time then
+                    newest_header_time = mtime
+                end
             end
         end
 
         -- 🔍 Vérifie si un .generated.h existe et récupère le plus récent
         local newest_generated_time = 0
         local has_generated = false
+
         for _, gen in ipairs(os.files(path.join(generated_dir, "*.generated.h"))) do
+
             has_generated = true
             local mtime = os.mtime(gen)
+
             if mtime > newest_generated_time then
                 newest_generated_time = mtime
             end
@@ -109,8 +122,27 @@ target("GenerateHeaders")
 
         -- 🧠 Décision : régénérer ou pas ?
         local need_regen = false
+        local missing_generated = {}
+
+        -- 🧩 Vérifie si chaque .h a un équivalent .generated.h
+        for _, pattern in ipairs(header_paths) do
+            for _, header in ipairs(os.files(pattern)) do
+                local name = path.basename(header)
+                local gen_path = path.join(generated_dir, name .. ".generated.h")
+                if not os.isfile(gen_path) then
+                    table.insert(missing_generated, gen_path)
+                end
+            end
+        end
+
         if not has_generated then
             print("[GenerateHeaders] ⚠️ Aucun fichier généré trouvé — première génération requise.")
+            need_regen = true
+        elseif #missing_generated > 0 then
+            print("[GenerateHeaders] ⚠️ Fichiers générés manquants détectés :")
+            for _, f in ipairs(missing_generated) do
+                print("   - " .. f)
+            end
             need_regen = true
         elseif newest_header_time > newest_generated_time then
             print("[GenerateHeaders] 🔄 Des headers ont été modifiés — régénération nécessaire.")

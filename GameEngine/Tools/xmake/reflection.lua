@@ -45,8 +45,19 @@ function generate_headers(force, generated_dir)
         end
     end
 
+    -- 🔍 Chemin dynamique vers le dossier Content
+    local plat = get_config("plat") or os.host()
+    local arch = get_config("arch") or os.arch()
+    local mode = get_config("mode") or "debug"
+    local content_path = path.join(os.projectdir(), "Build", plat, arch, mode, "Content")
+    
+    -- Scans
     scan_headers("Runtime/Include/**.h")
-    scan_headers("Samples/**.h")
+    
+    if os.isdir(content_path) then
+        local content_pattern = path.join(content_path, "**.h")
+        scan_headers(content_pattern)
+    end
 
     local count = 0
     for _ in pairs(gen_names) do count = count + 1 end
@@ -83,7 +94,7 @@ function generate_headers(force, generated_dir)
     -- Arguments
     local args = {
         path.join(os.projectdir(), "Runtime/Include"),
-        path.join(os.projectdir(), "Samples"),
+        path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, "Content"),
         path.join(os.projectdir(), generated_dir)
     }
     

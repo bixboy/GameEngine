@@ -147,7 +147,7 @@ namespace BixEngine::Gui::ActorInspector
 
         if (MatchesType(property.TypeName, "Math::Vector2") || MatchesType(property.TypeName, "Vector2"))
         {
-            auto& vector = property.Get<BixEngine::Math::Vector2>(instance);
+            auto& vector = property.Get<Math::Vector2<float>>(instance);
             float values[2] = {vector.x, vector.y};
             if (ImGui::DragFloat2(label.c_str(), values, 0.1f))
             {
@@ -160,7 +160,7 @@ namespace BixEngine::Gui::ActorInspector
 
         if (MatchesType(property.TypeName, "Math::Vector3") || MatchesType(property.TypeName, "Vector3"))
         {
-            auto& vector = property.Get<BixEngine::Math::Vector3>(instance);
+            auto& vector = property.Get<Math::Vector3>(instance);
             float values[3] = {vector.x, vector.y, vector.z};
             if (ImGui::DragFloat3(label.c_str(), values, 0.1f))
             {

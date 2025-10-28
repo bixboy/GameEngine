@@ -333,6 +333,7 @@
     <ClCompile Include="Tools\BixHeaderTool\Parser\TokenUtils.cpp" />
     </ItemGroup>
 <ItemGroup>
+    <ClInclude Include="Build\windows\x64\debug\Content\Scripts\NewScript.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Actor.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Component.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\EmptyScene.generated.h" />
@@ -854,7 +855,6 @@
 </ItemGroup>
 <ItemGroup>
   <Folder Include="Build\Intermediate\Win32\Debug\BixEngine.tlog\" />
-  <Folder Include="Build\windows\x64\debug\Content\Scripts\" />
   <Folder Include="Runtime\Source\Core\Containers\" />
 </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

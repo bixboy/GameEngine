@@ -16,8 +16,7 @@ namespace BixEngine::Game
         InitializeSpriteComponent();
     }
 
-    Player::Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color)
-        : Actor(Math::Transform(position, Math::Rotator(), size))
+    Player::Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color) : Actor(Math::Transform(position, Math::Rotator(), size))
     {
         size_ = size;
         color_ = color;
@@ -58,7 +57,7 @@ namespace BixEngine::Game
 
     void Player::ApplyMovement(float deltaTime)
     {
-        Math::Vector2 input = pendingInput_;
+        Math::Vector2<float> input = pendingInput_;
         if (input.LengthSquared() > 1.0f)
             input = input.Normalized();
 
@@ -81,8 +80,10 @@ namespace BixEngine::Game
     {
         ReadPrimitive(stream, moveSpeed_);
         stream.read(reinterpret_cast<char*>(&color_), sizeof(color_));
+        
         if (!stream)
             throw std::runtime_error("Failed to read player color from stream.");
+        
         ReadPrimitive(stream, size_.x);
         ReadPrimitive(stream, size_.y);
         ReadPrimitive(stream, size_.z);
