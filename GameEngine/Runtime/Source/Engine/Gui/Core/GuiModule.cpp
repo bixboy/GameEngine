@@ -95,6 +95,7 @@ namespace BixEngine::Core
         if (layoutManager_)
         {
             layoutManager_->SaveCurrentLayout();
+            layoutManager_->SaveAllLayoutsToDisk();
             layoutManager_.reset();
         }
         guiManager_.reset();

@@ -1,7 +1,14 @@
 #include "Engine/Gui/Core/GuiLayoutManager.h"
 
 #include <algorithm>
+#include <array>
+#include <filesystem>
+#include <fstream>
+#include <string_view>
+#include <system_error>
 #include <unordered_set>
+
+#include <imgui.h>
 
 #include "Engine/Gui/Core/GuiManager.h"
 #include "Engine/Gui/Core/GuiPanel.h"
@@ -12,6 +19,9 @@ namespace BixEngine::Gui
     namespace
     {
         constexpr const char* kRootDockspaceWindow = "EditorRootDockspace";
+        constexpr std::string_view kLayoutStorageFileName = "imgui_layouts.dat";
+        constexpr std::string_view kFileVersionLine = "Version:1";
+        constexpr std::string_view kActiveLayoutPrefix = "Active=";
     }
 
     GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager)
@@ -23,7 +33,9 @@ namespace BixEngine::Gui
         layoutPanels_.emplace(EditorLayoutType::Scene, std::vector<GuiPanel*>{});
         layoutPanels_.emplace(EditorLayoutType::ActorEditor, std::vector<GuiPanel*>{});
 
+        LoadPersistedLayouts_();
         EnsureDockspaceForCurrentLayout_();
+        LoadLayout(currentLayout_);
     }
 
     void GuiLayoutManager::Switch(EditorLayoutType newLayout)
@@ -57,8 +69,12 @@ namespace BixEngine::Gui
             return;
 
         const std::string serialized = guiSystem_->SaveLayoutToMemory();
-        if (!serialized.empty())
-            layoutData_[currentLayout_] = serialized;
+        layoutData_[currentLayout_] = serialized;
+    }
+
+    void GuiLayoutManager::SaveAllLayoutsToDisk()
+    {
+        PersistLayoutsToDisk_();
     }
 
     void GuiLayoutManager::LoadLayout(EditorLayoutType layout)
@@ -169,6 +185,8 @@ namespace BixEngine::Gui
         LoadLayout(newLayout);
         ApplyPanelVisibility_();
 
+        PersistLayoutsToDisk_();
+
         switchRequested_ = false;
         pendingLayout_.reset();
     }
@@ -196,6 +214,168 @@ namespace BixEngine::Gui
     {
         auto& layoutVector = layoutPanels_[layout];
         layoutVector.erase(std::remove(layoutVector.begin(), layoutVector.end(), &panel), layoutVector.end());
+    }
+
+    void GuiLayoutManager::LoadPersistedLayouts_()
+    {
+        layoutStorageFile_ = ResolveLayoutStoragePath_();
+        if (layoutStorageFile_.empty())
+            return;
+
+        std::ifstream file(layoutStorageFile_, std::ios::binary);
+        if (!file.is_open())
+            return;
+
+        std::string line;
+        while (std::getline(file, line))
+        {
+            TrimTrailingCarriageReturn_(line);
+            if (line.empty())
+                continue;
+
+            if (line.rfind(kFileVersionLine.data(), 0) == 0)
+                continue;
+
+            if (line.rfind(kActiveLayoutPrefix.data(), 0) == 0)
+            {
+                const std::string layoutName = line.substr(kActiveLayoutPrefix.size());
+                if (auto parsed = LayoutTypeFromString(layoutName))
+                {
+                    currentLayout_ = *parsed;
+                    dockspaceDirty_ = true;
+                }
+                continue;
+            }
+
+            auto layoutType = LayoutTypeFromString(line);
+            if (!layoutType.has_value())
+                continue;
+
+            std::string sizeLine;
+            if (!std::getline(file, sizeLine))
+                break;
+
+            TrimTrailingCarriageReturn_(sizeLine);
+
+            size_t dataSize = 0;
+            if (!sizeLine.empty())
+            {
+                try
+                {
+                    dataSize = static_cast<size_t>(std::stoull(sizeLine));
+                }
+                catch (...)
+                {
+                    dataSize = 0;
+                }
+            }
+
+            std::string data(dataSize, '\0');
+            if (dataSize > 0)
+            {
+                file.read(data.data(), static_cast<std::streamsize>(dataSize));
+                if (!file)
+                    break;
+            }
+
+            if (file.peek() == '\r')
+            {
+                file.get();
+                if (file.peek() == '\n')
+                    file.get();
+            }
+            else if (file.peek() == '\n')
+            {
+                file.get();
+            }
+
+            layoutData_[*layoutType] = std::move(data);
+        }
+    }
+
+    void GuiLayoutManager::PersistLayoutsToDisk_()
+    {
+        if (layoutStorageFile_.empty())
+            layoutStorageFile_ = ResolveLayoutStoragePath_();
+
+        if (layoutStorageFile_.empty())
+            return;
+
+        std::filesystem::path directory = layoutStorageFile_.parent_path();
+        if (!directory.empty())
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(directory, ec);
+        }
+
+        std::ofstream file(layoutStorageFile_, std::ios::binary | std::ios::trunc);
+        if (!file.is_open())
+            return;
+
+        file << kFileVersionLine << '\n';
+        file << kActiveLayoutPrefix << LayoutTypeToString(currentLayout_) << '\n';
+
+        const std::array<EditorLayoutType, 2> layoutOrder = {
+            EditorLayoutType::Scene,
+            EditorLayoutType::ActorEditor};
+
+        for (EditorLayoutType type : layoutOrder)
+        {
+            const auto it = layoutData_.find(type);
+            const std::string* dataPtr = (it != layoutData_.end()) ? &it->second : nullptr;
+
+            file << LayoutTypeToString(type) << '\n';
+            const size_t size = dataPtr ? dataPtr->size() : 0;
+            file << size << '\n';
+            if (dataPtr && !dataPtr->empty())
+                file.write(dataPtr->data(), static_cast<std::streamsize>(dataPtr->size()));
+            file << '\n';
+        }
+    }
+
+    std::filesystem::path GuiLayoutManager::ResolveLayoutStoragePath_() const
+    {
+        if (!ImGui::GetCurrentContext())
+            return {};
+
+        const ImGuiIO& io = ImGui::GetIO();
+        std::filesystem::path basePath;
+        if (io.IniFilename && io.IniFilename[0] != '\0')
+            basePath = std::filesystem::path(io.IniFilename).parent_path();
+
+        if (basePath.empty())
+            basePath = std::filesystem::current_path();
+
+        return basePath / kLayoutStorageFileName;
+    }
+
+    void GuiLayoutManager::TrimTrailingCarriageReturn_(std::string& value)
+    {
+        if (!value.empty() && value.back() == '\r')
+            value.pop_back();
+    }
+
+    std::string GuiLayoutManager::LayoutTypeToString(EditorLayoutType type)
+    {
+        switch (type)
+        {
+            case EditorLayoutType::Scene:
+                return "Scene";
+            case EditorLayoutType::ActorEditor:
+                return "ActorEditor";
+        }
+
+        return "Scene";
+    }
+
+    std::optional<EditorLayoutType> GuiLayoutManager::LayoutTypeFromString(const std::string& value)
+    {
+        if (value == "Scene")
+            return EditorLayoutType::Scene;
+        if (value == "ActorEditor")
+            return EditorLayoutType::ActorEditor;
+
+        return std::nullopt;
     }
 }
 

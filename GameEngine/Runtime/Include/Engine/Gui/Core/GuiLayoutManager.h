@@ -1,5 +1,6 @@
 #pragma once
 
+#include <filesystem>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -37,6 +38,7 @@ namespace BixEngine::Gui
         void Switch(EditorLayoutType newLayout);
         void SaveCurrentLayout();
         void LoadLayout(EditorLayoutType layout);
+        void SaveAllLayoutsToDisk();
 
         void SetPanelsForLayout(EditorLayoutType layout, const std::vector<GuiPanel*>& panels);
         void AddPanel(EditorLayoutType layout, GuiPanel& panel);
@@ -49,6 +51,12 @@ namespace BixEngine::Gui
         void EnsureDockspaceForCurrentLayout_();
         void ApplyPanelVisibility_();
         void RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout);
+        void LoadPersistedLayouts_();
+        void PersistLayoutsToDisk_();
+        [[nodiscard]] std::filesystem::path ResolveLayoutStoragePath_() const;
+        static void TrimTrailingCarriageReturn_(std::string& value);
+        static std::string LayoutTypeToString(EditorLayoutType type);
+        static std::optional<EditorLayoutType> LayoutTypeFromString(const std::string& value);
 
     private:
         GuiSystem* guiSystem_{nullptr};
@@ -63,6 +71,7 @@ namespace BixEngine::Gui
 
         bool dockspaceDirty_{true};
         bool switchRequested_{false};
+        std::filesystem::path layoutStorageFile_{};
     };
 }
 
