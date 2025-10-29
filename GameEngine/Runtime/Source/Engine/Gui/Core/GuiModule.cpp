@@ -106,6 +106,12 @@ namespace BixEngine::Core
         selectedActor_ = nullptr;
         lastDeltaTime_ = nullptr;
 
+        if (layoutManager_)
+        {
+            layoutManager_->SaveCurrentLayout();
+            layoutManager_->SaveAllLayoutsToDisk();
+        }
+
         if (guiManager_)
         {
             for (auto& [_, entry] : actorEditors_)
@@ -133,11 +139,7 @@ namespace BixEngine::Core
 
         DestroySceneViewportTexture();
         if (layoutManager_)
-        {
-            layoutManager_->SaveCurrentLayout();
-            layoutManager_->SaveAllLayoutsToDisk();
             layoutManager_.reset();
-        }
         guiManager_.reset();
 
         if (guiSystem_)
