@@ -776,7 +776,6 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\SceneOutlinerPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\SceneViewportPanel.cpp" />

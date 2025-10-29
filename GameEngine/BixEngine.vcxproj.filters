@@ -42,9 +42,6 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp">
-      <Filter>Runtime\Engine\Private\Gui</Filter>
-    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
