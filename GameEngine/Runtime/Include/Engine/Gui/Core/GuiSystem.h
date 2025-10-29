@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <string>
 #include <vector>
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
@@ -40,6 +41,11 @@ namespace BixEngine::Gui
         
         [[nodiscard]] bool IsDockingEnabled() const noexcept { return dockingEnabled_; }
         [[nodiscard]] ImGuiID GetDockspaceId() const noexcept { return dockspaceId_; }
+
+        void SetDockspaceIdentifiers(std::string windowName, std::string dockspaceLabel);
+        void RequestDefaultDockLayout();
+        [[nodiscard]] std::string SaveLayoutToMemory() const;
+        void LoadLayoutFromMemory(const std::string& data);
 
         // ────────────────────────────────────────────────
         // 🪟 Gestion des panneaux
@@ -98,6 +104,8 @@ namespace BixEngine::Gui
         bool bShowDockDebugOverlay_{false};
 
         ImGuiID dockspaceId_{0};
+        std::string dockspaceWindowName_{"EngineDockSpace"};
+        std::string dockspaceLabel_{"EngineDockSpace::DockSpace"};
         std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)> dockRegionIds_{};
 
         std::vector<GuiPanel*> panels_{};

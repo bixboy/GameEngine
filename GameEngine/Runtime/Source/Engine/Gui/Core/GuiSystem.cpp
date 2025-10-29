@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <system_error>
 
 #include <SDL3/SDL.h>
@@ -122,6 +123,55 @@ namespace BixEngine::Gui
     }
 
 
+    void GuiSystem::SetDockspaceIdentifiers(std::string windowName, std::string dockspaceLabel)
+    {
+        dockspaceWindowName_ = windowName.empty() ? "EngineDockSpace" : std::move(windowName);
+        dockspaceLabel_ = dockspaceLabel.empty() ? dockspaceWindowName_ + "::DockSpace" : std::move(dockspaceLabel);
+        dockspaceId_ = 0;
+    }
+
+    void GuiSystem::RequestDefaultDockLayout()
+    {
+        useSavedDockLayout_ = false;
+        dockLayoutBuilt_ = false;
+        rebuildDockLayout_ = true;
+        dockspaceId_ = 0;
+        dockRegionIds_.fill(0);
+        pendingDockUpdates_.clear();
+    }
+
+    std::string GuiSystem::SaveLayoutToMemory() const
+    {
+        if (!ImGui::GetCurrentContext())
+            return {};
+
+        size_t dataSize = 0;
+        const char* iniData = ImGui::SaveIniSettingsToMemory(&dataSize);
+        if (!iniData || dataSize == 0)
+            return {};
+
+        return std::string(iniData, dataSize);
+    }
+
+    void GuiSystem::LoadLayoutFromMemory(const std::string& data)
+    {
+        if (!ImGui::GetCurrentContext())
+            return;
+
+        if (data.empty())
+        {
+            RequestDefaultDockLayout();
+            return;
+        }
+
+        ImGui::LoadIniSettingsFromMemory(data.c_str(), data.size());
+        useSavedDockLayout_ = true;
+        dockLayoutBuilt_ = true;
+        rebuildDockLayout_ = false;
+        pendingDockUpdates_.clear();
+    }
+
+
     // ────────────────────────────────────────────────
     // 🧠 Cycle de frame ImGui
     // ────────────────────────────────────────────────
@@ -238,10 +288,12 @@ namespace BixEngine::Gui
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 
-        ImGui::Begin("EngineDockSpace", nullptr, winFlags);
+        const char* dockspaceWindowName = dockspaceWindowName_.empty() ? "EngineDockSpace" : dockspaceWindowName_.c_str();
+        ImGui::Begin(dockspaceWindowName, nullptr, winFlags);
         ImGui::PopStyleVar(3);
 
-        dockspaceId_ = ImGui::GetID("EngineDockSpace::DockSpace");
+        const char* dockLabel = dockspaceLabel_.empty() ? "EngineDockSpace::DockSpace" : dockspaceLabel_.c_str();
+        dockspaceId_ = ImGui::GetID(dockLabel);
 
         if (rebuildDockLayout_)
         {

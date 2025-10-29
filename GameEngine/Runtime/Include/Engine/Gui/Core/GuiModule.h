@@ -12,7 +12,7 @@ namespace BixEngine
 {
     namespace Core { class Window; class Timer; class SubsystemManager; }
     namespace Graphics { class Renderer; }
-    namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; class ActorEditorController; }
+    namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; class ActorEditorController; class GuiLayoutManager; enum class EditorLayoutType; }
     namespace Game { class Actor; }
 }
 
@@ -107,6 +107,7 @@ namespace BixEngine::Core
 
         std::unique_ptr<Gui::GuiSystem> guiSystem_;
         std::unique_ptr<Gui::GuiManager> guiManager_;
+        std::unique_ptr<Gui::GuiLayoutManager> layoutManager_;
 
         SubsystemManager* subsystems_{nullptr};
 
@@ -139,11 +140,13 @@ namespace BixEngine::Core
         std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
         std::vector<std::string> focusRequests_{};
         std::string activeNavigationId_{"scene"};
+        Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
         void DrawEditorNavigation();
         void ProcessFocusRequests();
         void FocusSceneViewport();
+        void RefreshActorPanelsVisibility();
     };
 }

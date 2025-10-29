@@ -86,6 +86,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/GuiTheme.cpp
     Runtime/Source/Engine/Gui/GuiManager.cpp
     Runtime/Source/Engine/Gui/GuiModule.cpp
+    Runtime/Source/Engine/Gui/Core/GuiLayoutManager.cpp
     Runtime/Source/Engine/Gui/GuiPanelController.cpp
     Runtime/Source/Engine/Gui/GuiPanel.cpp
     Runtime/Source/Engine/Gui/GuiSystem.cpp
