@@ -2,8 +2,10 @@
 
 #include <functional>
 #include <string>
-#include <vector>
 #include <unordered_map>
+#include <vector>
+
+#include "Engine/Gui/GuiTheme.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui::Utils
@@ -79,6 +81,33 @@ namespace BixEngine::Gui::Utils
     {
         ScopedColor(ImGuiCol color, const ImVec4& value) { ImGui::PushStyleColor(color, value); }
         ~ScopedColor() { ImGui::PopStyleColor(); }
+    };
+
+    struct ScopedStyleColor
+    {
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value) : applied(true)
+        {
+            ImGui::PushStyleColor(color, value);
+        }
+
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value, bool condition) : applied(condition)
+        {
+            if (applied)
+            {
+                ImGui::PushStyleColor(color, value);
+            }
+        }
+
+        ~ScopedStyleColor()
+        {
+            if (applied)
+            {
+                ImGui::PopStyleColor();
+            }
+        }
+
+    private:
+        bool applied;
     };
 
     /// Gère automatiquement PushFont / PopFont.
@@ -172,5 +201,11 @@ namespace BixEngine::Gui::Utils
     void PushSmallFont();                // Active la plus petite police dispo
     void PopSmallFont();                 // Restaure la police précédente
     void DrawSeparatorText(const char* text); // Séparateur textuel centré
+
+    ImVec4 AdjustColor(const ImVec4& color, float delta) noexcept;
+
+    void ShowTooltip(const char* text, ImGuiHoveredFlags flags = Theme::TooltipHoverFlags);
+    bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left,
+                             ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
 
 }

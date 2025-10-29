@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Engine/Gui/GuiTheme.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 
 #include <cfloat>
@@ -9,17 +10,6 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
-    namespace Colors
-    {
-        inline constexpr ImVec4 kInspectorBackground{0.12f, 0.12f, 0.12f, 0.95f};
-        inline constexpr ImVec4 kSectionBackground{0.18f, 0.18f, 0.18f, 0.65f};
-        inline constexpr ImVec4 kOverviewBackground{0.16f, 0.16f, 0.19f, 0.85f};
-        inline constexpr ImVec4 kAxisXColor{0.80f, 0.28f, 0.28f, 1.0f};
-        inline constexpr ImVec4 kAxisYColor{0.32f, 0.72f, 0.45f, 1.0f};
-        inline constexpr ImVec4 kAxisZColor{0.26f, 0.45f, 0.86f, 1.0f};
-    }
-
-    ImVec4 AdjustColor(const ImVec4& color, float delta);
     ImVec2 DrawBadge(const char* label, const ImVec4& backgroundColor, const ImVec4& textColor);
     bool DrawVector3Control(const char* label, float* values, float resetValue, float speed, const char* format);
 
@@ -78,7 +68,14 @@ namespace BixEngine::Gui::ActorInspector
         explicit SectionContainer(const char* id);
         ~SectionContainer();
 
-        [[nodiscard]] bool IsVisible() const noexcept { return true; }
+        [[nodiscard]] bool IsVisible() const noexcept { return isVisible_; }
+
+    private:
+        Utils::ScopedID idScope_;
+        Utils::ScopedColor background_;
+        Utils::ScopedStyle rounding_;
+        Utils::ScopedStyle padding_;
+        bool isVisible_{false};
     };
 }
 

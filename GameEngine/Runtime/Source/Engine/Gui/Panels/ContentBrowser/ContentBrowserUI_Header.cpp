@@ -6,11 +6,11 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kHeaderBackground{0.16f, 0.16f, 0.16f, 1.0f};
-        constexpr ImVec4 kBreadcrumbHighlight{0.95f, 0.80f, 0.40f, 1.0f};
-        constexpr ImVec4 kBreadcrumbNormal{0.75f, 0.75f, 0.75f, 1.0f};
         constexpr float kHeaderHeight = 72.0f;
         constexpr float kButtonHeight = 24.0f;
         constexpr float kButtonWidth = 76.0f;
@@ -20,7 +20,7 @@ namespace BixEngine::Gui
     {
         namespace fs = std::filesystem;
 
-        Utils::ScopedColor headerColor(ImGuiCol_ChildBg, kHeaderBackground);
+        ScopedColor headerColor(ImGuiCol_ChildBg, HeaderBackground);
         if (!ImGui::BeginChild("ContentBrowserHeader", ImVec2(0.0f, kHeaderHeight), true, ImGuiWindowFlags_NoScrollbar))
         {
             ImGui::EndChild();
@@ -43,8 +43,8 @@ namespace BixEngine::Gui
         toolbar.AddLeft([&]()
         {
             { // <- ouverture d’un scope explicite RAII
-                Utils::ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 5.0f);
-                Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 0.0f));
+                ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 5.0f);
+                ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(5.0f, 0.0f));
 
                 const ImVec2 btnSize(kButtonWidth, kButtonHeight);
 
@@ -79,17 +79,17 @@ namespace BixEngine::Gui
         toolbar.AddLeft([&]()
         {
             { // Scope explicite
-                Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(3.0f, 0.0f));
-                Utils::ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+                ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(3.0f, 0.0f));
+                ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
 
                 fs::path currentPath = state.root;
                 std::vector<fs::path> segments;
                 for (const auto& part : state.current.lexically_relative(state.root))
                     segments.push_back(part);
 
-                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
-                ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.30f, 0.30f, 0.4f));
-                ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
+                ScopedColor breadcrumbBase(ImGuiCol_Button, ImVec4(0, 0, 0, 0));
+                ScopedColor breadcrumbHover(ImGuiCol_ButtonHovered, ImVec4(0.30f, 0.30f, 0.30f, 0.4f));
+                ScopedColor breadcrumbActive(ImGuiCol_ButtonActive, ImVec4(0.35f, 0.35f, 0.35f, 0.5f));
 
                 if (ImGui::Button("Content##Breadcrumb"))
                 {
@@ -107,19 +107,16 @@ namespace BixEngine::Gui
                     const std::string segmentName = segments[i].generic_string();
 
                     const bool isLast = (i == segments.size() - 1);
-                    const ImVec4 color = isLast ? kBreadcrumbHighlight : kBreadcrumbNormal;
+                    const ImVec4 color = isLast ? BreadcrumbHighlight : BreadcrumbNormal;
 
-                    Utils::ScopedColor textColor(ImGuiCol_Text, color);
-                    ImGui::PushID(static_cast<int>(i));
+                    ScopedColor textColor(ImGuiCol_Text, color);
+                    ScopedID id(static_cast<int>(i));
                     if (ImGui::Button(segmentName.c_str()))
                     {
                         state.current = currentPath;
                         selectedEntry.Clear();
                     }
-                    ImGui::PopID();
                 }
-
-                ImGui::PopStyleColor(3);
             }
         });
 
@@ -129,10 +126,10 @@ namespace BixEngine::Gui
         toolbar.AddRight([&]()
         {
             { // Scope explicite
-                Utils::ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 4.0f);
-                Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+                ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 4.0f);
+                ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
                 ImGui::SetNextItemWidth(200.0f);
-                Utils::SearchInput("##Search", searchBuffer, IM_ARRAYSIZE(searchBuffer), "Search assets...");
+                SearchInput("##Search", searchBuffer, IM_ARRAYSIZE(searchBuffer), "Search assets...");
             }
         });
 

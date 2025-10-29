@@ -1,4 +1,6 @@
 #include "Engine/Gui/Utils/GuiHelpers.h"
+
+#include <algorithm>
 #include <cfloat>
 
 namespace
@@ -379,7 +381,7 @@ namespace BixEngine::Gui::Utils
 
     void DrawSeparatorText(const char* text)
     {
-        
+
 #if IMGUI_VERSION_NUM >= 18967
         ImGui::SeparatorText(text ? text : "");
 #else
@@ -391,5 +393,33 @@ namespace BixEngine::Gui::Utils
         ImGui::Separator();
         ImGui::Spacing();
 #endif
+    }
+
+    ImVec4 AdjustColor(const ImVec4& color, float delta) noexcept
+    {
+        const auto clamp = [](float value)
+        {
+            return std::clamp(value, 0.0f, 1.0f);
+        };
+
+        return ImVec4(
+            clamp(color.x + delta),
+            clamp(color.y + delta),
+            clamp(color.z + delta),
+            clamp(color.w));
+    }
+
+    void ShowTooltip(const char* text, ImGuiHoveredFlags flags)
+    {
+        if (!text || text[0] == '\0')
+            return;
+
+        if (ImGui::IsItemHovered(flags))
+            ImGui::SetTooltip("%s", text);
+    }
+
+    bool IsItemDoubleClicked(ImGuiMouseButton button, ImGuiHoveredFlags flags) noexcept
+    {
+        return ImGui::IsItemHovered(flags) && ImGui::IsMouseDoubleClicked(button);
     }
 }

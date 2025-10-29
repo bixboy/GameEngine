@@ -13,6 +13,9 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
+    using namespace Theme;
+    using namespace Utils;
+
     void DrawTransformSection(Game::Actor& actor)
     {
         const std::string contextId = BuildActorContextId(actor);

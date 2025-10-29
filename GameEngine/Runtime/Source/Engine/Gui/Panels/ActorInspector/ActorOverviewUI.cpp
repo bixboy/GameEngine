@@ -13,20 +13,25 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
+    using namespace Theme;
+    using namespace Utils;
+
     void DrawActorOverview(Game::Actor& actor, ActorInspectorState& state)
     {
-        ImGui::PushID("ActorOverview");
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, Colors::kOverviewBackground);
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 10.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 8.0f));
+        ScopedID overviewId("ActorOverview");
+        ScopedColor background(ImGuiCol_ChildBg, OverviewBackground);
+        ScopedStyle rounding(ImGuiStyleVar_ChildRounding, 10.0f);
+        ScopedStyle padding(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 8.0f));
 
-        if (ImGui::BeginChild(
-                "OverviewCard",
-                ImVec2(-FLT_MIN, 0.0f),
-                ImGuiChildFlags_AutoResizeY,
-                ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding))
+        const bool visible = ImGui::BeginChild(
+            "OverviewCard",
+            ImVec2(-FLT_MIN, 0.0f),
+            ImGuiChildFlags_AutoResizeY,
+            ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding);
+
+        if (visible)
         {
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
+            ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
 
             if (ImGui::BeginTable(
                     "ActorOverviewTable",
@@ -90,13 +95,8 @@ namespace BixEngine::Gui::ActorInspector
                 ImGui::EndTable();
             }
 
-            ImGui::PopStyleVar();
         }
         ImGui::EndChild();
-
-        ImGui::PopStyleVar(2);
-        ImGui::PopStyleColor();
-        ImGui::PopID();
     }
 
     void DrawGeneralSection(Game::Actor& actor)

@@ -17,33 +17,11 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kContentBackground{0.09f, 0.09f, 0.09f, 0.95f};
-        constexpr float kThumbnailSize = 72.0f;
-        constexpr float kThumbnailPadding = 28.0f;
-        
-        constexpr ImGuiHoveredFlags kTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
-        constexpr ImGuiHoveredFlags kDoubleClickFlags = ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped;
-
-        ImVec4 AdjustColor(const ImVec4& color, float delta)
-        {
-            auto clamp = [](float value)
-            {
-                if (value < 0.0f)
-                    return 0.0f;
-                if (value > 1.0f)
-                    return 1.0f;
-                return value;
-            };
-
-            return ImVec4(
-                clamp(color.x + delta),
-                clamp(color.y + delta),
-                clamp(color.z + delta),
-                clamp(color.w));
-        }
-
         bool IsActorAsset(const std::filesystem::path& path)
         {
             if (path.empty())
@@ -211,11 +189,11 @@ namespace BixEngine::Gui
     {
         if (!RefreshDirectoryCache(state))
         {
-            Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
+            DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
             return;
         }
 
-        Utils::ScopedColor bg(ImGuiCol_ChildBg, kContentBackground);
+        ScopedColor bg(ImGuiCol_ChildBg, ContentBackground);
         if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0, 0), true))
             return;
 
@@ -230,7 +208,7 @@ namespace BixEngine::Gui
             ImGui::EndPopup();
         }
 
-        const float cellSize = kThumbnailSize + kThumbnailPadding;
+        const float cellSize = ThumbnailSize + ThumbnailPadding;
         const float available = ImGui::GetContentRegionAvail().x;
         const int columns = std::max(1, static_cast<int>(available / cellSize));
 
@@ -242,19 +220,19 @@ namespace BixEngine::Gui
                     continue;
 
                 ImGui::TableNextColumn();
-                Gui::Utils::ScopedID id(entry.SelectionKey().c_str());
+                ScopedID id(entry.SelectionKey().c_str());
                 ImGui::BeginGroup();
 
                 const bool isSelected = (selectedEntry == entry.SelectionKey());
-                const ImVec2 btnSize(kThumbnailSize, kThumbnailSize);
+                const ImVec2 btnSize(ThumbnailSize, ThumbnailSize);
 
                 // Style optimisé (push/pop en RAII)
                 const ImVec4 base = isSelected ? ImVec4(0.20f, 0.35f, 0.60f, 0.95f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
-                
-                Utils::ScopedColor b(ImGuiCol_Button, base);
-                Utils::ScopedColor h(ImGuiCol_ButtonHovered, AdjustColor(base, 0.08f));
-                Utils::ScopedColor a(ImGuiCol_ButtonActive, AdjustColor(base, 0.14f));
-                Utils::ScopedStyle pad(ImGuiStyleVar_FramePadding, ImVec2(12, 12));
+
+                ScopedColor button(ImGuiCol_Button, base);
+                ScopedColor hover(ImGuiCol_ButtonHovered, AdjustColor(base, 0.08f));
+                ScopedColor active(ImGuiCol_ButtonActive, AdjustColor(base, 0.14f));
+                ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(12, 12));
 
                 // ────── Bouton principal ──────
                 if (ImGui::Button(GetIcon(entry.type), btnSize))
@@ -272,7 +250,7 @@ namespace BixEngine::Gui
                 }
 
                 // Double-clic : ouvre TOUJOURS Actor Editor
-                if (ImGui::IsItemHovered(kDoubleClickFlags) && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = entry.SelectionKey();
                     if (state.openActorEditorCallback)
@@ -294,21 +272,18 @@ namespace BixEngine::Gui
                 }
 
                 // Tooltip léger
-                if (ImGui::IsItemHovered(kTooltipHoverFlags))
+                if (ImGui::IsItemHovered(TooltipHoverFlags) && ImGui::BeginTooltip())
                 {
-                    if (ImGui::BeginTooltip())
-                    {
-                        ImGui::TextUnformatted(entry.name.c_str());
-                        ImGui::Separator();
-                        ImGui::Text("Path: %s", entry.path.generic_string().c_str());
-                        ImGui::EndTooltip();
-                    }
+                    ImGui::TextUnformatted(entry.name.c_str());
+                    ImGui::Separator();
+                    ImGui::Text("Path: %s", entry.path.generic_string().c_str());
+                    ImGui::EndTooltip();
                 }
 
                 // Légende
                 if (isSelected)
                 {
-                    Utils::ScopedColor txt(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1));
+                    ScopedColor textColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1));
                     ImGui::TextWrapped("%s", entry.name.c_str());
                 }
                 else
@@ -321,7 +296,7 @@ namespace BixEngine::Gui
         }
         else
         {
-            Utils::DrawEmptyStateMessage("Nothing to show.");
+            DrawEmptyStateMessage("Nothing to show.");
         }
 
         ImGui::EndChild();

@@ -760,6 +760,7 @@
     </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\GuiContextFactory.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\GuiTheme.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorEditorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
@@ -952,6 +953,7 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\SceneViewportPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Utils\GuiHelpers.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\GuiTheme.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\GuiWidgetLibrary.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Application.h" />

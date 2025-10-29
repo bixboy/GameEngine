@@ -10,6 +10,9 @@ namespace fs = std::filesystem;
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     // ─────────────────────────────────────────────
     // 🏗️  Implémentation du Content Browser unique
     // ─────────────────────────────────────────────
@@ -70,7 +73,7 @@ namespace BixEngine::Gui
         // ─────────────────────────────
         // Arborescence + fichiers
         // ─────────────────────────────
-        Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
+        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
 
         RenderDirectoryTree(state_, selectedEntry_);
         ImGui::SameLine();
@@ -96,7 +99,7 @@ namespace BixEngine::Gui
         contentPanel.SetMovable(true);
         contentPanel.SetCollapsable(true);
         contentPanel.SetClosable(true);
-        contentPanel.SetBackgroundColor(kContentBackground);
+        contentPanel.SetBackgroundColor(ContentBackground);
         contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
 
         static ContentBrowserPanel browser(context);

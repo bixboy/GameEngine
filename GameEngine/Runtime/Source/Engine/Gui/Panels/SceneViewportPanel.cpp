@@ -4,15 +4,18 @@
 
 #include "Engine/Gui/Core/GuiManager.h"
 #include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
 
 #include "imgui.h"
 #include "Engine/Gui/Core/GuiDocking.h"
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kViewportBackground{0.05f, 0.05f, 0.05f, 1.0f};
 
         ImVec2 ComputeImageSize(const ImVec2& availableSize, int textureWidth, int textureHeight) noexcept
         {
@@ -52,7 +55,7 @@ namespace BixEngine::Gui
     {
         GuiPanel& viewportPanel = guiManager.CreatePanel("scene_viewport", "Scene");
         guiManager.SetPanelDockingArea(viewportPanel, DockSpaceRegion::Center, ImGuiCond_FirstUseEver);
-        viewportPanel.SetBackgroundColor(kViewportBackground);
+        viewportPanel.SetBackgroundColor(ViewportBackground);
         viewportPanel.SetCollapsable(false);
         viewportPanel.SetClosable(false);
         viewportPanel.AddWindowFlags(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
@@ -62,13 +65,12 @@ namespace BixEngine::Gui
             sizeProvider = context.sceneRenderTextureSizeProvider
         ]()
         {
-            ImGui::PushID("SceneViewportPanel");
+            ScopedID viewportId("SceneViewportPanel");
 
             const ImVec2 available = ImGui::GetContentRegionAvail();
             if (available.x <= 0.0f || available.y <= 0.0f)
             {
                 ImGui::TextUnformatted("Viewport unavailable.");
-                ImGui::PopID();
                 return;
             }
 
@@ -84,7 +86,6 @@ namespace BixEngine::Gui
                 textPos.x += (available.x - textSize.x) * 0.5f;
                 textPos.y += (available.y - textSize.y) * 0.5f;
                 ImGui::GetWindowDrawList()->AddText(textPos, ImGui::GetColorU32(ImGuiCol_TextDisabled), "No scene is currently available.");
-                ImGui::PopID();
                 return;
             }
 
@@ -101,7 +102,6 @@ namespace BixEngine::Gui
             const ImU32 infoColor = ImGui::GetColorU32(ImVec4{1.0f, 1.0f, 1.0f, 0.8f});
             ImGui::GetWindowDrawList()->AddText(infoPos, infoColor, "Scene Viewport");
 
-            ImGui::PopID();
         });
 
         return viewportPanel;
