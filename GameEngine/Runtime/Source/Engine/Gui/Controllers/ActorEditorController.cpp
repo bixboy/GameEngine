@@ -104,7 +104,6 @@ namespace BixEngine::Gui
 
             return "Actor Editor - ";
         }
-    }
 
         String BuildPanelStableId(const String& root, ActorEditorController::Section section)
         {
