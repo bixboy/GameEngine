@@ -363,31 +363,36 @@ namespace BixEngine::Core
                     ImGui::EndTabItem();
                 }
 
-                std::vector<const ActorEditorEntry*> sortedEntries;
+                std::vector<std::pair<std::string, std::string>> sortedEntries;
                 sortedEntries.reserve(actorEditors_.size());
-                for (auto& [_, entry] : actorEditors_)
-                    sortedEntries.push_back(&entry);
+                for (const auto& [navigationId, entry] : actorEditors_)
+                    sortedEntries.emplace_back(navigationId, entry.tabLabel);
 
-                std::sort(sortedEntries.begin(), sortedEntries.end(), [](const ActorEditorEntry* lhs, const ActorEditorEntry* rhs)
+                std::sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& lhs, const auto& rhs)
                 {
-                    return lhs->tabLabel < rhs->tabLabel;
+                    return lhs.second < rhs.second;
                 });
 
-                for (const ActorEditorEntry* entry : sortedEntries)
+                for (const auto& [navigationId, tabLabel] : sortedEntries)
                 {
+                    auto it = actorEditors_.find(navigationId);
+                    if (it == actorEditors_.end())
+                        continue;
+
+                    ActorEditorEntry& entry = it->second;
                     ImGuiTabItemFlags tabFlags = ImGuiTabItemFlags_NoCloseWithMiddleMouseButton;
-                    if (activeNavigationId_ == entry->navigationId)
+                    if (activeNavigationId_ == entry.navigationId)
                         tabFlags |= ImGuiTabItemFlags_SetSelected;
 
-                    if (ImGui::BeginTabItem(entry->tabLabel.c_str(), nullptr, tabFlags))
+                    if (ImGui::BeginTabItem(tabLabel.c_str(), nullptr, tabFlags))
                     {
                         if (ImGui::IsItemActivated())
                         {
-                            activeNavigationId_ = entry->navigationId;
-                            if (entry->panel)
+                            activeNavigationId_ = entry.navigationId;
+                            if (entry.panel)
                             {
-                                entry->panel->SetVisible(true);
-                                focusRequests_.push_back(entry->panel->GetTitle().Std());
+                                entry.panel->SetVisible(true);
+                                focusRequests_.push_back(entry.panel->GetTitle().Std());
                             }
                         }
 

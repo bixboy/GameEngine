@@ -288,11 +288,19 @@ namespace BixEngine::Gui
                     }
                 }
 
-                if (entry.IsScript() && hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    selectedEntry = selectionId;
-                    if (state.openActorEditorCallback)
-                        state.openActorEditorCallback(entry.path);
+                    if (entry.IsScript())
+                    {
+                        selectedEntry = selectionId;
+                        RequestOpenScriptFiles(state, entry, entry.HasHeader(), entry.HasSource());
+                    }
+                    else if (entry.IsActor())
+                    {
+                        selectedEntry = selectionId;
+                        if (state.openActorEditorCallback)
+                            state.openActorEditorCallback(entry.path);
+                    }
                 }
 
                 if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
