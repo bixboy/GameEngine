@@ -26,78 +26,81 @@ namespace BixEngine::Gui
         namespace Utils = Gui::Utils;
 
         Utils::ScopedStyle treeSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
-        if (!ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true))
-            return;
-
-        Utils::ScopedColor treeColor(ImGuiCol_ChildBg, kContentTreeBackground);
-        if (ImGui::BeginChild("ContentBrowserTreeInner", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar))
+        const bool treeVisible = ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true);
+        if (treeVisible)
         {
-            const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
+            Utils::ScopedColor treeColor(ImGuiCol_ChildBg, kContentTreeBackground);
+            const bool innerVisible = ImGui::BeginChild("ContentBrowserTreeInner", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar);
+            if (innerVisible)
             {
-                const String directoryName = directory == state.root ? String("Content") : String(directory.filename().generic_string());
-                const String directoryId = directory.generic_string();
-                std::error_code equivalentError;
-                const bool isSelected = fs::equivalent(directory, state.current, equivalentError);
-                const ImGuiTreeNodeFlags nodeFlags =
-                    ImGuiTreeNodeFlags_OpenOnArrow |
-                    ImGuiTreeNodeFlags_OpenOnDoubleClick |
-                    ImGuiTreeNodeFlags_SpanFullWidth |
-                    (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
-
-                const bool open = ImGui::TreeNodeEx(directoryId.c_str(), nodeFlags, "%s", directoryName.c_str());
-                if (ImGui::IsItemClicked())
+                const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
                 {
-                    state.current = directory;
-                    selectedEntry.Clear();
-                }
+                    const String directoryName = directory == state.root ? String("Content") : String(directory.filename().generic_string());
+                    const String directoryId = directory.generic_string();
+                    std::error_code equivalentError;
+                    const bool isSelected = fs::equivalent(directory, state.current, equivalentError);
+                    const ImGuiTreeNodeFlags nodeFlags =
+                        ImGuiTreeNodeFlags_OpenOnArrow |
+                        ImGuiTreeNodeFlags_OpenOnDoubleClick |
+                        ImGuiTreeNodeFlags_SpanFullWidth |
+                        (isSelected ? ImGuiTreeNodeFlags_Selected : 0);
 
-                if (open)
-                {
-                    std::vector<fs::path> children{};
-                    std::error_code childError;
-                    for (const auto& entry : fs::directory_iterator(directory, childError))
+                    const bool open = ImGui::TreeNodeEx(directoryId.c_str(), nodeFlags, "%s", directoryName.c_str());
+                    if (ImGui::IsItemClicked())
                     {
-                        if (!entry.is_directory())
-                            continue;
-
-                        children.push_back(entry.path());
+                        state.current = directory;
+                        selectedEntry.Clear();
                     }
 
-                    if (childError)
+                    if (open)
                     {
-                        Utils::DrawEmptyStateMessage("Unable to open directory.");
-                    }
-                    else
-                    {
-                        std::sort(children.begin(), children.end(), [&](const fs::path& lhs, const fs::path& rhs)
+                        std::vector<fs::path> children{};
+                        std::error_code childError;
+                        for (const auto& entry : fs::directory_iterator(directory, childError))
                         {
-                            const String lhsName = lhs.filename().generic_string();
-                            const String rhsName = rhs.filename().generic_string();
-                            return CaseInsensitiveLess(lhsName, rhsName);
-                        });
+                            if (!entry.is_directory())
+                                continue;
 
-                        for (const auto& child : children)
-                        {
-                            const int nextDepth = depth + 1;
-                            if (nextDepth > 64)
-                            {
-                                Utils::DrawEmptyStateMessage("...");
-                                break;
-                            }
-
-                            self(self, child, nextDepth);
+                            children.push_back(entry.path());
                         }
+
+                        if (childError)
+                        {
+                            Utils::DrawEmptyStateMessage("Unable to open directory.");
+                        }
+                        else
+                        {
+                            std::sort(children.begin(), children.end(), [&](const fs::path& lhs, const fs::path& rhs)
+                            {
+                                const String lhsName = lhs.filename().generic_string();
+                                const String rhsName = rhs.filename().generic_string();
+                                return CaseInsensitiveLess(lhsName, rhsName);
+                            });
+
+                            for (const auto& child : children)
+                            {
+                                const int nextDepth = depth + 1;
+                                if (nextDepth > 64)
+                                {
+                                    Utils::DrawEmptyStateMessage("...");
+                                    break;
+                                }
+
+                                self(self, child, nextDepth);
+                            }
+                        }
+
+                        ImGui::TreePop();
                     }
+                };
 
-                    ImGui::TreePop();
-                }
-            };
+                if (fs::exists(state.root))
+                    renderDirectoryTree(renderDirectoryTree, state.root, 0);
+            }
 
-            if (fs::exists(state.root))
-                renderDirectoryTree(renderDirectoryTree, state.root, 0);
+            ImGui::EndChild();
         }
 
-        ImGui::EndChild();
         ImGui::EndChild();
     }
 }
