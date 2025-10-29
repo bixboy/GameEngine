@@ -11,6 +11,7 @@
 #include "imgui.h"
 
 #include <cstdio>
+#include <memory>
 #include <ranges>
 #include <unordered_map>
 #include <vector>
@@ -212,7 +213,7 @@ namespace BixEngine::Gui
 
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery)
     {
-        namespace Utils = Gui::Utils;
+        namespace Utils = BixEngine::Gui::Utils;
 
         if (!RefreshDirectoryCache(state))
         {
@@ -220,7 +221,7 @@ namespace BixEngine::Gui
             return;
         }
 
-        ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
+        Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
         if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true))
             return;
 
@@ -250,7 +251,7 @@ namespace BixEngine::Gui
                     continue;
 
                 ImGui::TableNextColumn();
-                ScopedID entryId(entry.SelectionKey().c_str());
+                Utils::ScopedID entryId(entry.SelectionKey().c_str());
                 ImGui::BeginGroup();
 
                 const String selectionId = entry.SelectionKey();
@@ -260,10 +261,10 @@ namespace BixEngine::Gui
                 const ImVec4 hoverColor = AdjustColor(baseColor, 0.10f);
                 const ImVec4 activeColor = AdjustColor(baseColor, 0.20f);
 
-                ScopedColor buttonColor(ImGuiCol_Button, baseColor);
-                ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
-                ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
-                ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
+                Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
+                Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
+                Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
+                Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
 
                 const bool clicked = ImGui::Button(GetIcon(entry.type), ImVec2(kContentThumbnailSize, kContentThumbnailSize));
                 const bool hoveredForDoubleClick = ImGui::IsItemHovered(kEntryDoubleClickHoverFlags);
@@ -320,19 +321,19 @@ namespace BixEngine::Gui
                     {
                         const bool hasSource = entry.HasSource();
                         ShowActionTooltip(entry.name, {
-                            {"Open header", [&, selection = selectionId, &entry]()
+                            {"Open header", [&, selection = selectionId]()
                             {
                                 selectedEntry = selection;
                                 RequestOpenScriptFiles(state, entry, true, false);
                             }},
-                            {"Open source", [&, selection = selectionId, &entry, hasSource]()
+                            {"Open source", [&, selection = selectionId, hasSource]()
                             {
                                 if (!hasSource)
                                     return;
                                 selectedEntry = selection;
                                 RequestOpenScriptFiles(state, entry, false, true);
                             }},
-                            {"Open both", [&, selection = selectionId, &entry]()
+                            {"Open both", [&, selection = selectionId]()
                             {
                                 selectedEntry = selection;
                                 RequestOpenScriptFiles(state, entry, true, true);
@@ -342,7 +343,7 @@ namespace BixEngine::Gui
                     else if (entry.IsActor())
                     {
                         ShowActionTooltip(entry.name, {
-                            {"Open actor editor", [&, selection = selectionId, &entry]()
+                            {"Open actor editor", [&, selection = selectionId]()
                             {
                                 selectedEntry = selection;
                                 if (state.openActorEditorCallback)
@@ -361,22 +362,17 @@ namespace BixEngine::Gui
                     }
                 }
 
-                bool pushedTextColor = false;
+                std::unique_ptr<Utils::ScopedColor> textColor{};
                 if (isSelected)
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
-                    pushedTextColor = true;
+                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
                 }
                 else if (ImGui::IsItemHovered())
                 {
-                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
-                    pushedTextColor = true;
+                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
                 }
 
                 ImGui::TextWrapped("%s", entry.name.c_str());
-
-                if (pushedTextColor)
-                    ImGui::PopStyleColor();
 
                 ImGui::EndGroup();
             }
