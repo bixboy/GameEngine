@@ -22,6 +22,11 @@
 
 namespace BixEngine::Core
 {
+    namespace
+    {
+        constexpr float kNavigationBarHeight = 38.0f;
+    }
+
     GuiModule::GuiModule() = default;
 
     GuiModule::~GuiModule()
@@ -121,8 +126,13 @@ namespace BixEngine::Core
 
     void GuiModule::BeginFrame()
     {
-        if (IsInitialized())
-            guiSystem_->BeginFrame();
+        if (!IsInitialized())
+            return;
+
+        if (guiSystem_)
+            guiSystem_->SetDockspaceTopPadding(kNavigationBarHeight);
+
+        guiSystem_->BeginFrame();
     }
 
     void GuiModule::Render(SubsystemManager& subsystems)
@@ -319,9 +329,8 @@ namespace BixEngine::Core
         if (!viewport)
             return;
 
-        constexpr float kNavHeight = 38.0f;
         ImGui::SetNextWindowPos(ImVec2(viewport->WorkPos.x, viewport->WorkPos.y));
-        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, kNavHeight));
+        ImGui::SetNextWindowSize(ImVec2(viewport->WorkSize.x, kNavigationBarHeight));
         ImGui::SetNextWindowViewport(viewport->ID);
 
         const ImGuiWindowFlags flags =

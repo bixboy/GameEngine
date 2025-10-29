@@ -63,6 +63,8 @@ namespace BixEngine::Gui
         void DumpGuiState() const;
         void ToggleDockDebugOverlay(bool enable) noexcept { bShowDockDebugOverlay_ = enable; }
 
+        void SetDockspaceTopPadding(float padding) noexcept { dockspaceTopPadding_ = padding < 0.0f ? 0.0f : padding; }
+
     private:
         
         // ────────────────────────────────────────────────
@@ -70,7 +72,11 @@ namespace BixEngine::Gui
         // ────────────────────────────────────────────────
         
         void BeginDockspaceLayout_();
-        void BuildDefaultDockLayout_(ImGuiViewport& viewport, ImGuiID dockspaceId, ImGuiDockNodeFlags dockspaceFlags);
+        void BuildDefaultDockLayout_(ImGuiViewport& viewport,
+                                     ImGuiID dockspaceId,
+                                     ImGuiDockNodeFlags dockspaceFlags,
+                                     const ImVec2& dockspacePos,
+                                     const ImVec2& dockspaceSize);
         void ApplyDockingPreferences_();
 
         void QueuePanelForDockUpdate_(GuiPanel& panel);
@@ -96,5 +102,6 @@ namespace BixEngine::Gui
 
         std::vector<GuiPanel*> panels_{};
         std::vector<GuiPanel*> pendingDockUpdates_{};
+        float dockspaceTopPadding_{0.0f};
     };
 }

@@ -67,11 +67,13 @@ namespace BixEngine::Gui
                 return false;
 
             const auto extension = ToLowerCopy(path.extension().generic_string());
-            if (extension == ".actor")
+            if (extension == ".actor" || extension == ".component")
                 return true;
 
             const String fileName = ToLowerCopy(path.filename().generic_string());
-            return fileName.View().ends_with(".actor.json") || fileName.View().ends_with(".actor");
+            const auto view = fileName.View();
+            return view.ends_with(".actor.json") || view.ends_with(".actor") ||
+                   view.ends_with(".component.json") || view.ends_with(".component");
         }
 
         [[nodiscard]] String BuildScriptSelectionId(const ScriptEntryInfo& script)
@@ -592,6 +594,8 @@ namespace BixEngine::Gui
                     ImGui::EndPopup();
                 }
 
+                const bool hoveredForDoubleClick = ImGui::IsItemHovered(kEntryDoubleClickHoverFlags);
+
                 if (clicked)
                 {
                     if (isDirectory)
@@ -605,12 +609,12 @@ namespace BixEngine::Gui
                     }
                 }
 
-                if (isScript && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                if (isScript && hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = selectionId;
                     RequestOpenScriptFiles(state, entry.script, true, true);
                 }
-                else if (isActor && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                else if (isActor && hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = selectionId;
                     if (state.openActorEditorCallback)

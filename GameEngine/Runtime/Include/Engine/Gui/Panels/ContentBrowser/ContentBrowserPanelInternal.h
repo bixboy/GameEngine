@@ -76,6 +76,9 @@ namespace BixEngine::Gui
     inline constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
 #endif
 
+    inline constexpr ImGuiHoveredFlags kEntryDoubleClickHoverFlags =
+        ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped;
+
     void LogAndStoreError(String& storage, String message, bool log = true);
     String ToLowerCopy(const String& value);
     bool CaseInsensitiveLess(const String& lhs, const String& rhs);
