@@ -28,6 +28,9 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
         constexpr const char* kScriptHeaderExtension = ".h";
@@ -501,18 +504,14 @@ namespace BixEngine::Gui
                     {
                         for (size_t baseIndex = 0; baseIndex < baseParents.size(); ++baseIndex)
                         {
-                            ImGui::PushID(static_cast<int>(baseIndex));
+                            ScopedID baseId(static_cast<int>(baseIndex));
                             const auto& baseParent = baseParents[baseIndex];
                             const bool isSelectedBase = requests.selectedParentIsBase && !requests.selectedParentClass.IsEmpty() && requests.selectedParentClass.View() == baseParent.className;
                             if (ImGui::Selectable(baseParent.displayName.c_str(), isSelectedBase))
                             {
                                 SetSelectedParent(requests, baseParent, true);
                             }
-                            if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
-                            {
-                                ImGui::SetTooltip("%s", baseParent.className.c_str());
-                            }
-                            ImGui::PopID();
+                            ShowTooltip(baseParent.className.c_str(), ImGuiHoveredFlags_DelayNormal);
                         }
                     }
                 }

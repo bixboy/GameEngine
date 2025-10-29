@@ -21,6 +21,9 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
         class ActorInspectorPanelController final : public GuiPanelController
@@ -42,13 +45,13 @@ namespace BixEngine::Gui
                 panel.SetMovable(true);
                 panel.SetCollapsable(true);
                 panel.SetClosable(true);
-                panel.SetBackgroundColor(ActorInspector::Colors::kInspectorBackground);
+                panel.SetBackgroundColor(InspectorBackground);
                 panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
             }
 
             void OnDraw(GuiPanel&) override
             {
-                ImGui::PushID("ActorInspectorPanel");
+                ScopedID panelScope("ActorInspectorPanel");
 
                 Game::SceneManager* sceneManager = sceneManagerProvider_ ? sceneManagerProvider_() : nullptr;
                 Game::Scene* activeScene = sceneManager ? sceneManager->GetScene() : nullptr;
@@ -56,7 +59,6 @@ namespace BixEngine::Gui
                 if (!activeScene)
                 {
                     Utils::DrawEmptyStateMessage("No active scene.");
-                    ImGui::PopID();
                     return;
                 }
 
@@ -64,7 +66,6 @@ namespace BixEngine::Gui
                 if (!selectedActor)
                 {
                     Utils::DrawEmptyStateMessage("No actor selected.");
-                    ImGui::PopID();
                     return;
                 }
 
@@ -74,15 +75,12 @@ namespace BixEngine::Gui
                         selectedActorSetter_(nullptr);
 
                     Utils::DrawEmptyStateMessage("The selected actor is no longer available.");
-                    ImGui::PopID();
                     return;
                 }
 
                 ActorInspector::DrawGeneralSection(*selectedActor);
                 ActorInspector::DrawTransformSection(*selectedActor);
                 ActorInspector::DrawComponentSection(*selectedActor);
-
-                ImGui::PopID();
             }
 
         private:

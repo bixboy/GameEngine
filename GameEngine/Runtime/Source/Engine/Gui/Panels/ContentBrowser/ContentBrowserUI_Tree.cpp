@@ -10,12 +10,11 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr float kContentTreeWidth = 240.0f;
-        constexpr ImVec4 kContentTreeBackground{0.13f, 0.13f, 0.13f, 0.95f};
-        constexpr ImVec4 kSelectedFolderText{0.95f, 0.85f, 0.40f, 1.0f};
-
         struct DirectoryChildrenCache
         {
             std::unordered_map<std::string, std::vector<std::filesystem::path>> children;
@@ -32,34 +31,34 @@ namespace BixEngine::Gui
     {
         namespace fs = std::filesystem;
 
-        Utils::ScopedStyle treeSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
-        if (!ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true))
+        ScopedStyle treeSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
+        if (!ImGui::BeginChild("ContentBrowserTree", ImVec2(ContentTreeWidth, 0.0f), true))
         {
             ImGui::EndChild();
             return;
         }
 
         {
-            Utils::ScopedColor treeColor(ImGuiCol_ChildBg, kContentTreeBackground);
+            ScopedColor treeColor(ImGuiCol_ChildBg, ContentTreeBackground);
 
             // ─────────────────────────────────────────────
             // 🧭 Toolbar minimaliste
             // ─────────────────────────────────────────────
             {
-                Utils::ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(2.5f, 2.5f));
-                Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
-                Utils::ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 3.0f);
+                ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(2.5f, 2.5f));
+                ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+                ScopedStyle rounding(ImGuiStyleVar_FrameRounding, 3.0f);
 
                 const float buttonSize = 22.0f;
                 const ImVec4 baseColor = ImVec4(0.25f, 0.25f, 0.25f, 0.8f);
                 const ImVec4 hoverColor = ImVec4(0.35f, 0.35f, 0.35f, 1.0f);
                 const ImVec4 activeColor = ImVec4(0.45f, 0.45f, 0.45f, 1.0f);
 
-                Utils::ScopedColor btn(ImGuiCol_Button, baseColor);
-                Utils::ScopedColor btnH(ImGuiCol_ButtonHovered, hoverColor);
-                Utils::ScopedColor btnA(ImGuiCol_ButtonActive, activeColor);
+                ScopedColor buttonColor(ImGuiCol_Button, baseColor);
+                ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
+                ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
 
-                ImGui::PushStyleVar(ImGuiStyleVar_ItemInnerSpacing, ImVec2(4.f, 2.f));
+                ScopedStyle innerSpacing(ImGuiStyleVar_ItemInnerSpacing, ImVec2(4.f, 2.f));
 
                 // Collapse
                 if (ImGui::Button("➖", ImVec2(buttonSize, buttonSize)))
@@ -68,8 +67,7 @@ namespace BixEngine::Gui
                     gRequestExpandAll = false;
                 }
                 
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("Collapse all folders");
+                ShowTooltip("Collapse all folders");
 
                 ImGui::SameLine();
 
@@ -80,8 +78,7 @@ namespace BixEngine::Gui
                     gRequestCollapseAll = false;
                 }
                 
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("Expand all folders");
+                ShowTooltip("Expand all folders");
 
                 ImGui::SameLine();
 
@@ -91,10 +88,7 @@ namespace BixEngine::Gui
                     gCache.Clear();
                 }
                 
-                if (ImGui::IsItemHovered())
-                    ImGui::SetTooltip("Refresh directory");
-
-                ImGui::PopStyleVar();
+                ShowTooltip("Refresh directory");
 
                 ImGui::Dummy(ImVec2(0.0f, 4.0f));
                 ImGui::Separator();
@@ -150,7 +144,7 @@ namespace BixEngine::Gui
                             std::sort(children.begin(), children.end(),
                                 [](const fs::path& a, const fs::path& b)
                                 {
-                                    return CaseInsensitiveLess( a.filename().generic_string(), b.filename().generic_string());
+                                    return CaseInsensitiveLess(a.filename().generic_string(), b.filename().generic_string());
                                 });
                         }
 
@@ -158,7 +152,7 @@ namespace BixEngine::Gui
                         {
                             if (depth > 64)
                             {
-                                Utils::DrawEmptyStateMessage("...");
+                                DrawEmptyStateMessage("...");
                                 break;
                             }
                             self(self, child, depth + 1);
@@ -171,7 +165,7 @@ namespace BixEngine::Gui
                 if (fs::exists(state.root))
                     renderDirectoryTree(renderDirectoryTree, state.root, 0);
                 else
-                    Utils::DrawEmptyStateMessage("Content directory not found.");
+                    DrawEmptyStateMessage("Content directory not found.");
 
                 ImGui::EndChild();
             }

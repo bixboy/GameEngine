@@ -1,57 +1,26 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Grid.h"
 
-#include "Core/Logger.h"
-#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserActions.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserActions.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentEntry.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
-#include "Engine/Gui/Widgets/ActionTooltip.h"
 
 #include "imgui.h"
 
 #include <cstdio>
 #include <functional>
-#include <memory>
 #include <ranges>
 #include <unordered_map>
 #include <vector>
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kContentBackground{0.09f, 0.09f, 0.09f, 0.95f};
-        constexpr float kContentThumbnailSize = 72.0f;
-        constexpr float kContentThumbnailPadding = 28.0f;
-
-#ifdef ImGuiHoveredFlags_ForTooltip
-        constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal | ImGuiHoveredFlags_ForTooltip;
-#else
-        constexpr ImGuiHoveredFlags kEntryTooltipHoverFlags = ImGuiHoveredFlags_DelayNormal;
-#endif
-
-        constexpr ImGuiHoveredFlags kEntryDoubleClickHoverFlags =
-            ImGuiHoveredFlags_AllowWhenBlockedByActiveItem | ImGuiHoveredFlags_AllowWhenOverlapped;
-
-        ImVec4 AdjustColor(const ImVec4& color, float delta)
-        {
-            auto clamp = [](float value)
-            {
-                if (value < 0.0f)
-                    return 0.0f;
-                if (value > 1.0f)
-                    return 1.0f;
-                return value;
-            };
-
-            return ImVec4(
-                clamp(color.x + delta),
-                clamp(color.y + delta),
-                clamp(color.z + delta),
-                clamp(color.w));
-        }
-
         bool IsActorAsset(const std::filesystem::path& path)
         {
             if (path.empty())
@@ -63,39 +32,8 @@ namespace BixEngine::Gui
 
             const String fileName = ToLowerCopy(path.filename().generic_string());
             const auto view = fileName.View();
-            return view.ends_with(".actor.json") || view.ends_with(".actor") ||
-                   view.ends_with(".component.json") || view.ends_with(".component");
-        }
-
-        void RequestOpenScriptFiles(const ContentBrowserState& state, const ContentEntry& entry, bool openHeader, bool openSource)
-        {
-            namespace fs = std::filesystem;
-
-            if (!openHeader && !openSource)
-                return;
-
-            std::vector<fs::path> paths{};
-            paths.reserve(2);
-
-            if (openHeader && entry.HasHeader())
-                paths.push_back(entry.headerPath);
-
-            if (openSource && entry.HasSource())
-                paths.push_back(entry.sourcePath);
-
-            if (paths.empty())
-                return;
-
-            if (state.openScriptFilesCallback)
-            {
-                state.openScriptFilesCallback(paths);
-            }
-            else
-            {
-                String message = "Code editor integration is not available to open script: ";
-                message += entry.name;
-                LOG_WARNING(message);
-            }
+            
+            return view.ends_with(".actor.json") || view.ends_with(".actor") || view.ends_with(".component.json") || view.ends_with(".component");
         }
 
         bool RefreshDirectoryCache(ContentBrowserState& state)
@@ -148,12 +86,14 @@ namespace BixEngine::Gui
                     auto& group = scriptGroups[groupKey];
                     group.type = ContentType::Script;
                     group.path = entryPath.parent_path();
+                    
                     if (group.name.IsEmpty())
                         group.name = entryPath.stem().generic_string();
                     if (isHeader)
                         group.headerPath = entryPath;
                     else
                         group.sourcePath = entryPath;
+                    
                     continue;
                 }
 
@@ -181,6 +121,7 @@ namespace BixEngine::Gui
             {
                 const int lhsPriority = GetSortPriority(lhs.type);
                 const int rhsPriority = GetSortPriority(rhs.type);
+                
                 if (lhsPriority != rhsPriority)
                     return lhsPriority < rhsPriority;
 
@@ -212,69 +153,57 @@ namespace BixEngine::Gui
     // 🧱  Grille des entrées et interactions
     // ─────────────────────────────────────────────
 
-    void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery)
+    void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests, const String& searchQuery)
     {
         if (!RefreshDirectoryCache(state))
         {
-            Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
+            DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
             return;
         }
 
-        Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
-        if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true))
+        ScopedColor bg(ImGuiCol_ChildBg, ContentBackground);
+        if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0, 0), true))
             return;
 
+        // Clic droit sur le fond
         if (ImGui::BeginPopupContextWindow("ContentBrowserBackgroundContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
         {
             if (ImGui::MenuItem("Create script..."))
-                RequestCreateScript(requestPopups);
-
+                RequestCreateScript(requests);
             if (ImGui::MenuItem("Create folder..."))
-            {
-                requestPopups.folderTarget = state.current;
-                RequestCreateFolder(requestPopups, state.current);
-            }
-
+                RequestCreateFolder(requests, state.current);
+            
             ImGui::EndPopup();
         }
 
-        const float thumbnailWithPadding = kContentThumbnailSize + kContentThumbnailPadding;
-        const float availableWidth = ImGui::GetContentRegionAvail().x;
-        const int columns = std::max(1, static_cast<int>(availableWidth / thumbnailWithPadding));
+        const float cellSize = ThumbnailSize + ThumbnailPadding;
+        const float available = ImGui::GetContentRegionAvail().x;
+        const int columns = std::max(1, static_cast<int>(available / cellSize));
 
-        if (ImGui::BeginTable("ContentBrowserEntries", columns, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_NoSavedSettings))
+        if (ImGui::BeginTable("ContentBrowserEntries", columns, ImGuiTableFlags_SizingFixedFit | ImGuiTableFlags_NoSavedSettings))
         {
-            for (const ContentEntry& entry : state.cache.entries)
+            for (const auto& entry : state.cache.entries)
             {
                 if (!MatchesSearch(entry.name, searchQuery))
                     continue;
 
                 ImGui::TableNextColumn();
-                Gui::Utils::ScopedID entryId(entry.SelectionKey().c_str());
+                ScopedID id(entry.SelectionKey().c_str());
                 ImGui::BeginGroup();
 
-                const String selectionId = entry.SelectionKey();
-                const bool isSelected = selectedEntry == selectionId;
+                const bool isSelected = (selectedEntry == entry.SelectionKey());
+                const ImVec2 btnSize(ThumbnailSize, ThumbnailSize);
 
-                const ImVec4 baseColor = isSelected ? ImVec4(0.20f, 0.35f, 0.60f, 0.95f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
-                const ImVec4 hoverColor = AdjustColor(baseColor, 0.10f);
-                const ImVec4 activeColor = AdjustColor(baseColor, 0.20f);
+                // Style optimisé (push/pop en RAII)
+                const ImVec4 base = isSelected ? ImVec4(0.20f, 0.35f, 0.60f, 0.95f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
 
-                Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
-                Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
-                Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
-                Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
+                ScopedColor button(ImGuiCol_Button, base);
+                ScopedColor hover(ImGuiCol_ButtonHovered, AdjustColor(base, 0.08f));
+                ScopedColor active(ImGuiCol_ButtonActive, AdjustColor(base, 0.14f));
+                ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(12, 12));
 
-                const bool clicked = ImGui::Button(GetIcon(entry.type), ImVec2(kContentThumbnailSize, kContentThumbnailSize));
-                const bool hoveredForDoubleClick = ImGui::IsItemHovered(kEntryDoubleClickHoverFlags);
-
-                if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
-                {
-                    DrawEntryContextMenu(state, entry, requestPopups, selectedEntry);
-                    ImGui::EndPopup();
-                }
-
-                if (clicked)
+                // ────── Bouton principal ──────
+                if (ImGui::Button(GetIcon(entry.type), btnSize))
                 {
                     if (entry.IsDirectory())
                     {
@@ -284,109 +213,42 @@ namespace BixEngine::Gui
                     }
                     else
                     {
-                        selectedEntry = selectionId;
+                        selectedEntry = entry.SelectionKey();
                     }
                 }
 
-                if (hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                // Double-clic : ouvre TOUJOURS Actor Editor
+                if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
-                    if (entry.IsScript())
-                    {
-                        selectedEntry = selectionId;
-                        RequestOpenScriptFiles(state, entry, entry.HasHeader(), entry.HasSource());
-                    }
-                    else if (entry.IsActor())
-                    {
-                        selectedEntry = selectionId;
-                        if (state.openActorEditorCallback)
-                            state.openActorEditorCallback(entry.path);
-                    }
+                    selectedEntry = entry.SelectionKey();
+                    if (state.openActorEditorCallback)
+                        state.openActorEditorCallback(entry.path);
                 }
 
-                if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
+                // Popup clic droit spécifique à l’item
+                if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
                 {
-                    auto stateRef = std::ref(state);
-                    auto selectionRef = std::ref(selectedEntry);
-                    auto requestRef = std::ref(requestPopups);
-                    const auto entryRef = std::cref(entry);
-
-                    if (entry.IsDirectory())
-                    {
-                        const auto entryPath = entry.path;
-                        ShowActionTooltip(entry.name, {
-                            {"Open", [stateRef, selectionRef, entryPath]() mutable
-                            {
-                                auto& stateValue = stateRef.get();
-                                stateValue.current = entryPath;
-                                stateValue.cache.dirty = true;
-                                selectionRef.get().Clear();
-                            }},
-                            {"Create script...", [requestRef]() mutable
-                            {
-                                RequestCreateScript(requestRef.get());
-                            }},
-                            {"Create folder...", [requestRef, entryPath]() mutable
-                            {
-                                RequestCreateFolder(requestRef.get(), entryPath);
-                            }}
-                        });
-                    }
-                    else if (entry.IsScript())
-                    {
-                        const bool hasSource = entry.HasSource();
-                        ShowActionTooltip(entry.name, {
-                            {"Open header", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
-                            {
-                                selectionRef.get() = selection;
-                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), true, false);
-                            }},
-                            {"Open source", [stateRef, entryRef, selectionRef, selection = selectionId, hasSource]() mutable
-                            {
-                                if (!hasSource)
-                                    return;
-                                selectionRef.get() = selection;
-                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), false, true);
-                            }},
-                            {"Open both", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
-                            {
-                                selectionRef.get() = selection;
-                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), true, true);
-                            }}
-                        });
-                    }
-                    else if (entry.IsActor())
-                    {
-                        ShowActionTooltip(entry.name, {
-                            {"Open actor editor", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
-                            {
-                                selectionRef.get() = selection;
-                                if (stateRef.get().openActorEditorCallback)
-                                    stateRef.get().openActorEditorCallback(entryRef.get().path);
-                            }}
-                        });
-                    }
-                    else
-                    {
-                        ShowActionTooltip(entry.name, {
-                            {"Open", [selectionRef, selection = selectionId]() mutable
-                            {
-                                selectionRef.get() = selection;
-                            }}
-                        });
-                    }
+                    DrawEntryContextMenu(state, entry, requests, selectedEntry);
+                    ImGui::EndPopup();
                 }
 
-                std::unique_ptr<Utils::ScopedColor> textColor{};
+                // Tooltip léger
+                if (ImGui::IsItemHovered(TooltipHoverFlags) && ImGui::BeginTooltip())
+                {
+                    ImGui::TextUnformatted(entry.name.c_str());
+                    ImGui::Separator();
+                    ImGui::Text("Path: %s", entry.path.generic_string().c_str());
+                    ImGui::EndTooltip();
+                }
+
+                // Légende
                 if (isSelected)
                 {
-                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
+                    ScopedColor textColor(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1));
+                    ImGui::TextWrapped("%s", entry.name.c_str());
                 }
-                else if (ImGui::IsItemHovered())
-                {
-                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
-                }
-
-                ImGui::TextWrapped("%s", entry.name.c_str());
+                else
+                    ImGui::TextWrapped("%s", entry.name.c_str());
 
                 ImGui::EndGroup();
             }
@@ -395,7 +257,7 @@ namespace BixEngine::Gui
         }
         else
         {
-            Utils::DrawEmptyStateMessage("Nothing to show.");
+            DrawEmptyStateMessage("Nothing to show.");
         }
 
         ImGui::EndChild();

@@ -17,6 +17,9 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
+    using namespace Theme;
+    using namespace Utils;
+
     void DrawAddComponentPopup(Game::Actor& actor)
     {
         if (!ImGui::BeginPopup("AddComponentPopup"))
@@ -99,19 +102,8 @@ namespace BixEngine::Gui::ActorInspector
                     }
                 }
 
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                {
-                    ImGui::BeginTooltip();
-                    if (!entry.info->QualifiedName.empty())
-                    {
-                        ImGui::TextUnformatted(entry.info->QualifiedName.c_str());
-                    }
-                    else
-                    {
-                        ImGui::TextUnformatted(entry.label.c_str());
-                    }
-                    ImGui::EndTooltip();
-                }
+                const std::string& tooltip = !entry.info->QualifiedName.empty() ? entry.info->QualifiedName : entry.label;
+                ShowTooltip(tooltip.c_str(), ImGuiHoveredFlags_DelayShort);
             }
         }
 
@@ -151,11 +143,11 @@ namespace BixEngine::Gui::ActorInspector
             return;
         }
 
-        ImGui::PushID("ActorComponents");
-        ImGui::PushStyleColor(ImGuiCol_Header, ImVec4(0.25f, 0.33f, 0.45f, 0.65f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.55f, 0.75f));
-        ImGui::PushStyleColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.32f, 0.52f, 0.85f));
-        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 6.0f));
+        ScopedID componentsId("ActorComponents");
+        ScopedColor headerColor(ImGuiCol_Header, ImVec4(0.25f, 0.33f, 0.45f, 0.65f));
+        ScopedColor headerHoverColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.55f, 0.75f));
+        ScopedColor headerActiveColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.32f, 0.52f, 0.85f));
+        ScopedStyle framePadding(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 6.0f));
 
         static Game::Component* componentPendingRemoval = nullptr;
         for (std::size_t index = 0; index < components.size(); ++index)
@@ -166,7 +158,7 @@ namespace BixEngine::Gui::ActorInspector
                 continue;
             }
 
-            ImGui::PushID(static_cast<int>(index));
+            ScopedID componentId(static_cast<int>(index));
 
             const std::string typeLabel = ToStdString(component->GetTypeName());
             const std::string treeLabel = "🧩 " + typeLabel;
@@ -187,13 +179,7 @@ namespace BixEngine::Gui::ActorInspector
                 DrawClassProperties(component->GetClass(), component.get(), false, nullptr, true);
                 ImGui::TreePop();
             }
-
-            ImGui::PopID();
         }
-
-        ImGui::PopStyleVar();
-        ImGui::PopStyleColor(3);
-        ImGui::PopID();
 
         if (componentPendingRemoval)
         {

@@ -19,9 +19,11 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kStatsBackground{0.1f, 0.1f, 0.1f, 0.95f};
         constexpr float kSmoothingFactor = 0.1f;
         constexpr float kUpdateInterval  = 0.25f;
 
@@ -63,7 +65,7 @@ namespace BixEngine::Gui
                 panel.SetMovable(true);
                 panel.SetCollapsable(true);
                 panel.SetClosable(true);
-                panel.SetBackgroundColor(kStatsBackground);
+                panel.SetBackgroundColor(StatsBackground);
                 panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
             }
 
@@ -109,7 +111,7 @@ namespace BixEngine::Gui
                     Game::SceneManager* sceneManager = sceneManagerProvider_ ? sceneManagerProvider_() : nullptr;
                     if (!sceneManager)
                     {
-                        Utils::DrawEmptyStateMessage("No active scene.");
+                        DrawEmptyStateMessage("No active scene.");
                         return;
                     }
 
@@ -122,7 +124,7 @@ namespace BixEngine::Gui
                     }
                     else
                     {
-                        Utils::DrawEmptyStateMessage("No scene is currently loaded.");
+                        DrawEmptyStateMessage("No scene is currently loaded.");
                     }
                 }
             }

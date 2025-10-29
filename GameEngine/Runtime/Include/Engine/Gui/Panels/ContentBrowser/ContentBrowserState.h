@@ -5,10 +5,24 @@
 
 #include <filesystem>
 #include <functional>
+#include <imgui.h>
 #include <vector>
 
 namespace BixEngine::Gui
 {
+    enum class ContentViewMode
+    {
+        Grid = 0, List
+    };
+    enum class ContentSortMode
+    {
+        TypeThenName = 0,
+        NameAZ,
+        NameZA,
+        DateNewest,
+        DateOldest
+    };
+    
     enum class ScriptTemplateType
     {
         Actor = 0,
@@ -46,6 +60,10 @@ namespace BixEngine::Gui
         std::filesystem::path directory{};
         std::vector<ContentEntry> entries{};
         bool dirty{true};
+
+        std::unordered_map<std::string, std::uintmax_t> fileSizes;
+        std::unordered_map<std::string, std::filesystem::file_time_type> lastWriteTimes;
+        void ClearMeta() { fileSizes.clear(); lastWriteTimes.clear(); }
     };
 
     struct ContentBrowserState
@@ -56,6 +74,12 @@ namespace BixEngine::Gui
         bool initialized{false};
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesCallback{};
         std::function<void(const std::filesystem::path&)> openActorEditorCallback{};
+
+        std::function<ImTextureID(const std::filesystem::path&)> getPreviewTextureCallback{};
+        ContentViewMode viewMode{ContentViewMode::Grid};
+        ContentSortMode sortMode{ContentSortMode::TypeThenName};
+        float gridZoom{1.0f};
+
         DirectoryCache cache{};
     };
 

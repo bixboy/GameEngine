@@ -19,12 +19,11 @@
 
 namespace BixEngine::Gui
 {
+    using namespace Theme;
+    using namespace Utils;
+
     namespace
     {
-        constexpr ImVec4 kOutlinerBackground{0.11f, 0.11f, 0.11f, 0.95f};
-
-        namespace Utils = BixEngine::Gui::Utils;
-
         class SceneOutlinerPanelController final : public GuiPanelController
         {
         public:
@@ -45,27 +44,26 @@ namespace BixEngine::Gui
                 panel.SetMovable(true);
                 panel.SetCollapsable(true);
                 panel.SetClosable(true);
-                panel.SetBackgroundColor(kOutlinerBackground);
+                panel.SetBackgroundColor(OutlinerBackground);
                 panel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
             }
 
             void OnDraw(GuiPanel&) override
             {
-                ImGui::PushID("SceneOutlinerPanel");
+                ScopedID panelScope("SceneOutlinerPanel");
 
                 const Game::SceneManager* sceneManager = sceneManagerProvider_ ? sceneManagerProvider_() : nullptr;
                 const Game::Scene* activeScene = sceneManager ? sceneManager->GetScene() : nullptr;
                 if (!activeScene)
                 {
-                    Utils::DrawEmptyStateMessage("No active scene.");
-                    ImGui::PopID();
+                    DrawEmptyStateMessage("No active scene.");
                     return;
                 }
 
                 Widgets::PanelToolbar toolbar;
                 toolbar.AddLeft([this]()
                 {
-                    Utils::SearchInput("SceneOutlinerSearch", searchBuffer_.data(), searchBuffer_.size(), "Search actors...");
+                    SearchInput("SceneOutlinerSearch", searchBuffer_.data(), searchBuffer_.size(), "Search actors...");
                 });
                 toolbar.Commit();
 
@@ -117,7 +115,7 @@ namespace BixEngine::Gui
 
                     if (totalActors == 0)
                     {
-                        Utils::DrawEmptyStateMessage("No actors in this scene.");
+                        DrawEmptyStateMessage("No actors in this scene.");
                     }
                     else
                     {
@@ -157,7 +155,7 @@ namespace BixEngine::Gui
                         }
 
                         if (hasSearch && filteredActors == 0)
-                            Utils::DrawEmptyStateMessage("No actors match the current filter.");
+                            DrawEmptyStateMessage("No actors match the current filter.");
                     }
 
                     ImGui::TreePop();
@@ -168,8 +166,6 @@ namespace BixEngine::Gui
                     ImGui::Text("%zu / %zu actor%s", filteredActors, totalActors, totalActors == 1 ? "" : "s");
                 else
                     ImGui::Text("%zu actor%s", totalActors, totalActors == 1 ? "" : "s");
-
-                ImGui::PopID();
             }
 
         private:

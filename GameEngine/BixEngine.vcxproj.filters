@@ -45,6 +45,9 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\GuiTheme.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -171,6 +174,9 @@
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentEntry.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\GuiTheme.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h">

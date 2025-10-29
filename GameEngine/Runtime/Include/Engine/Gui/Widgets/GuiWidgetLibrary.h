@@ -85,8 +85,8 @@ namespace BixEngine::Gui::Widgets
     class PanelToolbar
     {
     public:
-        PanelToolbar();
-        ~PanelToolbar();
+        PanelToolbar() = default;
+        ~PanelToolbar() = default;
 
         PanelToolbar(const PanelToolbar&) = delete;
         PanelToolbar& operator=(const PanelToolbar&) = delete;

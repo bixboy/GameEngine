@@ -2,30 +2,18 @@
 
 #include <algorithm>
 #include <string>
+
 #include <imgui_internal.h>
 
 namespace BixEngine::Gui::ActorInspector
 {
-    ImVec4 AdjustColor(const ImVec4& color, float delta)
-    {
-        const auto clamp = [](float value)
-        {
-            return std::clamp(value, 0.0f, 1.0f);
-        };
-
-        return ImVec4(
-            clamp(color.x + delta),
-            clamp(color.y + delta),
-            clamp(color.z + delta),
-            color.w);
-    }
+    using namespace Theme;
+    using namespace Utils;
 
     ImVec2 DrawBadge(const char* label, const ImVec4& backgroundColor, const ImVec4& textColor)
     {
         if (!label || label[0] == '\0')
-        {
             return ImVec2(0.0f, 0.0f);
-        }
 
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         const ImVec2 position = ImGui::GetCursorScreenPos();
@@ -44,12 +32,12 @@ namespace BixEngine::Gui::ActorInspector
     bool DrawVector3Control(const char* label, float* values, float resetValue, float speed, const char* format)
     {
         if (!values)
-        {
             return false;
-        }
 
         bool changed = false;
-        ImGui::PushID(label);
+        const char* idLabel = label ? label : "Vector3Control";
+        ScopedID idScope(idLabel);
+
         ImGui::Columns(2, nullptr, false);
         ImGui::SetColumnWidth(0, 120.0f);
         ImGui::AlignTextToFramePadding();
@@ -57,44 +45,37 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::NextColumn();
 
         ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
 
-        const char* axisLabels[3] = {"X", "Y", "Z"};
-        const ImVec4 axisColors[3] = {Colors::kAxisXColor, Colors::kAxisYColor, Colors::kAxisZColor};
+        constexpr const char* axisLabels[3] = {"X", "Y", "Z"};
+        const ImVec4 axisColors[3] = {AxisColorX, AxisColorY, AxisColorZ};
 
         for (int index = 0; index < 3; ++index)
         {
-            ImGui::PushID(index);
+            ScopedID axisId(index);
 
             if (index > 0)
-            {
                 ImGui::SameLine(0.0f, 4.0f);
-            }
 
-            const ImVec4 baseColor = axisColors[index];
-            ImGui::PushStyleColor(ImGuiCol_Button, baseColor);
-            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, AdjustColor(baseColor, 0.12f));
-            ImGui::PushStyleColor(ImGuiCol_ButtonActive, AdjustColor(baseColor, -0.10f));
+            const ImVec4& baseColor = axisColors[index];
+            ScopedColor button(ImGuiCol_Button, baseColor);
+            ScopedColor hovered(ImGuiCol_ButtonHovered, AdjustColor(baseColor, 0.12f));
+            ScopedColor active(ImGuiCol_ButtonActive, AdjustColor(baseColor, -0.10f));
+
             if (ImGui::Button(axisLabels[index], ImVec2(26.0f, 26.0f)))
             {
                 values[index] = resetValue;
                 changed = true;
             }
-            ImGui::PopStyleColor(3);
 
             ImGui::SameLine(0.0f, 4.0f);
-            std::string dragId = std::string("##") + axisLabels[index];
-            if (ImGui::DragFloat(dragId.c_str(), &values[index], speed, 0.0f, 0.0f, format))
-            {
+            if (ImGui::DragFloat("##Value", &values[index], speed, 0.0f, 0.0f, format))
                 changed = true;
-            }
+
             ImGui::PopItemWidth();
-            ImGui::PopID();
         }
 
-        ImGui::PopStyleVar();
         ImGui::Columns(1);
-        ImGui::PopID();
         ImGui::Spacing();
 
         return changed;
@@ -108,19 +89,16 @@ namespace BixEngine::Gui::ActorInspector
     PersistentSectionScope::~PersistentSectionScope()
     {
         if (isOpen_)
-        {
             Utils::EndPersistentSection();
-        }
     }
 
     SectionContainer::SectionContainer(const char* id)
+        : idScope_(id)
+        , background_(ImGuiCol_ChildBg, SectionBackground)
+        , rounding_(ImGuiStyleVar_ChildRounding, 5.0f)
+        , padding_(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 6.0f))
     {
-        ImGui::PushID(id);
-        ImGui::PushStyleColor(ImGuiCol_ChildBg, Colors::kSectionBackground);
-        ImGui::PushStyleVar(ImGuiStyleVar_ChildRounding, 5.0f);
-        ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 6.0f));
-
-        ImGui::BeginChild(
+        isVisible_ = ImGui::BeginChild(
             "section",
             ImVec2(-FLT_MIN, 0.0f),
             ImGuiChildFlags_AutoResizeY,
@@ -130,11 +108,6 @@ namespace BixEngine::Gui::ActorInspector
     SectionContainer::~SectionContainer()
     {
         ImGui::EndChild();
-        ImGui::PopStyleVar(2);
-        ImGui::PopStyleColor();
-
         ImGui::Dummy(ImVec2(1.0f, 4.0f));
-        ImGui::PopID();
     }
 }
-
