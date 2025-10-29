@@ -96,11 +96,15 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ImGuiControls.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ReflectionDrawer.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/TransformSectionUI.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserActions.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserState.cpp
-    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUISections.cpp
-    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUtils.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Grid.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Header.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Tree.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentEntry.cpp
     Runtime/Source/Engine/Gui/Panels/ActorEditorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneOutlinerPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneViewportPanel.cpp

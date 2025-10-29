@@ -1,5 +1,8 @@
 #include "Core/Logger.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.h"
 #include "imgui.h"
 #include <algorithm>
 #include <filesystem>
@@ -12,10 +15,6 @@
 #include <unordered_set>
 #include <sstream>
 #include <cctype>
-
-#include "Core/FileUtils.h"
-#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
-#include "SDL3/SDL_egl.h"
 
 
 namespace BixEngine::Gui
@@ -734,6 +733,7 @@ namespace BixEngine::Gui
                                             selectedEntry = headerPath.generic_string();
                                             requests.scriptError.Clear();
                                             ClearSelectedParent(requests);
+                                            state.cache.dirty = true;
                                             ImGui::CloseCurrentPopup();
 
                                             std::filesystem::path toolPath = Core::FindToolExecutable("BixHeaderTool.exe");
@@ -818,23 +818,13 @@ namespace BixEngine::Gui
                     {
                         LogAndStoreError(requests.folderError, "A folder with this name already exists.", false);
                     }
-                    else
+                    else if (TryCreateDir(folderPath, requests.folderError))
                     {
-                        std::error_code createError;
-                        fs::create_directories(folderPath, createError);
-                        if (createError)
-                        {
-                            String message = "Unable to create folder: ";
-                            message += createError.message();
-                            LogAndStoreError(requests.folderError, std::move(message));
-                        }
-                        else
-                        {
-                            selectedEntry = folderPath.generic_string();
-                            requests.folderError.Clear();
-                            requests.folderTarget.clear();
-                            ImGui::CloseCurrentPopup();
-                        }
+                        selectedEntry = folderPath.generic_string();
+                        requests.folderError.Clear();
+                        requests.folderTarget.clear();
+                        state.cache.dirty = true;
+                        ImGui::CloseCurrentPopup();
                     }
                 }
             }
@@ -1052,6 +1042,7 @@ namespace BixEngine::Gui
                                         requests.renameTarget = newHeaderPath;
                                         requests.renameSecondaryTarget = newSourcePath;
                                         requests.renameTargetIsScriptGroup = false;
+                                        state.cache.dirty = true;
                                         ImGui::CloseCurrentPopup();
                                     }
                                 }
@@ -1080,14 +1071,9 @@ namespace BixEngine::Gui
                         }
                         else
                         {
-                            std::error_code renameError;
-                            fs::rename(oldPath, newPath, renameError);
-
-                            if (renameError)
+                            if (!TryRename(oldPath, newPath, requests.renameError))
                             {
-                                String errorMessage = "Unable to rename entry: ";
-                                errorMessage += renameError.message();
-                                LogAndStoreError(requests.renameError, std::move(errorMessage));
+                                // Error already stored.
                             }
                             else
                             {
@@ -1096,6 +1082,7 @@ namespace BixEngine::Gui
 
                                 requests.renameTarget = newPath;
                                 requests.renameError.Clear();
+                                state.cache.dirty = true;
                                 ImGui::CloseCurrentPopup();
                             }
                         }
