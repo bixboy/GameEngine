@@ -28,7 +28,7 @@ namespace BixEngine::Gui
         const String relativeString = relativePath.generic_string();
         const bool atRoot = relativeString.IsEmpty() || relativeString == ".";
 
-        ScopedColor headerColor(ImGuiCol_ChildBg, kContentHeaderBackground);
+        Gui::Utils::ScopedColor headerColor(ImGuiCol_ChildBg, kContentHeaderBackground);
         if (ImGui::BeginChild("ContentBrowserHeader", ImVec2(0.0f, kContentHeaderHeight), true, ImGuiWindowFlags_NoScrollbar))
         {
             Widgets::DrawPanelHeader({

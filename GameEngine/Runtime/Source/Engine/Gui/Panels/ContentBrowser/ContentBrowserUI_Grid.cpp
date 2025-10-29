@@ -11,6 +11,7 @@
 #include "imgui.h"
 
 #include <cstdio>
+#include <functional>
 #include <memory>
 #include <ranges>
 #include <unordered_map>
@@ -213,15 +214,13 @@ namespace BixEngine::Gui
 
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery)
     {
-        namespace Utils = BixEngine::Gui::Utils;
-
         if (!RefreshDirectoryCache(state))
         {
-            Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
+            Gui::Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
             return;
         }
 
-        Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
+        Gui::Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
         if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true))
             return;
 
@@ -251,7 +250,7 @@ namespace BixEngine::Gui
                     continue;
 
                 ImGui::TableNextColumn();
-                Utils::ScopedID entryId(entry.SelectionKey().c_str());
+                Gui::Utils::ScopedID entryId(entry.SelectionKey().c_str());
                 ImGui::BeginGroup();
 
                 const String selectionId = entry.SelectionKey();
@@ -261,10 +260,10 @@ namespace BixEngine::Gui
                 const ImVec4 hoverColor = AdjustColor(baseColor, 0.10f);
                 const ImVec4 activeColor = AdjustColor(baseColor, 0.20f);
 
-                Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
-                Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
-                Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
-                Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
+                Gui::Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
+                Gui::Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
+                Gui::Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
+                Gui::Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
 
                 const bool clicked = ImGui::Button(GetIcon(entry.type), ImVec2(kContentThumbnailSize, kContentThumbnailSize));
                 const bool hoveredForDoubleClick = ImGui::IsItemHovered(kEntryDoubleClickHoverFlags);
@@ -298,22 +297,29 @@ namespace BixEngine::Gui
 
                 if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
                 {
+                    auto stateRef = std::ref(state);
+                    auto selectionRef = std::ref(selectedEntry);
+                    auto requestRef = std::ref(requestPopups);
+                    const auto entryRef = std::cref(entry);
+
                     if (entry.IsDirectory())
                     {
+                        const auto entryPath = entry.path;
                         ShowActionTooltip(entry.name, {
-                            {"Open", [&, path = entry.path]()
+                            {"Open", [stateRef, selectionRef, entryPath]() mutable
                             {
-                                state.current = path;
-                                state.cache.dirty = true;
-                                selectedEntry.Clear();
+                                auto& stateValue = stateRef.get();
+                                stateValue.current = entryPath;
+                                stateValue.cache.dirty = true;
+                                selectionRef.get().Clear();
                             }},
-                            {"Create script...", [&]()
+                            {"Create script...", [requestRef]() mutable
                             {
-                                RequestCreateScript(requestPopups);
+                                RequestCreateScript(requestRef.get());
                             }},
-                            {"Create folder...", [&, path = entry.path]()
+                            {"Create folder...", [requestRef, entryPath]() mutable
                             {
-                                RequestCreateFolder(requestPopups, path);
+                                RequestCreateFolder(requestRef.get(), entryPath);
                             }}
                         });
                     }
@@ -321,55 +327,55 @@ namespace BixEngine::Gui
                     {
                         const bool hasSource = entry.HasSource();
                         ShowActionTooltip(entry.name, {
-                            {"Open header", [&, selection = selectionId]()
+                            {"Open header", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
                             {
-                                selectedEntry = selection;
-                                RequestOpenScriptFiles(state, entry, true, false);
+                                selectionRef.get() = selection;
+                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), true, false);
                             }},
-                            {"Open source", [&, selection = selectionId, hasSource]()
+                            {"Open source", [stateRef, entryRef, selectionRef, selection = selectionId, hasSource]() mutable
                             {
                                 if (!hasSource)
                                     return;
-                                selectedEntry = selection;
-                                RequestOpenScriptFiles(state, entry, false, true);
+                                selectionRef.get() = selection;
+                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), false, true);
                             }},
-                            {"Open both", [&, selection = selectionId]()
+                            {"Open both", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
                             {
-                                selectedEntry = selection;
-                                RequestOpenScriptFiles(state, entry, true, true);
+                                selectionRef.get() = selection;
+                                RequestOpenScriptFiles(stateRef.get(), entryRef.get(), true, true);
                             }}
                         });
                     }
                     else if (entry.IsActor())
                     {
                         ShowActionTooltip(entry.name, {
-                            {"Open actor editor", [&, selection = selectionId]()
+                            {"Open actor editor", [stateRef, entryRef, selectionRef, selection = selectionId]() mutable
                             {
-                                selectedEntry = selection;
-                                if (state.openActorEditorCallback)
-                                    state.openActorEditorCallback(entry.path);
+                                selectionRef.get() = selection;
+                                if (stateRef.get().openActorEditorCallback)
+                                    stateRef.get().openActorEditorCallback(entryRef.get().path);
                             }}
                         });
                     }
                     else
                     {
                         ShowActionTooltip(entry.name, {
-                            {"Open", [&, selection = selectionId]()
+                            {"Open", [selectionRef, selection = selectionId]() mutable
                             {
-                                selectedEntry = selection;
+                                selectionRef.get() = selection;
                             }}
                         });
                     }
                 }
 
-                std::unique_ptr<Utils::ScopedColor> textColor{};
+                std::unique_ptr<Gui::Utils::ScopedColor> textColor{};
                 if (isSelected)
                 {
-                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
+                    textColor = std::make_unique<Gui::Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
                 }
                 else if (ImGui::IsItemHovered())
                 {
-                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
+                    textColor = std::make_unique<Gui::Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
                 }
 
                 ImGui::TextWrapped("%s", entry.name.c_str());
@@ -381,7 +387,7 @@ namespace BixEngine::Gui
         }
         else
         {
-            Utils::DrawEmptyStateMessage("Nothing to show.");
+            Gui::Utils::DrawEmptyStateMessage("Nothing to show.");
         }
 
         ImGui::EndChild();
