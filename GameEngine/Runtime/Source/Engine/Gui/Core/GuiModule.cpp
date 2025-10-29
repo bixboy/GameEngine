@@ -2,12 +2,13 @@
 
 #include <SDL3/SDL.h>
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <cstdint>
 #include <filesystem>
+#include <format>
 #include <functional>
-#include <iterator>
-#include <sstream>
+#include <string_view>
 #include <utility>
 #include <vector>
 #include <imgui_internal.h>
@@ -31,6 +32,7 @@ namespace BixEngine::Core
     namespace
     {
         constexpr float kNavigationBarHeight = 38.0f;
+        constexpr std::string_view kSceneNavigationId{"scene"};
 
         std::string MakeNavigationIdFromPath(const std::filesystem::path& path)
         {
@@ -57,11 +59,8 @@ namespace BixEngine::Core
                 hash *= kFnvPrime;
             }
 
-            std::ostringstream oss;
-            oss << std::hex << hash;
-
             sanitized.append("_");
-            sanitized.append(oss.str());
+            sanitized.append(std::format("{:x}", hash));
 
             return "actor_editor_" + sanitized;
         }
@@ -72,13 +71,16 @@ namespace BixEngine::Core
         activeLayout_ = Gui::EditorLayoutType::Scene;
     }
 
-    GuiModule::~GuiModule()
+    GuiModule::~GuiModule() noexcept
     {
         Shutdown();
     }
 
     bool GuiModule::Initialize(Window& window, Graphics::Renderer& renderer)
     {
+        if (bInitialized_)
+            return true;
+
         if (!guiSystem_)
             guiSystem_ = std::make_unique<Gui::GuiSystem>();
 
@@ -87,17 +89,26 @@ namespace BixEngine::Core
             guiSystem_->Shutdown();
             guiSystem_.reset();
             guiManager_.reset();
+            layoutManager_.reset();
+            bInitialized_ = false;
             return false;
         }
 
         guiManager_ = std::make_unique<Gui::GuiManager>(*guiSystem_);
         layoutManager_ = std::make_unique<Gui::GuiLayoutManager>(*guiSystem_, *guiManager_);
         DestroySceneViewportTexture();
+
+        activeLayout_ = Gui::EditorLayoutType::Scene;
+        activeNavigationId_ = std::string{kSceneNavigationId};
+        bInitialized_ = true;
         return true;
     }
 
     void GuiModule::Shutdown() noexcept
     {
+        if (!bInitialized_ && !guiSystem_ && !guiManager_ && !layoutManager_)
+            return;
+
         statsPanel_ = nullptr;
         outlinerPanel_ = nullptr;
         contentBrowserPanel_ = nullptr;
@@ -116,24 +127,21 @@ namespace BixEngine::Core
         {
             for (auto& [_, entry] : actorEditors_)
             {
-                for (Gui::GuiPanel* panel : entry.panels.Collect())
-                {
-                    if (!panel)
-                        continue;
-
-                    if (layoutManager_)
-                        layoutManager_->RemovePanel(*panel);
-
-                    guiManager_->RemovePanel(panel->GetName());
-                }
+                PanelBuffer buffer{};
+                const auto panelSpan = CollectPanels(entry.panels, buffer);
+                if (layoutManager_)
+                    layoutManager_->DetachPanels(panelSpan);
+                guiManager_->RemovePanels(panelSpan);
                 entry.sharedState.reset();
             }
         }
 
         actorEditors_.clear();
+        actorEditorsByPath_.clear();
         actorEditorOrder_.clear();
         focusRequests_.clear();
-        activeNavigationId_ = "scene";
+        activeNavigationId_ = std::string{kSceneNavigationId};
+        activeLayout_ = Gui::EditorLayoutType::Scene;
         nextActorEditorId_ = 0;
         subsystems_ = nullptr;
 
@@ -147,11 +155,13 @@ namespace BixEngine::Core
             guiSystem_->Shutdown();
             guiSystem_.reset();
         }
+
+        bInitialized_ = false;
     }
 
     bool GuiModule::IsInitialized() const noexcept
     {
-        return guiSystem_ && guiSystem_->IsInitialized();
+        return bInitialized_ && guiSystem_ && guiSystem_->IsInitialized();
     }
 
     bool GuiModule::ProcessEvent(const SDL_Event& event)
@@ -232,6 +242,10 @@ namespace BixEngine::Core
             inspectorPanel_ = nullptr;
             viewportPanel_ = nullptr;
             selectedActor_ = nullptr;
+            actorEditors_.clear();
+            actorEditorsByPath_.clear();
+            actorEditorOrder_.clear();
+            focusRequests_.clear();
             return;
         }
 
@@ -239,27 +253,24 @@ namespace BixEngine::Core
         {
             for (auto& [_, entry] : actorEditors_)
             {
-                if (!guiManager_)
-                    continue;
-
-                for (Gui::GuiPanel* panel : entry.panels.Collect())
-                {
-                    if (!panel)
-                        continue;
-
-                    if (layoutManager_)
-                        layoutManager_->RemovePanel(*panel);
-
-                    guiManager_->RemovePanel(panel->GetName());
-                }
+                PanelBuffer buffer{};
+                const auto panelSpan = CollectPanels(entry.panels, buffer);
+                if (layoutManager_)
+                    layoutManager_->DetachPanels(panelSpan);
+                guiManager_->RemovePanels(panelSpan);
                 entry.sharedState.reset();
             }
+
             actorEditors_.clear();
+            actorEditorsByPath_.clear();
             actorEditorOrder_.clear();
             nextActorEditorId_ = 0;
             focusRequests_.clear();
-            activeNavigationId_ = "scene";
+            activeNavigationId_ = std::string{kSceneNavigationId};
             activeLayout_ = Gui::EditorLayoutType::Scene;
+
+            if (layoutManager_)
+                layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
         }
 
         selectedActor_ = nullptr;
@@ -307,16 +318,23 @@ namespace BixEngine::Core
 
         if (layoutManager_)
         {
-            std::vector<Gui::GuiPanel*> scenePanels;
-            scenePanels.reserve(5);
-            if (viewportPanel_) scenePanels.push_back(viewportPanel_);
-            if (outlinerPanel_) scenePanels.push_back(outlinerPanel_);
-            if (contentBrowserPanel_) scenePanels.push_back(contentBrowserPanel_);
-            if (inspectorPanel_) scenePanels.push_back(inspectorPanel_);
-            if (statsPanel_) scenePanels.push_back(statsPanel_);
+            std::array<Gui::GuiPanel*, 5> scenePanelBuffer{};
+            std::size_t count = 0;
+            auto pushScenePanel = [&](Gui::GuiPanel* panel)
+            {
+                if (panel)
+                    scenePanelBuffer[count++] = panel;
+            };
 
-            layoutManager_->SetPanelsForLayout(Gui::EditorLayoutType::Scene, scenePanels);
-            layoutManager_->LoadLayout(Gui::EditorLayoutType::Scene);
+            pushScenePanel(viewportPanel_);
+            pushScenePanel(outlinerPanel_);
+            pushScenePanel(contentBrowserPanel_);
+            pushScenePanel(inspectorPanel_);
+            pushScenePanel(statsPanel_);
+
+            const std::span panelsSpan(scenePanelBuffer.data(), count);
+            layoutManager_->RegisterPanels(Gui::EditorLayoutType::Scene, panelsSpan,
+                                           Gui::GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
         }
 
         activeLayout_ = Gui::EditorLayoutType::Scene;
@@ -455,19 +473,12 @@ namespace BixEngine::Core
             }
         }
 
+        PanelBuffer buffer{};
+        const auto panelSpan = CollectPanels(entry.panels, buffer);
+        if (layoutManager_)
+            layoutManager_->DetachPanels(panelSpan);
         if (guiManager_)
-        {
-            for (Gui::GuiPanel* panel : entry.panels.Collect())
-            {
-                if (!panel)
-                    continue;
-
-                if (layoutManager_)
-                    layoutManager_->RemovePanel(*panel);
-
-                guiManager_->RemovePanel(panel->GetName());
-            }
-        }
+            guiManager_->RemovePanels(panelSpan);
 
         actorEditorsByPath_.erase(entry.assetPath);
 
@@ -479,28 +490,26 @@ namespace BixEngine::Core
         {
             if (actorEditors_.empty())
             {
-                activeNavigationId_ = "scene";
+                activeNavigationId_ = std::string{kSceneNavigationId};
                 focusScene = true;
                 if (layoutManager_)
                 {
                     layoutManager_->Switch(Gui::EditorLayoutType::Scene);
-                    layoutManager_->SetPanelsForLayout(Gui::EditorLayoutType::ActorEditor, {});
+                    layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
                 }
-                actorEditorLayoutInitialized_ = false;
                 activeLayout_ = Gui::EditorLayoutType::Scene;
             }
             else
             {
                 if (actorEditorOrder_.empty())
                 {
-                    activeNavigationId_ = "scene";
+                    activeNavigationId_ = std::string{kSceneNavigationId};
                     focusScene = true;
                     if (layoutManager_)
                     {
                         layoutManager_->Switch(Gui::EditorLayoutType::Scene);
-                        layoutManager_->SetPanelsForLayout(Gui::EditorLayoutType::ActorEditor, {});
+                        layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
                     }
-                    actorEditorLayoutInitialized_ = false;
                     activeLayout_ = Gui::EditorLayoutType::Scene;
                 }
                 else
@@ -524,6 +533,9 @@ namespace BixEngine::Core
                 }
             }
         }
+
+        if (actorEditors_.empty() && layoutManager_)
+            layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
 
         RefreshActorPanelsVisibility();
 
@@ -564,115 +576,134 @@ namespace BixEngine::Core
                 activeLayout_ = layoutManager_->GetCurrentLayout();
 
             const float buttonHeight = kNavigationBarHeight - 16.0f;
-            auto drawNavigationButton = [&](const std::string& label, bool isActive)
-            {
-                if (isActive)
-                {
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.30f, 0.30f, 0.34f, 1.0f});
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.34f, 0.34f, 0.38f, 1.0f});
-                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.28f, 0.28f, 0.32f, 1.0f});
-                }
+            // TODO(workspaces): Replace this navigation row with a workspace-aware toolbar when multi-workspace support lands.
 
-                const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
-                const float paddingX = 32.0f;
-                const ImVec2 size{textSize.x + paddingX, buttonHeight};
-                const bool clicked = ImGui::Button(label.c_str(), size);
-
-                if (isActive)
-                    ImGui::PopStyleColor(3);
-
-                return clicked;
-            };
-
-            const bool sceneActive = activeNavigationId_ == "scene" || actorEditors_.empty();
-            if (drawNavigationButton("Scene", sceneActive))
-            {
-                activeNavigationId_ = "scene";
-                activeLayout_ = Gui::EditorLayoutType::Scene;
-                if (layoutManager_)
-                    layoutManager_->Switch(Gui::EditorLayoutType::Scene);
-                RefreshActorPanelsVisibility();
-                FocusSceneViewport();
-            }
-
-            if (!actorEditorOrder_.empty())
-            {
-                std::vector<std::string> closeRequests;
-                std::vector<std::string> staleEntries;
-                closeRequests.reserve(actorEditorOrder_.size());
-                staleEntries.reserve(actorEditorOrder_.size());
-
-                for (const std::string& navId : actorEditorOrder_)
-                {
-                    auto entryIt = actorEditors_.find(navId);
-                    if (entryIt == actorEditors_.end())
-                    {
-                        staleEntries.push_back(navId);
-                        continue;
-                    }
-
-                    ActorEditorEntry& entry = entryIt->second;
-                    if (entry.sharedState)
-                    {
-                        const std::string displayName = entry.sharedState->assetDisplayName.Std();
-                        if (entry.buttonLabel != displayName)
-                            entry.buttonLabel = displayName;
-                    }
-
-                    ImGui::SameLine();
-                    const bool isActive = activeNavigationId_ == entry.navigationId;
-
-                    ImGui::PushID(entry.navigationId.c_str());
-
-                    const std::string& label = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
-                    if (drawNavigationButton(label, isActive))
-                    {
-                        activeNavigationId_ = entry.navigationId;
-                        activeLayout_ = Gui::EditorLayoutType::ActorEditor;
-                        if (layoutManager_)
-                        {
-                            ApplyActorEditorPanels(entry);
-                            layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
-                        }
-                        RefreshActorPanelsVisibility();
-                        if (entry.panels.viewport)
-                            focusRequests_.push_back(entry.panels.viewport->GetTitle().Std());
-                    }
-
-                    ImGui::SameLine(0.0f, 6.0f);
-                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
-                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.42f, 0.12f, 0.12f, 1.0f});
-                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.58f, 0.16f, 0.16f, 1.0f});
-                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.36f, 0.10f, 0.10f, 1.0f});
-                    const float closeButtonSize = buttonHeight - 12.0f;
-                    const ImVec2 closeSize{std::max(12.0f, closeButtonSize), buttonHeight};
-                    const bool closeRequested = ImGui::Button("x", closeSize);
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("Close %s", label.c_str());
-                    ImGui::PopStyleColor(3);
-                    ImGui::PopStyleVar();
-
-                    if (closeRequested)
-                        closeRequests.push_back(entry.navigationId);
-
-                    ImGui::PopID();
-                }
-
-                for (const std::string& stale : staleEntries)
-                {
-                    auto orderIt = std::find(actorEditorOrder_.begin(), actorEditorOrder_.end(), stale);
-                    if (orderIt != actorEditorOrder_.end())
-                        actorEditorOrder_.erase(orderIt);
-                }
-
-                for (const std::string& navigationId : closeRequests)
-                    CloseActorEditor(navigationId);
-            }
+            DrawSceneButton(buttonHeight);
+            DrawActorEditorTabs(buttonHeight);
         }
 
         ImGui::End();
         ImGui::PopStyleVar();
         ImGui::PopStyleColor();
+    }
+
+    bool GuiModule::DrawNavigationButton(const std::string& label, bool isActive, float buttonHeight) const
+    {
+        if (isActive)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.30f, 0.30f, 0.34f, 1.0f});
+            ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.34f, 0.34f, 0.38f, 1.0f});
+            ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.28f, 0.28f, 0.32f, 1.0f});
+        }
+
+        const ImVec2 textSize = ImGui::CalcTextSize(label.c_str());
+        const float paddingX = 32.0f;
+        const ImVec2 size{textSize.x + paddingX, buttonHeight};
+        const bool clicked = ImGui::Button(label.c_str(), size);
+
+        if (isActive)
+            ImGui::PopStyleColor(3);
+
+        return clicked;
+    }
+
+    bool GuiModule::DrawCloseButton(std::string_view label, float buttonHeight) const
+    {
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.42f, 0.12f, 0.12f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.58f, 0.16f, 0.16f, 1.0f});
+        ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.36f, 0.10f, 0.10f, 1.0f});
+
+        const float closeButtonSize = buttonHeight - 12.0f;
+        const ImVec2 closeSize{std::max(12.0f, closeButtonSize), buttonHeight};
+        const bool closeRequested = ImGui::Button("x", closeSize);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Close %.*s", static_cast<int>(label.size()), label.data());
+
+        ImGui::PopStyleColor(3);
+        ImGui::PopStyleVar();
+
+        return closeRequested;
+    }
+
+    void GuiModule::DrawSceneButton(float buttonHeight)
+    {
+        static const std::string kSceneLabel{"Scene"};
+        const bool sceneActive = activeNavigationId_ == kSceneNavigationId || actorEditors_.empty();
+        if (!DrawNavigationButton(kSceneLabel, sceneActive, buttonHeight))
+            return;
+
+        activeNavigationId_ = std::string{kSceneNavigationId};
+        activeLayout_ = Gui::EditorLayoutType::Scene;
+        if (layoutManager_)
+            layoutManager_->Switch(Gui::EditorLayoutType::Scene);
+        RefreshActorPanelsVisibility();
+        FocusSceneViewport();
+    }
+
+    void GuiModule::DrawActorEditorTabs(float buttonHeight)
+    {
+        if (actorEditorOrder_.empty())
+            return;
+
+        std::vector<std::string> closeRequests;
+        std::vector<std::string> staleEntries;
+        closeRequests.reserve(actorEditorOrder_.size());
+        staleEntries.reserve(actorEditorOrder_.size());
+
+        for (const std::string& navId : actorEditorOrder_)
+        {
+            auto entryIt = actorEditors_.find(navId);
+            if (entryIt == actorEditors_.end())
+            {
+                staleEntries.push_back(navId);
+                continue;
+            }
+
+            ActorEditorEntry& entry = entryIt->second;
+            if (entry.sharedState)
+            {
+                const std::string displayName = entry.sharedState->assetDisplayName.Std();
+                if (entry.buttonLabel != displayName)
+                    entry.buttonLabel = displayName;
+            }
+
+            ImGui::SameLine();
+            const bool isActive = activeNavigationId_ == entry.navigationId;
+
+            ImGui::PushID(entry.navigationId.c_str());
+
+            const std::string& label = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
+            if (DrawNavigationButton(label, isActive, buttonHeight))
+            {
+                activeNavigationId_ = entry.navigationId;
+                activeLayout_ = Gui::EditorLayoutType::ActorEditor;
+                if (layoutManager_)
+                {
+                    ApplyActorEditorPanels(entry);
+                    layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
+                }
+                RefreshActorPanelsVisibility();
+                if (entry.panels.viewport)
+                    focusRequests_.push_back(entry.panels.viewport->GetTitle().Std());
+            }
+
+            ImGui::SameLine(0.0f, 6.0f);
+            if (DrawCloseButton(label, buttonHeight))
+                closeRequests.push_back(entry.navigationId);
+
+            ImGui::PopID();
+        }
+
+        for (const std::string& stale : staleEntries)
+        {
+            auto orderIt = std::find(actorEditorOrder_.begin(), actorEditorOrder_.end(), stale);
+            if (orderIt != actorEditorOrder_.end())
+                actorEditorOrder_.erase(orderIt);
+        }
+
+        for (const std::string& navigationId : closeRequests)
+            CloseActorEditor(navigationId);
     }
 
     void GuiModule::ProcessFocusRequests()
@@ -715,11 +746,10 @@ namespace BixEngine::Core
         for (auto& [navigationId, entry] : actorEditors_)
         {
             const bool shouldBeVisible = actorLayoutActive && activeNavigationId_ == navigationId;
-            for (Gui::GuiPanel* panel : entry.panels.Collect())
+            entry.panels.ForEachPanel([shouldBeVisible](Gui::GuiPanel* panel)
             {
-                if (panel)
-                    panel->SetVisible(shouldBeVisible);
-            }
+                panel->SetVisible(shouldBeVisible);
+            });
         }
     }
 
@@ -728,13 +758,17 @@ namespace BixEngine::Core
         if (!layoutManager_)
             return;
 
-        layoutManager_->SetPanelsForLayout(Gui::EditorLayoutType::ActorEditor, entry.panels.Collect());
+        PanelBuffer buffer{};
+        const auto panelSpan = CollectPanels(entry.panels, buffer);
+        layoutManager_->RegisterPanels(Gui::EditorLayoutType::ActorEditor, panelSpan,
+                                       Gui::GuiLayoutManager::LayoutRegistrationMode::LoadIfUninitialized);
+    }
 
-        if (!actorEditorLayoutInitialized_)
-        {
-            layoutManager_->LoadLayout(Gui::EditorLayoutType::ActorEditor);
-            actorEditorLayoutInitialized_ = true;
-        }
+
+    std::span<Gui::GuiPanel*> GuiModule::CollectPanels(const ActorEditorPanels& panels, PanelBuffer& buffer) const noexcept
+    {
+        std::span spanBuffer{buffer};
+        return panels.CopyTo(spanBuffer);
     }
 
 

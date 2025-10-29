@@ -2,8 +2,10 @@
 
 #include <filesystem>
 #include <optional>
+#include <span>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace BixEngine::Gui
@@ -40,7 +42,18 @@ namespace BixEngine::Gui
         void LoadLayout(EditorLayoutType layout);
         void SaveAllLayoutsToDisk();
 
-        void SetPanelsForLayout(EditorLayoutType layout, const std::vector<GuiPanel*>& panels);
+        enum class LayoutRegistrationMode
+        {
+            RegisterOnly,
+            LoadIfUninitialized,
+            ForceLoad
+        };
+
+        void RegisterPanels(EditorLayoutType layout, std::span<GuiPanel*> panels,
+                             LayoutRegistrationMode mode = LayoutRegistrationMode::RegisterOnly);
+        void DetachPanels(std::span<GuiPanel*> panels);
+        void ResetLayout(EditorLayoutType layout);
+        void SetPanelsForLayout(EditorLayoutType layout, std::span<GuiPanel*> panels);
         void AddPanel(EditorLayoutType layout, GuiPanel& panel);
         void RemovePanel(GuiPanel& panel);
 
@@ -68,6 +81,7 @@ namespace BixEngine::Gui
         std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> dockspaceNames_{};
         std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>, EditorLayoutTypeHash> layoutPanels_{};
         std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_{};
+        std::unordered_set<EditorLayoutType, EditorLayoutTypeHash> initializedLayouts_{};
 
         bool dockspaceDirty_{true};
         bool switchRequested_{false};

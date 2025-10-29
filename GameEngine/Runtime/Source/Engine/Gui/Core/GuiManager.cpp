@@ -41,6 +41,16 @@ namespace BixEngine::Gui
         registry_.RemovePanel(name);
     }
 
+    void GuiManager::RemovePanels(std::span<GuiPanel*> panels)
+    {
+        for (GuiPanel* panel : panels)
+        {
+            if (!panel)
+                continue;
+            RemovePanel(panel->GetName());
+        }
+    }
+
     GuiPanel* GuiManager::FindPanel(const String& name) noexcept
     {
         return registry_.FindPanel(name);

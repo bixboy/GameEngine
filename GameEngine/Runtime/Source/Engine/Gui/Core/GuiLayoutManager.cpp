@@ -83,6 +83,53 @@ namespace BixEngine::Gui
         PersistLayoutsToDisk_();
     }
 
+    void GuiLayoutManager::RegisterPanels(EditorLayoutType layout, std::span<GuiPanel*> panels,
+                                          LayoutRegistrationMode mode)
+    {
+        SetPanelsForLayout(layout, panels);
+
+        switch (mode)
+        {
+            case LayoutRegistrationMode::RegisterOnly:
+                break;
+            case LayoutRegistrationMode::LoadIfUninitialized:
+                if (!initializedLayouts_.contains(layout))
+                    LoadLayout(layout);
+                break;
+            case LayoutRegistrationMode::ForceLoad:
+                LoadLayout(layout);
+                break;
+        }
+    }
+
+    void GuiLayoutManager::DetachPanels(std::span<GuiPanel*> panels)
+    {
+        for (GuiPanel* panel : panels)
+        {
+            if (!panel)
+                continue;
+            RemovePanel(*panel);
+        }
+    }
+
+    void GuiLayoutManager::ResetLayout(EditorLayoutType layout)
+    {
+        auto layoutIt = layoutPanels_.find(layout);
+        if (layoutIt == layoutPanels_.end())
+            return;
+
+        for (GuiPanel* panel : layoutIt->second)
+        {
+            if (!panel)
+                continue;
+            panelLayoutLookup_.erase(panel);
+            panel->SetVisible(false);
+        }
+
+        layoutIt->second.clear();
+        initializedLayouts_.erase(layout);
+    }
+
     void GuiLayoutManager::LoadLayout(EditorLayoutType layout)
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
@@ -97,9 +144,11 @@ namespace BixEngine::Gui
         {
             guiSystem_->RequestDefaultDockLayout();
         }
+
+        initializedLayouts_.insert(layout);
     }
 
-    void GuiLayoutManager::SetPanelsForLayout(EditorLayoutType layout, const std::vector<GuiPanel*>& panels)
+    void GuiLayoutManager::SetPanelsForLayout(EditorLayoutType layout, std::span<GuiPanel*> panels)
     {
         auto& layoutVector = layoutPanels_[layout];
         for (GuiPanel* panel : layoutVector)

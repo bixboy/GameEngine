@@ -1,6 +1,7 @@
 #pragma once
-#include <memory>
 #include <functional>
+#include <memory>
+#include <span>
 #include <utility>
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Core/GuiDocking.h"
@@ -45,6 +46,9 @@ namespace BixEngine::Gui
 
         /** Supprime un panneau existant. */
         void RemovePanel(const String& name);
+
+        /** Supprime plusieurs panneaux à partir de leurs pointeurs. */
+        void RemovePanels(std::span<GuiPanel*> panels);
 
         // ────────────────────────────────────────────────
         // 🔍 Accès / Recherche

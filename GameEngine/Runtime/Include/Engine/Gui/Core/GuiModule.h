@@ -1,8 +1,11 @@
 #pragma once
 
+#include <array>
 #include <filesystem>
 #include <memory>
+#include <span>
 #include <string>
+#include <string_view>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -29,7 +32,7 @@ namespace BixEngine::Core
     {
     public:
         GuiModule();
-        ~GuiModule();
+        ~GuiModule() noexcept;
 
         // ────────────────────────────────────────────────
         // ⚙️ Cycle de vie
@@ -137,15 +140,41 @@ namespace BixEngine::Core
             Gui::GuiPanel* outline{nullptr};
             Gui::GuiPanel* inspector{nullptr};
 
-            [[nodiscard]] std::vector<Gui::GuiPanel*> Collect() const
+            [[nodiscard]] std::size_t Count() const noexcept
             {
-                std::vector<Gui::GuiPanel*> result;
-                result.reserve(4);
-                if (toolbar) result.push_back(toolbar);
-                if (viewport) result.push_back(viewport);
-                if (outline) result.push_back(outline);
-                if (inspector) result.push_back(inspector);
-                return result;
+                std::size_t count = 0;
+                if (toolbar) ++count;
+                if (viewport) ++count;
+                if (outline) ++count;
+                if (inspector) ++count;
+                return count;
+            }
+
+            template <typename Fn>
+            void ForEachPanel(Fn&& fn) const
+            {
+                if (toolbar) std::forward<Fn>(fn)(toolbar);
+                if (viewport) std::forward<Fn>(fn)(viewport);
+                if (outline) std::forward<Fn>(fn)(outline);
+                if (inspector) std::forward<Fn>(fn)(inspector);
+            }
+
+            [[nodiscard]] std::span<Gui::GuiPanel*> CopyTo(std::span<Gui::GuiPanel*> buffer) const noexcept
+            {
+                std::size_t index = 0;
+                auto push = [&](Gui::GuiPanel* panel) noexcept
+                {
+                    if (!panel || index >= buffer.size())
+                        return;
+                    buffer[index++] = panel;
+                };
+
+                push(toolbar);
+                push(viewport);
+                push(outline);
+                push(inspector);
+
+                return buffer.first(index);
             }
         };
 
@@ -158,21 +187,38 @@ namespace BixEngine::Core
             std::shared_ptr<Gui::ActorEditorController::SharedState> sharedState{};
         };
 
+        static constexpr std::size_t kActorEditorPanelCapacity = 4;
+
+        struct PathHash
+        {
+            std::size_t operator()(const std::filesystem::path& value) const noexcept
+            {
+                return std::hash<std::string>{}(value.generic_string());
+            }
+        };
+
+        using PanelBuffer = std::array<Gui::GuiPanel*, kActorEditorPanelCapacity>;
+
         std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
-        std::unordered_map<std::filesystem::path, std::string, std::hash<std::filesystem::path>> actorEditorsByPath_{};
+        std::unordered_map<std::filesystem::path, std::string, PathHash> actorEditorsByPath_{};
         std::vector<std::string> actorEditorOrder_{};
         std::vector<std::string> focusRequests_{};
         std::string activeNavigationId_{"scene"};
         Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
         int nextActorEditorId_{};
-        bool actorEditorLayoutInitialized_{false};
+        bool bInitialized_{false};
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
         void DrawEditorNavigation();
+        void DrawSceneButton(float buttonHeight);
+        void DrawActorEditorTabs(float buttonHeight);
+        bool DrawCloseButton(std::string_view label, float buttonHeight) const;
+        bool DrawNavigationButton(const std::string& label, bool isActive, float buttonHeight) const;
         void ProcessFocusRequests();
         void FocusSceneViewport();
         void RefreshActorPanelsVisibility();
         void ApplyActorEditorPanels(ActorEditorEntry& entry);
+        [[nodiscard]] std::span<Gui::GuiPanel*> CollectPanels(const ActorEditorPanels& panels, PanelBuffer& buffer) const noexcept;
     };
 }
