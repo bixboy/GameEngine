@@ -59,6 +59,8 @@ namespace BixEngine::Core
         Input::InputManager* GetInputManager() noexcept;
         Game::SceneManager* GetSceneManager() noexcept;
         Game::Scene* GetActiveScene() noexcept;
+        Game::Scene* GetScene() noexcept;
+        const Game::Scene* GetScene() const noexcept;
 
         
         // Crée une nouvelle scène active de type TScene.

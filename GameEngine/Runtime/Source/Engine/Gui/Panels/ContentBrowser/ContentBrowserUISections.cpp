@@ -49,6 +49,7 @@ namespace BixEngine::Gui
         {
             Directory = 0,
             Script,
+            Actor,
             File,
         };
 
@@ -57,7 +58,21 @@ namespace BixEngine::Gui
             ContentEntryType type{ContentEntryType::File};
             std::filesystem::path path{};
             ScriptEntryInfo script{};
+            std::filesystem::path actorAsset{};
         };
+
+        bool IsActorAsset(const std::filesystem::path& path)
+        {
+            if (path.empty())
+                return false;
+
+            const auto extension = ToLowerCopy(path.extension().generic_string());
+            if (extension == ".actor")
+                return true;
+
+            const String fileName = ToLowerCopy(path.filename().generic_string());
+            return fileName.View().ends_with(".actor.json") || fileName.View().ends_with(".actor");
+        }
 
         [[nodiscard]] String BuildScriptSelectionId(const ScriptEntryInfo& script)
         {
@@ -307,6 +322,16 @@ namespace BixEngine::Gui
                 continue;
             }
 
+            if (IsActorAsset(entryPath))
+            {
+                DisplayEntry actorEntry{};
+                actorEntry.type = ContentEntryType::Actor;
+                actorEntry.path = entryPath;
+                actorEntry.actorAsset = entryPath;
+                displayEntries.push_back(std::move(actorEntry));
+                continue;
+            }
+
             DisplayEntry fileEntry{};
             fileEntry.type = ContentEntryType::File;
             fileEntry.path = entryPath;
@@ -331,9 +356,11 @@ namespace BixEngine::Gui
                     return 0;
                 case ContentEntryType::Script:
                     return 1;
+                case ContentEntryType::Actor:
+                    return 2;
                 case ContentEntryType::File:
                 default:
-                    return 2;
+                    return 3;
                 }
             };
 
@@ -344,11 +371,15 @@ namespace BixEngine::Gui
 
             const String lhsName = lhs.type == ContentEntryType::Script
                 ? lhs.script.name
-                : String(lhs.path.filename().generic_string());
+                : (lhs.type == ContentEntryType::Actor
+                    ? String(lhs.actorAsset.filename().generic_string())
+                    : String(lhs.path.filename().generic_string()));
 
             const String rhsName = rhs.type == ContentEntryType::Script
                 ? rhs.script.name
-                : String(rhs.path.filename().generic_string());
+                : (rhs.type == ContentEntryType::Actor
+                    ? String(rhs.actorAsset.filename().generic_string())
+                    : String(rhs.path.filename().generic_string()));
 
 
             return CaseInsensitiveLess(lhsName, rhsName);
@@ -367,13 +398,20 @@ namespace BixEngine::Gui
             {
                 const bool isDirectory = entry.type == ContentEntryType::Directory;
                 const bool isScript = entry.type == ContentEntryType::Script;
-                const String entryName = isScript ? entry.script.name : String(entry.path.filename().generic_string());
-                
+                const bool isActor = entry.type == ContentEntryType::Actor;
+                const String entryName = isScript
+                    ? entry.script.name
+                    : (isActor
+                        ? String(entry.actorAsset.filename().generic_string())
+                        : String(entry.path.filename().generic_string()));
+
                 if (!MatchesSearch(entryName, searchQuery))
                     continue;
 
-                const String selectionId = isScript ? BuildScriptSelectionId(entry.script) : String(entry.path.generic_string());
-                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "<>" : "\xef\x81\x96");
+                const String selectionId = isScript
+                    ? BuildScriptSelectionId(entry.script)
+                    : String((isActor ? entry.actorAsset : entry.path).generic_string());
+                const char* icon = isDirectory ? "\xef\x81\xbb" : (isScript ? "<>" : (isActor ? "🎭" : "\xef\x81\x96"));
 
                 ImGui::TableNextColumn();
                 ImGui::PushID(entryName.c_str());
@@ -427,6 +465,15 @@ namespace BixEngine::Gui
                         {
                             selectedEntry = selectionId;
                             RequestOpenScriptFiles(state, entry.script, true, true);
+                        }
+                    }
+                    else if (isActor)
+                    {
+                        if (ImGui::MenuItem("Open Actor Editor"))
+                        {
+                            selectedEntry = selectionId;
+                            if (state.openActorEditorCallback)
+                                state.openActorEditorCallback(entry.actorAsset);
                         }
                     }
                     else
@@ -563,6 +610,12 @@ namespace BixEngine::Gui
                     selectedEntry = selectionId;
                     RequestOpenScriptFiles(state, entry.script, true, true);
                 }
+                else if (isActor && ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
+                {
+                    selectedEntry = selectionId;
+                    if (state.openActorEditorCallback)
+                        state.openActorEditorCallback(entry.actorAsset);
+                }
 
                 if (ImGui::IsItemHovered(kEntryTooltipHoverFlags))
                 {
@@ -611,6 +664,17 @@ namespace BixEngine::Gui
                             {
                                 selectedEntry = selection;
                                 RequestOpenScriptFiles(state, script, true, true);
+                            }}
+                        });
+                    }
+                    else if (isActor)
+                    {
+                        ShowActionTooltip(entryName, {
+                            {"Open actor editor", [&, selection = selectionId]()
+                            {
+                                selectedEntry = selection;
+                                if (state.openActorEditorCallback)
+                                    state.openActorEditorCallback(entry.actorAsset);
                             }}
                         });
                     }

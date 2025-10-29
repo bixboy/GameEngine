@@ -17,6 +17,7 @@ namespace BixEngine::Gui
         String error{};
         bool initialized{false};
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesCallback{};
+        std::function<void(const std::filesystem::path&)> openActorEditorCallback{};
     };
 
     enum class ScriptTemplateType

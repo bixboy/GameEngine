@@ -95,6 +95,7 @@ namespace BixEngine
             
             // Trouver un acteur par nom
             Actor* FindActorByName(const String& name) noexcept;
+            Actor* FindActorByPath(const String& path) noexcept;
 
             
             // Trouver le premier acteur d’un type donné

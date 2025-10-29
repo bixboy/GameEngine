@@ -1,7 +1,9 @@
 ﻿#pragma once
-#include <unordered_map>
-#include <memory>
 #include <functional>
+#include <memory>
+#include <stdexcept>
+#include <type_traits>
+#include <unordered_map>
 #include <vector>
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Utils/GuiPanelController.h"
@@ -38,6 +40,9 @@ namespace BixEngine::Gui
 
         /** Crée un nouveau panneau ou renvoie celui existant. */
         GuiPanel& AddPanel(String name, String title);
+
+        template <typename PanelT, typename... Args>
+        PanelT& AddPanelOfType(String name, String title, Args&&... args);
 
         /** Supprime le panneau et son contrôleur associé. */
         void RemovePanel(const String& name);
@@ -83,4 +88,47 @@ namespace BixEngine::Gui
         /** Retire un panneau de l’index inverse. */
         void UnregisterPanelIndex_(GuiPanel& panel);
     };
+}
+
+namespace BixEngine::Gui
+{
+    template <typename PanelT, typename... Args>
+    PanelT& GuiPanelRegistry::AddPanelOfType(String name, String title, Args&&... args)
+    {
+        static_assert(std::is_base_of_v<GuiPanel, PanelT>, "PanelT must derive from GuiPanel");
+
+        if (auto it = panels_.find(name); it != panels_.end())
+        {
+            auto& entry = it->second;
+            if (!entry.panel)
+            {
+                entry.panel = std::make_unique<PanelT>(String{name}, String{title}, std::forward<Args>(args)...);
+                PanelT& panelRef = static_cast<PanelT&>(*entry.panel);
+                RegisterPanelIndex_(panelRef, it->first);
+                if (OnPanelCreated)
+                    OnPanelCreated(panelRef);
+                return panelRef;
+            }
+
+            auto* existing = dynamic_cast<PanelT*>(entry.panel.get());
+            if (!existing)
+                throw std::runtime_error("GuiPanelRegistry::AddPanelOfType — panel already exists with a different type.");
+
+            existing->SetTitle(std::move(title));
+            return *existing;
+        }
+
+        PanelEntry entry{};
+        entry.panel = std::make_unique<PanelT>(String{name}, String{title}, std::forward<Args>(args)...);
+        PanelT& panelRef = static_cast<PanelT&>(*entry.panel);
+        RegisterPanelIndex_(panelRef, name);
+
+        const String key = name;
+        panels_.emplace(key, std::move(entry));
+
+        if (OnPanelCreated)
+            OnPanelCreated(panelRef);
+
+        return panelRef;
+    }
 }
