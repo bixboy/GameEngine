@@ -1,5 +1,6 @@
 #pragma once
 
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -44,6 +45,7 @@ namespace BixEngine::Gui
         [[nodiscard]] EditorLayoutType GetCurrentLayout() const noexcept { return currentLayout_; }
 
     private:
+        void ProcessPendingSwitch_();
         void EnsureDockspaceForCurrentLayout_();
         void ApplyPanelVisibility_();
         void RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout);
@@ -53,12 +55,14 @@ namespace BixEngine::Gui
         GuiManager* guiManager_{nullptr};
 
         EditorLayoutType currentLayout_{EditorLayoutType::Scene};
+        std::optional<EditorLayoutType> pendingLayout_{};
         std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> layoutData_{};
         std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> dockspaceNames_{};
         std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>, EditorLayoutTypeHash> layoutPanels_{};
         std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_{};
 
         bool dockspaceDirty_{true};
+        bool switchRequested_{false};
     };
 }
 

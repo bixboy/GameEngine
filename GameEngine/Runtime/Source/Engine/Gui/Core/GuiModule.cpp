@@ -548,10 +548,22 @@ namespace BixEngine::Core
         if (focusRequests_.empty())
             return;
 
-        for (const std::string& windowName : focusRequests_)
-            ImGui::SetWindowFocus(windowName.c_str());
+        std::vector<std::string> remainingRequests;
+        remainingRequests.reserve(focusRequests_.size());
 
-        focusRequests_.clear();
+        for (const std::string& windowName : focusRequests_)
+        {
+            ImGuiWindow* window = ImGui::FindWindowByName(windowName.c_str());
+            if (!window || !window->Active)
+            {
+                remainingRequests.push_back(windowName);
+                continue;
+            }
+
+            ImGui::SetWindowFocus(windowName.c_str());
+        }
+
+        focusRequests_ = std::move(remainingRequests);
     }
 
     void GuiModule::FocusSceneViewport()

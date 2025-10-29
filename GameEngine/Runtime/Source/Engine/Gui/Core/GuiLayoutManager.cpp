@@ -26,23 +26,29 @@ namespace BixEngine::Gui
         EnsureDockspaceForCurrentLayout_();
     }
 
-    void GuiLayoutManager::Render()
-    {
-        EnsureDockspaceForCurrentLayout_();
-    }
-
     void GuiLayoutManager::Switch(EditorLayoutType newLayout)
     {
-        if (!guiSystem_ || currentLayout_ == newLayout)
+        if (!guiSystem_)
             return;
 
-        SaveCurrentLayout();
+        if (currentLayout_ == newLayout)
+        {
+            if (switchRequested_)
+            {
+                switchRequested_ = false;
+                pendingLayout_.reset();
+            }
+            return;
+        }
 
-        currentLayout_ = newLayout;
-        dockspaceDirty_ = true;
+        pendingLayout_ = newLayout;
+        switchRequested_ = true;
+    }
+
+    void GuiLayoutManager::Render()
+    {
+        ProcessPendingSwitch_();
         EnsureDockspaceForCurrentLayout_();
-        LoadLayout(newLayout);
-        ApplyPanelVisibility_();
     }
 
     void GuiLayoutManager::SaveCurrentLayout()
@@ -140,6 +146,31 @@ namespace BixEngine::Gui
 
         guiSystem_->SetDockspaceIdentifiers(kRootDockspaceWindow, dockspaceLabel);
         dockspaceDirty_ = false;
+    }
+
+    void GuiLayoutManager::ProcessPendingSwitch_()
+    {
+        if (!switchRequested_ || !pendingLayout_.has_value() || !guiSystem_)
+            return;
+
+        const EditorLayoutType newLayout = pendingLayout_.value();
+        if (currentLayout_ == newLayout)
+        {
+            switchRequested_ = false;
+            pendingLayout_.reset();
+            return;
+        }
+
+        SaveCurrentLayout();
+
+        currentLayout_ = newLayout;
+        dockspaceDirty_ = true;
+        EnsureDockspaceForCurrentLayout_();
+        LoadLayout(newLayout);
+        ApplyPanelVisibility_();
+
+        switchRequested_ = false;
+        pendingLayout_.reset();
     }
 
     void GuiLayoutManager::ApplyPanelVisibility_()
