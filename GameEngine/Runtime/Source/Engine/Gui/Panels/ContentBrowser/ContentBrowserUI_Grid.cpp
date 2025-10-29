@@ -220,7 +220,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Double-clic : ouvre TOUJOURS Actor Editor
+                // Double-clic 
                 if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = entry.SelectionKey();
@@ -228,14 +228,13 @@ namespace BixEngine::Gui
                         state.openActorEditorCallback(entry.path);
                 }
 
-                // Popup clic droit spécifique à l’item
+                // Popup clic droit
                 if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
                 {
                     DrawEntryContextMenu(state, entry, requests, selectedEntry);
                     ImGui::EndPopup();
                 }
 
-                // Tooltip léger
                 if (ImGui::IsItemHovered(TooltipHoverFlags) && ImGui::BeginTooltip())
                 {
                     ImGui::TextUnformatted(entry.name.c_str());

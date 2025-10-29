@@ -1,13 +1,7 @@
 #pragma once
 
-/**
- * @brief Marks a class as participating in the reflection system.
- */
 #define BCLASS(...)
 
-/**
- * @brief Marks a field to be reflected by the tooling.
- */
 #define BPROPERTY(...)
 
 #ifndef GENERATED_BODY

@@ -9,6 +9,8 @@
 
 #include <cstdio>
 
+#include "Engine/Utils/EditorUtils.h"
+
 namespace BixEngine::Gui
 {
     namespace
@@ -110,6 +112,8 @@ namespace BixEngine::Gui
                     selection = script.SelectionKey();
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.headerPath});
+
+                    Utils::OpenFileInCodeEditor(script.headerPath);
                 },
                 hasHeader
             });
@@ -124,6 +128,8 @@ namespace BixEngine::Gui
                     selection = script.SelectionKey();
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.sourcePath});
+
+                    Utils::OpenFileInCodeEditor(script.sourcePath);
                 },
                 hasSource
             });
@@ -139,11 +145,17 @@ namespace BixEngine::Gui
                     if (contentState.openScriptFilesCallback)
                     {
                         std::vector<std::filesystem::path> files{};
+                        
                         if (hasHeader)
                             files.push_back(script.headerPath);
+                        
                         if (hasSource)
                             files.push_back(script.sourcePath);
+                        
                         contentState.openScriptFilesCallback(files);
+
+                        for (const auto& f : files)
+                            Utils::OpenFileInCodeEditor(f);
                     }
                 },
                 hasHeader || hasSource

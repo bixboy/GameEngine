@@ -6,7 +6,6 @@
 namespace BixEngine::Graphics
 {
     /**
-     * @brief Wrapper RAII autour de SDL_Renderer.
      * Gère la création, destruction et configuration du moteur de rendu.
      */
     class Renderer

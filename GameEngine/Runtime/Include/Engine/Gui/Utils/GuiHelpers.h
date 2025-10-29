@@ -10,15 +10,11 @@
 
 namespace BixEngine::Gui::Utils
 {
-    // ────────────────────────────────────────────────────────────────
-    // 🧩 Structures de base : nœuds et callbacks
-    // ────────────────────────────────────────────────────────────────
-
     struct TreeNodeData
     {
-        std::string name;                      // Nom affiché du nœud
-        std::vector<TreeNodeData> children;    // Liste des enfants (sous-nœuds)
-        bool isLeaf = false;                   // Indique si c’est une feuille terminale
+        std::string name;
+        std::vector<TreeNodeData> children;
+        bool isLeaf = false;
     };
 
     /// Callback déclenché lors d’une action (clic droit, menu...) sur un nœud.
@@ -27,16 +23,12 @@ namespace BixEngine::Gui::Utils
     /// Callback déclenché lors du survol d’un élément de liste.
     using ListItemCallback = std::function<void(const std::string&)>;
 
-    // ────────────────────────────────────────────────────────────────
-    // 🧱 Gestionnaire d’état global ImGui
-    // ────────────────────────────────────────────────────────────────
-
     struct GuiStateManager
     {
-        std::unordered_map<std::string, bool> PersistentSections;  // État ouvert/fermé des sections
-        std::vector<std::string> SectionStack;                     // Pile des sections imbriquées
-        int SmallFontPushCount = 0;                                // Nombre de polices poussées
-        ImFont* CachedSmallestFont = nullptr;                      // Police la plus petite en cache
+        std::unordered_map<std::string, bool> PersistentSections;
+        std::vector<std::string> SectionStack;
+        int SmallFontPushCount = 0;
+        ImFont* CachedSmallestFont = nullptr;
 
         /// Accès global (singleton interne)
         static GuiStateManager& Get()
@@ -54,10 +46,6 @@ namespace BixEngine::Gui::Utils
             CachedSmallestFont = nullptr;
         }
     };
-
-    // ────────────────────────────────────────────────────────────────
-    // ⚙️ RAII Helpers : push/pop automatiques
-    // ────────────────────────────────────────────────────────────────
 
     /// Gère automatiquement PushID / PopID.
     struct ScopedID
@@ -136,13 +124,11 @@ namespace BixEngine::Gui::Utils
     // 🎨 Fonctions de base : affichage de sections et messages
     // ────────────────────────────────────────────────────────────────
 
-    void DrawSectionHeader(const char* title);         // Titre avec séparateurs haut/bas
+    void DrawSectionHeader(const char* title); // Titre avec séparateurs haut/bas
     void DrawErrorMessage(const std::string& message); // Message d’erreur rouge
 
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel); // Boutons OK / Cancel
-    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel,
-                            const std::function<void()>& onConfirm,
-                            const std::function<void()>& onCancel);
+    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm, const std::function<void()>& onCancel);
 
     // ────────────────────────────────────────────────────────────────
     // ✏️ Champs texte, étiquettes et infos
@@ -150,10 +136,7 @@ namespace BixEngine::Gui::Utils
 
     bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
 
-    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize,
-                                     const std::function<bool(const char*)>& validator,
-                                     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue,
-                                     bool autoFocus = false, bool* outIsValid = nullptr);
+    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false, bool* outIsValid = nullptr);
 
     void DrawDescriptionText(const char* text); // Texte descriptif (wrap)
     void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-"); // Label + valeur
@@ -171,10 +154,8 @@ namespace BixEngine::Gui::Utils
     void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode);
     void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu);
 
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const char* emptyMessage = "No entries");
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const char* emptyMessage = "No entries");
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
 
     // ────────────────────────────────────────────────────────────────
     // 🔽 Sections repliables (persistantes ou non)
@@ -188,24 +169,22 @@ namespace BixEngine::Gui::Utils
     // 🔍 Recherche et mini-widgets
     // ────────────────────────────────────────────────────────────────
 
-    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...",
-                     float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None); // Champ recherche
+    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...", float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None); // Champ recherche
 
     bool IconButton(const char* icon, const char* tooltip = nullptr); // Bouton carré avec tooltip
-    void DrawHelpMarker(const char* text);                            // "?" contextuel (tooltip)
+    void DrawHelpMarker(const char* text); // "?" contextuel (tooltip)
 
     // ────────────────────────────────────────────────────────────────
     // 🔤 Gestion des polices et séparateurs
     // ────────────────────────────────────────────────────────────────
 
-    void PushSmallFont();                // Active la plus petite police dispo
-    void PopSmallFont();                 // Restaure la police précédente
+    void PushSmallFont(); // Active la plus petite police dispo
+    void PopSmallFont(); // Restaure la police précédente
     void DrawSeparatorText(const char* text); // Séparateur textuel centré
 
     ImVec4 AdjustColor(const ImVec4& color, float delta) noexcept;
 
     void ShowTooltip(const char* text, ImGuiHoveredFlags flags = Theme::TooltipHoverFlags);
-    bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left,
-                             ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
+    bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left, ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
 
 }

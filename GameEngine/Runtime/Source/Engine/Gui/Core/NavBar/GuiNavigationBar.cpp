@@ -160,11 +160,9 @@ namespace BixEngine::Core
         }
 
         for (const std::string& stale : staleEntries)
-            manager->RemoveNavigationIdFromOrder(stale);
+            manager->CloseActorEditor(stale);
 
         for (const std::string& navigationId : closeRequests)
             manager->CloseActorEditor(navigationId);
-    }
-
     }
 }

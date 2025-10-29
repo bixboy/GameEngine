@@ -20,8 +20,7 @@ namespace Bix::Reflection::detail
     };
 
     template<typename Base, typename Derived>
-    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base))>>
-        : std::bool_constant<std::is_base_of_v<Base, Derived>>
+    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base))>> : std::bool_constant<std::is_base_of_v<Base, Derived>>
     {
     };
 
@@ -48,14 +47,16 @@ namespace Bix::Reflection::detail
     struct RootTagTraits<T, std::void_t<typename T::__BixReflection_RootTag>>
     {
         using TagType = typename T::__BixReflection_RootTag;
+        
         static constexpr std::size_t Index = TagType::value;
+        
         using DeclaringType = typename TagType::DeclaringType;
+        
         static constexpr bool HasTag = true;
     };
 
     template<typename T, std::size_t Index>
-    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag
-                                      && RootTagTraits<std::remove_cv_t<T>>::Index == Index;
+    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag && RootTagTraits<std::remove_cv_t<T>>::Index == Index;
 
     template<typename T>
     inline constexpr bool HasAnyRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag;
@@ -93,11 +94,7 @@ namespace Bix::Reflection::detail
         return IsEngineBaseType<T>();
     }
 
-    template<typename ClassType, typename Populator>
-        inline ClassInfo& RegisterReflectedClass(const char* name,
-                                                 const char* qualifiedName,
-                                                 ClassInfo* superClass,
-                                                 Populator&& populator)
+    template<typename ClassType, typename Populator> ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
     {
         return RegisterClass<ClassType, Populator>(
             name,
@@ -107,9 +104,6 @@ namespace Bix::Reflection::detail
         );
     }
     
-    /**
-     * @brief Forces the registration of a class at static initialization time.
-     */
     template<typename ClassType>
     struct ClassRegistrationInvoker
     {
@@ -119,19 +113,15 @@ namespace Bix::Reflection::detail
         }
     };
 
-    /**
-     * @brief Registers the metadata of a class and returns the resulting descriptor.
-     */
+    
     template<typename ClassType, typename Populator>
-    ClassInfo& RegisterClass(const char* name,
-                             const char* qualifiedName,
-                             ClassInfo* superClass,
-                             Populator&& populator)
+    ClassInfo& RegisterClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
     {
         static std::once_flag onceFlag;
         static ClassInfo classInfo;
 
-        std::call_once(onceFlag, [&]() {
+        std::call_once(onceFlag, [&]()
+        {
             classInfo.Name = name ? name : "";
             classInfo.QualifiedName = qualifiedName ? qualifiedName : classInfo.Name;
             classInfo.Size = sizeof(ClassType);
@@ -148,14 +138,9 @@ namespace Bix::Reflection::detail
         return classInfo;
     }
 
-    /**
-     * @brief Registers a property of a class inside the reflection metadata.
-     */
+
     template<typename ClassType, typename PropertyType>
-    PropertyInfo& RegisterProperty(ClassInfo& classInfo,
-                                   const char* name,
-                                   PropertyType ClassType::* member,
-                                   const char* displayTypeName)
+    PropertyInfo& RegisterProperty(ClassInfo& classInfo, const char* name, PropertyType ClassType::* member, const char* displayTypeName)
     {
         PropertyInfo& info = classInfo.Properties.emplace_back();
 
@@ -181,12 +166,16 @@ namespace Bix::Reflection::detail
         if constexpr (std::is_standard_layout_v<ClassType> && std::is_default_constructible_v<ClassType>)
         {
             using Storage = std::aligned_storage_t<sizeof(ClassType), alignof(ClassType)>;
+            
             Storage storage{};
             ClassType* instance = new (&storage) ClassType();
+            
             auto* base = reinterpret_cast<std::byte*>(static_cast<void*>(instance));
             auto* memberPtr = reinterpret_cast<std::byte*>(&(instance->*member));
+            
             info.Offset = static_cast<std::size_t>(memberPtr - base);
             info.HasOffset = true;
+            
             instance->~ClassType();
         }
         else

@@ -921,7 +921,6 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\GuiContextFactory.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\GuiTheme.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorEditorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.cpp" />
@@ -1029,6 +1028,7 @@
     <ClCompile Include="Runtime\Source\Engine\Systems\SdlSystem.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\SubsystemManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\Window.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Utils\EditorUtils.cpp" />
     <ClCompile Include="Runtime\Source\Game\Actor.cpp" />
     <ClCompile Include="Runtime\Source\Game\ActorSpawner.cpp" />
     <ClCompile Include="Runtime\Source\Game\Components\SpriteComponent.cpp" />
@@ -1124,6 +1124,7 @@
     <ClInclude Include="Runtime\Include\Engine\Systems\SdlSystem.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\SubsystemManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Window.h" />
+    <ClInclude Include="Runtime\Include\Engine\Utils\EditorUtils.h" />
     <ClInclude Include="Runtime\Include\Game\Actor.h" />
     <ClInclude Include="Runtime\Include\Game\ActorSpawner.h" />
     <ClInclude Include="Runtime\Include\Game\Components\Component.h" />

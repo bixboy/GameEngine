@@ -16,7 +16,6 @@
 #include "Engine/Gui/Panels/ActorInspector/ActorOverviewUI.h"
 #include "Engine/Gui/Panels/ActorInspector/ComponentSectionUI.h"
 #include "Engine/Gui/Panels/ActorInspector/TransformSectionUI.h"
-#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 
 namespace BixEngine::Gui
@@ -117,19 +116,13 @@ namespace BixEngine::Gui
         }
     }
 
-    ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState,
-                                                 Section section)
-        : section_(section)
-        , state_(std::move(sharedState))
+    ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section) : section_(section), state_(std::move(sharedState))
     {
         if (state_)
             stableId_ = BuildPanelStableId(state_->stableIdRoot, section_);
     }
 
-    std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(Core::SubsystemManager& subsystems,
-                                                                                                  std::filesystem::path assetPath,
-                                                                                                  String stableIdRoot,
-                                                                                                  CloseRequest onCloseRequest)
+    std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(Core::SubsystemManager& subsystems, std::filesystem::path assetPath, String stableIdRoot, CloseRequest onCloseRequest)
     {
         auto state = std::make_shared<SharedState>();
         state->subsystems = &subsystems;
@@ -139,6 +132,7 @@ namespace BixEngine::Gui
         state->onCloseRequest = std::move(onCloseRequest);
         state->actor = nullptr;
         state->actorRefreshRequested = true;
+        
         return state;
     }
 
@@ -394,19 +388,19 @@ namespace BixEngine::Gui
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(14.0f, 6.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12.0f, 0.0f));
 
-        if (ImGui::Button("▶ Play"))
+        if (ImGui::Button("Play"))
         {
             HandlePlayRequest();
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("💾 Save"))
+        if (ImGui::Button("Save"))
         {
             HandleSaveRequest();
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("🧠 Compile"))
+        if (ImGui::Button("Compile"))
         {
             HandleCompileRequest();
         }

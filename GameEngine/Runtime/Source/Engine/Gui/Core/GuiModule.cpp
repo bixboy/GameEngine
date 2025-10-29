@@ -257,8 +257,7 @@ namespace BixEngine::Core
             String message = "Requested to open script files in code editor:";
             for (const auto& path : paths)
             {
-                message += "
- - ";
+                message += "- ";
                 message += path.generic_string();
             }
 
