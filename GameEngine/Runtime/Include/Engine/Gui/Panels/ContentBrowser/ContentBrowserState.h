@@ -1,6 +1,7 @@
 #pragma once
 
 #include "Core/Containers/String.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentEntry.h"
 
 #include <filesystem>
 #include <functional>
@@ -14,8 +15,6 @@ namespace BixEngine::Gui
         Component,
         Utility,
     };
-
-    struct ContentEntry;
 
     struct PopupRequestState
     {
