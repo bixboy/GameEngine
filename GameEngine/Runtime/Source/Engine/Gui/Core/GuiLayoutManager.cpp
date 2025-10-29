@@ -34,6 +34,12 @@ namespace BixEngine::Gui
         layoutPanels_.emplace(EditorLayoutType::ActorEditor, std::vector<GuiPanel*>{});
 
         LoadPersistedLayouts_();
+
+        currentLayout_ = EditorLayoutType::Scene;
+        pendingLayout_.reset();
+        switchRequested_ = false;
+        dockspaceDirty_ = true;
+
         EnsureDockspaceForCurrentLayout_();
         LoadLayout(currentLayout_);
     }
