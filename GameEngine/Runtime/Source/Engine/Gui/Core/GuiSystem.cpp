@@ -169,6 +169,12 @@ namespace BixEngine::Gui
         dockLayoutBuilt_ = true;
         rebuildDockLayout_ = false;
         pendingDockUpdates_.clear();
+
+        for (GuiPanel* panel : panels_)
+        {
+            if (panel)
+                panel->ResetDockId();
+        }
     }
 
 

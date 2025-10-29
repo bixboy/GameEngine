@@ -138,7 +138,7 @@ namespace BixEngine::Gui
                             for (const auto& entry : fs::directory_iterator(directory, childErr))
                             {
                                 if (entry.is_directory())
-                                    children.push_back(entry.path());   
+                                    children.push_back(entry.path());
                             }
 
                             std::sort(children.begin(), children.end(),
@@ -166,9 +166,8 @@ namespace BixEngine::Gui
                     renderDirectoryTree(renderDirectoryTree, state.root, 0);
                 else
                     DrawEmptyStateMessage("Content directory not found.");
-
-                ImGui::EndChild();
             }
+            ImGui::EndChild();
         }
 
         ImGui::EndChild();
