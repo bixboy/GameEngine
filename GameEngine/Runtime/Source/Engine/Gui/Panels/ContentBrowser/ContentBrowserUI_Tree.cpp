@@ -25,11 +25,11 @@ namespace BixEngine::Gui
         namespace fs = std::filesystem;
         namespace Utils = Gui::Utils;
 
-        ScopedStyle treeSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
+        Utils::ScopedStyle treeSpacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 2.0f));
         if (!ImGui::BeginChild("ContentBrowserTree", ImVec2(kContentTreeWidth, 0.0f), true))
             return;
 
-        ScopedColor treeColor(ImGuiCol_ChildBg, kContentTreeBackground);
+        Utils::ScopedColor treeColor(ImGuiCol_ChildBg, kContentTreeBackground);
         if (ImGui::BeginChild("ContentBrowserTreeInner", ImVec2(0.0f, 0.0f), false, ImGuiWindowFlags_AlwaysVerticalScrollbar))
         {
             const auto renderDirectoryTree = [&](auto&& self, const fs::path& directory, int depth) -> void
