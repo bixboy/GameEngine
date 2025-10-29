@@ -7,7 +7,7 @@
 #include <unordered_map>
 #include <vector>
 #include "Core/Containers/String.h"
-#include "Engine/Gui/Utils/GuiPanelController.h"
+#include "Engine/Gui/Controllers/GuiPanelController.h"
 
 namespace BixEngine::Gui
 {

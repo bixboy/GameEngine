@@ -4,7 +4,7 @@
 #include <functional>
 
 #include "Core/Containers/String.h"
-#include "Engine/Gui/Utils/GuiPanelController.h"
+#include "Engine/Gui/Controllers/GuiPanelController.h"
 
 struct ImVec2;
 

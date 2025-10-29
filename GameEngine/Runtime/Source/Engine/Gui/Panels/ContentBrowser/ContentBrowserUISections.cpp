@@ -586,6 +586,7 @@ namespace BixEngine::Gui
                             fs::path parent = isScript ? entry.script.directory : entry.path.parent_path();
                             if (parent.empty())
                                 parent = state.current;
+                            
                             requestPopups.folderTarget = std::move(parent);
                         }
                         requestPopups.createFolder = true;
@@ -608,13 +609,8 @@ namespace BixEngine::Gui
                         selectedEntry = selectionId;
                     }
                 }
-
+                
                 if (isScript && hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
-                {
-                    selectedEntry = selectionId;
-                    RequestOpenScriptFiles(state, entry.script, true, true);
-                }
-                else if (isActor && hoveredForDoubleClick && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = selectionId;
                     if (state.openActorEditorCallback)

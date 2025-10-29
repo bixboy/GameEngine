@@ -36,6 +36,7 @@ namespace BixEngine::Gui
 
         // Fournisseur de taille du viewport
         std::function<std::pair<int, int>()> sceneViewportSizeProvider{};
+        
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
         std::function<void(const std::filesystem::path&)> openActorInEditor{};
 
