@@ -162,6 +162,7 @@ namespace BixEngine::Core
         std::vector<std::string> focusRequests_{};
         std::string activeNavigationId_{"scene"};
         Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
+        bool actorEditorLayoutInitialized_{false};
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
@@ -169,5 +170,6 @@ namespace BixEngine::Core
         void ProcessFocusRequests();
         void FocusSceneViewport();
         void RefreshActorPanelsVisibility();
+        void ApplyActorEditorPanels(ActorEditorEntry& entry);
     };
 }

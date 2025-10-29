@@ -35,6 +35,7 @@ namespace BixEngine::Gui
             Core::SubsystemManager* subsystems{nullptr};
             std::filesystem::path assetPath{};
             String assetDisplayName{};
+            String stableIdRoot{};
             CloseRequest onCloseRequest{};
             Game::Actor* actor{nullptr};
             bool actorRefreshRequested{true};
@@ -45,6 +46,7 @@ namespace BixEngine::Gui
 
         static std::shared_ptr<SharedState> CreateSharedState(Core::SubsystemManager& subsystems,
                                                               std::filesystem::path assetPath,
+                                                              String stableIdRoot,
                                                               CloseRequest onCloseRequest);
 
         [[nodiscard]] const std::filesystem::path& GetAssetPath() const noexcept { return state_->assetPath; }
@@ -76,5 +78,6 @@ namespace BixEngine::Gui
         Section section_;
         std::shared_ptr<SharedState> state_;
         String cachedDisplayName_{};
+        String stableId_{};
     };
 }

@@ -32,7 +32,28 @@ namespace BixEngine::Gui
             if (!filename.empty())
                 return filename;
 
+            const auto stem = path.stem().generic_string();
+            if (!stem.empty())
+                return stem;
+
             return String(path.generic_string());
+        }
+
+        const char* SectionSuffix(ActorEditorController::Section section)
+        {
+            switch (section)
+            {
+            case ActorEditorController::Section::Toolbar:
+                return "Toolbar";
+            case ActorEditorController::Section::Viewport:
+                return "Viewport";
+            case ActorEditorController::Section::Outline:
+                return "Outline";
+            case ActorEditorController::Section::Inspector:
+                return "Inspector";
+            }
+
+            return "Panel";
         }
 
         Game::Actor* ResolveActor(Core::SubsystemManager* subsystems, const std::filesystem::path& assetPath) noexcept
@@ -67,23 +88,6 @@ namespace BixEngine::Gui
             ImGui::GetWindowDrawList()->AddText(cursor, ImGui::GetColorU32(ImGuiCol_TextDisabled), text);
         }
 
-        const char* SectionStableId(ActorEditorController::Section section)
-        {
-            switch (section)
-            {
-            case ActorEditorController::Section::Toolbar:
-                return "ActorEditorToolbar";
-            case ActorEditorController::Section::Viewport:
-                return "ActorEditorViewport";
-            case ActorEditorController::Section::Outline:
-                return "ActorEditorOutline";
-            case ActorEditorController::Section::Inspector:
-                return "ActorEditorInspector";
-            }
-
-            return "ActorEditorPanel";
-        }
-
         const char* SectionDisplayPrefix(ActorEditorController::Section section)
         {
             switch (section)
@@ -102,21 +106,37 @@ namespace BixEngine::Gui
         }
     }
 
+        String BuildPanelStableId(const String& root, ActorEditorController::Section section)
+        {
+            String identifier = root;
+            if (identifier.IsEmpty())
+                identifier = "ActorEditor";
+
+            identifier += "_";
+            identifier += SectionSuffix(section);
+            return identifier;
+        }
+    }
+
     ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState,
                                                  Section section)
         : section_(section)
         , state_(std::move(sharedState))
     {
+        if (state_)
+            stableId_ = BuildPanelStableId(state_->stableIdRoot, section_);
     }
 
     std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(Core::SubsystemManager& subsystems,
                                                                                                   std::filesystem::path assetPath,
+                                                                                                  String stableIdRoot,
                                                                                                   CloseRequest onCloseRequest)
     {
         auto state = std::make_shared<SharedState>();
         state->subsystems = &subsystems;
         state->assetPath = std::move(assetPath);
         state->assetDisplayName = BuildDisplayName(state->assetPath);
+        state->stableIdRoot = std::move(stableIdRoot);
         state->onCloseRequest = std::move(onCloseRequest);
         state->actor = nullptr;
         state->actorRefreshRequested = true;
@@ -201,7 +221,6 @@ namespace BixEngine::Gui
 
     void ActorEditorController::ApplyPanelTitle(GuiPanel& panel)
     {
-        const char* stableId = SectionStableId(section_);
         String title(SectionDisplayPrefix(section_));
 
         if (!cachedDisplayName_.IsEmpty())
@@ -212,7 +231,15 @@ namespace BixEngine::Gui
             title += "Actor";
 
         title += "###";
-        title += stableId;
+        if (!stableId_.IsEmpty())
+        {
+            title += stableId_;
+        }
+        else
+        {
+            title += "ActorEditor";
+            title += SectionSuffix(section_);
+        }
 
         panel.SetTitle(std::move(title));
     }
@@ -225,12 +252,8 @@ namespace BixEngine::Gui
         state_->actor = ResolveActor(state_->subsystems, state_->assetPath);
         state_->actorRefreshRequested = false;
 
-        if (state_->actor)
-        {
-            const String actorName = state_->actor->GetName();
-            if (!actorName.IsEmpty() && state_->assetDisplayName != actorName)
-                state_->assetDisplayName = actorName;
-        }
+        // Keep the display name bound to the asset file so navigation buttons
+        // always reflect the script being edited.
     }
 
     void ActorEditorController::DrawViewport()
