@@ -8,6 +8,8 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 
+#include "Engine/Gui/Controllers/ActorEditorController.h"
+
 namespace BixEngine
 {
     namespace Core { class Window; class Timer; class SubsystemManager; }
@@ -161,6 +163,7 @@ namespace BixEngine::Core
         std::vector<std::string> actorEditorOrder_{};
         std::vector<std::string> focusRequests_{};
         std::string activeNavigationId_{"scene"};
+        int nextActorEditorId_{};
         Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
 
         void OpenActorEditor(const std::filesystem::path& path);
