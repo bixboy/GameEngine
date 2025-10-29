@@ -216,11 +216,11 @@ namespace BixEngine::Gui
     {
         if (!RefreshDirectoryCache(state))
         {
-            Gui::Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
+            Utils::DrawEmptyStateMessage(state.error.IsEmpty() ? "Unable to open directory." : state.error.c_str());
             return;
         }
 
-        Gui::Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
+        Utils::ScopedColor background(ImGuiCol_ChildBg, kContentBackground);
         if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0.0f, 0.0f), true))
             return;
 
@@ -260,10 +260,10 @@ namespace BixEngine::Gui
                 const ImVec4 hoverColor = AdjustColor(baseColor, 0.10f);
                 const ImVec4 activeColor = AdjustColor(baseColor, 0.20f);
 
-                Gui::Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
-                Gui::Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
-                Gui::Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
-                Gui::Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
+                Utils::ScopedColor buttonColor(ImGuiCol_Button, baseColor);
+                Utils::ScopedColor buttonHover(ImGuiCol_ButtonHovered, hoverColor);
+                Utils::ScopedColor buttonActive(ImGuiCol_ButtonActive, activeColor);
+                Utils::ScopedStyle buttonPadding(ImGuiStyleVar_FramePadding, ImVec2(12.0f, 12.0f));
 
                 const bool clicked = ImGui::Button(GetIcon(entry.type), ImVec2(kContentThumbnailSize, kContentThumbnailSize));
                 const bool hoveredForDoubleClick = ImGui::IsItemHovered(kEntryDoubleClickHoverFlags);
@@ -376,14 +376,14 @@ namespace BixEngine::Gui
                     }
                 }
 
-                std::unique_ptr<Gui::Utils::ScopedColor> textColor{};
+                std::unique_ptr<Utils::ScopedColor> textColor{};
                 if (isSelected)
                 {
-                    textColor = std::make_unique<Gui::Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
+                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1.0f));
                 }
                 else if (ImGui::IsItemHovered())
                 {
-                    textColor = std::make_unique<Gui::Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
+                    textColor = std::make_unique<Utils::ScopedColor>(ImGuiCol_Text, ImVec4(0.85f, 0.85f, 0.85f, 1.0f));
                 }
 
                 ImGui::TextWrapped("%s", entry.name.c_str());
@@ -395,7 +395,7 @@ namespace BixEngine::Gui
         }
         else
         {
-            Gui::Utils::DrawEmptyStateMessage("Nothing to show.");
+            Utils::DrawEmptyStateMessage("Nothing to show.");
         }
 
         ImGui::EndChild();

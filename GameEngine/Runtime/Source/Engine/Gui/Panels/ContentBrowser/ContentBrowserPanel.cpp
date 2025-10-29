@@ -1,15 +1,93 @@
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
-#include "Engine/Gui/Utils/GuiHelpers.h"
-#include "imgui.h"
-#include <filesystem>
-#include "Engine/Gui/DefaultEngineGui.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Engine/Gui/Core/GuiDocking.h"
-#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Core/Logger.h"
+#include <filesystem>
+#include "imgui.h"
 
+
+namespace fs = std::filesystem;
 
 namespace BixEngine::Gui
 {
+    // ─────────────────────────────────────────────
+    // 🏗️  Implémentation du Content Browser unique
+    // ─────────────────────────────────────────────
+
+    ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context)
+    {
+        state_.openScriptFilesCallback = context.openScriptFilesInEditor;
+        state_.openActorEditorCallback = context.openActorInEditor;
+    }
+
+    void ContentBrowserPanel::EnsureValidDirectory()
+    {
+        if (state_.current.empty() || !fs::exists(state_.current))
+            state_.current = state_.root;
+    }
+
+    void ContentBrowserPanel::HandleShortcuts()
+    {
+        if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
+            return;
+
+        // 🔁 Refresh du dossier
+        if (ImGui::IsKeyPressed(ImGuiKey_F5))
+        {
+            LOG_INFO("Content Browser refreshed");
+            state_.error.Clear();
+            EnsureContentBrowserInitialized(state_);
+        }
+
+        // 🗑️ Suppression
+        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
+        {
+            if (!selectedEntry_.IsEmpty())
+            {
+                LOG_WARNING("Delete requested for: " + selectedEntry_);
+            }
+        }
+    }
+
+    void ContentBrowserPanel::Draw()
+    {
+        if (!EnsureContentBrowserInitialized(state_))
+        {
+            Utils::DrawErrorMessage(state_.error);
+            ImGui::Spacing();
+            Utils::DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
+            return;
+        }
+
+        EnsureValidDirectory();
+
+        // ─────────────────────────────
+        // Barre de navigation du dossier
+        // ─────────────────────────────
+        RenderHeader(state_, selectedEntry_, searchBuffer_);
+        ImGui::Spacing();
+
+        // ─────────────────────────────
+        // Arborescence + fichiers
+        // ─────────────────────────────
+        Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
+
+        RenderDirectoryTree(state_, selectedEntry_);
+        ImGui::SameLine();
+
+        const String searchQuery(searchBuffer_);
+        RenderEntries(state_, selectedEntry_, popupRequests_, searchQuery);
+
+        // Popups (création / renommage / erreurs)
+        RenderPopups(state_, selectedEntry_, popupRequests_);
+
+        HandleShortcuts();
+    }
+
+    // ─────────────────────────────────────────────
+    // 🧱  Création unique du panneau dockable
+    // ─────────────────────────────────────────────
+
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
         GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
@@ -20,46 +98,9 @@ namespace BixEngine::Gui
         contentPanel.SetClosable(true);
         contentPanel.SetBackgroundColor(kContentBackground);
         contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-        const auto scriptEditorOpener = context.openScriptFilesInEditor;
-        const auto actorEditorOpener = context.openActorInEditor;
-        contentPanel.SetDrawFunction([scriptEditorOpener, actorEditorOpener]()
-        {
-            namespace fs = std::filesystem;
 
-            static ContentBrowserState state{};
-            static char searchBuffer[256] = "";
-            static String selectedEntry{};
-            static PopupRequestState popupRequests{};
-
-            state.openScriptFilesCallback = scriptEditorOpener;
-            state.openActorEditorCallback = actorEditorOpener;
-
-            if (!EnsureContentBrowserInitialized(state))
-            {
-                Utils::DrawErrorMessage(state.error);
-                ImGui::Spacing();
-                Utils::DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
-                return;
-            }
-
-            if (state.current.empty())
-                state.current = state.root;
-
-            if (!fs::exists(state.current))
-                state.current = state.root;
-
-            RenderHeader(state, selectedEntry, searchBuffer);
-
-            ImGui::BeginGroup();
-            RenderDirectoryTree(state, selectedEntry);
-            ImGui::SameLine();
-
-            const String searchQuery(searchBuffer);
-            RenderEntries(state, selectedEntry, popupRequests, searchQuery);
-            ImGui::EndGroup();
-
-            RenderPopups(state, selectedEntry, popupRequests);
-        });
+        static ContentBrowserPanel browser(context);
+        contentPanel.SetDrawFunction([] { browser.Draw(); });
 
         return contentPanel;
     }

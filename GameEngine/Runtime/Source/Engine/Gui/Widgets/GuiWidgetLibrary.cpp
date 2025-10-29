@@ -108,17 +108,12 @@ namespace BixEngine::Gui::Widgets
     
     PanelToolbar::PanelToolbar()
     {
-        ImGui::PushID(this);
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 4.0f));
     }
 
     PanelToolbar::~PanelToolbar()
     {
-        if (!committed_)
-            Commit();
-
         ImGui::PopStyleVar();
-        ImGui::PopID();
     }
 
     void PanelToolbar::AddLeft(const std::function<void()>& drawCallback)

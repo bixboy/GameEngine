@@ -445,6 +445,21 @@ namespace BixEngine
         operator const char*() const noexcept { return data_.c_str(); }
         operator std::string_view() const noexcept { return data_; }
 
+        template <typename... Args>
+        static String Format(const char* format, Args&&... args)
+        {
+            if (!format)
+                return {};
+
+            int size = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // +1 pour '\0'
+            if (size <= 0)
+                return {};
+
+            std::vector<char> buffer(static_cast<size_t>(size));
+            std::snprintf(buffer.data(), static_cast<size_t>(size), format, std::forward<Args>(args)...);
+            return String(std::string_view(buffer.data(), static_cast<size_t>(size - 1)));
+        }
+
     private:
         [[nodiscard]] size_type FindInsensitive(std::string_view value, size_type start = 0) const
         {
