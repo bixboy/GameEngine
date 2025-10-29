@@ -224,6 +224,13 @@ namespace BixEngine::Gui
 
         state_->actor = ResolveActor(state_->subsystems, state_->assetPath);
         state_->actorRefreshRequested = false;
+
+        if (state_->actor)
+        {
+            const String actorName = state_->actor->GetName();
+            if (!actorName.IsEmpty() && state_->assetDisplayName != actorName)
+                state_->assetDisplayName = actorName;
+        }
     }
 
     void ActorEditorController::DrawViewport()

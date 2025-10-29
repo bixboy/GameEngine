@@ -157,11 +157,11 @@ namespace BixEngine::Core
         };
 
         std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
+        std::unordered_map<std::filesystem::path, std::string, std::hash<std::filesystem::path>> actorEditorsByPath_{};
         std::vector<std::string> actorEditorOrder_{};
         std::vector<std::string> focusRequests_{};
         std::string activeNavigationId_{"scene"};
         Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
-        size_t nextActorEditorId_{0};
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);

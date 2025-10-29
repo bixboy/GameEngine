@@ -2,9 +2,12 @@
 
 #include <SDL3/SDL.h>
 #include <algorithm>
+#include <cctype>
+#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <iterator>
+#include <sstream>
 #include <utility>
 #include <vector>
 #include <imgui_internal.h>
@@ -28,6 +31,40 @@ namespace BixEngine::Core
     namespace
     {
         constexpr float kNavigationBarHeight = 38.0f;
+
+        std::string MakeNavigationIdFromPath(const std::filesystem::path& path)
+        {
+            std::string raw = path.generic_string();
+            if (raw.empty())
+                raw = "actor";
+
+            std::string sanitized;
+            sanitized.reserve(raw.size());
+            for (char ch : raw)
+            {
+                if (std::isalnum(static_cast<unsigned char>(ch)) || ch == '_')
+                    sanitized.push_back(ch);
+                else
+                    sanitized.push_back('_');
+            }
+
+            constexpr std::uint64_t kFnvOffset = 1469598103934665603ull;
+            constexpr std::uint64_t kFnvPrime = 1099511628211ull;
+            std::uint64_t hash = kFnvOffset;
+            for (unsigned char ch : raw)
+            {
+                hash ^= ch;
+                hash *= kFnvPrime;
+            }
+
+            std::ostringstream oss;
+            oss << std::hex << hash;
+
+            sanitized.append("_");
+            sanitized.append(oss.str());
+
+            return "actor_editor_" + sanitized;
+        }
     }
 
     GuiModule::GuiModule()
@@ -318,7 +355,25 @@ namespace BixEngine::Core
             return;
         }
 
-        const std::string navigationId = "actor_editor_" + std::to_string(++nextActorEditorId_);
+        auto existingByPath = actorEditorsByPath_.find(normalized);
+        if (existingByPath != actorEditorsByPath_.end())
+        {
+            const std::string& navigationId = existingByPath->second;
+            activeNavigationId_ = navigationId;
+            activeLayout_ = Gui::EditorLayoutType::ActorEditor;
+            if (layoutManager_)
+                layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
+            RefreshActorPanelsVisibility();
+
+            if (auto itEntry = actorEditors_.find(navigationId); itEntry != actorEditors_.end())
+            {
+                if (itEntry->second.panels.viewport)
+                    focusRequests_.push_back(itEntry->second.panels.viewport->GetTitle().Std());
+            }
+            return;
+        }
+
+        const std::string navigationId = MakeNavigationIdFromPath(normalized);
         const std::string baseName = navigationId;
 
         auto sharedState = Gui::ActorEditorController::CreateSharedState(*subsystems_, normalized, [this, navigationId]()
@@ -353,6 +408,7 @@ namespace BixEngine::Core
         entry.panels.inspector = createPanel("inspector", Gui::ActorEditorController::Section::Inspector);
 
         actorEditorOrder_.push_back(navigationId);
+        actorEditorsByPath_.emplace(normalized, navigationId);
         actorEditors_.emplace(navigationId, std::move(entry));
 
         activeNavigationId_ = navigationId;
@@ -403,6 +459,8 @@ namespace BixEngine::Core
                 guiManager_->RemovePanel(panel->GetName());
             }
         }
+
+        actorEditorsByPath_.erase(entry.assetPath);
 
         entry.sharedState.reset();
 

@@ -368,16 +368,52 @@ namespace BixEngine::Gui
         if (!dockLayoutBuilt_ || dockspaceId_ == 0 || pendingDockUpdates_.empty())
             return;
 
+        std::vector<GuiPanel*> panelsToProcess;
+        panelsToProcess.reserve(pendingDockUpdates_.size());
+
         if (useSavedDockLayout_)
+        {
+            for (GuiPanel* panel : pendingDockUpdates_)
+            {
+                if (!panel)
+                    continue;
+
+                const auto& title = panel->GetTitle();
+                const auto& name = panel->GetName();
+
+                ImGuiWindowSettings* settings = nullptr;
+                if (!title.IsEmpty())
+                {
+                    const ImGuiID seed = name.IsEmpty() ? 0 : ImHashStr(name.c_str());
+                    const ImGuiID windowId = ImHashStr(title.c_str(), 0, seed);
+                    settings = ImGui::FindWindowSettingsByID(windowId);
+                }
+
+                if (settings && settings->DockId != 0)
+                    continue;
+
+                panelsToProcess.push_back(panel);
+            }
+        }
+        else
+        {
+            for (GuiPanel* panel : pendingDockUpdates_)
+            {
+                if (panel)
+                    panelsToProcess.push_back(panel);
+            }
+        }
+
+        if (panelsToProcess.empty())
         {
             pendingDockUpdates_.clear();
             return;
         }
 
         std::vector<GuiPanel*> remaining;
-        remaining.reserve(pendingDockUpdates_.size());
+        remaining.reserve(panelsToProcess.size());
 
-        for (GuiPanel* panel : pendingDockUpdates_)
+        for (GuiPanel* panel : panelsToProcess)
         {
             if (!panel)
                 continue;
@@ -411,9 +447,6 @@ namespace BixEngine::Gui
 
     void GuiSystem::QueuePanelForDockUpdate_(GuiPanel& panel)
     {
-        if (useSavedDockLayout_)
-            return;
-
         if (std::find(pendingDockUpdates_.begin(), pendingDockUpdates_.end(), &panel) == pendingDockUpdates_.end())
             pendingDockUpdates_.push_back(&panel);
     }
