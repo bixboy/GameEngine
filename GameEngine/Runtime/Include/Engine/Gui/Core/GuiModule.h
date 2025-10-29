@@ -3,12 +3,13 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <unordered_map>
 #include <utility>
 #include <vector>
 #include <SDL3/SDL_events.h>
 
-#include "Engine/Gui/Controllers/ActorEditorController.h"
+#include "Engine/Gui/Core/NavBar/GuiActorEditorManager.h"
+#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+
 
 namespace BixEngine
 {
@@ -29,7 +30,7 @@ namespace BixEngine::Core
     {
     public:
         GuiModule();
-        ~GuiModule();
+        ~GuiModule() noexcept;
 
         // ────────────────────────────────────────────────
         // ⚙️ Cycle de vie
@@ -76,7 +77,7 @@ namespace BixEngine::Core
         bool IsMouseOverViewport() const noexcept;
 
         // ────────────────────────────────────────────────
-        // 🪟 Gestion de la texture du viewport 3D
+        // 🪟 Gestion de la texture du viewpor
         // ────────────────────────────────────────────────
 
         /**
@@ -102,7 +103,11 @@ namespace BixEngine::Core
         /** Retourne un pointeur vers le gestionnaire GUI (GuiManager). */
         Gui::GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
 
-    private:
+        /** Retourne un pointeur vers le gestionnaire des éditeurs d'acteurs. */
+        GuiActorEditorManager* GetActorEditorManager() noexcept { return actorEditorManager_.get(); }
+        const GuiActorEditorManager* GetActorEditorManager() const noexcept { return actorEditorManager_.get(); }
+
+    public:
         // ────────────────────────────────────────────────
         // 🧠 Données internes
         // ────────────────────────────────────────────────
@@ -110,6 +115,7 @@ namespace BixEngine::Core
         std::unique_ptr<Gui::GuiSystem> guiSystem_;
         std::unique_ptr<Gui::GuiManager> guiManager_;
         std::unique_ptr<Gui::GuiLayoutManager> layoutManager_;
+        std::unique_ptr<GuiNavigationBar> navigationBar_;
 
         SubsystemManager* subsystems_{nullptr};
 
@@ -130,49 +136,14 @@ namespace BixEngine::Core
         int sceneViewportHeight_{0};
         bool sceneViewportTextureErrorLogged_{false};
 
-        struct ActorEditorPanels
-        {
-            Gui::GuiPanel* toolbar{nullptr};
-            Gui::GuiPanel* viewport{nullptr};
-            Gui::GuiPanel* outline{nullptr};
-            Gui::GuiPanel* inspector{nullptr};
-
-            [[nodiscard]] std::vector<Gui::GuiPanel*> Collect() const
-            {
-                std::vector<Gui::GuiPanel*> result;
-                result.reserve(4);
-                if (toolbar) result.push_back(toolbar);
-                if (viewport) result.push_back(viewport);
-                if (outline) result.push_back(outline);
-                if (inspector) result.push_back(inspector);
-                return result;
-            }
-        };
-
-        struct ActorEditorEntry
-        {
-            std::filesystem::path assetPath;
-            std::string navigationId;
-            std::string buttonLabel;
-            ActorEditorPanels panels{};
-            std::shared_ptr<Gui::ActorEditorController::SharedState> sharedState{};
-        };
-
-        std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
-        std::unordered_map<std::filesystem::path, std::string, std::hash<std::filesystem::path>> actorEditorsByPath_{};
-        std::vector<std::string> actorEditorOrder_{};
+        std::unique_ptr<GuiActorEditorManager> actorEditorManager_{};
         std::vector<std::string> focusRequests_{};
-        std::string activeNavigationId_{"scene"};
-        Gui::EditorLayoutType activeLayout_{static_cast<Gui::EditorLayoutType>(0)};
-        int nextActorEditorId_{};
-        bool actorEditorLayoutInitialized_{false};
+        bool bInitialized_{false};
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
-        void DrawEditorNavigation();
+
         void ProcessFocusRequests();
         void FocusSceneViewport();
-        void RefreshActorPanelsVisibility();
-        void ApplyActorEditorPanels(ActorEditorEntry& entry);
     };
 }

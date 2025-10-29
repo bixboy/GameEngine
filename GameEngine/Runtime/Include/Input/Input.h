@@ -3,7 +3,7 @@
 #include <SDL3/SDL_events.h>
 #include <unordered_set>
 #include <bitset>
-#include <utility> // std::pair
+#include <utility>
 
 namespace BixEngine::Input
 {

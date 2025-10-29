@@ -8,8 +8,6 @@
 
 namespace BixEngine::Gui
 {
-    // Usage: AsyncDirectoryLoader loader; loader.Request(state.current);
-    // Appeler Tick(state) à chaque frame : renvoie true si un nouveau résultat est disponible.
     class AsyncDirectoryLoader
     {
     public:
@@ -17,7 +15,7 @@ namespace BixEngine::Gui
         ~AsyncDirectoryLoader();
 
         void Request(const std::filesystem::path& directory);
-        bool Tick(ContentBrowserState& state); // applique résultats dans state.cache
+        bool Tick(ContentBrowserState& state);
 
         bool IsBusy() const noexcept { return running_.load(); }
 

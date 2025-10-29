@@ -10,9 +10,6 @@
 
 namespace Bix::Reflection
 {
-    /**
-     * @brief Holds metadata about a reflected class.
-     */
     struct ClassInfo
     {
         using Constructor = void* (*)(void* context);
@@ -26,8 +23,11 @@ namespace Bix::Reflection
         Constructor ConstructorFn = nullptr;
 
         [[nodiscard]] const PropertyInfo* FindProperty(std::string_view name) const;
+        
         PropertyInfo* FindProperty(std::string_view name);
+        
         [[nodiscard]] bool CanConstruct() const noexcept;
+        
         void* Construct(void* context = nullptr) const;
 
         template<typename T>

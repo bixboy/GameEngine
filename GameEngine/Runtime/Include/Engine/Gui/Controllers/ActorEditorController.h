@@ -41,13 +41,9 @@ namespace BixEngine::Gui
             bool actorRefreshRequested{true};
         };
 
-        ActorEditorController(std::shared_ptr<SharedState> sharedState,
-                              Section section);
+        ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section);
 
-        static std::shared_ptr<SharedState> CreateSharedState(Core::SubsystemManager& subsystems,
-                                                              std::filesystem::path assetPath,
-                                                              String stableIdRoot,
-                                                              CloseRequest onCloseRequest);
+        static std::shared_ptr<SharedState> CreateSharedState(Core::SubsystemManager& subsystems, std::filesystem::path assetPath, String stableIdRoot, CloseRequest onCloseRequest);
 
         [[nodiscard]] const std::filesystem::path& GetAssetPath() const noexcept { return state_->assetPath; }
         [[nodiscard]] const String& GetDisplayName() const noexcept { return state_->assetDisplayName; }

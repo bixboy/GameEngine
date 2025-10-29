@@ -18,12 +18,17 @@ namespace Bix::Reflection
         static Registry& Get();
 
         void Register(ClassInfo* classInfo);
+        
         ClassInfo* Find(std::string_view name);
         ClassInfo* FindByQualifiedName(std::string_view name);
+        
         std::vector<ClassInfo*> GetClasses();
+        
         void RegisterBaseType(const std::type_info& type, ClassInfo* classInfo);
+        
         bool IsBaseType(const std::type_info& type) const;
         bool IsBaseType(std::string_view qualifiedName) const;
+        
         std::vector<ClassInfo*> GetBaseTypes() const;
 
     private:

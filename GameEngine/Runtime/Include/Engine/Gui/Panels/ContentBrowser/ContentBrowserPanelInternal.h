@@ -1,7 +1,5 @@
 #pragma once
-#include "Engine/Gui/GuiTheme.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserState.h"
-#include "imgui.h"
 
 
 namespace BixEngine::Gui
