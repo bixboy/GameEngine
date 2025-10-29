@@ -18,19 +18,34 @@
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanel.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPopups.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserState.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserUISections.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserUtils.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
@@ -131,11 +146,35 @@
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
-    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ContentBrowserPanel.h">
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
-    <ClInclude Include="Runtime\Source\Engine\Private\Gui\Panels\ContentBrowserPanelInternal.h">
-      <Filter>Runtime\Engine\Private\Gui</Filter>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentEntry.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h">
       <Filter>Runtime\Include\Engine\Gui</Filter>
