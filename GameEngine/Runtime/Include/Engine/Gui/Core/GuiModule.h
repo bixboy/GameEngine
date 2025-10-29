@@ -3,16 +3,17 @@
 #include <filesystem>
 #include <memory>
 #include <string>
-#include <string_view>
 #include <utility>
 #include <vector>
 #include <SDL3/SDL_events.h>
 
 #include "Engine/Gui/Core/NavBar/GuiActorEditorManager.h"
+#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+
 
 namespace BixEngine
 {
-    namespace Core { class GuiNavigationBar; class Window; class Timer; class SubsystemManager; }
+    namespace Core {class Window; class Timer; class SubsystemManager; }
     namespace Graphics { class Renderer; }
     namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; class ActorEditorController; class GuiLayoutManager; enum class EditorLayoutType; }
     namespace Game { class Actor; }
