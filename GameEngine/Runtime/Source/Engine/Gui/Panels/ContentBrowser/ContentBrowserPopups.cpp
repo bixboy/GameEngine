@@ -1,3 +1,4 @@
+#include "Core/FileUtils.h"
 #include "Core/Logger.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
@@ -5,16 +6,24 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.h"
 #include "imgui.h"
 #include <algorithm>
+#include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <cstring>
 #include <unordered_map>
 #include <unordered_set>
-#include <sstream>
-#include <cctype>
+#include <vector>
+
+#if defined(_WIN32)
+#    ifndef NOMINMAX
+#        define NOMINMAX
+#    endif
+#    define WIN32_LEAN_AND_MEAN
+#    include <windows.h>
+#endif
 
 
 namespace BixEngine::Gui
@@ -1094,6 +1103,7 @@ namespace BixEngine::Gui
 
     void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath)
     {
+#if defined(_WIN32)
         std::wstring tool = L"\"" + toolPath.wstring() + L"\"";
         std::wstring header = L"\"" + headerPath.wstring() + L"\"";
         std::wstring cmdLine = tool + L" --single " + header;
@@ -1128,6 +1138,11 @@ namespace BixEngine::Gui
             LOG_WARNING("BixHeaderTool exited with code " + String::FromInt(exitCode));
         else
             LOG_INFO("BixHeaderTool finished successfully.");
+#else
+        (void)toolPath;
+        (void)headerPath;
+        LOG_WARNING("BixHeaderTool execution is only supported on Windows platforms.");
+#endif
     }
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups)
