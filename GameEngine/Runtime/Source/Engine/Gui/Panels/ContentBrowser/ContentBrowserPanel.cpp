@@ -21,7 +21,8 @@ namespace BixEngine::Gui
         contentPanel.SetBackgroundColor(kContentBackground);
         contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
         const auto scriptEditorOpener = context.openScriptFilesInEditor;
-        contentPanel.SetDrawFunction([scriptEditorOpener]()
+        const auto actorEditorOpener = context.openActorInEditor;
+        contentPanel.SetDrawFunction([scriptEditorOpener, actorEditorOpener]()
         {
             namespace fs = std::filesystem;
 
@@ -31,6 +32,7 @@ namespace BixEngine::Gui
             static PopupRequestState popupRequests{};
 
             state.openScriptFilesCallback = scriptEditorOpener;
+            state.openActorEditorCallback = actorEditorOpener;
 
             if (!EnsureContentBrowserInitialized(state))
             {

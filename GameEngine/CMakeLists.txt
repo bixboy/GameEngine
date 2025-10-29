@@ -15,6 +15,7 @@ set_target_properties(BixEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOU
 add_dependencies(BixEngine BixHeaderTool)
 target_include_directories(BixEngine PRIVATE
     Runtime/Include
+    Runtime/Source
     ThirdParty/ImGui
     ThirdParty/ImGui/backends
     ThirdParty/SDL3-3.2.22/include
@@ -87,6 +88,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/GuiPanelController.cpp
     Runtime/Source/Engine/Gui/GuiPanel.cpp
     Runtime/Source/Engine/Gui/GuiSystem.cpp
+    Runtime/Source/Engine/Gui/Controllers/ActorEditorController.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorState.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorOverviewUI.cpp
@@ -94,11 +96,16 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ImGuiControls.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ReflectionDrawer.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/TransformSectionUI.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserActions.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserState.cpp
-    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUISections.cpp
-    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUtils.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Grid.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Header.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Tree.cpp
+    Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentEntry.cpp
+    Runtime/Source/Engine/Gui/Panels/ActorEditorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneOutlinerPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneViewportPanel.cpp
     Runtime/Source/Engine/Gui/Panels/StatsPanel.cpp

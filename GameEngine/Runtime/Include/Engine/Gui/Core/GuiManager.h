@@ -37,6 +37,12 @@ namespace BixEngine::Gui
         /** Crée un panneau. */
         GuiPanel& CreatePanel(String name, String title);
 
+        template <typename PanelT, typename... Args>
+        PanelT& CreatePanelOfType(String name, String title, Args&&... args)
+        {
+            return registry_.AddPanelOfType<PanelT>(std::move(name), std::move(title), std::forward<Args>(args)...);
+        }
+
         /** Supprime un panneau existant. */
         void RemovePanel(const String& name);
 

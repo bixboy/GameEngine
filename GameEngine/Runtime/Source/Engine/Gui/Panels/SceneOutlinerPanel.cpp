@@ -5,7 +5,7 @@
 #include "Game/SceneManager.h"
 #include "Engine/Gui/Core/GuiManager.h"
 #include "Engine/Gui/Core/GuiPanel.h"
-#include "Engine/Gui/Utils/GuiPanelController.h"
+#include "Engine/Gui/Controllers/GuiPanelController.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Engine/Gui/Widgets/GuiWidgetLibrary.h"
 #include "Core/Containers/String.h"

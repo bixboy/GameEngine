@@ -156,4 +156,14 @@ namespace BixEngine::Core
     {
         return sceneManager_ ? sceneManager_->GetScene() : nullptr;
     }
+
+    Game::Scene* SubsystemManager::GetScene() noexcept
+    {
+        return GetActiveScene();
+    }
+
+    const Game::Scene* SubsystemManager::GetScene() const noexcept
+    {
+        return sceneManager_ ? sceneManager_->GetScene() : nullptr;
+    }
 }

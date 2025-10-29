@@ -15,6 +15,7 @@ namespace BixEngine::Gui
 
         PanelEntry entry{};
         entry.panel = std::make_unique<GuiPanel>(name, title);
+        entry.panelType = std::type_index(typeid(GuiPanel));
 
         GuiPanel& panelRef = *entry.panel;
         RegisterPanelIndex_(panelRef, name);

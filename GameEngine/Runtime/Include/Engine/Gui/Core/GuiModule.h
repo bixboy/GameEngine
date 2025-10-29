@@ -1,14 +1,18 @@
 #pragma once
 
+#include <filesystem>
 #include <memory>
+#include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 #include <SDL3/SDL_events.h>
 
 namespace BixEngine
 {
     namespace Core { class Window; class Timer; class SubsystemManager; }
     namespace Graphics { class Renderer; }
-    namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; }
+    namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; class ActorEditorController; }
     namespace Game { class Actor; }
 }
 
@@ -104,6 +108,8 @@ namespace BixEngine::Core
         std::unique_ptr<Gui::GuiSystem> guiSystem_;
         std::unique_ptr<Gui::GuiManager> guiManager_;
 
+        SubsystemManager* subsystems_{nullptr};
+
         // Références directes vers les panneaux standards du moteur
         Gui::GuiPanel* statsPanel_{nullptr};
         Gui::GuiPanel* outlinerPanel_{nullptr};
@@ -120,5 +126,24 @@ namespace BixEngine::Core
         int sceneViewportWidth_{0};
         int sceneViewportHeight_{0};
         bool sceneViewportTextureErrorLogged_{false};
+
+        struct ActorEditorEntry
+        {
+            std::filesystem::path assetPath;
+            std::string navigationId;
+            std::string tabLabel;
+            Gui::GuiPanel* panel{nullptr};
+            Gui::ActorEditorController* controller{nullptr};
+        };
+
+        std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
+        std::vector<std::string> focusRequests_{};
+        std::string activeNavigationId_{"scene"};
+
+        void OpenActorEditor(const std::filesystem::path& path);
+        void CloseActorEditor(const std::string& navigationId);
+        void DrawEditorNavigation();
+        void ProcessFocusRequests();
+        void FocusSceneViewport();
     };
 }

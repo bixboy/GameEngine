@@ -1,6 +1,7 @@
 #include "Game/Scene.h"
 
 #include <stdexcept>
+#include <string_view>
 #include <utility>
 
 #include "Core/Timer.h"
@@ -67,6 +68,23 @@ namespace BixEngine::Game
                 return a.get();
         }
         return nullptr;
+    }
+
+    Actor* Scene::FindActorByPath(const String& path) noexcept
+    {
+        if (path.IsEmpty())
+            return nullptr;
+
+        std::string_view view = path.View();
+        const std::size_t separator = view.find_last_of("/\\");
+        if (separator != std::string_view::npos)
+            view = view.substr(separator + 1);
+
+        if (view.empty())
+            return nullptr;
+
+        const String actorName(view);
+        return FindActorByName(actorName);
     }
 
     void Scene::Rename(String name)

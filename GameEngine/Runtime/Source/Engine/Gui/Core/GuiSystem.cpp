@@ -222,8 +222,16 @@ namespace BixEngine::Gui
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
             ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
 
-        ImGui::SetNextWindowPos(viewport->WorkPos);
-        ImGui::SetNextWindowSize(viewport->WorkSize);
+        ImVec2 dockspacePos = viewport->WorkPos;
+        ImVec2 dockspaceSize = viewport->WorkSize;
+        if (dockspaceTopPadding_ > 0.0f)
+        {
+            dockspacePos.y += dockspaceTopPadding_;
+            dockspaceSize.y = std::max(0.0f, dockspaceSize.y - dockspaceTopPadding_);
+        }
+
+        ImGui::SetNextWindowPos(dockspacePos);
+        ImGui::SetNextWindowSize(dockspaceSize);
         ImGui::SetNextWindowViewport(viewport->ID);
 
         ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, 0.f);
@@ -237,7 +245,7 @@ namespace BixEngine::Gui
 
         if (rebuildDockLayout_)
         {
-            BuildDefaultDockLayout_(*viewport, dockspaceId_, dockFlags);
+            BuildDefaultDockLayout_(*viewport, dockspaceId_, dockFlags, dockspacePos, dockspaceSize);
             rebuildDockLayout_ = false;
         }
 
@@ -245,8 +253,13 @@ namespace BixEngine::Gui
         ImGui::End();
     }
 
-    void GuiSystem::BuildDefaultDockLayout_(ImGuiViewport& viewport, ImGuiID dockspaceId, ImGuiDockNodeFlags flags)
+    void GuiSystem::BuildDefaultDockLayout_(ImGuiViewport& viewport,
+                                            ImGuiID dockspaceId,
+                                            ImGuiDockNodeFlags flags,
+                                            const ImVec2& dockspacePos,
+                                            const ImVec2& dockspaceSize)
     {
+        static_cast<void>(viewport);
         if (dockspaceId == 0)
             return;
 
@@ -254,8 +267,8 @@ namespace BixEngine::Gui
 
         ImGui::DockBuilderRemoveNode(dockspaceId);
         ImGui::DockBuilderAddNode(dockspaceId, flags | ImGuiDockNodeFlags_DockSpace);
-        ImGui::DockBuilderSetNodePos(dockspaceId, viewport.WorkPos);
-        ImGui::DockBuilderSetNodeSize(dockspaceId, viewport.WorkSize);
+        ImGui::DockBuilderSetNodePos(dockspaceId, dockspacePos);
+        ImGui::DockBuilderSetNodeSize(dockspaceId, dockspaceSize);
 
         ImGuiID main = dockspaceId;
         ImGuiID left = ImGui::DockBuilderSplitNode(main, ImGuiDir_Left, 0.20f, nullptr, &main);

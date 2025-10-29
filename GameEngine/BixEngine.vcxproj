@@ -189,6 +189,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BixRun\main.cpp" />
+    <ClCompile Include="Build\windows\x64\debug\Content\Scripts\NewScript.cpp" />
     <ClCompile Include="Runtime\Source\Core\EventDispatcher.cpp" />
     <ClCompile Include="Runtime\Source\Core\FileUtils.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -276,6 +277,87 @@
     <ClCompile Include="Runtime\Source\Core\Math\Vector3.cpp" />
     <ClCompile Include="Runtime\Source\Core\Timer.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Bootstrap\EngineBootstrap.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\GuiPanelController.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\Core\GuiManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -678,6 +760,7 @@
     </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\DefaultEngineGui.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\GuiContextFactory.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorEditorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorInspectorState.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.cpp" />
@@ -685,95 +768,19 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ImGuiControls.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\ReflectionDrawer.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ActorInspector\TransformSectionUI.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\SceneOutlinerPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\SceneViewportPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\StatsPanel.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Utils\GuiHelpers.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Gui\Utils\GuiPanelController.cpp">
-      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
-      <Optimization>Disabled</Optimization>
-      <SupportJustMyCode>false</SupportJustMyCode>
-      <AssemblerOutput>NoListing</AssemblerOutput>
-      <AssemblerListingLocation>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
-      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
-      <BrowseInformation>false</BrowseInformation>
-      <BrowseInformationFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
-      <CompileAs>Default</CompileAs>
-      <UseDynamicDebugging>false</UseDynamicDebugging>
-      <ConformanceMode>true</ConformanceMode>
-      <DiagnosticsFormat>Column</DiagnosticsFormat>
-      <DisableLanguageExtensions>false</DisableLanguageExtensions>
-      <ErrorReporting>Prompt</ErrorReporting>
-      <ExpandAttributedSource>false</ExpandAttributedSource>
-      <ExceptionHandling>Sync</ExceptionHandling>
-      <EnableASAN>false</EnableASAN>
-      <EnableFuzzer>false</EnableFuzzer>
-      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
-      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
-      <EnableVectorLength>NotSet</EnableVectorLength>
-      <FloatingPointModel>Precise</FloatingPointModel>
-      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
-      <GenerateModuleDependencies>false</GenerateModuleDependencies>
-      <GenerateSourceDependencies>false</GenerateSourceDependencies>
-      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
-      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
-      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
-      <LanguageStandard>stdcpp20</LanguageStandard>
-      <LanguageStandard_C>Default</LanguageStandard_C>
-      <MinimalRebuild>false</MinimalRebuild>
-      <ModuleDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
-      <ModuleOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
-      <OmitDefaultLibName>false</OmitDefaultLibName>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
-      <WholeProgramOptimization>false</WholeProgramOptimization>
-      <ObjectFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
-      <CallingConvention>Cdecl</CallingConvention>
-      <ProgramDataBaseFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
-      <PrecompiledHeader>NotUsing</PrecompiledHeader>
-      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <PrecompiledHeaderOutputFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
-      <PreprocessToFile>false</PreprocessToFile>
-      <PreprocessKeepComments>false</PreprocessKeepComments>
-      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
-      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
-      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
-      <ShowIncludes>false</ShowIncludes>
-      <SourceDependenciesFile>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
-      <SuppressStartupBanner>true</SuppressStartupBanner>
-      <BufferSecurityCheck>true</BufferSecurityCheck>
-      <SmallerTypeCheck>false</SmallerTypeCheck>
-      <SpectreMitigation>false</SpectreMitigation>
-      <StructMemberAlignment>Default</StructMemberAlignment>
-      <TrackerLogDirectory>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
-      <TranslateIncludes>false</TranslateIncludes>
-      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
-      <TreatWarningAsError>false</TreatWarningAsError>
-      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
-      <UseFullPaths>true</UseFullPaths>
-      <WarningLevel>Level3</WarningLevel>
-      <XMLDocumentationFileName>C:\App\CustomEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
-      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <IntelJCCErratum>false</IntelJCCErratum>
-      <BuildStlModules>false</BuildStlModules>
-      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
-      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
-      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
-      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
-      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
-      <EnablePREfast>false</EnablePREfast>
-      <OmitFramePointers>false</OmitFramePointers>
-      <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
-      <AdditionalOptions>/FS </AdditionalOptions>
-      <LinkCompiled>true</LinkCompiled>
-    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\ActionTooltip.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\GuiWidgetLibrary.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\Application.cpp" />
@@ -831,6 +838,8 @@
     <ClInclude Include="Runtime\Include\Core\Math\Vector3.h" />
     <ClInclude Include="Runtime\Include\Core\Timer.h" />
     <ClInclude Include="Runtime\Include\Engine\Bootstrap\EngineBootstrap.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\GuiPanelController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiDocking.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiModule.h" />
@@ -839,6 +848,7 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiSystem.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiContextFactory.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorEditorPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspectorPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\ActorInspectorState.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\ActorOverviewUI.h" />
@@ -847,13 +857,20 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\ReflectionDrawer.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\TransformSectionUI.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ActorInspector\Utils\ActorInspectorHelpers.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentEntry.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\SceneOutlinerPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\SceneViewportPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Panels\StatsPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Utils\GuiHelpers.h" />
-    <ClInclude Include="Runtime\Include\Engine\Gui\Utils\GuiPanelController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\GuiWidgetLibrary.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Application.h" />
@@ -1013,7 +1030,12 @@
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.cpp.obj.d" />
-  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\SceneOutlinerPanel.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\SceneViewportPanel.cpp.obj.d" />
@@ -1035,7 +1057,12 @@
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserState.cpp.obj.d" />
-  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp.obj.d" />
+  <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentEntry.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp.obj.d" />
   <Content Include="Build\.deps\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp.obj.d" />
@@ -1174,7 +1201,12 @@
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.cpp.obj" />
-  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\SceneOutlinerPanel.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Gui\Panels\SceneViewportPanel.cpp.obj" />
@@ -1196,7 +1228,12 @@
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserState.cpp.obj" />
-  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUISections.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp.obj" />
+  <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentEntry.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\ContentBrowser\ContentBrowserUtils.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp.obj" />
   <Content Include="Build\.objs\BixEngine\windows\x64\debug\Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp.obj" />

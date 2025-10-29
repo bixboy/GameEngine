@@ -1,21 +1,29 @@
+#include "Core/FileUtils.h"
 #include "Core/Logger.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.h"
 #include "imgui.h"
 #include <algorithm>
+#include <cctype>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
+#include <sstream>
 #include <string>
 #include <string_view>
-#include <vector>
-#include <cstring>
 #include <unordered_map>
 #include <unordered_set>
-#include <sstream>
-#include <cctype>
+#include <vector>
 
-#include "Core/FileUtils.h"
-#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
-#include "SDL3/SDL_egl.h"
+#if defined(_WIN32)
+#    ifndef NOMINMAX
+#        define NOMINMAX
+#    endif
+#    define WIN32_LEAN_AND_MEAN
+#    include <windows.h>
+#endif
 
 
 namespace BixEngine::Gui
@@ -734,6 +742,7 @@ namespace BixEngine::Gui
                                             selectedEntry = headerPath.generic_string();
                                             requests.scriptError.Clear();
                                             ClearSelectedParent(requests);
+                                            state.cache.dirty = true;
                                             ImGui::CloseCurrentPopup();
 
                                             std::filesystem::path toolPath = Core::FindToolExecutable("BixHeaderTool.exe");
@@ -818,23 +827,13 @@ namespace BixEngine::Gui
                     {
                         LogAndStoreError(requests.folderError, "A folder with this name already exists.", false);
                     }
-                    else
+                    else if (TryCreateDir(folderPath, requests.folderError))
                     {
-                        std::error_code createError;
-                        fs::create_directories(folderPath, createError);
-                        if (createError)
-                        {
-                            String message = "Unable to create folder: ";
-                            message += createError.message();
-                            LogAndStoreError(requests.folderError, std::move(message));
-                        }
-                        else
-                        {
-                            selectedEntry = folderPath.generic_string();
-                            requests.folderError.Clear();
-                            requests.folderTarget.clear();
-                            ImGui::CloseCurrentPopup();
-                        }
+                        selectedEntry = folderPath.generic_string();
+                        requests.folderError.Clear();
+                        requests.folderTarget.clear();
+                        state.cache.dirty = true;
+                        ImGui::CloseCurrentPopup();
                     }
                 }
             }
@@ -1052,6 +1051,7 @@ namespace BixEngine::Gui
                                         requests.renameTarget = newHeaderPath;
                                         requests.renameSecondaryTarget = newSourcePath;
                                         requests.renameTargetIsScriptGroup = false;
+                                        state.cache.dirty = true;
                                         ImGui::CloseCurrentPopup();
                                     }
                                 }
@@ -1080,14 +1080,9 @@ namespace BixEngine::Gui
                         }
                         else
                         {
-                            std::error_code renameError;
-                            fs::rename(oldPath, newPath, renameError);
-
-                            if (renameError)
+                            if (!TryRename(oldPath, newPath, requests.renameError))
                             {
-                                String errorMessage = "Unable to rename entry: ";
-                                errorMessage += renameError.message();
-                                LogAndStoreError(requests.renameError, std::move(errorMessage));
+                                // Error already stored.
                             }
                             else
                             {
@@ -1096,6 +1091,7 @@ namespace BixEngine::Gui
 
                                 requests.renameTarget = newPath;
                                 requests.renameError.Clear();
+                                state.cache.dirty = true;
                                 ImGui::CloseCurrentPopup();
                             }
                         }
@@ -1107,6 +1103,7 @@ namespace BixEngine::Gui
 
     void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath)
     {
+#if defined(_WIN32)
         std::wstring tool = L"\"" + toolPath.wstring() + L"\"";
         std::wstring header = L"\"" + headerPath.wstring() + L"\"";
         std::wstring cmdLine = tool + L" --single " + header;
@@ -1141,6 +1138,11 @@ namespace BixEngine::Gui
             LOG_WARNING("BixHeaderTool exited with code " + String::FromInt(exitCode));
         else
             LOG_INFO("BixHeaderTool finished successfully.");
+#else
+        (void)toolPath;
+        (void)headerPath;
+        LOG_WARNING("BixHeaderTool execution is only supported on Windows platforms.");
+#endif
     }
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups)

@@ -3,6 +3,7 @@
 #include <type_traits>
 #include <vector>
 #include "Game/Object.h"
+#include "Game/Components/Component.h"
 #include "Core/Math/Math.h"
 #include "Actor.generated.h"
 

@@ -171,6 +171,7 @@ target("BixEngine")
 
     add_files("Runtime/Source/**.cpp")
     add_includedirs("Runtime/Include", { public = true })
+    add_includedirs("Runtime/Source")
 
     -- 🧩 ImGui
     add_files("ThirdParty/ImGui/*.cpp")
