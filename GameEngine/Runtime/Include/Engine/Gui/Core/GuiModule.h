@@ -128,13 +128,32 @@ namespace BixEngine::Core
         int sceneViewportHeight_{0};
         bool sceneViewportTextureErrorLogged_{false};
 
+        struct ActorEditorPanels
+        {
+            Gui::GuiPanel* toolbar{nullptr};
+            Gui::GuiPanel* viewport{nullptr};
+            Gui::GuiPanel* outline{nullptr};
+            Gui::GuiPanel* inspector{nullptr};
+
+            [[nodiscard]] std::vector<Gui::GuiPanel*> Collect() const
+            {
+                std::vector<Gui::GuiPanel*> result;
+                result.reserve(4);
+                if (toolbar) result.push_back(toolbar);
+                if (viewport) result.push_back(viewport);
+                if (outline) result.push_back(outline);
+                if (inspector) result.push_back(inspector);
+                return result;
+            }
+        };
+
         struct ActorEditorEntry
         {
             std::filesystem::path assetPath;
             std::string navigationId;
-            std::string tabLabel;
-            Gui::GuiPanel* panel{nullptr};
-            Gui::ActorEditorController* controller{nullptr};
+            std::string buttonLabel;
+            ActorEditorPanels panels{};
+            std::shared_ptr<Gui::ActorEditorController::SharedState> sharedState{};
         };
 
         std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};

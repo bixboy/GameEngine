@@ -107,7 +107,6 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Header.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Tree.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentEntry.cpp
-    Runtime/Source/Engine/Gui/Panels/ActorEditorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneOutlinerPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneViewportPanel.cpp
     Runtime/Source/Engine/Gui/Panels/StatsPanel.cpp

@@ -5,7 +5,7 @@
 #include <utility>
 
 #include "Core/Logger.h"
-#include "Engine/Gui/Panels/ActorEditorPanel.h"
+#include "Engine/Gui/Core/GuiPanel.h"
 #include "Engine/Systems/SubsystemManager.h"
 #include "Game/Actor.h"
 #include "Game/Components/Component.h"
@@ -35,6 +35,25 @@ namespace BixEngine::Gui
             return String(path.generic_string());
         }
 
+        Game::Actor* ResolveActor(Core::SubsystemManager* subsystems, const std::filesystem::path& assetPath) noexcept
+        {
+            if (!subsystems)
+                return nullptr;
+
+            Game::Scene* scene = subsystems->GetScene();
+            if (!scene)
+                return nullptr;
+
+            if (!assetPath.empty())
+            {
+                const String pathString(assetPath.generic_string());
+                if (Game::Actor* resolved = scene->FindActorByPath(pathString))
+                    return resolved;
+            }
+
+            return nullptr;
+        }
+
         void DrawCenteredText(const char* text, float verticalOffset = 0.0f)
         {
             if (!text)
@@ -49,44 +68,63 @@ namespace BixEngine::Gui
         }
     }
 
-    ActorEditorController::ActorEditorController(Core::SubsystemManager& subsystems,
-                                                 std::filesystem::path assetPath,
-                                                 CloseRequest onCloseRequest)
-        : subsystems_(&subsystems)
-        , assetPath_(std::move(assetPath))
-        , assetDisplayName_(BuildDisplayName(assetPath_))
-        , onCloseRequest_(std::move(onCloseRequest))
+    ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState,
+                                                 Section section)
+        : section_(section)
+        , state_(std::move(sharedState))
     {
+    }
+
+    std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(Core::SubsystemManager& subsystems,
+                                                                                                  std::filesystem::path assetPath,
+                                                                                                  CloseRequest onCloseRequest)
+    {
+        auto state = std::make_shared<SharedState>();
+        state->subsystems = &subsystems;
+        state->assetPath = std::move(assetPath);
+        state->assetDisplayName = BuildDisplayName(state->assetPath);
+        state->onCloseRequest = std::move(onCloseRequest);
+        state->actor = nullptr;
+        state->actorRefreshRequested = true;
+        return state;
     }
 
     void ActorEditorController::RequestActorReload()
     {
-        actorRefreshRequested_ = true;
+        if (state_)
+            state_->actorRefreshRequested = true;
     }
 
     void ActorEditorController::OnAttach(GuiPanel& panel)
     {
-        actorPanel_ = static_cast<ActorEditorPanel*>(&panel);
+        if (!state_)
+            return;
 
-        actorPanel_->SetDrawCallbacks({
-            [this]() { DrawViewport(); },
-            [this]() { DrawOutline(); },
-            [this]() { DrawInspector(); }
-        });
-
-        actorPanel_->SetToolbarCallbacks({
-            [this]() { HandlePlayRequest(); },
-            [this]() { HandleSaveRequest(); },
-            [this]() { HandleCompileRequest(); }
-        });
-
-        panel.SetDockingPreference(DockSpaceRegion::Center, ImGuiCond_Always);
-        panel.SetTitle(String{"Actor Editor - "} + assetDisplayName_);
         panel.SetClosable(true);
         panel.SetMovable(true);
         panel.SetResizable(true);
 
-        panel.OnClose = [request = onCloseRequest_]()
+        switch (section_)
+        {
+        case Section::Toolbar:
+            panel.SetTitle(String{"Actor Toolbar - "} + state_->assetDisplayName);
+            panel.SetDockingPreference(DockSpaceRegion::Top, ImGuiCond_FirstUseEver);
+            break;
+        case Section::Viewport:
+            panel.SetTitle(String{"Actor Viewport - "} + state_->assetDisplayName);
+            panel.SetDockingPreference(DockSpaceRegion::Center, ImGuiCond_FirstUseEver);
+            break;
+        case Section::Outline:
+            panel.SetTitle(String{"Actor Outline - "} + state_->assetDisplayName);
+            panel.SetDockingPreference(DockSpaceRegion::Left, ImGuiCond_FirstUseEver);
+            break;
+        case Section::Inspector:
+            panel.SetTitle(String{"Actor Inspector - "} + state_->assetDisplayName);
+            panel.SetDockingPreference(DockSpaceRegion::Right, ImGuiCond_FirstUseEver);
+            break;
+        }
+
+        panel.OnClose = [request = state_->onCloseRequest]()
         {
             if (request)
                 request();
@@ -97,55 +135,45 @@ namespace BixEngine::Gui
 
     void ActorEditorController::OnDetach(GuiPanel& panel)
     {
-        if (actorPanel_ == &panel)
-        {
-            actorPanel_->SetDrawCallbacks({});
-            actorPanel_->SetToolbarCallbacks({});
-            actorPanel_ = nullptr;
-        }
-
         panel.OnClose = nullptr;
-        actor_ = nullptr;
     }
 
     void ActorEditorController::OnDraw(GuiPanel& panel)
     {
         static_cast<void>(panel);
         EnsureActorUpToDate();
-        if (actorPanel_)
-            actorPanel_->DrawEditor();
-    }
 
-    Game::Actor* ActorEditorController::ResolveActor() noexcept
-    {
-        if (!subsystems_)
-            return nullptr;
-
-        Game::Scene* scene = subsystems_->GetScene();
-        if (!scene)
-            return nullptr;
-
-        if (!assetPath_.empty())
+        switch (section_)
         {
-            const String pathString(assetPath_.generic_string());
-            if (Game::Actor* resolved = scene->FindActorByPath(pathString))
-                return resolved;
+        case Section::Toolbar:
+            DrawToolbar();
+            break;
+        case Section::Viewport:
+            DrawViewport();
+            break;
+        case Section::Outline:
+            DrawOutline();
+            break;
+        case Section::Inspector:
+            DrawInspector();
+            break;
         }
-
-        return nullptr;
     }
 
     void ActorEditorController::EnsureActorUpToDate()
     {
-        if (!actorRefreshRequested_)
+        if (!state_ || !state_->actorRefreshRequested)
             return;
 
-        actor_ = ResolveActor();
-        actorRefreshRequested_ = false;
+        state_->actor = ResolveActor(state_->subsystems, state_->assetPath);
+        state_->actorRefreshRequested = false;
     }
 
     void ActorEditorController::DrawViewport()
     {
+        if (!state_)
+            return;
+
         ImVec2 available = ImGui::GetContentRegionAvail();
         if (available.x <= 0.0f || available.y <= 0.0f)
         {
@@ -156,7 +184,7 @@ namespace BixEngine::Gui
         const ImVec2 cursor = ImGui::GetCursorScreenPos();
         DrawViewportGrid_(available);
 
-        if (!actor_)
+        if (!state_->actor)
         {
             DrawCenteredText("Actor not found.");
             ImGui::Dummy(available);
@@ -167,17 +195,20 @@ namespace BixEngine::Gui
 
         ImGui::SetCursorScreenPos(ImVec2{cursor.x + 16.0f, cursor.y + 16.0f});
         ImGui::BeginGroup();
-        const auto nameView = actor_->GetName().View();
-        ImGui::Text("%s", assetDisplayName_.View().data());
+        const auto nameView = state_->actor->GetName().View();
+        ImGui::Text("%s", state_->assetDisplayName.View().data());
         ImGui::Separator();
         ImGui::Text("Actor name: %.*s", static_cast<int>(nameView.size()), nameView.data());
-        ImGui::Text("Components: %zu", actor_->GetComponents().size());
+        ImGui::Text("Components: %zu", state_->actor->GetComponents().size());
         ImGui::EndGroup();
     }
 
     void ActorEditorController::DrawOutline()
     {
-        if (!actor_)
+        if (!state_)
+            return;
+
+        if (!state_->actor)
         {
             Utils::DrawEmptyStateMessage("No actor loaded.");
             return;
@@ -186,7 +217,7 @@ namespace BixEngine::Gui
         ImGui::TextUnformatted("Components");
         ImGui::Separator();
 
-        auto& components = actor_->GetComponents();
+        auto& components = state_->actor->GetComponents();
         if (components.empty())
         {
             Utils::DrawEmptyStateMessage("Actor has no components.");
@@ -206,30 +237,42 @@ namespace BixEngine::Gui
 
     void ActorEditorController::DrawInspector()
     {
-        if (!actor_)
+        if (!state_)
+            return;
+
+        if (!state_->actor)
         {
             Utils::DrawEmptyStateMessage("No actor loaded.");
             return;
         }
 
-        ActorInspector::DrawGeneralSection(*actor_);
-        ActorInspector::DrawTransformSection(*actor_);
-        ActorInspector::DrawComponentSection(*actor_);
+        ActorInspector::DrawGeneralSection(*state_->actor);
+        ActorInspector::DrawTransformSection(*state_->actor);
+        ActorInspector::DrawComponentSection(*state_->actor);
     }
 
     void ActorEditorController::HandlePlayRequest()
     {
-        LOG_INFO(String{"[ActorEditor] ▶ Play requested for asset: "} + assetDisplayName_);
+        if (!state_)
+            return;
+
+        LOG_INFO(String{"[ActorEditor] ▶ Play requested for asset: "} + state_->assetDisplayName);
     }
 
     void ActorEditorController::HandleSaveRequest()
     {
-        LOG_INFO(String{"[ActorEditor] 💾 Save requested for asset: "} + assetDisplayName_);
+        if (!state_)
+            return;
+
+        LOG_INFO(String{"[ActorEditor] 💾 Save requested for asset: "} + state_->assetDisplayName);
     }
 
     void ActorEditorController::HandleCompileRequest()
     {
-        LOG_INFO(String{"[ActorEditor] 🧠 Compile requested for asset: "} + assetDisplayName_);
+        if (!state_)
+            return;
+
+        LOG_INFO(String{"[ActorEditor] 🧠 Compile requested for asset: "} + state_->assetDisplayName);
     }
 
     void ActorEditorController::DrawViewportGrid_(const ImVec2& size)
@@ -255,5 +298,33 @@ namespace BixEngine::Gui
         }
 
         drawList->AddRect(origin, ImVec2{origin.x + size.x, origin.y + size.y}, axisColor, 0.0f, 0, 2.0f);
+    }
+
+    void ActorEditorController::DrawToolbar()
+    {
+        if (!state_)
+            return;
+
+        ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(14.0f, 6.0f));
+        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12.0f, 0.0f));
+
+        if (ImGui::Button("▶ Play"))
+        {
+            HandlePlayRequest();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("💾 Save"))
+        {
+            HandleSaveRequest();
+        }
+
+        ImGui::SameLine();
+        if (ImGui::Button("🧠 Compile"))
+        {
+            HandleCompileRequest();
+        }
+
+        ImGui::PopStyleVar(2);
     }
 }
