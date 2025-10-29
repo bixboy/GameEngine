@@ -3,7 +3,6 @@
 #include <SDL3/SDL.h>
 #include <algorithm>
 #include <cctype>
-#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <iterator>
