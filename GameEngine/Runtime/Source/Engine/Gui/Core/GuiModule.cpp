@@ -130,6 +130,8 @@ namespace BixEngine::Core
         if (!IsInitialized())
             return;
 
+        subsystems_ = &subsystems;
+
         if (guiManager_)
         {
             DrawEditorNavigation();
@@ -274,7 +276,7 @@ namespace BixEngine::Core
         });
 
         Gui::GuiPanelController& attached = guiManager_->AttachController(actorPanel, std::move(controller));
-        auto* editorController = dynamic_cast<Gui::ActorEditorController*>(&attached);
+        auto* editorController = static_cast<Gui::ActorEditorController*>(&attached);
 
         ActorEditorEntry entry{};
         entry.assetPath = normalized;

@@ -42,8 +42,15 @@ namespace BixEngine::Gui
         [[nodiscard]] GuiPanel& GetPanel() noexcept;
         [[nodiscard]] const GuiPanel& GetPanel() const noexcept;
 
-        virtual void OnAttach(GuiPanel& panel) {}
-        virtual void OnDetach(GuiPanel& panel) {}
+        virtual void OnAttach(GuiPanel& panel)
+        {
+            (void)panel;
+        }
+
+        virtual void OnDetach(GuiPanel& panel)
+        {
+            (void)panel;
+        }
         virtual void OnDraw(GuiPanel& panel) = 0;
 
     private:

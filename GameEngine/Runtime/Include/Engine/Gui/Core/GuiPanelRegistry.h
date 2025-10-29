@@ -3,6 +3,7 @@
 #include <memory>
 #include <stdexcept>
 #include <type_traits>
+#include <typeindex>
 #include <unordered_map>
 #include <vector>
 #include "Core/Containers/String.h"
@@ -26,6 +27,7 @@ namespace BixEngine::Gui
         {
             std::unique_ptr<GuiPanel> panel;
             std::unique_ptr<GuiPanelController> controller;
+            std::type_index panelType{typeid(void)};
         };
 
         using MapType = std::unordered_map<String, PanelEntry>;
@@ -103,6 +105,7 @@ namespace BixEngine::Gui
             if (!entry.panel)
             {
                 entry.panel = std::make_unique<PanelT>(String{name}, String{title}, std::forward<Args>(args)...);
+                entry.panelType = std::type_index(typeid(PanelT));
                 PanelT& panelRef = static_cast<PanelT&>(*entry.panel);
                 RegisterPanelIndex_(panelRef, it->first);
                 if (OnPanelCreated)
@@ -110,16 +113,17 @@ namespace BixEngine::Gui
                 return panelRef;
             }
 
-            auto* existing = dynamic_cast<PanelT*>(entry.panel.get());
-            if (!existing)
+            if (entry.panelType != std::type_index(typeid(PanelT)))
                 throw std::runtime_error("GuiPanelRegistry::AddPanelOfType — panel already exists with a different type.");
 
+            auto* existing = static_cast<PanelT*>(entry.panel.get());
             existing->SetTitle(std::move(title));
             return *existing;
         }
 
         PanelEntry entry{};
         entry.panel = std::make_unique<PanelT>(String{name}, String{title}, std::forward<Args>(args)...);
+        entry.panelType = std::type_index(typeid(PanelT));
         PanelT& panelRef = static_cast<PanelT&>(*entry.panel);
         RegisterPanelIndex_(panelRef, name);
 
