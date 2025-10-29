@@ -15,7 +15,7 @@
 
 namespace BixEngine
 {
-    namespace Core { class Window; class Timer; class SubsystemManager; }
+    namespace Core { class GuiNavigationBar; class Window; class Timer; class SubsystemManager; }
     namespace Graphics { class Renderer; }
     namespace Gui { class GuiSystem; class GuiManager; class GuiPanel; class ActorEditorController; class GuiLayoutManager; enum class EditorLayoutType; }
     namespace Game { class Actor; }
@@ -79,7 +79,7 @@ namespace BixEngine::Core
         bool IsMouseOverViewport() const noexcept;
 
         // ────────────────────────────────────────────────
-        // 🪟 Gestion de la texture du viewport 3D
+        // 🪟 Gestion de la texture du viewpor
         // ────────────────────────────────────────────────
 
         /**
@@ -105,7 +105,7 @@ namespace BixEngine::Core
         /** Retourne un pointeur vers le gestionnaire GUI (GuiManager). */
         Gui::GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
 
-    private:
+    public:
         // ────────────────────────────────────────────────
         // 🧠 Données internes
         // ────────────────────────────────────────────────
@@ -113,6 +113,7 @@ namespace BixEngine::Core
         std::unique_ptr<Gui::GuiSystem> guiSystem_;
         std::unique_ptr<Gui::GuiManager> guiManager_;
         std::unique_ptr<Gui::GuiLayoutManager> layoutManager_;
+        std::unique_ptr<GuiNavigationBar> navigationBar_;
 
         SubsystemManager* subsystems_{nullptr};
 
@@ -210,11 +211,7 @@ namespace BixEngine::Core
 
         void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
-        void DrawEditorNavigation();
-        void DrawSceneButton(float buttonHeight);
-        void DrawActorEditorTabs(float buttonHeight);
-        bool DrawCloseButton(std::string_view label, float buttonHeight) const;
-        bool DrawNavigationButton(const std::string& label, bool isActive, float buttonHeight) const;
+        
         void ProcessFocusRequests();
         void FocusSceneViewport();
         void RefreshActorPanelsVisibility();
