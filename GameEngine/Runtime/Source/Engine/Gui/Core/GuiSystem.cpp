@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
+#include <string>
 #include <system_error>
 
 #include <SDL3/SDL.h>
@@ -122,6 +123,61 @@ namespace BixEngine::Gui
     }
 
 
+    void GuiSystem::SetDockspaceIdentifiers(std::string windowName, std::string dockspaceLabel)
+    {
+        dockspaceWindowName_ = windowName.empty() ? "EngineDockSpace" : std::move(windowName);
+        dockspaceLabel_ = dockspaceLabel.empty() ? dockspaceWindowName_ + "::DockSpace" : std::move(dockspaceLabel);
+        dockspaceId_ = 0;
+    }
+
+    void GuiSystem::RequestDefaultDockLayout()
+    {
+        useSavedDockLayout_ = false;
+        dockLayoutBuilt_ = false;
+        rebuildDockLayout_ = true;
+        dockspaceId_ = 0;
+        dockRegionIds_.fill(0);
+        pendingDockUpdates_.clear();
+    }
+
+    std::string GuiSystem::SaveLayoutToMemory() const
+    {
+        if (!ImGui::GetCurrentContext())
+            return {};
+
+        size_t dataSize = 0;
+        const char* iniData = ImGui::SaveIniSettingsToMemory(&dataSize);
+        if (!iniData || dataSize == 0)
+            return {};
+
+        return std::string(iniData, dataSize);
+    }
+
+    void GuiSystem::LoadLayoutFromMemory(const std::string& data)
+    {
+        if (!ImGui::GetCurrentContext())
+            return;
+
+        if (data.empty())
+        {
+            RequestDefaultDockLayout();
+            return;
+        }
+
+        ImGui::LoadIniSettingsFromMemory(data.c_str(), data.size());
+        useSavedDockLayout_ = true;
+        dockLayoutBuilt_ = true;
+        rebuildDockLayout_ = false;
+        pendingDockUpdates_.clear();
+
+        for (GuiPanel* panel : panels_)
+        {
+            if (panel)
+                panel->ResetDockId();
+        }
+    }
+
+
     // ────────────────────────────────────────────────
     // 🧠 Cycle de frame ImGui
     // ────────────────────────────────────────────────
@@ -238,10 +294,12 @@ namespace BixEngine::Gui
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 
-        ImGui::Begin("EngineDockSpace", nullptr, winFlags);
+        const char* dockspaceWindowName = dockspaceWindowName_.empty() ? "EngineDockSpace" : dockspaceWindowName_.c_str();
+        ImGui::Begin(dockspaceWindowName, nullptr, winFlags);
         ImGui::PopStyleVar(3);
 
-        dockspaceId_ = ImGui::GetID("EngineDockSpace::DockSpace");
+        const char* dockLabel = dockspaceLabel_.empty() ? "EngineDockSpace::DockSpace" : dockspaceLabel_.c_str();
+        dockspaceId_ = ImGui::GetID(dockLabel);
 
         if (rebuildDockLayout_)
         {
@@ -310,16 +368,52 @@ namespace BixEngine::Gui
         if (!dockLayoutBuilt_ || dockspaceId_ == 0 || pendingDockUpdates_.empty())
             return;
 
+        std::vector<GuiPanel*> panelsToProcess;
+        panelsToProcess.reserve(pendingDockUpdates_.size());
+
         if (useSavedDockLayout_)
+        {
+            for (GuiPanel* panel : pendingDockUpdates_)
+            {
+                if (!panel)
+                    continue;
+
+                const auto& title = panel->GetTitle();
+                const auto& name = panel->GetName();
+
+                ImGuiWindowSettings* settings = nullptr;
+                if (!title.IsEmpty())
+                {
+                    const ImGuiID seed = name.IsEmpty() ? 0 : ImHashStr(name.c_str());
+                    const ImGuiID windowId = ImHashStr(title.c_str(), 0, seed);
+                    settings = ImGui::FindWindowSettingsByID(windowId);
+                }
+
+                if (settings && settings->DockId != 0)
+                    continue;
+
+                panelsToProcess.push_back(panel);
+            }
+        }
+        else
+        {
+            for (GuiPanel* panel : pendingDockUpdates_)
+            {
+                if (panel)
+                    panelsToProcess.push_back(panel);
+            }
+        }
+
+        if (panelsToProcess.empty())
         {
             pendingDockUpdates_.clear();
             return;
         }
 
         std::vector<GuiPanel*> remaining;
-        remaining.reserve(pendingDockUpdates_.size());
+        remaining.reserve(panelsToProcess.size());
 
-        for (GuiPanel* panel : pendingDockUpdates_)
+        for (GuiPanel* panel : panelsToProcess)
         {
             if (!panel)
                 continue;
@@ -353,9 +447,6 @@ namespace BixEngine::Gui
 
     void GuiSystem::QueuePanelForDockUpdate_(GuiPanel& panel)
     {
-        if (useSavedDockLayout_)
-            return;
-
         if (std::find(pendingDockUpdates_.begin(), pendingDockUpdates_.end(), &panel) == pendingDockUpdates_.end())
             pendingDockUpdates_.push_back(&panel);
     }

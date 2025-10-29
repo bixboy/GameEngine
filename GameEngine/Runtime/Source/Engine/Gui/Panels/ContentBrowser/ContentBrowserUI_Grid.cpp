@@ -163,7 +163,10 @@ namespace BixEngine::Gui
 
         ScopedColor bg(ImGuiCol_ChildBg, ContentBackground);
         if (!ImGui::BeginChild("ContentBrowserGrid", ImVec2(0, 0), true))
+        {
+            ImGui::EndChild();
             return;
+        }
 
         // Clic droit sur le fond
         if (ImGui::BeginPopupContextWindow("ContentBrowserBackgroundContext", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))

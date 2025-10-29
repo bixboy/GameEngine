@@ -2,6 +2,7 @@
 
 #include <filesystem>
 #include <functional>
+#include <memory>
 
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Controllers/GuiPanelController.h"
@@ -16,19 +17,41 @@ namespace BixEngine
 
 namespace BixEngine::Gui
 {
-    class ActorEditorPanel;
-
     class ActorEditorController final : public GuiPanelController
     {
     public:
+        enum class Section
+        {
+            Toolbar,
+            Viewport,
+            Outline,
+            Inspector
+        };
+
         using CloseRequest = std::function<void()>;
 
-        ActorEditorController(Core::SubsystemManager& subsystems,
-                              std::filesystem::path assetPath,
-                              CloseRequest onCloseRequest);
+        struct SharedState
+        {
+            Core::SubsystemManager* subsystems{nullptr};
+            std::filesystem::path assetPath{};
+            String assetDisplayName{};
+            String stableIdRoot{};
+            CloseRequest onCloseRequest{};
+            Game::Actor* actor{nullptr};
+            bool actorRefreshRequested{true};
+        };
 
-        [[nodiscard]] const std::filesystem::path& GetAssetPath() const noexcept { return assetPath_; }
-        [[nodiscard]] const String& GetDisplayName() const noexcept { return assetDisplayName_; }
+        ActorEditorController(std::shared_ptr<SharedState> sharedState,
+                              Section section);
+
+        static std::shared_ptr<SharedState> CreateSharedState(Core::SubsystemManager& subsystems,
+                                                              std::filesystem::path assetPath,
+                                                              String stableIdRoot,
+                                                              CloseRequest onCloseRequest);
+
+        [[nodiscard]] const std::filesystem::path& GetAssetPath() const noexcept { return state_->assetPath; }
+        [[nodiscard]] const String& GetDisplayName() const noexcept { return state_->assetDisplayName; }
+        [[nodiscard]] std::shared_ptr<SharedState> GetSharedState() const noexcept { return state_; }
 
         void RequestActorReload();
 
@@ -38,12 +61,13 @@ namespace BixEngine::Gui
         void OnDraw(GuiPanel& panel) override;
 
     private:
-        [[nodiscard]] Game::Actor* ResolveActor() noexcept;
         void EnsureActorUpToDate();
-
+        void DrawToolbar();
         void DrawViewport();
         void DrawOutline();
         void DrawInspector();
+
+        void ApplyPanelTitle(GuiPanel& panel);
 
         void HandlePlayRequest();
         void HandleSaveRequest();
@@ -51,12 +75,9 @@ namespace BixEngine::Gui
 
         void DrawViewportGrid_(const ImVec2& size);
 
-        Core::SubsystemManager* subsystems_{nullptr};
-        std::filesystem::path assetPath_{};
-        String assetDisplayName_{};
-        CloseRequest onCloseRequest_{};
-        Game::Actor* actor_{nullptr};
-        bool actorRefreshRequested_{true};
-        ActorEditorPanel* actorPanel_{nullptr};
+        Section section_;
+        std::shared_ptr<SharedState> state_;
+        String cachedDisplayName_{};
+        String stableId_{};
     };
 }

@@ -86,6 +86,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/GuiTheme.cpp
     Runtime/Source/Engine/Gui/GuiManager.cpp
     Runtime/Source/Engine/Gui/GuiModule.cpp
+    Runtime/Source/Engine/Gui/Core/GuiLayoutManager.cpp
     Runtime/Source/Engine/Gui/GuiPanelController.cpp
     Runtime/Source/Engine/Gui/GuiPanel.cpp
     Runtime/Source/Engine/Gui/GuiSystem.cpp
@@ -106,7 +107,6 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Header.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Tree.cpp
     Runtime/Source/Engine/Gui/Panels/ContentBrowser/ContentEntry.cpp
-    Runtime/Source/Engine/Gui/Panels/ActorEditorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneOutlinerPanel.cpp
     Runtime/Source/Engine/Gui/Panels/SceneViewportPanel.cpp
     Runtime/Source/Engine/Gui/Panels/StatsPanel.cpp
