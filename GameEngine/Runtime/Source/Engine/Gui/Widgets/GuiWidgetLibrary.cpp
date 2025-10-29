@@ -106,16 +106,6 @@ namespace BixEngine::Gui::Widgets
     // 🧰  Barre d’outils horizontale (RAII)
     // ─────────────────────────────────────────────
     
-    PanelToolbar::PanelToolbar()
-    {
-        ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 4.0f));
-    }
-
-    PanelToolbar::~PanelToolbar()
-    {
-        ImGui::PopStyleVar();
-    }
-
     void PanelToolbar::AddLeft(const std::function<void()>& drawCallback)
     {
         leftElements_.push_back(drawCallback);
@@ -131,6 +121,8 @@ namespace BixEngine::Gui::Widgets
         if (committed_)
             return;
         committed_ = true;
+
+        Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(6.0f, 4.0f));
 
         bool firstInRow = true;
         bool drewAny = false;
