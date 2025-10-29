@@ -66,20 +66,19 @@ namespace BixEngine::Gui
 
     void ActorEditorController::OnAttach(GuiPanel& panel)
     {
-        if (auto* actorPanel = GetActorPanel(panel))
-        {
-            actorPanel->SetDrawCallbacks({
-                [this]() { DrawViewport(); },
-                [this]() { DrawOutline(); },
-                [this]() { DrawInspector(); }
-            });
+        actorPanel_ = static_cast<ActorEditorPanel*>(&panel);
 
-            actorPanel->SetToolbarCallbacks({
-                [this]() { HandlePlayRequest(); },
-                [this]() { HandleSaveRequest(); },
-                [this]() { HandleCompileRequest(); }
-            });
-        }
+        actorPanel_->SetDrawCallbacks({
+            [this]() { DrawViewport(); },
+            [this]() { DrawOutline(); },
+            [this]() { DrawInspector(); }
+        });
+
+        actorPanel_->SetToolbarCallbacks({
+            [this]() { HandlePlayRequest(); },
+            [this]() { HandleSaveRequest(); },
+            [this]() { HandleCompileRequest(); }
+        });
 
         panel.SetDockingPreference(DockSpaceRegion::Center, ImGuiCond_Always);
         panel.SetTitle(String{"Actor Editor - "} + assetDisplayName_);
@@ -98,10 +97,11 @@ namespace BixEngine::Gui
 
     void ActorEditorController::OnDetach(GuiPanel& panel)
     {
-        if (auto* actorPanel = GetActorPanel(panel))
+        if (actorPanel_ == &panel)
         {
-            actorPanel->SetDrawCallbacks({});
-            actorPanel->SetToolbarCallbacks({});
+            actorPanel_->SetDrawCallbacks({});
+            actorPanel_->SetToolbarCallbacks({});
+            actorPanel_ = nullptr;
         }
 
         panel.OnClose = nullptr;
@@ -110,20 +110,10 @@ namespace BixEngine::Gui
 
     void ActorEditorController::OnDraw(GuiPanel& panel)
     {
-        auto* actorPanel = GetActorPanel(panel);
-        if (!actorPanel)
-        {
-            ImGui::TextUnformatted("Actor editor unavailable: panel type mismatch.");
-            return;
-        }
-
+        static_cast<void>(panel);
         EnsureActorUpToDate();
-        actorPanel->DrawEditor();
-    }
-
-    ActorEditorPanel* ActorEditorController::GetActorPanel(GuiPanel& panel) noexcept
-    {
-        return dynamic_cast<ActorEditorPanel*>(&panel);
+        if (actorPanel_)
+            actorPanel_->DrawEditor();
     }
 
     Game::Actor* ActorEditorController::ResolveActor() noexcept
@@ -175,7 +165,7 @@ namespace BixEngine::Gui
 
         ImGui::Dummy(available);
 
-        ImGui::SetCursorScreenPos(cursor + ImVec2{16.0f, 16.0f});
+        ImGui::SetCursorScreenPos(ImVec2{cursor.x + 16.0f, cursor.y + 16.0f});
         ImGui::BeginGroup();
         const auto nameView = actor_->GetName().View();
         ImGui::Text("%s", assetDisplayName_.View().data());

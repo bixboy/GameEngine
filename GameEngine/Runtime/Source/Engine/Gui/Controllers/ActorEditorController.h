@@ -2,8 +2,6 @@
 
 #include <filesystem>
 #include <functional>
-#include <memory>
-#include <optional>
 
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Utils/GuiPanelController.h"
@@ -40,7 +38,6 @@ namespace BixEngine::Gui
         void OnDraw(GuiPanel& panel) override;
 
     private:
-        [[nodiscard]] ActorEditorPanel* GetActorPanel(GuiPanel& panel) noexcept;
         [[nodiscard]] Game::Actor* ResolveActor() noexcept;
         void EnsureActorUpToDate();
 
@@ -60,5 +57,6 @@ namespace BixEngine::Gui
         CloseRequest onCloseRequest_{};
         Game::Actor* actor_{nullptr};
         bool actorRefreshRequested_{true};
+        ActorEditorPanel* actorPanel_{nullptr};
     };
 }
