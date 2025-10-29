@@ -59,6 +59,7 @@ namespace BixEngine::Core
         contentBrowserPanel_ = nullptr;
         inspectorPanel_ = nullptr;
         viewportPanel_ = nullptr;
+        defaultPanels_.clear();
         selectedActor_ = nullptr;
         lastDeltaTime_ = nullptr;
 
@@ -165,6 +166,7 @@ namespace BixEngine::Core
             contentBrowserPanel_ = nullptr;
             inspectorPanel_ = nullptr;
             viewportPanel_ = nullptr;
+            defaultPanels_.clear();
             selectedActor_ = nullptr;
             return;
         }
@@ -223,6 +225,21 @@ namespace BixEngine::Core
         outlinerPanel_ = panels.sceneOutlinerPanel;
         contentBrowserPanel_ = panels.contentBrowserPanel;
         inspectorPanel_ = panels.actorInspectorPanel;
+
+        defaultPanels_.clear();
+        defaultPanels_.reserve(5);
+        if (viewportPanel_)
+            defaultPanels_.push_back(viewportPanel_);
+        if (statsPanel_)
+            defaultPanels_.push_back(statsPanel_);
+        if (outlinerPanel_)
+            defaultPanels_.push_back(outlinerPanel_);
+        if (contentBrowserPanel_)
+            defaultPanels_.push_back(contentBrowserPanel_);
+        if (inspectorPanel_)
+            defaultPanels_.push_back(inspectorPanel_);
+
+        UpdateNavigationLayout();
     }
 
     bool GuiModule::IsMouseOverViewport() const noexcept
@@ -263,6 +280,7 @@ namespace BixEngine::Core
                 entry.panel->SetVisible(true);
                 focusRequests_.push_back(entry.panel->GetTitle().Std());
             }
+            UpdateNavigationLayout();
             return;
         }
 
@@ -300,6 +318,7 @@ namespace BixEngine::Core
         actorPanel.SetVisible(true);
         activeNavigationId_ = entry.navigationId;
         focusRequests_.push_back(actorPanel.GetTitle().Std());
+        UpdateNavigationLayout();
     }
 
     void GuiModule::CloseActorEditor(const std::string& navigationId)
@@ -318,6 +337,8 @@ namespace BixEngine::Core
             activeNavigationId_ = "scene";
             FocusSceneViewport();
         }
+
+        UpdateNavigationLayout();
     }
 
     void GuiModule::DrawEditorNavigation()
@@ -359,6 +380,7 @@ namespace BixEngine::Core
                     {
                         activeNavigationId_ = "scene";
                         FocusSceneViewport();
+                        UpdateNavigationLayout();
                     }
                     ImGui::EndTabItem();
                 }
@@ -394,6 +416,7 @@ namespace BixEngine::Core
                                 entry.panel->SetVisible(true);
                                 focusRequests_.push_back(entry.panel->GetTitle().Std());
                             }
+                            UpdateNavigationLayout();
                         }
 
                         ImGui::EndTabItem();
@@ -427,6 +450,24 @@ namespace BixEngine::Core
 
         viewportPanel_->SetVisible(true);
         focusRequests_.push_back(viewportPanel_->GetTitle().Std());
+    }
+
+    void GuiModule::UpdateNavigationLayout()
+    {
+        const bool sceneActive = activeNavigationId_ == "scene";
+
+        for (Gui::GuiPanel* panel : defaultPanels_)
+        {
+            if (panel)
+                panel->SetVisible(sceneActive);
+        }
+
+        for (auto& [navigationId, entry] : actorEditors_)
+        {
+            const bool editorActive = !sceneActive && navigationId == activeNavigationId_;
+            if (entry.panel)
+                entry.panel->SetVisible(editorActive);
+        }
     }
 
 

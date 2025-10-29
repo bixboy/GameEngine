@@ -116,6 +116,7 @@ namespace BixEngine::Core
         Gui::GuiPanel* contentBrowserPanel_{nullptr};
         Gui::GuiPanel* inspectorPanel_{nullptr};
         Gui::GuiPanel* viewportPanel_{nullptr};
+        std::vector<Gui::GuiPanel*> defaultPanels_{};
 
         // Pointeurs vers des éléments du jeu liés à l’interface
         Game::Actor* selectedActor_{nullptr};
@@ -145,5 +146,6 @@ namespace BixEngine::Core
         void DrawEditorNavigation();
         void ProcessFocusRequests();
         void FocusSceneViewport();
+        void UpdateNavigationLayout();
     };
 }
