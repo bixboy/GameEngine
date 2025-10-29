@@ -510,7 +510,15 @@ namespace BixEngine::Core
                 sortedEntries.reserve(actorEditors_.size());
                 for (auto& [_, entry] : actorEditors_)
                 {
-                    sortedEntries.emplace_back(entry.buttonLabel, std::ref(entry));
+                    if (entry.sharedState)
+                    {
+                        const std::string displayName = entry.sharedState->assetDisplayName.Std();
+                        if (entry.buttonLabel != displayName)
+                            entry.buttonLabel = displayName;
+                    }
+
+                    const std::string key = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
+                    sortedEntries.emplace_back(key, std::ref(entry));
                 }
 
                 std::sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& lhs, const auto& rhs)
@@ -518,13 +526,18 @@ namespace BixEngine::Core
                     return lhs.first < rhs.first;
                 });
 
+                std::vector<std::string> closeRequests;
+                closeRequests.reserve(sortedEntries.size());
+
                 for (auto& pair : sortedEntries)
                 {
                     ImGui::SameLine();
                     ActorEditorEntry& entry = pair.second.get();
-                    const std::string& label = pair.first.empty() ? entry.navigationId : pair.first;
                     const bool isActive = activeNavigationId_ == entry.navigationId;
 
+                    ImGui::PushID(entry.navigationId.c_str());
+
+                    const std::string& label = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
                     if (drawNavigationButton(label, isActive))
                     {
                         activeNavigationId_ = entry.navigationId;
@@ -535,7 +548,28 @@ namespace BixEngine::Core
                         if (entry.panels.viewport)
                             focusRequests_.push_back(entry.panels.viewport->GetTitle().Std());
                     }
+
+                    ImGui::SameLine(0.0f, 6.0f);
+                    ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(6.0f, 4.0f));
+                    ImGui::PushStyleColor(ImGuiCol_Button, ImVec4{0.42f, 0.12f, 0.12f, 1.0f});
+                    ImGui::PushStyleColor(ImGuiCol_ButtonHovered, ImVec4{0.58f, 0.16f, 0.16f, 1.0f});
+                    ImGui::PushStyleColor(ImGuiCol_ButtonActive, ImVec4{0.36f, 0.10f, 0.10f, 1.0f});
+                    const float closeButtonSize = buttonHeight - 12.0f;
+                    const ImVec2 closeSize{std::max(12.0f, closeButtonSize), buttonHeight};
+                    const bool closeRequested = ImGui::Button("x", closeSize);
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("Close %s", label.c_str());
+                    ImGui::PopStyleColor(3);
+                    ImGui::PopStyleVar();
+
+                    if (closeRequested)
+                        closeRequests.push_back(entry.navigationId);
+
+                    ImGui::PopID();
                 }
+
+                for (const std::string& navigationId : closeRequests)
+                    CloseActorEditor(navigationId);
             }
         }
 
