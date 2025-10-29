@@ -1,11 +1,10 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserUI_Grid.h"
 
-#include "Core/Logger.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserActions.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentEntry.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
-#include "Engine/Gui/Widgets/ActionTooltip.h"
 
 #include "imgui.h"
 
@@ -35,37 +34,6 @@ namespace BixEngine::Gui
             const auto view = fileName.View();
             
             return view.ends_with(".actor.json") || view.ends_with(".actor") || view.ends_with(".component.json") || view.ends_with(".component");
-        }
-
-        void RequestOpenScriptFiles(const ContentBrowserState& state, const ContentEntry& entry, bool openHeader, bool openSource)
-        {
-            namespace fs = std::filesystem;
-
-            if (!openHeader && !openSource)
-                return;
-
-            std::vector<fs::path> paths{};
-            paths.reserve(2);
-
-            if (openHeader && entry.HasHeader())
-                paths.push_back(entry.headerPath);
-
-            if (openSource && entry.HasSource())
-                paths.push_back(entry.sourcePath);
-
-            if (paths.empty())
-                return;
-
-            if (state.openScriptFilesCallback)
-            {
-                state.openScriptFilesCallback(paths);
-            }
-            else
-            {
-                String message = "Code editor integration is not available to open script: ";
-                message += entry.name;
-                LOG_WARNING(message);
-            }
         }
 
         bool RefreshDirectoryCache(ContentBrowserState& state)
@@ -260,14 +228,7 @@ namespace BixEngine::Gui
                 // Popup clic droit spécifique à l’item
                 if (ImGui::BeginPopupContextItem("ContentBrowserEntryContext"))
                 {
-                    const bool hasSource = entry.HasSource();
-
-                    ShowActionTooltip(entry.name, {
-                        {"Open header", [&]() { RequestOpenScriptFiles(state, entry, true, false); }},
-                        {"Open source", [&]() { if (hasSource) RequestOpenScriptFiles(state, entry, false, true); }},
-                        {"Open both", [&]() { RequestOpenScriptFiles(state, entry, true, true); }}
-                    });
-
+                    DrawEntryContextMenu(state, entry, requests, selectedEntry);
                     ImGui::EndPopup();
                 }
 
