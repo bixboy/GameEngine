@@ -65,6 +65,8 @@ namespace BixEngine::Gui
         void DrawOutline();
         void DrawInspector();
 
+        void ApplyPanelTitle(GuiPanel& panel);
+
         void HandlePlayRequest();
         void HandleSaveRequest();
         void HandleCompileRequest();
@@ -73,5 +75,6 @@ namespace BixEngine::Gui
 
         Section section_;
         std::shared_ptr<SharedState> state_;
+        String cachedDisplayName_{};
     };
 }

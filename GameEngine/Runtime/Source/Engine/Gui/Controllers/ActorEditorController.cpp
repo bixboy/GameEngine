@@ -66,6 +66,40 @@ namespace BixEngine::Gui
             cursor.y += std::max(0.0f, (region.y - textSize.y) * 0.5f) + verticalOffset;
             ImGui::GetWindowDrawList()->AddText(cursor, ImGui::GetColorU32(ImGuiCol_TextDisabled), text);
         }
+
+        const char* SectionStableId(ActorEditorController::Section section)
+        {
+            switch (section)
+            {
+            case ActorEditorController::Section::Toolbar:
+                return "ActorEditorToolbar";
+            case ActorEditorController::Section::Viewport:
+                return "ActorEditorViewport";
+            case ActorEditorController::Section::Outline:
+                return "ActorEditorOutline";
+            case ActorEditorController::Section::Inspector:
+                return "ActorEditorInspector";
+            }
+
+            return "ActorEditorPanel";
+        }
+
+        const char* SectionDisplayPrefix(ActorEditorController::Section section)
+        {
+            switch (section)
+            {
+            case ActorEditorController::Section::Toolbar:
+                return "Actor Toolbar - ";
+            case ActorEditorController::Section::Viewport:
+                return "Actor Viewport - ";
+            case ActorEditorController::Section::Outline:
+                return "Actor Outline - ";
+            case ActorEditorController::Section::Inspector:
+                return "Actor Inspector - ";
+            }
+
+            return "Actor Editor - ";
+        }
     }
 
     ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState,
@@ -104,22 +138,21 @@ namespace BixEngine::Gui
         panel.SetMovable(true);
         panel.SetResizable(true);
 
+        cachedDisplayName_ = state_->assetDisplayName;
+        ApplyPanelTitle(panel);
+
         switch (section_)
         {
         case Section::Toolbar:
-            panel.SetTitle(String{"Actor Toolbar - "} + state_->assetDisplayName);
             panel.SetDockingPreference(DockSpaceRegion::Top, ImGuiCond_FirstUseEver);
             break;
         case Section::Viewport:
-            panel.SetTitle(String{"Actor Viewport - "} + state_->assetDisplayName);
             panel.SetDockingPreference(DockSpaceRegion::Center, ImGuiCond_FirstUseEver);
             break;
         case Section::Outline:
-            panel.SetTitle(String{"Actor Outline - "} + state_->assetDisplayName);
             panel.SetDockingPreference(DockSpaceRegion::Left, ImGuiCond_FirstUseEver);
             break;
         case Section::Inspector:
-            panel.SetTitle(String{"Actor Inspector - "} + state_->assetDisplayName);
             panel.SetDockingPreference(DockSpaceRegion::Right, ImGuiCond_FirstUseEver);
             break;
         }
@@ -143,6 +176,12 @@ namespace BixEngine::Gui
         static_cast<void>(panel);
         EnsureActorUpToDate();
 
+        if (state_ && cachedDisplayName_ != state_->assetDisplayName)
+        {
+            cachedDisplayName_ = state_->assetDisplayName;
+            ApplyPanelTitle(panel);
+        }
+
         switch (section_)
         {
         case Section::Toolbar:
@@ -158,6 +197,24 @@ namespace BixEngine::Gui
             DrawInspector();
             break;
         }
+    }
+
+    void ActorEditorController::ApplyPanelTitle(GuiPanel& panel)
+    {
+        const char* stableId = SectionStableId(section_);
+        String title(SectionDisplayPrefix(section_));
+
+        if (!cachedDisplayName_.IsEmpty())
+            title += cachedDisplayName_;
+        else if (state_ && !state_->assetDisplayName.IsEmpty())
+            title += state_->assetDisplayName;
+        else
+            title += "Actor";
+
+        title += "###";
+        title += stableId;
+
+        panel.SetTitle(std::move(title));
     }
 
     void ActorEditorController::EnsureActorUpToDate()

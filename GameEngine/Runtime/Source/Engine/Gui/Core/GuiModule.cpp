@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <filesystem>
 #include <functional>
+#include <iterator>
 #include <utility>
 #include <vector>
 #include <imgui_internal.h>
@@ -87,8 +88,10 @@ namespace BixEngine::Core
         }
 
         actorEditors_.clear();
+        actorEditorOrder_.clear();
         focusRequests_.clear();
         activeNavigationId_ = "scene";
+        nextActorEditorId_ = 0;
         subsystems_ = nullptr;
 
         DestroySceneViewportTexture();
@@ -213,6 +216,8 @@ namespace BixEngine::Core
                 entry.sharedState.reset();
             }
             actorEditors_.clear();
+            actorEditorOrder_.clear();
+            nextActorEditorId_ = 0;
             focusRequests_.clear();
             activeNavigationId_ = "scene";
             activeLayout_ = Gui::EditorLayoutType::Scene;
@@ -301,25 +306,11 @@ namespace BixEngine::Core
             return;
 
         std::filesystem::path normalized = path.lexically_normal();
-        std::string key = normalized.generic_string();
-        if (key.empty())
-            key = path.generic_string();
+        if (normalized.empty())
+            normalized = path;
 
-        if (key.empty())
+        if (normalized.empty())
             return;
-
-        if (auto it = actorEditors_.find(key); it != actorEditors_.end())
-        {
-            ActorEditorEntry& entry = it->second;
-            activeNavigationId_ = entry.navigationId;
-            if (layoutManager_)
-                layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
-            activeLayout_ = Gui::EditorLayoutType::ActorEditor;
-            RefreshActorPanelsVisibility();
-            if (entry.panels.viewport)
-                focusRequests_.push_back(entry.panels.viewport->GetTitle().Std());
-            return;
-        }
 
         if (!subsystems_)
         {
@@ -327,8 +318,8 @@ namespace BixEngine::Core
             return;
         }
 
-        const std::string navigationId = key;
-        const std::string baseName = "actor_editor_" + std::to_string(std::hash<std::string>{}(navigationId));
+        const std::string navigationId = "actor_editor_" + std::to_string(++nextActorEditorId_);
+        const std::string baseName = navigationId;
 
         auto sharedState = Gui::ActorEditorController::CreateSharedState(*subsystems_, normalized, [this, navigationId]()
         {
@@ -361,9 +352,10 @@ namespace BixEngine::Core
         entry.panels.outline = createPanel("outline", Gui::ActorEditorController::Section::Outline);
         entry.panels.inspector = createPanel("inspector", Gui::ActorEditorController::Section::Inspector);
 
-        actorEditors_.emplace(entry.navigationId, std::move(entry));
+        actorEditorOrder_.push_back(navigationId);
+        actorEditors_.emplace(navigationId, std::move(entry));
 
-        activeNavigationId_ = entry.navigationId;
+        activeNavigationId_ = navigationId;
         if (layoutManager_)
             layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
         activeLayout_ = Gui::EditorLayoutType::ActorEditor;
@@ -384,6 +376,19 @@ namespace BixEngine::Core
 
         ActorEditorEntry entry = std::move(it->second);
         actorEditors_.erase(it);
+
+        size_t removedIndex = 0;
+        bool removedFromOrder = false;
+        if (!actorEditorOrder_.empty())
+        {
+            auto orderIt = std::find(actorEditorOrder_.begin(), actorEditorOrder_.end(), navigationId);
+            if (orderIt != actorEditorOrder_.end())
+            {
+                removedIndex = static_cast<size_t>(std::distance(actorEditorOrder_.begin(), orderIt));
+                actorEditorOrder_.erase(orderIt);
+                removedFromOrder = true;
+            }
+        }
 
         if (guiManager_)
         {
@@ -415,22 +420,30 @@ namespace BixEngine::Core
             }
             else
             {
-                std::vector<std::pair<std::string, std::reference_wrapper<ActorEditorEntry>>> sortedEntries;
-                sortedEntries.reserve(actorEditors_.size());
-                for (auto& [_, candidate] : actorEditors_)
-                    sortedEntries.emplace_back(candidate.buttonLabel, std::ref(candidate));
-
-                std::sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& lhs, const auto& rhs)
+                if (actorEditorOrder_.empty())
                 {
-                    return lhs.first < rhs.first;
-                });
+                    activeNavigationId_ = "scene";
+                    focusScene = true;
+                    if (layoutManager_)
+                        layoutManager_->Switch(Gui::EditorLayoutType::Scene);
+                    activeLayout_ = Gui::EditorLayoutType::Scene;
+                }
+                else
+                {
+                    size_t nextIndex = 0;
+                    if (removedFromOrder && removedIndex < actorEditorOrder_.size())
+                        nextIndex = removedIndex;
+                    else if (!actorEditorOrder_.empty())
+                        nextIndex = actorEditorOrder_.size() - 1;
 
-                ActorEditorEntry& nextEntry = sortedEntries.front().second.get();
-                activeNavigationId_ = nextEntry.navigationId;
-                activeLayout_ = Gui::EditorLayoutType::ActorEditor;
-                if (layoutManager_)
-                    layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
-                panelToFocus = nextEntry.panels.viewport;
+                    const std::string& nextNavigationId = actorEditorOrder_[nextIndex];
+                    activeNavigationId_ = nextNavigationId;
+                    activeLayout_ = Gui::EditorLayoutType::ActorEditor;
+                    if (layoutManager_)
+                        layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
+                    if (auto nextIt = actorEditors_.find(nextNavigationId); nextIt != actorEditors_.end())
+                        panelToFocus = nextIt->second.panels.viewport;
+                }
             }
         }
 
@@ -504,12 +517,23 @@ namespace BixEngine::Core
                 FocusSceneViewport();
             }
 
-            if (!actorEditors_.empty())
+            if (!actorEditorOrder_.empty())
             {
-                std::vector<std::pair<std::string, std::reference_wrapper<ActorEditorEntry>>> sortedEntries;
-                sortedEntries.reserve(actorEditors_.size());
-                for (auto& [_, entry] : actorEditors_)
+                std::vector<std::string> closeRequests;
+                std::vector<std::string> staleEntries;
+                closeRequests.reserve(actorEditorOrder_.size());
+                staleEntries.reserve(actorEditorOrder_.size());
+
+                for (const std::string& navId : actorEditorOrder_)
                 {
+                    auto entryIt = actorEditors_.find(navId);
+                    if (entryIt == actorEditors_.end())
+                    {
+                        staleEntries.push_back(navId);
+                        continue;
+                    }
+
+                    ActorEditorEntry& entry = entryIt->second;
                     if (entry.sharedState)
                     {
                         const std::string displayName = entry.sharedState->assetDisplayName.Std();
@@ -517,22 +541,7 @@ namespace BixEngine::Core
                             entry.buttonLabel = displayName;
                     }
 
-                    const std::string key = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
-                    sortedEntries.emplace_back(key, std::ref(entry));
-                }
-
-                std::sort(sortedEntries.begin(), sortedEntries.end(), [](const auto& lhs, const auto& rhs)
-                {
-                    return lhs.first < rhs.first;
-                });
-
-                std::vector<std::string> closeRequests;
-                closeRequests.reserve(sortedEntries.size());
-
-                for (auto& pair : sortedEntries)
-                {
                     ImGui::SameLine();
-                    ActorEditorEntry& entry = pair.second.get();
                     const bool isActive = activeNavigationId_ == entry.navigationId;
 
                     ImGui::PushID(entry.navigationId.c_str());
@@ -566,6 +575,13 @@ namespace BixEngine::Core
                         closeRequests.push_back(entry.navigationId);
 
                     ImGui::PopID();
+                }
+
+                for (const std::string& stale : staleEntries)
+                {
+                    auto orderIt = std::find(actorEditorOrder_.begin(), actorEditorOrder_.end(), stale);
+                    if (orderIt != actorEditorOrder_.end())
+                        actorEditorOrder_.erase(orderIt);
                 }
 
                 for (const std::string& navigationId : closeRequests)
@@ -612,7 +628,9 @@ namespace BixEngine::Core
 
     void GuiModule::RefreshActorPanelsVisibility()
     {
-        const bool actorLayoutActive = layoutManager_ && layoutManager_->GetCurrentLayout() == Gui::EditorLayoutType::ActorEditor;
+        const bool actorLayoutActive =
+            (layoutManager_ && layoutManager_->GetCurrentLayout() == Gui::EditorLayoutType::ActorEditor) ||
+            activeLayout_ == Gui::EditorLayoutType::ActorEditor;
         for (auto& [navigationId, entry] : actorEditors_)
         {
             const bool shouldBeVisible = actorLayoutActive && activeNavigationId_ == navigationId;
