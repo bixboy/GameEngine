@@ -1,6 +1,8 @@
-﻿#pragma once
+#pragma once
 
+#include <array>
 #include <filesystem>
+#include <functional>
 #include <memory>
 #include <span>
 #include <string>
@@ -10,77 +12,141 @@
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Controllers/ActorEditorController.h"
 #include "Engine/Gui/Core/GuiLayoutManager.h"
-#include "Engine/Gui/Core/GuiManager.h"
 
 namespace BixEngine::Gui
 {
-    struct ActorEditorPanels
-    {
-        GuiPanel* toolbar = nullptr;
-        GuiPanel* viewport = nullptr;
-        GuiPanel* outline = nullptr;
-        GuiPanel* inspector = nullptr;
+    class GuiManager;
+    class GuiPanel;
+}
 
-        template<typename Fn>
-        void ForEachPanel(Fn&& fn) const
-        {
-            if (toolbar) fn(toolbar);
-            if (viewport) fn(viewport);
-            if (outline) fn(outline);
-            if (inspector) fn(inspector);
-        }
+namespace BixEngine::Core
+{
+    class SubsystemManager;
 
-        std::span<GuiPanel*> CopyTo(std::span<GuiPanel*> dest) const noexcept
-        {
-            size_t index = 0;
-            ForEachPanel([&](GuiPanel* p){
-                if (index < dest.size())
-                    dest[index++] = p;
-            });
-            return dest.first(index);
-        }
-    };
-
-    struct ActorEditorEntry
-    {
-        std::filesystem::path assetPath;
-        std::string navigationId;
-        String buttonLabel;
-        std::shared_ptr<ActorEditorController::SharedState> sharedState;
-        ActorEditorPanels panels;
-    };
-
+    /**
+     * @brief Gère la création et la gestion des éditeurs d'acteurs.
+     */
     class GuiActorEditorManager
     {
     public:
-        GuiActorEditorManager(GuiManager& guiManager, GuiLayoutManager& layoutManager);
+        struct ActorEditorPanels
+        {
+            Gui::GuiPanel* toolbar{nullptr};
+            Gui::GuiPanel* viewport{nullptr};
+            Gui::GuiPanel* outline{nullptr};
+            Gui::GuiPanel* inspector{nullptr};
 
-        // Gestion des onglets d'éditeurs
-        void OpenActorEditor(const std::filesystem::path& path, Core::SubsystemManager* subsystems);
+            [[nodiscard]] std::size_t Count() const noexcept
+            {
+                std::size_t count = 0;
+                if (toolbar) ++count;
+                if (viewport) ++count;
+                if (outline) ++count;
+                if (inspector) ++count;
+                return count;
+            }
+
+            template <typename Fn>
+            void ForEachPanel(Fn&& fn) const
+            {
+                if (toolbar) std::forward<Fn>(fn)(toolbar);
+                if (viewport) std::forward<Fn>(fn)(viewport);
+                if (outline) std::forward<Fn>(fn)(outline);
+                if (inspector) std::forward<Fn>(fn)(inspector);
+            }
+
+            [[nodiscard]] std::span<Gui::GuiPanel*> CopyTo(std::span<Gui::GuiPanel*> buffer) const noexcept
+            {
+                std::size_t index = 0;
+                auto push = [&](Gui::GuiPanel* panel) noexcept
+                {
+                    if (!panel || index >= buffer.size())
+                        return;
+                    buffer[index++] = panel;
+                };
+
+                push(toolbar);
+                push(viewport);
+                push(outline);
+                push(inspector);
+
+                return buffer.first(index);
+            }
+        };
+
+        struct ActorEditorEntry
+        {
+            std::filesystem::path assetPath;
+            std::string navigationId;
+            std::string buttonLabel;
+            ActorEditorPanels panels{};
+            std::shared_ptr<Gui::ActorEditorController::SharedState> sharedState{};
+        };
+
+        using FocusRequestCallback = std::function<void(const std::string&)>;
+        using FocusSceneCallback = std::function<void()>;
+
+        GuiActorEditorManager(Gui::GuiManager& guiManager,
+                              Gui::GuiLayoutManager* layoutManager,
+                              FocusRequestCallback focusRequestCallback,
+                              FocusSceneCallback focusSceneCallback);
+
+        void SetLayoutManager(Gui::GuiLayoutManager* layoutManager) noexcept;
+        void SetSubsystems(SubsystemManager* subsystems) noexcept;
+        void SetFocusCallbacks(FocusRequestCallback focusRequestCallback,
+                               FocusSceneCallback focusSceneCallback);
+
+        void OpenActorEditor(const std::filesystem::path& path);
         void CloseActorEditor(const std::string& navigationId);
 
-        // Rafraîchissement
-        void RefreshActorPanelsVisibility();
-        void ApplyActorEditorPanels(ActorEditorEntry& entry);
+        void ActivateEditor(const std::string& navigationId, bool requestFocus);
+        void ActivateScene(bool requestFocus);
 
-        // Données
+        void RefreshActorPanelsVisibility();
+        void RemoveAllEditors();
+
+        void OnLayoutChanged(Gui::EditorLayoutType layout) noexcept;
+
         [[nodiscard]] bool HasEditors() const noexcept { return !actorEditors_.empty(); }
         [[nodiscard]] const std::string& GetActiveNavigationId() const noexcept { return activeNavigationId_; }
+        [[nodiscard]] Gui::EditorLayoutType GetActiveLayout() const noexcept { return activeLayout_; }
+        [[nodiscard]] const std::vector<std::string>& GetEditorOrder() const noexcept { return actorEditorOrder_; }
 
-        void SetActiveLayout(EditorLayoutType layout) noexcept { activeLayout_ = layout; }
-        [[nodiscard]] EditorLayoutType GetActiveLayout() const noexcept { return activeLayout_; }
+        [[nodiscard]] ActorEditorEntry* FindEditor(const std::string& navigationId) noexcept;
+        [[nodiscard]] const ActorEditorEntry* FindEditor(const std::string& navigationId) const noexcept;
 
-        std::span<GuiPanel*> CollectPanels(const ActorEditorPanels& panels, std::array<GuiPanel*, 4>& buffer) const noexcept;
+        void RemoveNavigationIdFromOrder(const std::string& navigationId);
 
     private:
-        GuiManager& guiManager_;
-        GuiLayoutManager& layoutManager_;
+        struct PathHash
+        {
+            std::size_t operator()(const std::filesystem::path& value) const noexcept
+            {
+                return std::hash<std::string>{}(value.generic_string());
+            }
+        };
 
-        std::unordered_map<std::string, ActorEditorEntry> actorEditors_;
-        std::unordered_map<std::filesystem::path, std::string> actorEditorsByPath_;
-        std::vector<std::string> actorEditorOrder_;
+        static constexpr std::size_t kActorEditorPanelCapacity = 4;
+        using PanelBuffer = std::array<Gui::GuiPanel*, kActorEditorPanelCapacity>;
 
-        std::string activeNavigationId_ = "scene";
-        EditorLayoutType activeLayout_ = EditorLayoutType::Scene;
+        void ApplyActorEditorPanels(ActorEditorEntry& entry);
+        [[nodiscard]] std::span<Gui::GuiPanel*> CollectPanels(const ActorEditorPanels& panels, PanelBuffer& buffer) const noexcept;
+
+        void FocusPanel(Gui::GuiPanel* panel) const;
+        void RequestSceneFocus() const;
+
+    private:
+        Gui::GuiManager* guiManager_{nullptr};
+        Gui::GuiLayoutManager* layoutManager_{nullptr};
+        SubsystemManager* subsystems_{nullptr};
+
+        FocusRequestCallback focusRequestCallback_{};
+        FocusSceneCallback focusSceneCallback_{};
+
+        std::unordered_map<std::string, ActorEditorEntry> actorEditors_{};
+        std::unordered_map<std::filesystem::path, std::string, PathHash> actorEditorsByPath_{};
+        std::vector<std::string> actorEditorOrder_{};
+        std::string activeNavigationId_{"scene"};
+        Gui::EditorLayoutType activeLayout_{Gui::EditorLayoutType::Scene};
     };
 }

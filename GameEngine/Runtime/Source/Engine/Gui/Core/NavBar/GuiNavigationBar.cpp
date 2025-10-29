@@ -1,5 +1,6 @@
 ﻿#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
 #include "Engine/Gui/Core/GuiModule.h"
+#include "Engine/Gui/Core/NavBar/GuiActorEditorManager.h"
 #include "Engine/Gui/Core/GuiSystem.h"
 #include "Engine/Gui/Core/GuiLayoutManager.h"
 #include "Engine/Gui/Core/GuiPanel.h"
@@ -45,7 +46,10 @@ namespace BixEngine::Core
         if (ImGui::Begin("EditorNavigationBar", nullptr, flags))
         {
             if (layoutManager_)
-                owner_->activeLayout_ = layoutManager_->GetCurrentLayout();
+            {
+                if (auto* manager = owner_->GetActorEditorManager())
+                    manager->OnLayoutChanged(layoutManager_->GetCurrentLayout());
+            }
 
             const float buttonHeight = kNavigationBarHeight - 16.0f;
             DrawSceneButton(buttonHeight);
@@ -100,84 +104,67 @@ namespace BixEngine::Core
     void GuiNavigationBar::DrawSceneButton(float buttonHeight)
     {
         static const std::string kSceneLabel{"Scene"};
-        const bool sceneActive = owner_->activeNavigationId_ == kSceneNavigationId || owner_->actorEditors_.empty();
+        auto* manager = owner_->GetActorEditorManager();
+        const bool sceneActive = !manager || manager->GetActiveNavigationId() == kSceneNavigationId || !manager->HasEditors();
 
         if (!DrawNavigationButton(kSceneLabel, sceneActive, buttonHeight))
             return;
 
-        owner_->activeNavigationId_ = std::string{kSceneNavigationId};
-        owner_->activeLayout_ = Gui::EditorLayoutType::Scene;
-
-        if (layoutManager_)
-            layoutManager_->Switch(Gui::EditorLayoutType::Scene);
-
-        owner_->RefreshActorPanelsVisibility();
-        owner_->FocusSceneViewport();
+        if (manager)
+            manager->ActivateScene(true);
+        else
+            owner_->FocusSceneViewport();
     }
 
     void GuiNavigationBar::DrawActorEditorTabs(float buttonHeight)
     {
-        if (owner_->actorEditorOrder_.empty())
+        auto* manager = owner_->GetActorEditorManager();
+        if (!manager || manager->GetEditorOrder().empty())
             return;
 
         std::vector<std::string> closeRequests;
         std::vector<std::string> staleEntries;
-        closeRequests.reserve(owner_->actorEditorOrder_.size());
-        staleEntries.reserve(owner_->actorEditorOrder_.size());
+        closeRequests.reserve(manager->GetEditorOrder().size());
+        staleEntries.reserve(manager->GetEditorOrder().size());
 
-        for (const std::string& navId : owner_->actorEditorOrder_)
+        for (const std::string& navId : manager->GetEditorOrder())
         {
-            auto entryIt = owner_->actorEditors_.find(navId);
-            if (entryIt == owner_->actorEditors_.end())
+            auto* entry = manager->FindEditor(navId);
+            if (!entry)
             {
                 staleEntries.push_back(navId);
                 continue;
             }
 
-            auto& entry = entryIt->second;
-            if (entry.sharedState)
+            if (entry->sharedState)
             {
-                const std::string displayName = entry.sharedState->assetDisplayName.Std();
-                if (entry.buttonLabel != displayName)
-                    entry.buttonLabel = displayName;
+                const std::string displayName = entry->sharedState->assetDisplayName.Std();
+                if (entry->buttonLabel != displayName)
+                    entry->buttonLabel = displayName;
             }
 
             ImGui::SameLine();
-            const bool isActive = owner_->activeNavigationId_ == entry.navigationId;
+            const bool isActive = manager->GetActiveNavigationId() == entry->navigationId;
 
-            ImGui::PushID(entry.navigationId.c_str());
+            ImGui::PushID(entry->navigationId.c_str());
 
-            const std::string& label = entry.buttonLabel.empty() ? entry.navigationId : entry.buttonLabel;
+            const std::string& label = entry->buttonLabel.empty() ? entry->navigationId : entry->buttonLabel;
             if (DrawNavigationButton(label, isActive, buttonHeight))
-            {
-                owner_->activeNavigationId_ = entry.navigationId;
-                owner_->activeLayout_ = Gui::EditorLayoutType::ActorEditor;
-                if (layoutManager_)
-                {
-                    owner_->ApplyActorEditorPanels(entry);
-                    layoutManager_->Switch(Gui::EditorLayoutType::ActorEditor);
-                }
-
-                owner_->RefreshActorPanelsVisibility();
-                if (entry.panels.viewport)
-                    owner_->focusRequests_.push_back(entry.panels.viewport->GetTitle().Std());
-            }
+                manager->ActivateEditor(entry->navigationId, true);
 
             ImGui::SameLine(0.0f, 6.0f);
             if (DrawCloseButton(label, buttonHeight))
-                closeRequests.push_back(entry.navigationId);
+                closeRequests.push_back(entry->navigationId);
 
             ImGui::PopID();
         }
 
         for (const std::string& stale : staleEntries)
-        {
-            auto orderIt = std::find(owner_->actorEditorOrder_.begin(), owner_->actorEditorOrder_.end(), stale);
-            if (orderIt != owner_->actorEditorOrder_.end())
-                owner_->actorEditorOrder_.erase(orderIt);
-        }
+            manager->RemoveNavigationIdFromOrder(stale);
 
         for (const std::string& navigationId : closeRequests)
-            owner_->CloseActorEditor(navigationId);
+            manager->CloseActorEditor(navigationId);
+    }
+
     }
 }
