@@ -92,15 +92,15 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/DefaultEngineGui.cpp
     Runtime/Source/Engine/Gui/GuiContextFactory.cpp
     Runtime/Source/Engine/Gui/GuiTheme.cpp
-    Runtime/Source/Engine/Gui/Core/GuiManager.cpp
-    Runtime/Source/Engine/Gui/Core/GuiModule.cpp
-    Runtime/Source/Engine/Gui/Core/NavBar/GuiAssetEditorManager.cpp
-    Runtime/Source/Engine/Gui/Core/NavBar/GuiNavigationBar.cpp
-    Runtime/Source/Engine/Gui/Core/GuiLayoutManager.cpp
-    Runtime/Source/Engine/Gui/Core/GuiPanelRegistry.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiManager.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiModule.cpp
+    Runtime/Source/Engine/Gui/Internal/NavBar/GuiAssetEditorManager.cpp
+    Runtime/Source/Engine/Gui/Internal/NavBar/GuiNavigationBar.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiLayoutManager.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiPanelRegistry.cpp
     Runtime/Source/Engine/Gui/Controllers/GuiPanelController.cpp
-    Runtime/Source/Engine/Gui/Core/GuiPanel.cpp
-    Runtime/Source/Engine/Gui/Core/GuiSystem.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiPanel.cpp
+    Runtime/Source/Engine/Gui/Internal/GuiSystem.cpp
     Runtime/Source/Engine/Gui/Controllers/BaseAssetEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ActorEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ComponentEditorController.cpp

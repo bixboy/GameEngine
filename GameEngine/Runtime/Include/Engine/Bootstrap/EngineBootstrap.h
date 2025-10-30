@@ -5,7 +5,7 @@
 
 #include "Engine/Systems/ApplicationConfig.h"
 #include "Engine/Systems/SdlSystem.h"
-#include "Engine/Gui/Core/GuiModule.h"
+#include "Engine/Gui/Internal/GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
 #include "Core/EventDispatcher.h"
 #include "Engine/Systems/RenderLoop.h"

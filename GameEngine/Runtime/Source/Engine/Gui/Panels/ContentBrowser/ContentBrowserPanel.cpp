@@ -1,5 +1,5 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Core/Logger.h"
 #include <filesystem>

@@ -6,7 +6,7 @@
 #include <memory>
 #include <span>
 
-#include "Engine/Gui/Core/GuiLayoutManager.h"
+#include "Engine/Gui/Internal/GuiLayoutManager.h"
 
 struct ImVec2;
 

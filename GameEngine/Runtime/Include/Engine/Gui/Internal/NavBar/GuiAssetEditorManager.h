@@ -12,7 +12,7 @@
 
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Controllers/BaseAssetEditorController.h"
-#include "Engine/Gui/Core/GuiLayoutManager.h"
+#include "Engine/Gui/Internal/GuiLayoutManager.h"
 
 namespace BixEngine::Gui
 {

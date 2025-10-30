@@ -1,6 +1,6 @@
 #pragma once
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Gui/DefaultEngineGui.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 

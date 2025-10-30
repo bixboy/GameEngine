@@ -6,7 +6,7 @@
 #include <vector>
 #include <unordered_map>
 #include <string>
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 
 namespace BixEngine
 {

@@ -2,12 +2,12 @@
 
 #include <SDL3/SDL_render.h>
 
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 
 #include "imgui.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 
 namespace BixEngine::Gui
 {
