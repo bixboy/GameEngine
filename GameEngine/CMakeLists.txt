@@ -84,13 +84,15 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/DefaultEngineGui.cpp
     Runtime/Source/Engine/Gui/GuiContextFactory.cpp
     Runtime/Source/Engine/Gui/GuiTheme.cpp
-    Runtime/Source/Engine/Gui/GuiManager.cpp
-    Runtime/Source/Engine/Gui/GuiModule.cpp
+    Runtime/Source/Engine/Gui/Core/GuiManager.cpp
+    Runtime/Source/Engine/Gui/Core/GuiModule.cpp
     Runtime/Source/Engine/Gui/Core/NavBar/GuiAssetEditorManager.cpp
+    Runtime/Source/Engine/Gui/Core/NavBar/GuiNavigationBar.cpp
     Runtime/Source/Engine/Gui/Core/GuiLayoutManager.cpp
-    Runtime/Source/Engine/Gui/GuiPanelController.cpp
-    Runtime/Source/Engine/Gui/GuiPanel.cpp
-    Runtime/Source/Engine/Gui/GuiSystem.cpp
+    Runtime/Source/Engine/Gui/Core/GuiPanelRegistry.cpp
+    Runtime/Source/Engine/Gui/Controllers/GuiPanelController.cpp
+    Runtime/Source/Engine/Gui/Core/GuiPanel.cpp
+    Runtime/Source/Engine/Gui/Core/GuiSystem.cpp
     Runtime/Source/Engine/Gui/Controllers/BaseAssetEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ActorEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ComponentEditorController.cpp
@@ -132,7 +134,6 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Game/SceneRegistry.cpp
     Runtime/Source/Game/SceneSerializer.cpp
     Runtime/Source/Game/Test/Player.cpp
-    Runtime/Source/Game/Test/TestScene.cpp
     Runtime/Source/Graphics/Renderer.cpp
     Runtime/Source/Input/Input.cpp
     Runtime/Source/Input/InputManager.cpp
