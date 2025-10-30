@@ -59,7 +59,7 @@ local sdl3_image_inc = get_config("sdl3_image_dir") or ""
 local sdl3_image_lib = get_config("sdl3_image_lib_dir") or ""
 
 if (sdl3_image_inc == "" and sdl3_image_lib == "") then
-    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL3_image/include/SDL3_image")
+    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL3_image/include")
     sdl3_image_lib = path.join(os.projectdir(), "ThirdParty/SDL3_image/lib/x64")
     
 end
