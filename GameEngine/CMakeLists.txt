@@ -137,6 +137,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Game/Actor.cpp
     Runtime/Source/Game/BGameplayStatics.cpp
     Runtime/Source/Game/ActorSpawner.cpp
+    Runtime/Source/Game/Components/ComponentRegistry.cpp
     Runtime/Source/Game/Components/SpriteComponent.cpp
     Runtime/Source/Game/EmptyScene.cpp
     Runtime/Source/Game/Object.cpp

@@ -3,6 +3,7 @@
 #include "Core/Logger.h"
 #include "Core/Containers/String.h"
 #include "Engine/Systems/Window.h"
+#include "Game/Components/ComponentRegistry.h"
 #include "Graphics/Renderer.h"
 
 namespace
@@ -33,6 +34,8 @@ namespace BixEngine::Core
         }
 
         LOG_INFO("=== Initializing EngineBootstrap ===");
+
+        Game::RegisterBuiltinComponents();
 
         // --- SDL ---
         LOG_INFO("Initializing SDL system...");
