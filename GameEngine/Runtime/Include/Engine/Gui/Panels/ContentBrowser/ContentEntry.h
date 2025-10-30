@@ -14,7 +14,8 @@ namespace BixEngine::Gui
         Directory = 0,
         File,
         Script,
-        Actor,
+        ActorPrefab,
+        ComponentPrefab,
     };
 
     // ─────────────────────────────────────────────
@@ -38,12 +39,14 @@ namespace BixEngine::Gui
         [[nodiscard]] bool IsDirectory() const noexcept { return type == ContentType::Directory; }
         [[nodiscard]] bool IsFile() const noexcept { return type == ContentType::File; }
         [[nodiscard]] bool IsScript() const noexcept { return type == ContentType::Script; }
-        [[nodiscard]] bool IsActor() const noexcept { return type == ContentType::Actor; }
+        [[nodiscard]] bool IsActorPrefab() const noexcept { return type == ContentType::ActorPrefab; }
+        [[nodiscard]] bool IsComponentPrefab() const noexcept { return type == ContentType::ComponentPrefab; }
+        [[nodiscard]] bool IsPrefab() const noexcept { return IsActorPrefab() || IsComponentPrefab(); }
 
         [[nodiscard]] bool HasHeader() const noexcept { return !headerPath.empty(); }
         [[nodiscard]] bool HasSource() const noexcept { return !sourcePath.empty(); }
 
-        [[nodiscard]] bool IsAsset() const noexcept { return IsActor() || IsScript(); }
+        [[nodiscard]] bool IsAsset() const noexcept { return IsPrefab() || IsScript(); }
 
         [[nodiscard]] String SelectionKey() const;
     };

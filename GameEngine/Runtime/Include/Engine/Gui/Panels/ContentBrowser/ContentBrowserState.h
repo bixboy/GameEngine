@@ -33,6 +33,7 @@ namespace BixEngine::Gui
     struct PopupRequestState
     {
         bool createScript{false};
+        bool createPrefab{false};
         bool createFolder{false};
         bool renameEntry{false};
 
@@ -41,6 +42,7 @@ namespace BixEngine::Gui
         char folderName[128] = "NewFolder";
         char renameBuffer[256] = "";
         String scriptError{};
+        String prefabError{};
         String folderError{};
         String renameError{};
         std::filesystem::path folderTarget{};
@@ -53,6 +55,13 @@ namespace BixEngine::Gui
         bool selectedParentIsBase{false};
         bool selectedParentIsActor{false};
         bool selectedParentIsComponent{false};
+
+        String selectedPrefabClass{};
+        String selectedPrefabInclude{};
+        String selectedPrefabAssetBase{};
+        std::filesystem::path selectedPrefabScript{};
+        bool selectedPrefabIsActor{false};
+        bool selectedPrefabIsComponent{false};
     };
 
     struct DirectoryCache
@@ -73,7 +82,7 @@ namespace BixEngine::Gui
         String error{};
         bool initialized{false};
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesCallback{};
-        std::function<void(const std::filesystem::path&)> openActorEditorCallback{};
+        std::function<void(const std::filesystem::path&)> openAssetEditorCallback{};
 
         std::function<ImTextureID(const std::filesystem::path&)> getPreviewTextureCallback{};
         ContentViewMode viewMode{ContentViewMode::Grid};
@@ -84,6 +93,7 @@ namespace BixEngine::Gui
     };
 
     void ClearSelectedParent(PopupRequestState& requests);
+    void ClearSelectedPrefab(PopupRequestState& requests);
 
     bool EnsureContentBrowserInitialized(ContentBrowserState& state);
     void EnsureScriptsDirectoryExists(const ContentBrowserState& state);

@@ -7,26 +7,20 @@
 #include "Core/Containers/String.h"
 #include "Engine/Gui/Controllers/BaseAssetEditorController.h"
 
-struct ImVec2;
-
 namespace BixEngine::Gui
 {
-    class ActorEditorController final : public BaseAssetEditorController
+    class ComponentEditorController final : public BaseAssetEditorController
     {
     public:
         enum class Section
         {
             Toolbar,
-            Viewport,
-            Outline,
             Inspector
         };
 
-    private:
         using SharedState = BaseAssetEditorController::SharedState;
 
-    public:
-        ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section);
+        ComponentEditorController(std::shared_ptr<SharedState> sharedState, Section section);
 
         static std::shared_ptr<SharedState> CreateSharedState(std::filesystem::path assetPath, String stableIdRoot, std::function<void()> onCloseRequest);
 
@@ -38,11 +32,7 @@ namespace BixEngine::Gui
 
     private:
         void DrawToolbar();
-        void DrawViewport();
-        void DrawOutline();
         void DrawInspector();
-
-        void DrawViewportGrid_(const ImVec2& size);
 
         Section section_;
     };

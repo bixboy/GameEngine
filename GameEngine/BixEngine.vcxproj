@@ -277,7 +277,9 @@
     <ClCompile Include="Runtime\Source\Core\Math\Vector3.cpp" />
     <ClCompile Include="Runtime\Source\Core\Timer.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Bootstrap\EngineBootstrap.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\BaseAssetEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ComponentEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\GuiPanelController.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -758,7 +760,7 @@
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Gui\Core\NavBar\GuiActorEditorManager.cpp">
+    <ClCompile Include="Runtime\Source\Engine\Gui\Core\NavBar\GuiAssetEditorManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <Optimization>Disabled</Optimization>
@@ -1079,7 +1081,9 @@
     <ClInclude Include="Runtime\Include\Core\Math\Vector3.h" />
     <ClInclude Include="Runtime\Include\Core\Timer.h" />
     <ClInclude Include="Runtime\Include\Engine\Bootstrap\EngineBootstrap.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\BaseAssetEditorController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ComponentEditorController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\GuiPanelController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiDocking.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiManager.h" />
@@ -1087,7 +1091,7 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiPanel.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiPanelRegistry.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\GuiSystem.h" />
-    <ClInclude Include="Runtime\Include\Engine\Gui\Core\NavBar\GuiActorEditorManager.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Core\NavBar\GuiAssetEditorManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Core\NavBar\GuiNavigationBar.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\DefaultEngineGui.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiContextFactory.h" />

@@ -28,11 +28,12 @@ namespace BixEngine::Gui
     
     namespace
     {
-        constexpr std::array<const char*, 4> kIcons {{
+        constexpr std::array<const char*, 5> kIcons {{
             "\xef\x81\xbc", // Folder
             "\xef\x87\x83", // File
             "\xef\x84\x9b", // Script
-            "\xef\x8f\x88"  // Actor
+            "\xef\x8f\x88", // Actor prefab
+            "\xef\x89\xb2"  // Component prefab
         }};
     }
 
@@ -50,11 +51,12 @@ namespace BixEngine::Gui
     {
         switch (type)
         {
-        case ContentType::Directory: return 0;
-        case ContentType::Actor:     return 1;
-        case ContentType::Script:    return 2;
+        case ContentType::Directory:       return 0;
+        case ContentType::ActorPrefab:     return 1;
+        case ContentType::ComponentPrefab: return 2;
+        case ContentType::Script:          return 3;
         case ContentType::File:
-        default:                     return 3;
+        default:                             return 4;
         }
     }
 }

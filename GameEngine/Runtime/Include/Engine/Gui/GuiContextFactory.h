@@ -38,7 +38,7 @@ namespace BixEngine::Gui
         std::function<std::pair<int, int>()> sceneViewportSizeProvider{};
         
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
-        std::function<void(const std::filesystem::path&)> openActorInEditor{};
+        std::function<void(const std::filesystem::path&)> openAssetInEditor{};
 
         // Nouveau : permet un mode headless
         bool bEnableGui{true};
@@ -59,6 +59,6 @@ namespace BixEngine::Gui
 
         static std::function<std::pair<int, int>()> DefaultSizeProvider();
         static std::function<void(const std::vector<std::filesystem::path>&)> DefaultScriptOpener();
-        static std::function<void(const std::filesystem::path&)> DefaultActorOpener();
+        static std::function<void(const std::filesystem::path&)> DefaultAssetOpener();
     };
 }

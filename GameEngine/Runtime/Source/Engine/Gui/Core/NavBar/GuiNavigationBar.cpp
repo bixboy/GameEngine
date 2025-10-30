@@ -1,6 +1,6 @@
 ﻿#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
 #include "Engine/Gui/Core/GuiModule.h"
-#include "Engine/Gui/Core/NavBar/GuiActorEditorManager.h"
+#include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
 #include "Engine/Gui/Core/GuiSystem.h"
 #include "Engine/Gui/Core/GuiLayoutManager.h"
 #include "Engine/Gui/Core/GuiPanel.h"
@@ -47,13 +47,13 @@ namespace BixEngine::Core
         {
             if (layoutManager_)
             {
-                if (auto* manager = owner_->GetActorEditorManager())
+                if (auto* manager = owner_->GetAssetEditorManager())
                     manager->OnLayoutChanged(layoutManager_->GetCurrentLayout());
             }
 
             const float buttonHeight = kNavigationBarHeight - 16.0f;
             DrawSceneButton(buttonHeight);
-            DrawActorEditorTabs(buttonHeight);
+            DrawAssetEditorTabs(buttonHeight);
         }
 
         ImGui::End();
@@ -104,7 +104,7 @@ namespace BixEngine::Core
     void GuiNavigationBar::DrawSceneButton(float buttonHeight)
     {
         static const std::string kSceneLabel{"Scene"};
-        auto* manager = owner_->GetActorEditorManager();
+        auto* manager = owner_->GetAssetEditorManager();
         const bool sceneActive = !manager || manager->GetActiveNavigationId() == kSceneNavigationId || !manager->HasEditors();
 
         if (!DrawNavigationButton(kSceneLabel, sceneActive, buttonHeight))
@@ -116,9 +116,9 @@ namespace BixEngine::Core
             owner_->FocusSceneViewport();
     }
 
-    void GuiNavigationBar::DrawActorEditorTabs(float buttonHeight)
+    void GuiNavigationBar::DrawAssetEditorTabs(float buttonHeight)
     {
-        auto* manager = owner_->GetActorEditorManager();
+        auto* manager = owner_->GetAssetEditorManager();
         if (!manager || manager->GetEditorOrder().empty())
             return;
 
@@ -160,9 +160,9 @@ namespace BixEngine::Core
         }
 
         for (const std::string& stale : staleEntries)
-            manager->CloseActorEditor(stale);
+            manager->CloseAssetEditor(stale);
 
         for (const std::string& navigationId : closeRequests)
-            manager->CloseActorEditor(navigationId);
+            manager->CloseAssetEditor(navigationId);
     }
 }

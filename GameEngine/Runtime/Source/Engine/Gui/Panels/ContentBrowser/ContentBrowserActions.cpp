@@ -161,17 +161,17 @@ namespace BixEngine::Gui
                 hasHeader || hasSource
             });
         }
-        else if (entry.IsActor())
+        else if (entry.IsPrefab())
         {
             actions.push_back({
-                "Open actor editor",
+                "Open asset editor",
                 [](ContentBrowserState& contentState, const ContentEntry& actor, PopupRequestState&, String& selection)
                 {
                     selection = actor.SelectionKey();
-                    if (contentState.openActorEditorCallback)
-                        contentState.openActorEditorCallback(actor.path);
+                    if (contentState.openAssetEditorCallback)
+                        contentState.openAssetEditorCallback(actor.path);
                 },
-                static_cast<bool>(state.openActorEditorCallback)
+                static_cast<bool>(state.openAssetEditorCallback)
             });
         }
         else

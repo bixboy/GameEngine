@@ -72,22 +72,19 @@ namespace BixEngine::Core
             FocusSceneViewport();
         };
 
-        if (!actorEditorManager_)
+        if (!assetEditorManager_)
         {
-            actorEditorManager_ = std::make_unique<GuiActorEditorManager>(*guiManager_, layoutManager_.get(),
-                                                                          focusWindow, focusScene);
+            assetEditorManager_ = std::make_unique<GuiAssetEditorManager>(*guiManager_, layoutManager_.get(),
+                                                                         focusWindow, focusScene);
         }
         else
         {
-            actorEditorManager_->SetLayoutManager(layoutManager_.get());
-            actorEditorManager_->SetFocusCallbacks(focusWindow, focusScene);
+            assetEditorManager_->SetLayoutManager(layoutManager_.get());
+            assetEditorManager_->SetFocusCallbacks(focusWindow, focusScene);
         }
 
-        if (actorEditorManager_)
-        {
-            actorEditorManager_->SetSubsystems(subsystems_);
-            actorEditorManager_->ActivateScene(false);
-        }
+        if (assetEditorManager_)
+            assetEditorManager_->ActivateScene(false);
 
         focusRequests_.clear();
         bInitialized_ = true;
@@ -113,15 +110,19 @@ namespace BixEngine::Core
             layoutManager_->SaveAllLayoutsToDisk();
         }
 
-        if (actorEditorManager_)
-            actorEditorManager_->RemoveAllEditors();
+        if (assetEditorManager_)
+        {
+            // Reset any asset editors before rebuilding the default GUI panels to avoid
+            // keeping stale ImGui panel handles after a project or layout reload.
+            assetEditorManager_->RemoveAllEditors();
+        }
 
         focusRequests_.clear();
         subsystems_ = nullptr;
 
         DestroySceneViewportTexture();
         navigationBar_.reset();
-        actorEditorManager_.reset();
+        assetEditorManager_.reset();
         if (layoutManager_)
             layoutManager_.reset();
         guiManager_.reset();
@@ -193,9 +194,6 @@ namespace BixEngine::Core
             return;
 
         subsystems_ = &subsystems;
-        if (actorEditorManager_)
-            actorEditorManager_->SetSubsystems(subsystems_);
-
         if (navigationBar_)
             navigationBar_->Render();
 
@@ -213,8 +211,12 @@ namespace BixEngine::Core
     {
         lastDeltaTime_ = lastDeltaTimePointer;
         subsystems_ = &subsystems;
-        if (actorEditorManager_)
-            actorEditorManager_->SetSubsystems(subsystems_);
+        if (assetEditorManager_)
+        {
+            // Reset any asset editors before rebuilding the default GUI panels to avoid
+            // keeping stale ImGui panel handles after a project or layout reload.
+            assetEditorManager_->RemoveAllEditors();
+        }
 
         if (!guiManager_)
         {
@@ -225,13 +227,8 @@ namespace BixEngine::Core
             viewportPanel_ = nullptr;
             selectedActor_ = nullptr;
             focusRequests_.clear();
-            if (actorEditorManager_)
-                actorEditorManager_->RemoveAllEditors();
             return;
         }
-
-        if (actorEditorManager_)
-            actorEditorManager_->RemoveAllEditors();
 
         focusRequests_.clear();
         selectedActor_ = nullptr;
@@ -264,9 +261,9 @@ namespace BixEngine::Core
             LOG_INFO(message);
         };
 
-        contextArgs.openActorInEditor = [this](const std::filesystem::path& actorPath)
+        contextArgs.openAssetInEditor = [this](const std::filesystem::path& assetPath)
         {
-            OpenActorEditor(actorPath);
+            OpenAssetEditor(assetPath);
         };
 
         const Gui::DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
@@ -298,10 +295,10 @@ namespace BixEngine::Core
                                            Gui::GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
         }
 
-        if (actorEditorManager_)
+        if (assetEditorManager_)
         {
-            actorEditorManager_->ActivateScene(false);
-            actorEditorManager_->RefreshActorPanelsVisibility();
+            assetEditorManager_->ActivateScene(false);
+            assetEditorManager_->RefreshAssetPanelsVisibility();
         }
     }
 
@@ -321,21 +318,20 @@ namespace BixEngine::Core
         );
     }
 
-    void GuiModule::OpenActorEditor(const std::filesystem::path& path)
+    void GuiModule::OpenAssetEditor(const std::filesystem::path& path)
     {
-        if (!actorEditorManager_)
+        if (!assetEditorManager_)
             return;
 
-        actorEditorManager_->SetSubsystems(subsystems_);
-        actorEditorManager_->OpenActorEditor(path);
+        assetEditorManager_->OpenAssetEditor(path);
     }
 
-    void GuiModule::CloseActorEditor(const std::string& navigationId)
+    void GuiModule::CloseAssetEditor(const std::string& navigationId)
     {
-        if (!actorEditorManager_)
+        if (!assetEditorManager_)
             return;
 
-        actorEditorManager_->CloseActorEditor(navigationId);
+        assetEditorManager_->CloseAssetEditor(navigationId);
     }
 
     void GuiModule::ProcessFocusRequests()

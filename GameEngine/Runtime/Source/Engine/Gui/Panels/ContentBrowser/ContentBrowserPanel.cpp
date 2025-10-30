@@ -20,7 +20,7 @@ namespace BixEngine::Gui
     ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context)
     {
         state_.openScriptFilesCallback = context.openScriptFilesInEditor;
-        state_.openActorEditorCallback = context.openActorInEditor;
+        state_.openAssetEditorCallback = context.openAssetInEditor;
     }
 
     void ContentBrowserPanel::EnsureValidDirectory()

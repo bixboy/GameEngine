@@ -7,7 +7,7 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 
-#include "Engine/Gui/Core/NavBar/GuiActorEditorManager.h"
+#include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
 #include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
 
 
@@ -103,9 +103,9 @@ namespace BixEngine::Core
         /** Retourne un pointeur vers le gestionnaire GUI (GuiManager). */
         Gui::GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
 
-        /** Retourne un pointeur vers le gestionnaire des éditeurs d'acteurs. */
-        GuiActorEditorManager* GetActorEditorManager() noexcept { return actorEditorManager_.get(); }
-        const GuiActorEditorManager* GetActorEditorManager() const noexcept { return actorEditorManager_.get(); }
+        /** Retourne un pointeur vers le gestionnaire des éditeurs d'assets. */
+        GuiAssetEditorManager* GetAssetEditorManager() noexcept { return assetEditorManager_.get(); }
+        const GuiAssetEditorManager* GetAssetEditorManager() const noexcept { return assetEditorManager_.get(); }
 
     public:
         // ────────────────────────────────────────────────
@@ -136,12 +136,12 @@ namespace BixEngine::Core
         int sceneViewportHeight_{0};
         bool sceneViewportTextureErrorLogged_{false};
 
-        std::unique_ptr<GuiActorEditorManager> actorEditorManager_{};
+        std::unique_ptr<GuiAssetEditorManager> assetEditorManager_{};
         std::vector<std::string> focusRequests_{};
         bool bInitialized_{false};
 
-        void OpenActorEditor(const std::filesystem::path& path);
-        void CloseActorEditor(const std::string& navigationId);
+        void OpenAssetEditor(const std::filesystem::path& path);
+        void CloseAssetEditor(const std::string& navigationId);
 
         void ProcessFocusRequests();
         void FocusSceneViewport();

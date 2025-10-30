@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include <algorithm>
 #include <cctype>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <fstream>
@@ -51,8 +52,10 @@ namespace BixEngine::Gui
             std::string name{};
             std::string parentName{};
             std::string includePath{};
+            std::filesystem::path headerPath{};
             bool inheritsActor{false};
             bool inheritsComponent{false};
+            bool hasBlueprintMacro{false};
             std::vector<ScriptNode> children{};
         };
 
@@ -61,19 +64,105 @@ namespace BixEngine::Gui
             std::string displayName{};
             std::string className{};
             std::string includePath{};
+            std::filesystem::path headerPath{};
             bool isActor{false};
             bool isComponent{false};
+            bool hasBlueprintMacro{false};
 
             [[nodiscard]] bool IsValid() const noexcept { return !className.empty(); }
+        };
+
+        struct PrefabScriptCandidate
+        {
+            std::string displayName{};
+            std::string className{};
+            std::string includePath{};
+            std::filesystem::path headerPath{};
+            bool isActor{false};
+            bool isComponent{false};
+            bool hasBlueprintMacro{false};
+            std::string assetBaseName{};
         };
 
         const std::vector<ParentScriptInfo>& GetBaseClassParents()
         {
             static const std::vector<ParentScriptInfo> baseParents = {
-                {"Actor", "BixEngine::Game::Actor", "Game/Actor.h", true, false},
-                {"Component", "BixEngine::Game::Component", "Game/Components/Component.h", false, true},
+                {"Actor", "BixEngine::Game::Actor", "Game/Actor.h", std::filesystem::path{}, true, false, true},
+                {"Component", "BixEngine::Game::Component", "Game/Components/Component.h", std::filesystem::path{}, false, true, true},
             };
             return baseParents;
+        }
+
+        std::string EscapeJsonString(std::string_view value)
+        {
+            std::string escaped{};
+            escaped.reserve(value.size());
+
+            for (unsigned char ch : value)
+            {
+                switch (ch)
+                {
+                case '\\':
+                    escaped += "\\\\";
+                    break;
+                case '"':
+                    escaped += "\\\"";
+                    break;
+                case '\n':
+                    escaped += "\\n";
+                    break;
+                case '\r':
+                    escaped += "\\r";
+                    break;
+                case '\t':
+                    escaped += "\\t";
+                    break;
+                default:
+                    if (ch < 0x20)
+                    {
+                        char buffer[7]{};
+                        std::snprintf(buffer, sizeof(buffer), "\\u%04x", ch);
+                        escaped += buffer;
+                    }
+                    else
+                    {
+                        escaped += static_cast<char>(ch);
+                    }
+                    break;
+                }
+            }
+
+            return escaped;
+        }
+
+        bool ValidatePrefabMetadata(const PopupRequestState& requests, String& errorStorage)
+        {
+            auto hasInvalidCharacters = [](std::string_view value)
+            {
+                return value.find_first_of("\r\n\"") != std::string::npos;
+            };
+
+            if (!requests.selectedPrefabClass.IsEmpty())
+            {
+                const std::string className = std::string(requests.selectedPrefabClass.View());
+                if (hasInvalidCharacters(className))
+                {
+                    LogAndStoreError(errorStorage, "Selected script contains unsupported characters.", false);
+                    return false;
+                }
+            }
+
+            if (!requests.selectedPrefabInclude.IsEmpty())
+            {
+                const std::string includePath = std::string(requests.selectedPrefabInclude.View());
+                if (hasInvalidCharacters(includePath))
+                {
+                    LogAndStoreError(errorStorage, "Include path contains unsupported characters.", false);
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         bool MatchesActorType(std::string_view typeName)
@@ -129,6 +218,125 @@ namespace BixEngine::Gui
                 {
                     return toLower(a) < toLower(b);
                 });
+        }
+
+        bool ContainsBlueprintMacro(const std::filesystem::path& headerPath)
+        {
+            std::ifstream file(headerPath);
+            if (!file.is_open())
+                return false;
+
+            std::string line;
+            while (std::getline(file, line))
+            {
+                if (line.find("BCLASS") != std::string::npos)
+                    return true;
+            }
+
+            return false;
+        }
+
+        std::string SanitizeForFileName(std::string value)
+        {
+            auto isValidChar = [](unsigned char ch)
+            {
+                return std::isalnum(ch) != 0 || ch == '_' || ch == '-';
+            };
+
+            for (char& ch : value)
+            {
+                if (!isValidChar(static_cast<unsigned char>(ch)))
+                    ch = '_';
+            }
+
+            while (!value.empty() && value.front() == '_')
+                value.erase(value.begin());
+            while (!value.empty() && value.back() == '_')
+                value.pop_back();
+
+            return value;
+        }
+
+        void CollectPrefabCandidatesFromNode(const ScriptNode& node, std::vector<PrefabScriptCandidate>& out)
+        {
+            const bool qualifies = node.inheritsActor || node.inheritsComponent || node.hasBlueprintMacro;
+            if (qualifies)
+            {
+                PrefabScriptCandidate candidate{};
+                candidate.displayName = node.name;
+                candidate.className = node.name;
+                candidate.includePath = node.includePath;
+                candidate.headerPath = node.headerPath;
+                candidate.isActor = node.inheritsActor;
+                candidate.isComponent = node.inheritsComponent;
+                candidate.hasBlueprintMacro = node.hasBlueprintMacro;
+                if (candidate.assetBaseName.empty())
+                {
+                    if (!node.headerPath.empty())
+                        candidate.assetBaseName = node.headerPath.stem().generic_string();
+                    else
+                        candidate.assetBaseName = node.name;
+                }
+
+                candidate.assetBaseName = SanitizeForFileName(std::move(candidate.assetBaseName));
+                if (candidate.assetBaseName.empty())
+                    candidate.assetBaseName = "Prefab";
+
+                if (!candidate.isActor && !candidate.isComponent)
+                    candidate.isActor = true;
+
+                out.emplace_back(std::move(candidate));
+            }
+
+            for (const ScriptNode& child : node.children)
+                CollectPrefabCandidatesFromNode(child, out);
+        }
+
+        std::vector<PrefabScriptCandidate> BuildPrefabCandidateList(const std::vector<ScriptNode>& nodes, const std::vector<ParentScriptInfo>& baseParents)
+        {
+            std::vector<PrefabScriptCandidate> candidates{};
+            candidates.reserve(nodes.size() + baseParents.size());
+
+            for (const ParentScriptInfo& base : baseParents)
+            {
+                PrefabScriptCandidate candidate{};
+                candidate.displayName = base.displayName + " (Engine)";
+                candidate.className = base.className;
+                candidate.includePath = base.includePath;
+                candidate.headerPath = base.headerPath;
+                candidate.isActor = base.isActor;
+                candidate.isComponent = base.isComponent;
+                candidate.hasBlueprintMacro = base.hasBlueprintMacro;
+                candidate.assetBaseName = SanitizeForFileName(base.displayName);
+                if (candidate.assetBaseName.empty())
+                    candidate.assetBaseName = "Prefab";
+                if (!candidate.isActor && !candidate.isComponent)
+                    candidate.isActor = true;
+                candidates.emplace_back(std::move(candidate));
+            }
+
+            for (const ScriptNode& node : nodes)
+                CollectPrefabCandidatesFromNode(node, candidates);
+
+            std::sort(candidates.begin(), candidates.end(), [](const PrefabScriptCandidate& lhs, const PrefabScriptCandidate& rhs)
+            {
+                return CaseInsensitiveLess(lhs.displayName, rhs.displayName);
+            });
+
+            return candidates;
+        }
+
+        void SetSelectedPrefab(PopupRequestState& requests, const PrefabScriptCandidate& candidate)
+        {
+            requests.selectedPrefabClass = candidate.className;
+            requests.selectedPrefabInclude = candidate.includePath;
+            requests.selectedPrefabAssetBase = candidate.assetBaseName;
+            requests.selectedPrefabScript = candidate.headerPath;
+            requests.selectedPrefabIsActor = candidate.isActor;
+            requests.selectedPrefabIsComponent = candidate.isComponent;
+
+            if (!requests.selectedPrefabIsActor && !requests.selectedPrefabIsComponent)
+                requests.selectedPrefabIsActor = true;
         }
 
         std::string BuildIncludePath(const std::filesystem::path& headerPath, const std::filesystem::path& scriptsDirectory, const std::filesystem::path& contentRoot)
@@ -285,6 +493,8 @@ namespace BixEngine::Gui
                 node.name = className;
                 node.parentName = parentName;
                 node.includePath = BuildIncludePath(path, scriptsDirectory, contentRoot);
+                node.headerPath = path;
+                node.hasBlueprintMacro = ContainsBlueprintMacro(path);
 
                 auto [existing, inserted] = nodes.emplace(node.name, node);
                 if (!inserted)
@@ -293,6 +503,9 @@ namespace BixEngine::Gui
                         existing->second.parentName = node.parentName;
                     if (!node.includePath.empty())
                         existing->second.includePath = node.includePath;
+                    if (!node.headerPath.empty())
+                        existing->second.headerPath = node.headerPath;
+                    existing->second.hasBlueprintMacro = existing->second.hasBlueprintMacro || node.hasBlueprintMacro;
                 }
             }
 
@@ -386,8 +599,10 @@ namespace BixEngine::Gui
                 info.displayName = node.name;
                 info.className = node.name;
                 info.includePath = node.includePath;
+                info.headerPath = node.headerPath;
                 info.isActor = node.inheritsActor;
                 info.isComponent = node.inheritsComponent;
+                info.hasBlueprintMacro = node.hasBlueprintMacro;
                 outInfo.emplace(info.className, info);
 
                 Utils::TreeNodeData guiNode{};
@@ -428,6 +643,169 @@ namespace BixEngine::Gui
                 requests.scriptType = ScriptTemplateType::Component;
             else if (info.isActor)
                 requests.scriptType = ScriptTemplateType::Actor;
+        }
+
+        void RenderCreatePrefabPopup(ContentBrowserState& state, PopupRequestState& requests)
+        {
+            namespace fs = std::filesystem;
+
+            if (requests.createPrefab)
+            {
+                ImGui::OpenPopup("ContentBrowserCreatePrefab");
+                requests.createPrefab = false;
+            }
+
+            if (!ImGui::BeginPopupModal("ContentBrowserCreatePrefab", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                return;
+
+            Utils::DrawDescriptionText("Create a prefab asset bound to an existing gameplay script.");
+            ImGui::Spacing();
+
+            const fs::path scriptsDirectory = state.root / "Scripts";
+            const auto& baseParents = GetBaseClassParents();
+            const std::vector<ScriptNode> userScriptRoots = ParseScriptHierarchy(scriptsDirectory, state.root);
+            const std::vector<PrefabScriptCandidate> candidates = BuildPrefabCandidateList(userScriptRoots, baseParents);
+
+            static char searchBuffer[128] = "";
+            ImGui::InputTextWithHint("##PrefabSearch", "Search scripts...", searchBuffer, IM_ARRAYSIZE(searchBuffer));
+
+            const std::string filter = [&]()
+            {
+                std::string result(searchBuffer);
+                std::transform(result.begin(), result.end(), result.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                return result;
+            }();
+
+            ImGui::Spacing();
+
+            const float listHeight = ImGui::GetTextLineHeightWithSpacing() * 12.0f;
+            if (ImGui::BeginChild("PrefabCandidateList", ImVec2(420.0f, listHeight), true))
+            {
+                if (candidates.empty())
+                {
+                    ImGui::TextDisabled("No eligible scripts were found.");
+                }
+                else
+                {
+                    for (const PrefabScriptCandidate& candidate : candidates)
+                    {
+                        std::string displayLower = candidate.displayName;
+                        std::transform(displayLower.begin(), displayLower.end(), displayLower.begin(), [](unsigned char ch) { return static_cast<char>(std::tolower(ch)); });
+                        if (!filter.empty() && displayLower.find(filter) == std::string::npos)
+                            continue;
+
+                        std::string label = candidate.displayName;
+                        if (candidate.isActor && candidate.isComponent)
+                            label += " [Actor/Component]";
+                        else if (candidate.isActor)
+                            label += " [Actor]";
+                        else if (candidate.isComponent)
+                            label += " [Component]";
+                        else if (candidate.hasBlueprintMacro)
+                            label += " [Blueprint]";
+
+                        const bool isSelected = !requests.selectedPrefabClass.IsEmpty() && requests.selectedPrefabClass.View() == candidate.className;
+                        if (ImGui::Selectable(label.c_str(), isSelected))
+                        {
+                            SetSelectedPrefab(requests, candidate);
+                            requests.prefabError.Clear();
+                        }
+
+                        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort) && ImGui::BeginTooltip())
+                        {
+                            ImGui::TextUnformatted(candidate.className.c_str());
+                            if (!candidate.includePath.empty())
+                                ImGui::Text("Include: %s", candidate.includePath.c_str());
+                            if (!candidate.headerPath.empty())
+                                ImGui::Text("Header: %s", candidate.headerPath.generic_string().c_str());
+                            ImGui::EndTooltip();
+                        }
+                    }
+                }
+            }
+            ImGui::EndChild();
+
+            ImGui::Spacing();
+
+            if (!requests.prefabError.IsEmpty())
+                Utils::DrawErrorMessage(std::string(requests.prefabError.View()));
+
+            Utils::DrawSeparatorText("Prefab details");
+
+            const bool isComponentPrefab = requests.selectedPrefabIsComponent && !requests.selectedPrefabIsActor ? true : false;
+            const char* prefabTypeLabel = isComponentPrefab ? "Component" : "Actor";
+            const char* prefabExtension = isComponentPrefab ? ".bixcomponent" : ".bixactor";
+
+            Utils::DrawLabelValue("Script", requests.selectedPrefabClass.IsEmpty() ? "None" : requests.selectedPrefabClass.View().data(), "None");
+            Utils::DrawLabelValue("Type", prefabTypeLabel, "Actor");
+
+            std::string baseNamePreview = requests.selectedPrefabAssetBase.IsEmpty() ? std::string{} : std::string(requests.selectedPrefabAssetBase.View());
+            if (baseNamePreview.empty() && !requests.selectedPrefabClass.IsEmpty())
+                baseNamePreview = SanitizeForFileName(std::string(requests.selectedPrefabClass.View()));
+            if (baseNamePreview.empty())
+                baseNamePreview = "Prefab";
+
+            const fs::path relativeDirectory = state.current.lexically_relative(state.root);
+            std::string locationDisplay = "Content";
+            if (!relativeDirectory.empty() && relativeDirectory.generic_string() != ".")
+            {
+                locationDisplay += '/';
+                locationDisplay += relativeDirectory.generic_string();
+            }
+
+            Utils::DrawLabelValue("Location", locationDisplay, "Content");
+            Utils::DrawLabelValue("File", baseNamePreview + prefabExtension, "Prefab.bixactor");
+
+            ImGui::Spacing();
+
+            const bool confirm = Utils::DrawConfirmButtons("Create", "Cancel",
+                []() {},
+                [&]()
+                {
+                    ImGui::CloseCurrentPopup();
+                    ClearSelectedPrefab(requests);
+                    requests.prefabError.Clear();
+                });
+
+            if (confirm)
+            {
+                if (requests.selectedPrefabClass.IsEmpty())
+                {
+                    LogAndStoreError(requests.prefabError, "Please select a script to instantiate.", false);
+                }
+                else
+                {
+                    const fs::path targetFile = state.current / (baseNamePreview + prefabExtension);
+                    if (fs::exists(targetFile))
+                    {
+                        LogAndStoreError(requests.prefabError, "An asset with this name already exists.", false);
+                    }
+                    else if (ValidatePrefabMetadata(requests, requests.prefabError))
+                    {
+                        std::ostringstream content;
+                        content << "{\n";
+                        content << "    \"type\": \"" << prefabTypeLabel << "\",\n";
+                        const std::string className = EscapeJsonString(std::string(requests.selectedPrefabClass.View()));
+                        content << "    \"class\": \"" << className << "\"";
+                        if (!requests.selectedPrefabInclude.IsEmpty())
+                        {
+                            const std::string includeValue = EscapeJsonString(std::string(requests.selectedPrefabInclude.View()));
+                            content << ",\n    \"include\": \"" << includeValue << "\"";
+                        }
+                        content << "\n}\n";
+
+                        if (TryWriteFile(targetFile, content.str(), requests.prefabError))
+                        {
+                            ImGui::CloseCurrentPopup();
+                            ClearSelectedPrefab(requests);
+                            requests.prefabError.Clear();
+                            state.cache.dirty = true;
+                        }
+                    }
+                }
+            }
+
+            ImGui::EndPopup();
         }
 
         void RenderCreateScriptPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
@@ -1148,6 +1526,7 @@ namespace BixEngine::Gui
     {
         EnsureScriptsDirectoryExists(state);
         RenderCreateScriptPopup(state, selectedEntry, requestPopups);
+        RenderCreatePrefabPopup(state, requestPopups);
         RenderCreateFolderPopup(state, selectedEntry, requestPopups);
         RenderRenameEntryPopup(state, selectedEntry, requestPopups);
     }

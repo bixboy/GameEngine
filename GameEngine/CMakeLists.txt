@@ -86,11 +86,14 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/GuiTheme.cpp
     Runtime/Source/Engine/Gui/GuiManager.cpp
     Runtime/Source/Engine/Gui/GuiModule.cpp
+    Runtime/Source/Engine/Gui/Core/NavBar/GuiAssetEditorManager.cpp
     Runtime/Source/Engine/Gui/Core/GuiLayoutManager.cpp
     Runtime/Source/Engine/Gui/GuiPanelController.cpp
     Runtime/Source/Engine/Gui/GuiPanel.cpp
     Runtime/Source/Engine/Gui/GuiSystem.cpp
+    Runtime/Source/Engine/Gui/Controllers/BaseAssetEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ActorEditorController.cpp
+    Runtime/Source/Engine/Gui/Controllers/ComponentEditorController.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorState.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorOverviewUI.cpp

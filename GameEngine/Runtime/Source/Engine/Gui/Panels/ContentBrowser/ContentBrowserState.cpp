@@ -41,6 +41,16 @@ namespace BixEngine::Gui
         requests.selectedParentIsComponent = false;
     }
 
+    void ClearSelectedPrefab(PopupRequestState& requests)
+    {
+        requests.selectedPrefabClass.Clear();
+        requests.selectedPrefabInclude.Clear();
+        requests.selectedPrefabAssetBase.Clear();
+        requests.selectedPrefabScript.clear();
+        requests.selectedPrefabIsActor = false;
+        requests.selectedPrefabIsComponent = false;
+    }
+
     // ─────────────────────────────────────────────
     // 🚀  Initialisation du Content Browser
     // ─────────────────────────────────────────────

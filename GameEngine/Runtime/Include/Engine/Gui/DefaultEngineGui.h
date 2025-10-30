@@ -34,7 +34,7 @@ namespace BixEngine::Gui
         std::function<SDL_Texture*()> sceneRenderTextureProvider{};
         std::function<std::pair<int, int>()> sceneRenderTextureSizeProvider{};
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
-        std::function<void(const std::filesystem::path&)> openActorInEditor{};
+        std::function<void(const std::filesystem::path&)> openAssetInEditor{};
         bool bEnableGui{true};
     };
 
