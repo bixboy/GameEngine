@@ -13,21 +13,29 @@ add_library(BixEngine STATIC "")
 set_target_properties(BixEngine PROPERTIES OUTPUT_NAME "BixEngine")
 set_target_properties(BixEngine PROPERTIES ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/windows/x64/debug")
 add_dependencies(BixEngine BixHeaderTool)
+set(BIXENGINE_ROOT ${CMAKE_CURRENT_SOURCE_DIR})
+set(BIXENGINE_RUNTIME_INCLUDE_DIR ${BIXENGINE_ROOT}/Runtime/Include)
+set(BIXENGINE_RUNTIME_SOURCE_DIR ${BIXENGINE_ROOT}/Runtime/Source)
+set(BIXENGINE_IMGUI_DIR ${BIXENGINE_ROOT}/ThirdParty/ImGui)
+set(BIXENGINE_IMGUI_BACKENDS_DIR ${BIXENGINE_IMGUI_DIR}/backends)
+set(BIXENGINE_SDL_DIR ${BIXENGINE_ROOT}/ThirdParty/SDL3-3.2.22/include)
+set(BIXENGINE_GENERATED_DIR ${BIXENGINE_ROOT}/Build/windows/x64/debug/Intermediate/GeneratedHeaders)
+
 target_include_directories(BixEngine PRIVATE
-    Runtime/Include
-    Runtime/Source
-    ThirdParty/ImGui
-    ThirdParty/ImGui/backends
-    ThirdParty/SDL3-3.2.22/include
-    Build/windows/x64/debug/Intermediate/GeneratedHeaders
-    Tools/BixHeaderTool
+    ${BIXENGINE_RUNTIME_INCLUDE_DIR}
+    ${BIXENGINE_RUNTIME_SOURCE_DIR}
+    ${BIXENGINE_IMGUI_DIR}
+    ${BIXENGINE_IMGUI_BACKENDS_DIR}
+    ${BIXENGINE_SDL_DIR}
+    ${BIXENGINE_GENERATED_DIR}
+    ${BIXENGINE_ROOT}/Tools/BixHeaderTool
 )
 target_include_directories(BixEngine INTERFACE
-    Runtime/Include
-    ThirdParty/ImGui
-    ThirdParty/ImGui/backends
-    ThirdParty/SDL3-3.2.22/include
-    Build/windows/x64/debug/Intermediate/GeneratedHeaders
+    ${BIXENGINE_RUNTIME_INCLUDE_DIR}
+    ${BIXENGINE_IMGUI_DIR}
+    ${BIXENGINE_IMGUI_BACKENDS_DIR}
+    ${BIXENGINE_SDL_DIR}
+    ${BIXENGINE_GENERATED_DIR}
 )
 target_compile_options(BixEngine PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-G>
@@ -209,12 +217,12 @@ set_target_properties(BixRun PROPERTIES OUTPUT_NAME "BixRun")
 set_target_properties(BixRun PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/windows/x64/debug")
 add_dependencies(BixRun BixHeaderTool BixEngine)
 target_include_directories(BixRun PRIVATE
-    Runtime/Include
-    ThirdParty/SDL3-3.2.22/include
-    Build/windows/x64/debug/Intermediate/GeneratedHeaders
-    ThirdParty/ImGui
-    ThirdParty/ImGui/backends
-    Tools/BixHeaderTool
+    ${BIXENGINE_RUNTIME_INCLUDE_DIR}
+    ${BIXENGINE_SDL_DIR}
+    ${BIXENGINE_GENERATED_DIR}
+    ${BIXENGINE_IMGUI_DIR}
+    ${BIXENGINE_IMGUI_BACKENDS_DIR}
+    ${BIXENGINE_ROOT}/Tools/BixHeaderTool
 )
 target_compile_options(BixRun PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-G>
