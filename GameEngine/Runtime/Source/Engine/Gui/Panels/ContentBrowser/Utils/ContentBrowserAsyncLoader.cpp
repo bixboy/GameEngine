@@ -107,21 +107,21 @@ namespace BixEngine::Gui
                 continue;
             }
 
-            // Il te faut cette fonction util (tu l’as déjà dans Grid.cpp original)
-            auto IsActorAsset = [](const fs::path& path) -> bool
-            {
-                const auto ext = ToLowerCopy(path.extension().generic_string());
-                if (ext == ".actor" || ext == ".component") return true;
-                const String fileName = ToLowerCopy(path.filename().generic_string());
-                const auto view = fileName.View();
-                return view.ends_with(".actor.json") || view.ends_with(".actor")
-                    || view.ends_with(".component.json") || view.ends_with(".component");
-            };
-
-            if (IsActorAsset(p))
+            const String extensionLower = ToLowerCopy(p.extension().generic_string());
+            if (extensionLower == ".bixactor")
             {
                 ContentEntry ce{};
-                ce.type = ContentType::Actor;
+                ce.type = ContentType::ActorPrefab;
+                ce.path = p;
+                ce.name = p.filename().generic_string();
+                r.entries.push_back(std::move(ce));
+                continue;
+            }
+
+            if (extensionLower == ".bixcomponent")
+            {
+                ContentEntry ce{};
+                ce.type = ContentType::ComponentPrefab;
                 ce.path = p;
                 ce.name = p.filename().generic_string();
                 r.entries.push_back(std::move(ce));

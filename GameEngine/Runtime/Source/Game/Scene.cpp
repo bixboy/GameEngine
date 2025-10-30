@@ -9,7 +9,7 @@
 #include "Game/SceneSerializer.h"
 #include "Graphics/Renderer.h"
 #include "Input/Input.h"
-#include "Engine/Gui/Core/GuiManager.h"
+#include "Engine/Gui/Internal/GuiManager.h"
 #include "Core/Logger.h"
 
 namespace BixEngine::Game

@@ -1,5 +1,5 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Core/Logger.h"
 #include <filesystem>
@@ -20,7 +20,7 @@ namespace BixEngine::Gui
     ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context)
     {
         state_.openScriptFilesCallback = context.openScriptFilesInEditor;
-        state_.openActorEditorCallback = context.openActorInEditor;
+        state_.openAssetEditorCallback = context.openAssetInEditor;
     }
 
     void ContentBrowserPanel::EnsureValidDirectory()

@@ -113,7 +113,7 @@ namespace BixEngine::Gui
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.headerPath});
 
-                    Utils::OpenFileInCodeEditor(script.headerPath);
+                    EditorUtils::OpenFileInCodeEditor(script.headerPath);
                 },
                 hasHeader
             });
@@ -129,7 +129,7 @@ namespace BixEngine::Gui
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.sourcePath});
 
-                    Utils::OpenFileInCodeEditor(script.sourcePath);
+                    EditorUtils::OpenFileInCodeEditor(script.sourcePath);
                 },
                 hasSource
             });
@@ -155,23 +155,23 @@ namespace BixEngine::Gui
                         contentState.openScriptFilesCallback(files);
 
                         for (const auto& f : files)
-                            Utils::OpenFileInCodeEditor(f);
+                            EditorUtils::OpenFileInCodeEditor(f);
                     }
                 },
                 hasHeader || hasSource
             });
         }
-        else if (entry.IsActor())
+        else if (entry.IsPrefab())
         {
             actions.push_back({
-                "Open actor editor",
+                "Open asset editor",
                 [](ContentBrowserState& contentState, const ContentEntry& actor, PopupRequestState&, String& selection)
                 {
                     selection = actor.SelectionKey();
-                    if (contentState.openActorEditorCallback)
-                        contentState.openActorEditorCallback(actor.path);
+                    if (contentState.openAssetEditorCallback)
+                        contentState.openAssetEditorCallback(actor.path);
                 },
-                static_cast<bool>(state.openActorEditorCallback)
+                static_cast<bool>(state.openAssetEditorCallback)
             });
         }
         else

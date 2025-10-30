@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Engine/Utils/EditorUtils.h"
+
 namespace BixEngine::Gui
 {
     using namespace Theme;
@@ -21,19 +23,19 @@ namespace BixEngine::Gui
 
     namespace
     {
-        bool IsActorAsset(const std::filesystem::path& path)
+        ContentType DetectPrefabType(const std::filesystem::path& path)
         {
             if (path.empty())
-                return false;
+                return ContentType::File;
 
-            const auto extension = ToLowerCopy(path.extension().generic_string());
-            if (extension == ".actor" || extension == ".component")
-                return true;
+            const String extensionLower = ToLowerCopy(path.extension().generic_string());
+            if (extensionLower == ".bixactor")
+                return ContentType::ActorPrefab;
 
-            const String fileName = ToLowerCopy(path.filename().generic_string());
-            const auto view = fileName.View();
-            
-            return view.ends_with(".actor.json") || view.ends_with(".actor") || view.ends_with(".component.json") || view.ends_with(".component");
+            if (extensionLower == ".bixcomponent")
+                return ContentType::ComponentPrefab;
+
+            return ContentType::File;
         }
 
         bool RefreshDirectoryCache(ContentBrowserState& state)
@@ -97,10 +99,11 @@ namespace BixEngine::Gui
                     continue;
                 }
 
-                if (IsActorAsset(entryPath))
+                const ContentType prefabType = DetectPrefabType(entryPath);
+                if (prefabType != ContentType::File)
                 {
                     ContentEntry actorEntry{};
-                    actorEntry.type = ContentType::Actor;
+                    actorEntry.type = prefabType;
                     actorEntry.path = entryPath;
                     actorEntry.name = entryPath.filename().generic_string();
                     state.cache.entries.push_back(std::move(actorEntry));
@@ -147,6 +150,13 @@ namespace BixEngine::Gui
             requests.folderTarget = target;
             requests.createFolder = true;
         }
+
+        void RequestCreatePrefab(PopupRequestState& requests)
+        {
+            requests.prefabError.Clear();
+            requests.createPrefab = true;
+            ClearSelectedPrefab(requests);
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -173,9 +183,11 @@ namespace BixEngine::Gui
         {
             if (ImGui::MenuItem("Create script..."))
                 RequestCreateScript(requests);
+            if (ImGui::MenuItem("Create prefab..."))
+                RequestCreatePrefab(requests);
             if (ImGui::MenuItem("Create folder..."))
                 RequestCreateFolder(requests, state.current);
-            
+
             ImGui::EndPopup();
         }
 
@@ -224,8 +236,36 @@ namespace BixEngine::Gui
                 if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selectedEntry = entry.SelectionKey();
-                    if (state.openActorEditorCallback)
-                        state.openActorEditorCallback(entry.path);
+
+                    if (entry.IsDirectory())
+                    {
+                        state.current = entry.path;
+                        state.cache.dirty = true;
+                        selectedEntry.Clear();
+                    }
+                    else if (entry.IsScript())
+                    {
+                        std::vector<std::filesystem::path> filesToOpen{};
+                        if (entry.HasHeader())
+                            filesToOpen.push_back(entry.headerPath);
+                        
+                        if (entry.HasSource())
+                            filesToOpen.push_back(entry.sourcePath);
+
+                        if (!filesToOpen.empty())
+                        {
+                            if (state.openScriptFilesCallback)
+                                state.openScriptFilesCallback(filesToOpen);
+
+                            for (const auto& scriptFile : filesToOpen)
+                                EditorUtils::OpenFileInCodeEditor(scriptFile);
+                        }
+                    }
+                    else if (entry.IsPrefab())
+                    {
+                        if (state.openAssetEditorCallback)
+                            state.openAssetEditorCallback(entry.path);
+                    }
                 }
 
                 // Popup clic droit

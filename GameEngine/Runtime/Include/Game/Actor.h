@@ -30,16 +30,6 @@ namespace BixEngine::Game
 
             void AddComponent(std::unique_ptr<Component> component);
 
-            template<typename TComponent, typename... TArgs>
-            TComponent& AddComponent(TArgs&&... args)
-            {
-                static_assert(std::is_base_of_v<Component, TComponent>, "Component must derive from Game::Component");
-                auto component = std::make_unique<TComponent>(this, std::forward<TArgs>(args)...);
-                TComponent& componentRef = *component;
-                AddComponent(std::move(component));
-                return componentRef;
-            }
-
             [[nodiscard]] String GetTypeName() const noexcept override { return "Actor"; }
 
             [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
@@ -64,5 +54,33 @@ namespace BixEngine::Game
             bool has_begun_play_{false};
             bool active_{true};
             Scene* owningScene_{nullptr};
+
+
+    public:
+
+        template<typename TComponent>
+        TComponent* GetComponent() noexcept
+        {
+            static_assert(std::is_base_of_v<Component, TComponent>, "TComponent must derive from Game::Component");
+
+            for (auto& component : components_)
+            {
+                if (auto casted = dynamic_cast<TComponent*>(component.get()))
+                    return casted;
+            }
+
+            return nullptr;
+        }
+
+        template<typename TComponent, typename... TArgs>
+        TComponent& AddComponent(TArgs&&... args)
+        {
+            static_assert(std::is_base_of_v<Component, TComponent>, "Component must derive from Game::Component");
+            auto component = std::make_unique<TComponent>(this, std::forward<TArgs>(args)...);
+            TComponent& componentRef = *component;
+            AddComponent(std::move(component));
+            return componentRef;
+        }
+
     };
 }

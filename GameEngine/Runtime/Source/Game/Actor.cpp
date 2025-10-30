@@ -8,9 +8,15 @@
 
 namespace BixEngine::Game
 {
-    Actor::Actor(const Math::Transform& transform) : Object("Actor", transform) {}
+    Actor::Actor(const Math::Transform& transform) : Object("Actor", transform)
+    {
+        
+    }
 
-    Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform) {}
+    Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
+    {
+        
+    }
     
     void Actor::BeginPlay()
     {

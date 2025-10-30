@@ -1,7 +1,7 @@
 ﻿#pragma once
 #include <filesystem>
 
-namespace BixEngine::Utils
+namespace BixEngine::EditorUtils
 {
     /**
      * @brief Ouvre un fichier source dans l’éditeur de code configuré.

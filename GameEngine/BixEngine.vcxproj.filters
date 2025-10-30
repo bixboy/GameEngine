@@ -39,6 +39,18 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\BaseAssetEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ComponentEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Core\NavBar\GuiAssetEditorManager.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp">
       <Filter>Runtime\Engine\Private\Gui</Filter>
     </ClCompile>
@@ -256,6 +268,18 @@
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Graphics\Renderer.h">
       <Filter>Runtime\Include\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\BaseAssetEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ComponentEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Core\NavBar\GuiAssetEditorManager.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
     </ClInclude>
     <ClInclude Include="Runtime\Include\Bix\Input\Input.h">
       <Filter>Runtime\Include\Input</Filter>

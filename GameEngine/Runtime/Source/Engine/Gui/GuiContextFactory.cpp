@@ -34,14 +34,14 @@ namespace BixEngine::Gui
         };
     }
 
-    std::function<void(const std::filesystem::path&)> DefaultEngineGuiContextFactory::DefaultActorOpener()
+    std::function<void(const std::filesystem::path&)> DefaultEngineGuiContextFactory::DefaultAssetOpener()
     {
         return [](const std::filesystem::path& path)
         {
             if (path.empty())
                 return;
 
-            LOG_INFO("Requested to open actor asset in editor: " + path.generic_string());
+            LOG_INFO("Requested to open asset in editor: " + path.generic_string());
         };
     }
     
@@ -132,7 +132,7 @@ namespace BixEngine::Gui
         // Ouvrerture scripts
         // ──────────────────────────────
         context.openScriptFilesInEditor = args.openScriptFilesInEditor ? args.openScriptFilesInEditor : DefaultScriptOpener();
-        context.openActorInEditor = args.openActorInEditor ? args.openActorInEditor : DefaultActorOpener();
+        context.openAssetInEditor = args.openAssetInEditor ? args.openAssetInEditor : DefaultAssetOpener();
 
         LOG_INFO("[GuiContextFactory] ✅ Contexte GUI créé avec succès.");
         return context;
