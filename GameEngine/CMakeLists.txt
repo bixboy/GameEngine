@@ -126,6 +126,9 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Utils/GuiHelpers.cpp
     Runtime/Source/Engine/Gui/Widgets/GuiWidgetLibrary.cpp
     Runtime/Source/Engine/Gui/Widgets/ActionTooltip.cpp
+    Runtime/Source/Engine/Render/SpriteAtlasUtils.cpp
+    Runtime/Source/Engine/Render/SpriteFramePool.cpp
+    Runtime/Source/Engine/Render/TextureManager.cpp
     Runtime/Source/Engine/Systems/Application.cpp
     Runtime/Source/Engine/Systems/RenderLoop.cpp
     Runtime/Source/Engine/Systems/SdlSystem.cpp
@@ -134,6 +137,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Game/Actor.cpp
     Runtime/Source/Game/BGameplayStatics.cpp
     Runtime/Source/Game/ActorSpawner.cpp
+    Runtime/Source/Game/Components/ComponentRegistry.cpp
     Runtime/Source/Game/Components/SpriteComponent.cpp
     Runtime/Source/Game/EmptyScene.cpp
     Runtime/Source/Game/Object.cpp

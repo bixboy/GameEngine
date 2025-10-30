@@ -1,5 +1,5 @@
 #pragma once
-
+#include "Reflection/ReflectionMacros.h"
 #include "Core/Containers/String.h"
 #include "Component.generated.h"
 

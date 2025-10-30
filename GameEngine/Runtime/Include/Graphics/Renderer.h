@@ -11,11 +11,9 @@ namespace BixEngine::Graphics
     class Renderer
     {
     public:
+        
         /**
          * @brief Crée un renderer associé à une fenêtre SDL.
-         * @param window Fenêtre SDL valide.
-         * @param driverName Nom du driver de rendu (nullptr = auto).
-         * @param useVSync Active la synchronisation verticale.
          */
         explicit Renderer(SDL_Window* window, const char* driverName = nullptr, bool useVSync = false);
 
@@ -25,6 +23,8 @@ namespace BixEngine::Graphics
         Renderer& operator=(const Renderer&) = delete;
         Renderer(Renderer&&) noexcept = delete;
         Renderer& operator=(Renderer&&) noexcept = delete;
+
+        static Renderer* Get() noexcept { return instance_; }
 
         [[nodiscard]] bool IsValid() const noexcept { return renderer_ != nullptr; }
 
@@ -46,6 +46,7 @@ namespace BixEngine::Graphics
         [[nodiscard]] SDL_Renderer* GetSDLRenderer() const noexcept { return renderer_; }
 
     private:
+        static inline Renderer* instance_ = nullptr;
         SDL_Renderer* renderer_{nullptr};
     };
 }

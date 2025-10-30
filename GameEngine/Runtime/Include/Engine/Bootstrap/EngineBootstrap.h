@@ -62,6 +62,8 @@ namespace BixEngine::Core
             return subsystems_.EmplaceScene<TScene>(std::forward<Args>(args)...);
         }
 
+        [[nodiscard]] Graphics::Renderer* GetRenderer() const noexcept { return renderer_.get(); }
+
     private:
         // Crée la fenêtre principale SDL.
         bool CreateWindow();
