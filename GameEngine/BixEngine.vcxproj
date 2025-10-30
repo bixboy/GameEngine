@@ -276,6 +276,84 @@
     <ClCompile Include="Runtime\Source\Core\Math\Vector2.cpp" />
     <ClCompile Include="Runtime\Source\Core\Math\Vector3.cpp" />
     <ClCompile Include="Runtime\Source\Core\Timer.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Assets\TextureLoader.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Bootstrap\EngineBootstrap.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\BaseAssetEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp" />
@@ -1024,14 +1102,403 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Utils\GuiHelpers.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\ActionTooltip.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Widgets\GuiWidgetLibrary.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Render\RenderLoop.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Render\SpriteAnimator.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Render\SpriteFrame.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Render\Texture.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Systems\Application.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Systems\RenderLoop.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\SdlSystem.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\SubsystemManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\Window.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Utils\EditorUtils.cpp" />
     <ClCompile Include="Runtime\Source\Game\Actor.cpp" />
     <ClCompile Include="Runtime\Source\Game\ActorSpawner.cpp" />
+    <ClCompile Include="Runtime\Source\Game\Components\SpriteAnimatorComponent.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Game\Components\SpriteComponent.cpp" />
     <ClCompile Include="Runtime\Source\Game\EmptyScene.cpp" />
     <ClCompile Include="Runtime\Source\Game\Object.cpp" />
@@ -1052,6 +1519,39 @@
     <ClCompile Include="ThirdParty\ImGui\imgui_widgets.cpp" />
     <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_sdl3.cpp" />
     <ClCompile Include="ThirdParty\ImGui\backends\imgui_impl_sdlrenderer3.cpp" />
+    <ClCompile Include="ThirdParty\SDL_image\cmake\test\main.c" />
+    <ClCompile Include="ThirdParty\SDL_image\docs\hello.c" />
+    <ClCompile Include="ThirdParty\SDL_image\examples\showanim.c" />
+    <ClCompile Include="ThirdParty\SDL_image\examples\showclipboard.c" />
+    <ClCompile Include="ThirdParty\SDL_image\examples\showimage.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_ani.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_anim_decoder.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_anim_encoder.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_avif.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_bmp.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_gif.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_jpg.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_jxl.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_lbm.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_libpng.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_pcx.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_png.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_pnm.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_qoi.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_stb.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_svg.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_tga.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_tif.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_webp.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_WIC.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_xcf.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_xpm.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_xv.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\IMG_xxx.c" />
+    <ClCompile Include="ThirdParty\SDL_image\src\xmlman.c" />
+    <ClCompile Include="ThirdParty\SDL_image\test\testanimation.c" />
+    <ClCompile Include="ThirdParty\SDL_image\test\testimage.c" />
     <ClCompile Include="Tools\BixHeaderTool\FileSystem\FileUtils.cpp" />
     <ClCompile Include="Tools\BixHeaderTool\Generator\HeaderGenerator.cpp" />
     <ClCompile Include="Tools\BixHeaderTool\main.cpp" />
@@ -1074,11 +1574,13 @@
     <ClInclude Include="Runtime\Include\Core\Logger.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Color.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Math.h" />
+    <ClInclude Include="Runtime\Include\Core\Math\Rect.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Rotator.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Transform.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Vector2.h" />
     <ClInclude Include="Runtime\Include\Core\Math\Vector3.h" />
     <ClInclude Include="Runtime\Include\Core\Timer.h" />
+    <ClInclude Include="Runtime\Include\Engine\Assets\TextureLoader.h" />
     <ClInclude Include="Runtime\Include\Engine\Bootstrap\EngineBootstrap.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\BaseAssetEditorController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h" />
@@ -1121,10 +1623,13 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\GuiTheme.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\ActionTooltip.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\GuiWidgetLibrary.h" />
+    <ClInclude Include="Runtime\Include\Engine\Render\RenderLoop.h" />
+    <ClInclude Include="Runtime\Include\Engine\Render\SpriteAnimator.h" />
+    <ClInclude Include="Runtime\Include\Engine\Render\SpriteFrame.h" />
+    <ClInclude Include="Runtime\Include\Engine\Render\Texture.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Application.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\ApplicationConfig.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\BixEngine.h" />
-    <ClInclude Include="Runtime\Include\Engine\Systems\RenderLoop.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\SdlSystem.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\SubsystemManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Window.h" />
@@ -1132,6 +1637,7 @@
     <ClInclude Include="Runtime\Include\Game\Actor.h" />
     <ClInclude Include="Runtime\Include\Game\ActorSpawner.h" />
     <ClInclude Include="Runtime\Include\Game\Components\Component.h" />
+    <ClInclude Include="Runtime\Include\Game\Components\SpriteAnimatorComponent.h" />
     <ClInclude Include="Runtime\Include\Game\Components\SpriteComponent.h" />
     <ClInclude Include="Runtime\Include\Game\EmptyScene.h" />
     <ClInclude Include="Runtime\Include\Game\Object.h" />
@@ -1234,6 +1740,201 @@
     <ClInclude Include="ThirdParty\SDL3-3.2.22\include\SDL3\SDL_version.h" />
     <ClInclude Include="ThirdParty\SDL3-3.2.22\include\SDL3\SDL_video.h" />
     <ClInclude Include="ThirdParty\SDL3-3.2.22\include\SDL3\SDL_vulkan.h" />
+    <ClInclude Include="ThirdParty\SDL_image\include\SDL3_image\SDL_image.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_ani.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_anim_decoder.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_anim_encoder.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_avif.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_gif.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_libpng.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\IMG_webp.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\nanosvg.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\nanosvgrast.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\qoi.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\stb_image.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\tiny_jpeg.h" />
+    <ClInclude Include="ThirdParty\SDL_image\src\xmlman.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\avif\avif.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\png.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\pngconf.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\pnglibconf.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\tiff.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\tiffconf.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\tiffio.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\tiffvers.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\decode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\demux.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\encode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\mux.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\mux_types.h" />
+    <ClInclude Include="ThirdParty\SDL_image\VisualC\external\include\webp\types.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\arm64\config\aom_config.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\arm64\config\aom_dsp_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\arm64\config\aom_scale_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\arm64\config\aom_version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\arm64\config\av1_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\aom_config.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\aom_dsp_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\aom_scale_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\aom_version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\av1_rtcd.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\dav1d\arm64\config.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\dav1d\armv7\config.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\dav1d\vcs_version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\dav1d\version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\avif\dav1d\x86_64\config.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_assert.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_asyncio.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_atomic.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_audio.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_begin_code.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_bits.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_blendmode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_camera.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_clipboard.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_close_code.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_copying.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_cpuinfo.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_dialog.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_dlopennote.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_egl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_endian.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_error.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_events.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_filesystem.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_gamepad.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_gpu.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_guid.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_haptic.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_hidapi.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_hints.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_init.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_intrin.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_iostream.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_joystick.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_keyboard.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_keycode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_loadso.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_locale.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_log.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_main.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_main_impl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_messagebox.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_metal.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_misc.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_mouse.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_mutex.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_oldnames.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles2.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles2_gl2.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles2_gl2ext.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles2_gl2platform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengles2_khrplatform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_opengl_glext.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_pen.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_pixels.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_platform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_platform_defines.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_power.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_process.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_properties.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_rect.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_render.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_revision.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_scancode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_sensor.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_stdinc.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_storage.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_surface.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_system.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_thread.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_time.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_timer.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_touch.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_tray.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_video.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Headers\SDL_vulkan.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\jxl\jxl\jxl_export.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\jxl\jxl\version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_assert.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_asyncio.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_atomic.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_audio.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_begin_code.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_bits.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_blendmode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_camera.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_clipboard.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_close_code.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_copying.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_cpuinfo.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_dialog.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_dlopennote.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_egl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_endian.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_error.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_events.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_filesystem.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_gamepad.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_gpu.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_guid.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_haptic.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_hidapi.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_hints.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_init.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_intrin.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_iostream.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_joystick.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_keyboard.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_keycode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_loadso.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_locale.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_log.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_main.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_main_impl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_messagebox.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_metal.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_misc.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_mouse.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_mutex.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_oldnames.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengl.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles2.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles2_gl2.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles2_gl2ext.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles2_gl2platform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengles2_khrplatform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_opengl_glext.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_pen.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_pixels.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_platform.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_platform_defines.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_power.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_process.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_properties.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_rect.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_render.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_revision.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_scancode.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_sensor.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_stdinc.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_storage.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_surface.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_system.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_thread.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_time.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_timer.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_touch.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_tray.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_version.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_video.h" />
+    <ClInclude Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Headers\SDL_vulkan.h" />
     <ClInclude Include="Tools\BixHeaderTool\FileSystem\FileUtils.h" />
     <ClInclude Include="Tools\BixHeaderTool\Generator\HeaderGenerator.h" />
     <ClInclude Include="Tools\BixHeaderTool\Parser\HeaderParser.h" />
@@ -1614,12 +2315,182 @@
   <Content Include="ThirdParty\SDL3-3.2.22\lib\x86\SDL3_test.lib" />
   <Content Include="ThirdParty\SDL3-3.2.22\LICENSE.txt" />
   <Content Include="ThirdParty\SDL3-3.2.22\README.md" />
+  <Content Include="ThirdParty\SDL_image\.clang-format" />
+  <Content Include="ThirdParty\SDL_image\.editorconfig" />
+  <Content Include="ThirdParty\SDL_image\.github\actions\setup-ninja\action.yml" />
+  <Content Include="ThirdParty\SDL_image\.github\workflows\main.yml" />
+  <Content Include="ThirdParty\SDL_image\.github\workflows\release.yml" />
+  <Content Include="ThirdParty\SDL_image\.gitignore" />
+  <Content Include="ThirdParty\SDL_image\.gitmodules" />
+  <Content Include="ThirdParty\SDL_image\.wikiheaders-options" />
+  <Content Include="ThirdParty\SDL_image\Android.mk" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\build-release.py" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\cmake-toolchain-mingw64-i686.cmake" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\cmake-toolchain-mingw64-x86_64.cmake" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\create-release.py" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\android\aar\cmake\SDL3_imageConfig.cmake" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\android\aar\cmake\SDL3_imageConfigVersion.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\android\aar\description.json.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\android\aar\__main__.py.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\android\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\mingw\cmake\SDL3_imageConfig.cmake" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\mingw\cmake\SDL3_imageConfigVersion.cmake" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\mingw\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\mingw\Makefile" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\arm64\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\cmake\SDL3_imageConfig.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\cmake\SDL3_imageConfigVersion.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\x64\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\pkg-support\msvc\x86\INSTALL.md.in" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\release-info.json" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\test-versioning.sh" />
+  <Content Include="ThirdParty\SDL_image\build-scripts\wikiheaders.pl" />
+  <Content Include="ThirdParty\SDL_image\CHANGES.txt" />
+  <Content Include="ThirdParty\SDL_image\CMakeLists.txt" />
+  <Content Include="ThirdParty\SDL_image\cmake\cmake_uninstall.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\cmake\CPackProjectConfig.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\cmake\Findlibjxl.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\Findwebp.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\GetGitRevisionDescription.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\GetGitRevisionDescription.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\cmake\PrivateSdlFunctions.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\sdl3-image.pc.in" />
+  <Content Include="ThirdParty\SDL_image\cmake\SDL3_imageConfig.cmake.in" />
+  <Content Include="ThirdParty\SDL_image\cmake\sdlcpu.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\sdlmanpages.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\sdlplatform.cmake" />
+  <Content Include="ThirdParty\SDL_image\cmake\test\CMakeLists.txt" />
+  <Content Include="ThirdParty\SDL_image\docs\INTRO-androidstudio.md" />
+  <Content Include="ThirdParty\SDL_image\docs\INTRO-cmake.md" />
+  <Content Include="ThirdParty\SDL_image\docs\INTRO-emscripten.md" />
+  <Content Include="ThirdParty\SDL_image\docs\INTRO-visualstudio.md" />
+  <Content Include="ThirdParty\SDL_image\docs\INTRO-xcode.md" />
+  <Content Include="ThirdParty\SDL_image\docs\README-migration.md" />
+  <Content Include="ThirdParty\SDL_image\docs\README-versions.md" />
+  <Content Include="ThirdParty\SDL_image\docs\release_checklist.md" />
+  <Content Include="ThirdParty\SDL_image\external\download.sh" />
+  <Content Include="ThirdParty\SDL_image\external\Get-GitModules.ps1" />
+  <Content Include="ThirdParty\SDL_image\INSTALL.md" />
+  <Content Include="ThirdParty\SDL_image\LICENSE.txt" />
+  <Content Include="ThirdParty\SDL_image\README.md" />
+  <Content Include="ThirdParty\SDL_image\src\IMG_ImageIO.m" />
+  <Content Include="ThirdParty\SDL_image\src\SDL_image.sym" />
+  <Content Include="ThirdParty\SDL_image\src\version.rc" />
+  <Content Include="ThirdParty\SDL_image\test\.gitignore" />
+  <Content Include="ThirdParty\SDL_image\test\CMakeLists.txt" />
+  <Content Include="ThirdParty\SDL_image\test\palette.bmp" />
+  <Content Include="ThirdParty\SDL_image\test\palette.gif" />
+  <Content Include="ThirdParty\SDL_image\test\README.md" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb.ani" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb.avifs" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb.gif" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb.png" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb.webp" />
+  <Content Include="ThirdParty\SDL_image\test\rgbrgb_thirdpartymetadata.webp" />
+  <Content Include="ThirdParty\SDL_image\test\sample.avif" />
+  <Content Include="ThirdParty\SDL_image\test\sample.bmp" />
+  <Content Include="ThirdParty\SDL_image\test\sample.cur" />
+  <Content Include="ThirdParty\SDL_image\test\sample.ico" />
+  <Content Include="ThirdParty\SDL_image\test\sample.jpg" />
+  <Content Include="ThirdParty\SDL_image\test\sample.jxl" />
+  <Content Include="ThirdParty\SDL_image\test\sample.pcx" />
+  <Content Include="ThirdParty\SDL_image\test\sample.png" />
+  <Content Include="ThirdParty\SDL_image\test\sample.pnm" />
+  <Content Include="ThirdParty\SDL_image\test\sample.qoi" />
+  <Content Include="ThirdParty\SDL_image\test\sample.tga" />
+  <Content Include="ThirdParty\SDL_image\test\sample.tif" />
+  <Content Include="ThirdParty\SDL_image\test\sample.webp" />
+  <Content Include="ThirdParty\SDL_image\test\sample.xcf" />
+  <Content Include="ThirdParty\SDL_image\test\sample.xpm" />
+  <Content Include="ThirdParty\SDL_image\test\svg-class.bmp" />
+  <Content Include="ThirdParty\SDL_image\test\svg-class.svg" />
+  <Content Include="ThirdParty\SDL_image\test\svg.bmp" />
+  <Content Include="ThirdParty\SDL_image\test\svg.svg" />
+  <Content Include="ThirdParty\SDL_image\test\svg64.bmp" />
+  <Content Include="ThirdParty\SDL_image\test\template.test.in" />
+  <Content Include="ThirdParty\SDL_image\VisualC\clean.sh" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libavif-16.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libpng16-16.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libtiff-6.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libwebp-7.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libwebpdemux-2.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\libwebpmux-3.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.aom.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.avif.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.dav1d.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.libpng.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.tiff.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x64\LICENSE.webp.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libavif-16.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libpng16-16.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libtiff-6.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libwebp-7.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libwebpdemux-2.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\libwebpmux-3.dll" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.aom.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.avif.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.dav1d.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.libpng.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.tiff.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\external\optional\x86\LICENSE.webp.txt" />
+  <Content Include="ThirdParty\SDL_image\VisualC\SDL_image.sln" />
+  <Content Include="ThirdParty\SDL_image\VisualC\SDL_image.vcxproj" />
+  <Content Include="ThirdParty\SDL_image\VisualC\SDL_image.vcxproj.filters" />
+  <Content Include="ThirdParty\SDL_image\VisualC\showanim\showanim.vcxproj" />
+  <Content Include="ThirdParty\SDL_image\VisualC\showanim\showanim.vcxproj.filters" />
+  <Content Include="ThirdParty\SDL_image\VisualC\showimage\showimage.vcxproj" />
+  <Content Include="ThirdParty\SDL_image\VisualC\showimage\showimage.vcxproj.filters" />
+  <Content Include="ThirdParty\SDL_image\Xcode\avif\aom\config.xcconfig" />
+  <Content Include="ThirdParty\SDL_image\Xcode\avif\aom\x86_64\config\aom_config.asm" />
+  <Content Include="ThirdParty\SDL_image\Xcode\avif\avif.xcodeproj\project.pbxproj" />
+  <Content Include="ThirdParty\SDL_image\Xcode\config.xcconfig" />
+  <Content Include="ThirdParty\SDL_image\Xcode\Info-Framework.plist" />
+  <Content Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\Info.plist" />
+  <Content Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\LICENSE.txt" />
+  <Content Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\README.md" />
+  <Content Include="ThirdParty\SDL_image\Xcode\iOS\SDL3.framework\SDL3.tbd" />
+  <Content Include="ThirdParty\SDL_image\Xcode\jxl\jxl.xcodeproj\project.pbxproj" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Headers" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Resources" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\SDL3.tbd" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Resources\Info.plist" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Resources\LICENSE.txt" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\Resources\README.md" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\A\SDL3.tbd" />
+  <Content Include="ThirdParty\SDL_image\Xcode\macOS\SDL3.framework\Versions\Current" />
+  <Content Include="ThirdParty\SDL_image\Xcode\package" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\build.xcconfig" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\mkpackage.sh" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\CMake\SDL3_imageConfig.cmake" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\CMake\SDL3_imageConfigVersion.cmake" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\framework\INSTALL.md" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\INSTALL.md" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\SDL_DS_Store" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\share\cmake\SDL3_image\SDL3_imageConfig.cmake" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\resources\share\cmake\SDL3_image\SDL3_imageConfigVersion.cmake" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\SDL_image.info" />
+  <Content Include="ThirdParty\SDL_image\Xcode\pkg-support\sdl_logo.pdf" />
+  <Content Include="ThirdParty\SDL_image\Xcode\SDL_image.xcodeproj\project.pbxproj" />
+  <Content Include="ThirdParty\SDL_image\Xcode\showimage\config.xcconfig" />
+  <Content Include="ThirdParty\SDL_image\Xcode\showimage\macOS\macOS.entitlements" />
+  <Content Include="ThirdParty\SDL_image\Xcode\showimage\showimage.xcodeproj\project.pbxproj" />
+  <Content Include="ThirdParty\SDL_image\Xcode\webp\webp.xcodeproj\project.pbxproj" />
   <Content Include="Tools\xmake\reflection.lua" />
   <Content Include="xmake.lua" />
 </ItemGroup>
 <ItemGroup>
   <Folder Include="Build\Intermediate\Win32\Debug\BixEngine.tlog\" />
   <Folder Include="Runtime\Source\Core\Containers\" />
+  <Folder Include="ThirdParty\SDL_image\external\aom\" />
+  <Folder Include="ThirdParty\SDL_image\external\dav1d\" />
+  <Folder Include="ThirdParty\SDL_image\external\jpeg\" />
+  <Folder Include="ThirdParty\SDL_image\external\libavif\" />
+  <Folder Include="ThirdParty\SDL_image\external\libjxl\" />
+  <Folder Include="ThirdParty\SDL_image\external\libpng\" />
+  <Folder Include="ThirdParty\SDL_image\external\libtiff\" />
+  <Folder Include="ThirdParty\SDL_image\external\libwebp\" />
+  <Folder Include="ThirdParty\SDL_image\external\zlib\" />
 </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

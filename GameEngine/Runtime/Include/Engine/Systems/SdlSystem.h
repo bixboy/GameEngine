@@ -8,7 +8,6 @@ namespace BixEngine::Core
     public:
 
         // Initialise SDL3 avec les infos de l'application.
-        // Doit être appelée avant toute création de fenêtre ou renderer.
         bool Initialize(const char* appName, const char* appId, const char* appVersion);
 
         // Ferme proprement SDL et libère tous les sous-systèmes.

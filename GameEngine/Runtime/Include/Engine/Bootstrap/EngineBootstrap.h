@@ -8,7 +8,7 @@
 #include "Engine/Gui/Internal/GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
 #include "Core/EventDispatcher.h"
-#include "Engine/Systems/RenderLoop.h"
+#include "Engine/Render/RenderLoop.h"
 
 namespace BixEngine
 {

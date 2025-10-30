@@ -36,7 +36,23 @@ if (sdl3_inc == "" and sdl3_lib == "") then
     sdl3_inc = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include")
     sdl3_lib = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/lib/x64")
 elseif (sdl3_inc == "" or sdl3_lib == "") then
-    raise("❌ Veuillez définir *à la fois* sdl3_dir et sdl3_lib_dir pour utiliser SDL3 externe.")
+    print("❌ Veuillez définir *à la fois* sdl3_dir et sdl3_lib_dir pour utiliser SDL3 externe.")
+end
+
+
+-- ────────────────────────────────────────────────────────────────
+-- 🧩 SDL3_image Configuration
+-- ────────────────────────────────────────────────────────────────
+option("sdl3_image_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire include de SDL3_image")
+    set_default(os.getenv("SDL3_IMAGE_DIR") or "")
+option_end()
+
+local sdl3_image_inc = get_config("sdl3_image_dir") or ""
+
+if (sdl3_image_inc == "") then
+    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL_image/include/SDL3_image")
 end
 
 -- ────────────────────────────────────────────────────────────────
@@ -179,10 +195,10 @@ target("BixEngine")
     add_files("ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp")
     add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", { public = true })
 
-    -- 🧩 SDL3 + Generated
-    add_includedirs(sdl3_inc, generated_dir, { public = true })
+    -- 🧩 SDL3 + SDL3_image + Generated
+    add_includedirs(sdl3_inc, sdl3_image_inc, generated_dir, { public = true })
     add_linkdirs(sdl3_lib)
-    add_links("SDL3")
+    add_links("SDL3", "SDL3_image")
     
 
 -- ╔══════════════════════════════════════════════════════════════╗
@@ -194,14 +210,16 @@ target("BixRun")
     add_files("BixRun/main.cpp")
     add_deps("BixEngine")
 
-    add_includedirs("Runtime/Include", sdl3_inc, generated_dir)
+    add_includedirs("Runtime/Include", sdl3_inc, sdl3_image_inc, generated_dir)
     add_linkdirs(sdl3_lib)
-    add_links("SDL3")
+    add_links("SDL3", "SDL3_image")
     
     local content_dir = path.join("Build", plat, arch, mode, "Content")
     if os.isdir(content_dir) then
+    
         add_files(path.join(content_dir, "**.cpp"))
         add_includedirs(content_dir, { public = true })
+        
         print("[BixEngine] 🧩 Inclusion des scripts utilisateur depuis : " .. content_dir)
     else
         print("[BixEngine] ⚠️ Aucun dossier Content trouvé à : " .. content_dir)
@@ -209,12 +227,21 @@ target("BixRun")
 
     after_build(function(target)
         local exe_dir = path.directory(target:targetfile())
-        local dll_path = path.join(sdl3_lib, "SDL3.dll")
-        if os.isfile(dll_path) then
-            os.cp(dll_path, exe_dir)
-            print("[BixEngine] 📦 Copie de SDL3.dll → " .. exe_dir)
+        local dlls =
+        {
+            path.join(sdl3_lib, "SDL3.dll"),
+        }
+    
+        for _, dll_path in ipairs(dlls) do
+            if os.isfile(dll_path) then
+                os.cp(dll_path, exe_dir)
+                print("[BixEngine] 📦 Copie de " .. path.filename(dll_path) .. " → " .. exe_dir)
+            else
+                print("[BixEngine] ⚠️ DLL manquante : " .. dll_path)
+            end
         end
     end)
+
 
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║ 🧰 Task: regen (regenerate reflection headers)                ║

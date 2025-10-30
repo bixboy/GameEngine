@@ -1,7 +1,6 @@
 #pragma once
 
 #include "Core/Containers/String.h"
-#include "Reflection/BixReflection.h"
 #include "Component.generated.h"
 
 namespace BixEngine::Graphics { class Renderer; }
@@ -14,8 +13,10 @@ namespace BixEngine::Game
     class Component
     {
         GENERATED_BODY()
-        
+    
     public:
+        using Super = Component;
+        
         explicit Component(Actor* owner) : owner_(owner) {}
         virtual ~Component() = default;
         
