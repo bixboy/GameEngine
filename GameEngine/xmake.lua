@@ -58,10 +58,50 @@ option_end()
 local sdl3_image_inc = get_config("sdl3_image_dir") or ""
 local sdl3_image_lib = get_config("sdl3_image_lib_dir") or ""
 
+local function normalize_sdl3_image_include(dir)
+    if dir == "" then
+        return ""
+    end
+
+    -- If the provided directory already contains the SDL3_image folder, keep it.
+    if os.isdir(path.join(dir, "SDL3_image")) and os.isfile(path.join(dir, "SDL3_image", "SDL_image.h")) then
+        return dir
+    end
+
+    -- If the include path points directly at the folder that hosts SDL_image.h,
+    -- bubble up one level so we can include it with the SDL3_image/ prefix.
+    if os.isfile(path.join(dir, "SDL_image.h")) then
+        local parent = path.directory(dir)
+        if parent ~= dir and parent ~= nil then
+            return parent
+        end
+    end
+
+    local parent = path.directory(dir)
+    if parent ~= dir and parent ~= nil then
+        if os.isdir(path.join(parent, "SDL3_image")) and os.isfile(path.join(parent, "SDL3_image", "SDL_image.h")) then
+            return parent
+        end
+    end
+
+    return dir
+end
+
 if (sdl3_image_inc == "" and sdl3_image_lib == "") then
     sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL3_image/include")
     sdl3_image_lib = path.join(os.projectdir(), "ThirdParty/SDL3_image/lib/x64")
-    
+
+end
+
+sdl3_image_inc = normalize_sdl3_image_include(sdl3_image_inc)
+
+local sdl3_image_include_dirs = {}
+if sdl3_image_inc ~= "" then
+    table.insert(sdl3_image_include_dirs, sdl3_image_inc)
+    local nested = path.join(sdl3_image_inc, "SDL3_image")
+    if os.isdir(nested) then
+        table.insert(sdl3_image_include_dirs, nested)
+    end
 end
 
 -- ────────────────────────────────────────────────────────────────
@@ -205,7 +245,14 @@ target("BixEngine")
     add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", { public = true })
 
     -- 🧩 SDL3 + SDL3_image + Generated
-    add_includedirs(sdl3_inc, sdl3_image_inc, generated_dir, { public = true })
+    local bixengine_external_includes = { generated_dir }
+    if sdl3_inc ~= "" then
+        table.insert(bixengine_external_includes, sdl3_inc)
+    end
+    for _, dir in ipairs(sdl3_image_include_dirs) do
+        table.insert(bixengine_external_includes, dir)
+    end
+    add_includedirs(table.unpack(bixengine_external_includes), { public = true })
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
@@ -219,7 +266,14 @@ target("BixRun")
     add_files("BixRun/main.cpp")
     add_deps("BixEngine")
 
-    add_includedirs("Runtime/Include", sdl3_inc, sdl3_image_inc, generated_dir)
+    local bixrun_external_includes = { "Runtime/Include", generated_dir }
+    if sdl3_inc ~= "" then
+        table.insert(bixrun_external_includes, sdl3_inc)
+    end
+    for _, dir in ipairs(sdl3_image_include_dirs) do
+        table.insert(bixrun_external_includes, dir)
+    end
+    add_includedirs(table.unpack(bixrun_external_includes))
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
