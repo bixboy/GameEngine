@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+#include <unordered_map>
 #include <vector>
 #include "Core/Containers/String.h"
 #include "Engine/Render/SpriteFrame.h"
@@ -19,8 +21,8 @@ namespace BixEngine::Render
     public:
         SpriteAnimator() = default;
 
-        // Add Animation to the list
-        void AddAnimation(const SpriteAnimation& animation);
+        // Add Animation to the list (replaces existing animation sharing the same name)
+        void AddAnimation(SpriteAnimation animation);
 
         // Play Sepcifique Animation
         void Play(const String& name);
@@ -41,16 +43,15 @@ namespace BixEngine::Render
         void SetSpeed(float multiplier) noexcept { speedMultiplier_ = multiplier; }
 
     private:
+        [[nodiscard]] const SpriteAnimation* GetCurrentAnimation() const noexcept;
+
         std::vector<SpriteAnimation> animations_;
-        
-        const SpriteAnimation* currentAnim_ = nullptr;
-        
+        std::unordered_map<String, size_t> animationLookup_;
+
+        size_t currentAnimIndex_ = std::numeric_limits<size_t>::max();
         float timeAccumulator_ = 0.0f;
-        
         size_t currentFrameIndex_ = 0;
-        
         bool bPlaying_ = false;
-        
         float speedMultiplier_ = 1.0f;
     };
 }

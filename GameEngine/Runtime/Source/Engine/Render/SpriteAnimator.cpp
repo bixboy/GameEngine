@@ -1,26 +1,48 @@
 #include "Engine/Render/SpriteAnimator.h"
+#include <limits>
+#include <utility>
 
 namespace BixEngine::Render
 {
-    void SpriteAnimator::AddAnimation(const SpriteAnimation& animation)
+    namespace
     {
-        animations_.push_back(animation);
+        constexpr size_t kInvalidAnimationIndex = std::numeric_limits<size_t>::max();
+    }
+
+    void SpriteAnimator::AddAnimation(SpriteAnimation animation)
+    {
+        if (animation.Name.IsEmpty())
+            return;
+
+        auto found = animationLookup_.find(animation.Name);
+        if (found != animationLookup_.end())
+        {
+            animations_[found->second] = std::move(animation);
+
+            if (currentAnimIndex_ == found->second)
+            {
+                timeAccumulator_ = 0.0f;
+                currentFrameIndex_ = 0;
+            }
+
+            return;
+        }
+
+        const size_t index = animations_.size();
+        animationLookup_[animation.Name] = index;
+        animations_.push_back(std::move(animation));
     }
 
     void SpriteAnimator::Play(const String& name)
     {
-        for (auto& anim : animations_)
-        {
-            if (anim.Name == name)
-            {
-                currentAnim_ = &anim;
-                timeAccumulator_ = 0.0f;
-                currentFrameIndex_ = 0;
-                bPlaying_ = true;
-                
-                return;
-            }
-        }
+        const auto found = animationLookup_.find(name);
+        if (found == animationLookup_.end())
+            return;
+
+        currentAnimIndex_ = found->second;
+        timeAccumulator_ = 0.0f;
+        currentFrameIndex_ = 0;
+        bPlaying_ = true;
     }
 
     void SpriteAnimator::Pause()
@@ -33,28 +55,33 @@ namespace BixEngine::Render
         bPlaying_ = false;
         timeAccumulator_ = 0.0f;
         currentFrameIndex_ = 0;
+        currentAnimIndex_ = kInvalidAnimationIndex;
     }
 
     void SpriteAnimator::Update(float deltaTime)
     {
-        if (!bPlaying_ || !currentAnim_ || currentAnim_->Frames.empty())
+        const SpriteAnimation* currentAnimation = GetCurrentAnimation();
+        if (!bPlaying_ || !currentAnimation || currentAnimation->Frames.empty())
             return;
 
         timeAccumulator_ += deltaTime * speedMultiplier_;
 
-        float frameDuration = 1.0f / currentAnim_->FrameRate;
+        if (currentAnimation->FrameRate <= 0.0f)
+            return;
+
+        const float frameDuration = 1.0f / currentAnimation->FrameRate;
         while (timeAccumulator_ >= frameDuration)
         {
             timeAccumulator_ -= frameDuration;
             currentFrameIndex_++;
 
-            if (currentFrameIndex_ >= currentAnim_->Frames.size())
+            if (currentFrameIndex_ >= currentAnimation->Frames.size())
             {
-                if (currentAnim_->bLoop)
+                if (currentAnimation->bLoop)
                     currentFrameIndex_ = 0;
                 else
                 {
-                    currentFrameIndex_ = currentAnim_->Frames.size() - 1;
+                    currentFrameIndex_ = currentAnimation->Frames.size() - 1;
                     bPlaying_ = false;
                     break;
                 }
@@ -64,9 +91,18 @@ namespace BixEngine::Render
 
     const SpriteFrame* SpriteAnimator::GetCurrentFrame() const noexcept
     {
-        if (!currentAnim_ || currentAnim_->Frames.empty())
+        const SpriteAnimation* currentAnimation = GetCurrentAnimation();
+        if (!currentAnimation || currentAnimation->Frames.empty())
             return nullptr;
-        
-        return &currentAnim_->Frames[currentFrameIndex_];
+
+        return &currentAnimation->Frames[currentFrameIndex_];
+    }
+
+    const SpriteAnimation* SpriteAnimator::GetCurrentAnimation() const noexcept
+    {
+        if (currentAnimIndex_ == kInvalidAnimationIndex || currentAnimIndex_ >= animations_.size())
+            return nullptr;
+
+        return &animations_[currentAnimIndex_];
     }
 }
