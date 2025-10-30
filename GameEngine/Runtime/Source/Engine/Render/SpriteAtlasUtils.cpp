@@ -20,15 +20,14 @@ namespace BixEngine::Render
 
         [[nodiscard]] float ExtractFloat(const std::string& source, const std::string& key, float defaultValue)
         {
-            const std::string token = """ + key + """;
+            const std::string token = "\"" + key + "\"";
             size_t pos = source.find(token);
             if (pos == std::string::npos)
                 return defaultValue;
             pos = source.find(':', pos);
             if (pos == std::string::npos)
                 return defaultValue;
-            size_t end = source.find_first_of(",}
-", pos + 1);
+            size_t end = source.find_first_of(",}", pos + 1);
             const std::string value = source.substr(pos + 1, end - pos - 1);
             try
             {
@@ -47,7 +46,7 @@ namespace BixEngine::Render
 
         [[nodiscard]] bool ExtractBool(const std::string& source, const std::string& key, bool defaultValue)
         {
-            const std::string token = """ + key + """;
+            const std::string token = "\"" + key + "\"";
             size_t pos = source.find(token);
             if (pos == std::string::npos)
                 return defaultValue;
@@ -75,9 +74,7 @@ namespace BixEngine::Render
                 {
                     stream.putback(ch);
                     if (stream >> value)
-                    {
                         indices.push_back(value);
-                    }
                 }
             }
             return indices;
@@ -110,7 +107,10 @@ namespace BixEngine::Render
         {
             for (int column = 0; column < columns; ++column)
             {
-                Math::Rect rect{margin + column * (cellWidth + padding), margin + row * (cellHeight + padding), cellWidth, cellHeight};
+                Math::Rect rect{margin + column * (cellWidth + padding),
+                                margin + row * (cellHeight + padding),
+                                cellWidth,
+                                cellHeight};
                 frames.emplace_back(pool.Acquire(&texture, rect));
             }
         }
@@ -127,7 +127,7 @@ namespace BixEngine::Render
 
         SpriteFramePool& pool = SpriteFramePool::Get();
         size_t pos = 0;
-        while ((pos = contents.find(""frame"", pos)) != std::string::npos)
+        while ((pos = contents.find("\"frame\"", pos)) != std::string::npos)
         {
             size_t start = contents.find('{', pos);
             size_t end = contents.find('}', start);
@@ -141,7 +141,7 @@ namespace BixEngine::Render
         if (frames.empty())
         {
             pos = 0;
-            while ((pos = contents.find(""x"", pos)) != std::string::npos)
+            while ((pos = contents.find("\"x\"", pos)) != std::string::npos)
             {
                 size_t end = contents.find('}', pos);
                 Math::Rect rect = ExtractRect(contents.substr(pos, end - pos));
@@ -171,7 +171,7 @@ namespace BixEngine::Render
             return animations;
 
         size_t pos = 0;
-        while ((pos = contents.find(""name"", pos)) != std::string::npos)
+        while ((pos = contents.find("\"name\"", pos)) != std::string::npos)
         {
             size_t colon = contents.find(':', pos);
             size_t quoteStart = contents.find('"', colon + 1);
@@ -195,7 +195,7 @@ namespace BixEngine::Render
             animation.bLoop = ExtractBool(block, "loop", true);
             animation.bPingPong = ExtractBool(block, "pingPong", false);
 
-            size_t framesToken = block.find(""frames"");
+            size_t framesToken = block.find("\"frames\"");
             if (framesToken != std::string::npos)
             {
                 size_t listStart = block.find('[', framesToken);
@@ -213,7 +213,7 @@ namespace BixEngine::Render
                 }
             }
 
-            size_t eventsToken = block.find(""events"");
+            size_t eventsToken = block.find("\"events\"");
             if (eventsToken != std::string::npos)
             {
                 size_t listStart = block.find('[', eventsToken);
@@ -222,13 +222,13 @@ namespace BixEngine::Render
                 {
                     std::string eventsBlock = block.substr(listStart + 1, listEnd - listStart - 1);
                     size_t eventPos = 0;
-                    while ((eventPos = eventsBlock.find(""frame"", eventPos)) != std::string::npos)
+                    while ((eventPos = eventsBlock.find("\"frame\"", eventPos)) != std::string::npos)
                     {
                         size_t eventEnd = eventsBlock.find('}', eventPos);
                         std::string eventChunk = eventsBlock.substr(eventPos, eventEnd - eventPos);
                         SpriteEvent evt{};
                         evt.FrameIndex = static_cast<size_t>(ExtractInt(eventChunk, "frame", 0));
-                        size_t nameToken = eventsBlock.rfind(""name"", eventPos);
+                        size_t nameToken = eventsBlock.rfind("\"name\"", eventPos);
                         if (nameToken != std::string::npos)
                         {
                             size_t nameColon = eventsBlock.find(':', nameToken);

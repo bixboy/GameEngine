@@ -20,8 +20,7 @@ namespace BixEngine::Game
         }
     }
 
-    SpriteAnimatorComponent::SpriteAnimatorComponent(Actor* owner)
-        : Component(owner)
+    SpriteAnimatorComponent::SpriteAnimatorComponent(Actor* owner): Component(owner)
     {
     }
 
@@ -268,34 +267,7 @@ namespace BixEngine::Game
         if (!binding.Component)
             return;
 
-        if (!frame || !frame->handle)
-        {
-            if (binding.CurrentTexture)
-            {
-                binding.CurrentTexture = nullptr;
-                binding.Component->SetTexture(nullptr);
-            }
-            binding.Component->SetTint(binding.BaseTint);
-            return;
-        }
-
-        Render::Texture* texture = frame->GetTexture();
-        if (binding.CurrentTexture != texture)
-        {
-            binding.CurrentTexture = texture;
-            binding.Component->SetTexture(texture);
-        }
-
-        const Math::Rect& uv = frame->GetUVRect();
-        if (!AreRectsEqual(binding.CurrentUV, uv))
-        {
-            binding.CurrentUV = uv;
-            binding.Component->SetUVRect(uv);
-        }
-
-        SDL_Color tint = binding.BaseTint;
-        tint.a = static_cast<uint8_t>(std::clamp(alphaWeight, 0.0f, 1.0f) * static_cast<float>(binding.BaseTint.a));
-        binding.Component->SetTint(tint);
+        binding.Component->ApplyFrame(frame, binding.BaseTint, alphaWeight);
     }
 
     void SpriteAnimatorComponent::EvaluateStateMachine()

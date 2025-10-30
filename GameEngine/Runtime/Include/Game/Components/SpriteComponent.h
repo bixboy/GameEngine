@@ -5,12 +5,11 @@
 #include "SDL3/SDL.h"
 #include "Core/Math/Rect.h"
 #include "Core/Math/Vector2.h"
+#include "Engine/Render/Texture.h"
+#include "Engine/Render/SpriteFrame.h"
 #include "SpriteComponent.generated.h"
 
-namespace BixEngine::Render
-{
-    class Texture;
-}
+
 
 namespace BixEngine::Game
 {
@@ -20,6 +19,7 @@ namespace BixEngine::Game
     class SpriteComponent : public Component
     {
         GENERATED_BODY()
+        friend class SpriteAnimatorComponent;
 
     public:
         /**
@@ -31,6 +31,8 @@ namespace BixEngine::Game
 
         /** Renders the sprite to the provided renderer. */
         void Render(Graphics::Renderer& renderer) const override;
+
+        void ApplyFrame(const Render::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 
         /** Sets the base color of the sprite. */
         void SetColor(SDL_Color color) noexcept { color_ = color; }

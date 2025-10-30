@@ -49,10 +49,19 @@ option("sdl3_image_dir")
     set_default(os.getenv("SDL3_IMAGE_DIR") or "")
 option_end()
 
-local sdl3_image_inc = get_config("sdl3_image_dir") or ""
+option("sdl3_image_lib_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire lib de SDL3_image")
+    set_default(os.getenv("SDL3_IMAGE_LIB_DIR") or "")
+option_end()
 
-if (sdl3_image_inc == "") then
-    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL_image/include/SDL3_image")
+local sdl3_image_inc = get_config("sdl3_image_dir") or ""
+local sdl3_image_lib = get_config("sdl3_image_lib_dir") or ""
+
+if (sdl3_image_inc == "" and sdl3_image_lib == "") then
+    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL3_image/include/SDL3_image")
+    sdl3_image_lib = path.join(os.projectdir(), "ThirdParty/SDL3_image/lib/x64")
+    
 end
 
 -- ────────────────────────────────────────────────────────────────
@@ -197,7 +206,7 @@ target("BixEngine")
 
     -- 🧩 SDL3 + SDL3_image + Generated
     add_includedirs(sdl3_inc, sdl3_image_inc, generated_dir, { public = true })
-    add_linkdirs(sdl3_lib)
+    add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
 
@@ -211,7 +220,7 @@ target("BixRun")
     add_deps("BixEngine")
 
     add_includedirs("Runtime/Include", sdl3_inc, sdl3_image_inc, generated_dir)
-    add_linkdirs(sdl3_lib)
+    add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
     local content_dir = path.join("Build", plat, arch, mode, "Content")
@@ -230,6 +239,7 @@ target("BixRun")
         local dlls =
         {
             path.join(sdl3_lib, "SDL3.dll"),
+            path.join(sdl3_image_lib, "SDL3_image.dll"),
         }
     
         for _, dll_path in ipairs(dlls) do

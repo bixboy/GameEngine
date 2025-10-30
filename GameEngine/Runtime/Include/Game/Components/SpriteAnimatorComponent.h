@@ -7,18 +7,15 @@
 
 #include "Game/Components/Component.h"
 #include "Engine/Render/SpriteAnimator.h"
+#include "Game/Components/SpriteComponent.h"
 #include "Core/Math/Rect.h"
 #include "SDL3/SDL.h"
+#include "Reflection/ReflectionMacros.h"
 #include "SpriteComponent.generated.h"
 
-namespace BixEngine::Render
-{
-    class Texture;
-}
 
 namespace BixEngine::Game
 {
-    class SpriteComponent;
     class SpriteAnimatorComponent;
 
     /** State definition used by the animator component state machine. */
@@ -31,7 +28,7 @@ namespace BixEngine::Game
         std::function<bool(const SpriteAnimatorComponent&)> Condition;
     };
 
-    BCLASS(Blueprintable)
+    BCLASS()
     class SpriteAnimatorComponent : public Component
     {
         GENERATED_BODY()
@@ -90,7 +87,7 @@ namespace BixEngine::Game
 
         void SetTargetSprite(SpriteComponent* sprite) noexcept;
 
-    private:
+    protected:
         struct SpriteBinding
         {
             SpriteComponent* Component = nullptr;

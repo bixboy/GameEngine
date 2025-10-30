@@ -36,8 +36,10 @@ namespace BixEngine::Game
             SDL_FlipMode mode = SDL_FLIP_NONE;
             if (flipX)
                 mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_HORIZONTAL);
+            
             if (flipY)
                 mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_VERTICAL);
+            
             return mode;
         }
     }
@@ -76,6 +78,23 @@ namespace BixEngine::Game
             renderer.SetColor(combined.r, combined.g, combined.b, combined.a);
             SDL_RenderFillRect(renderer.GetSDLRenderer(), &destRect);
         }
+    }
+
+    void SpriteComponent::ApplyFrame(const Render::SpriteFrame* frame, SDL_Color baseTint, float alpha)
+    {
+        if (!frame || !frame->handle)
+        {
+            SetTexture(nullptr);
+            SetTint(baseTint);
+            return;
+        }
+
+        SetTexture(frame->GetTexture());
+        SetUVRect(frame->GetUVRect());
+
+        SDL_Color tint = baseTint;
+        tint.a = static_cast<uint8_t>(std::clamp(alpha, 0.0f, 1.0f) * static_cast<float>(baseTint.a));
+        SetTint(tint);
     }
 
     void SpriteComponent::SetTexture(Render::Texture* texture) noexcept
