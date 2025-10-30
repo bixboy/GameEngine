@@ -61,8 +61,12 @@
     <BixEngineSDL3Version>SDL3-3.2.22</BixEngineSDL3Version>
     <BixEngineSDL3Root Condition="'$(SDL3_DIR)' != ''">$(SDL3_DIR)\</BixEngineSDL3Root>
     <BixEngineSDL3Root Condition="'$(BixEngineSDL3Root)' == ''">$(BixEngineThirdParty)$(BixEngineSDL3Version)\</BixEngineSDL3Root>
-    <BixEngineSDL3Include Condition="'$(SDL3_INCLUDE_DIR)' != ''">$(SDL3_INCLUDE_DIR)</BixEngineSDL3Include>
-    <BixEngineSDL3Include Condition="'$(BixEngineSDL3Include)' == '' and Exists('$(BixEngineSDL3Root)include')">$(BixEngineSDL3Root)include</BixEngineSDL3Include>
+    <BixEngineSDL3IncludeCandidate Condition="'$(SDL3_INCLUDE_DIR)' != ''">$(SDL3_INCLUDE_DIR)</BixEngineSDL3IncludeCandidate>
+    <BixEngineSDL3IncludeCandidate Condition="'$(BixEngineSDL3IncludeCandidate)' == '' and Exists('$(BixEngineSDL3Root)include')">$(BixEngineSDL3Root)include</BixEngineSDL3IncludeCandidate>
+    <BixEngineSDL3Include>$(BixEngineSDL3IncludeCandidate)</BixEngineSDL3Include>
+    <BixEngineSDL3Include Condition="Exists('$(BixEngineSDL3IncludeCandidate)\\SDL_stdinc.h')">$(BixEngineSDL3IncludeCandidate)\..</BixEngineSDL3Include>
+    <BixEngineSDL3LeafInclude Condition="Exists('$(BixEngineSDL3IncludeCandidate)\\SDL_stdinc.h')">$(BixEngineSDL3IncludeCandidate)</BixEngineSDL3LeafInclude>
+    <BixEngineSDL3LeafInclude Condition="'$(BixEngineSDL3LeafInclude)' == '' and Exists('$(BixEngineSDL3Include)\\SDL3\\SDL_stdinc.h')">$(BixEngineSDL3Include)\SDL3</BixEngineSDL3LeafInclude>
     <BixEngineSDL3Lib Condition="'$(SDL3_LIB_DIR)' != ''">$(SDL3_LIB_DIR)</BixEngineSDL3Lib>
     <BixEngineSDL3Lib Condition="'$(BixEngineSDL3Lib)' == '' and Exists('$(BixEngineSDL3Root)lib\\$(Platform)')">$(BixEngineSDL3Root)lib\$(Platform)</BixEngineSDL3Lib>
     <BixEngineSDL3Lib Condition="'$(BixEngineSDL3Lib)' == '' and '$(Platform)' == 'Win32' and Exists('$(BixEngineSDL3Root)lib\\x86')">$(BixEngineSDL3Root)lib\x86</BixEngineSDL3Lib>
@@ -91,7 +95,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineThirdParty)ImGui\;$(BixEngineThirdParty)ImGui\backends\;$(BixEngineSDL3Include);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(IncludePath)</IncludePath>
+    <IncludePath>$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineThirdParty)ImGui\;$(BixEngineThirdParty)ImGui\backends\;$(BixEngineSDL3Include);$(BixEngineSDL3LeafInclude);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -108,7 +112,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3LeafInclude);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -138,6 +142,7 @@
           $(ProjectDir)Runtime\Source\Input\Private;
           $(ProjectDir)Runtime\Source\Math\Private;
           $(BixEngineSDL3Include);
+          $(BixEngineSDL3LeafInclude);
           $(BixEngineSDL3ImageInclude);
           $(BixEngineSDL3ImageLeafInclude);
           $(BixEngineSDL3ImageModuleInclude);
@@ -167,7 +172,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3LeafInclude);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -190,7 +195,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3LeafInclude);$(BixEngineSDL3ImageInclude);$(BixEngineSDL3ImageLeafInclude);$(BixEngineSDL3ImageModuleInclude);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
