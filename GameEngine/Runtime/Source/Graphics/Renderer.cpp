@@ -19,6 +19,8 @@ namespace BixEngine::Graphics
             return;
         }
 
+        instance_ = this;
+
         if (useVSync)
             SDL_SetRenderVSync(renderer_, 1);
         else
@@ -31,6 +33,7 @@ namespace BixEngine::Graphics
 
     Renderer::~Renderer()
     {
+        instance_ = nullptr;
         if (renderer_)
         {
             SDL_DestroyRenderer(renderer_);

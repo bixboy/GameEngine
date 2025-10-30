@@ -13,7 +13,6 @@
 
 namespace BixEngine::Game
 {
-    class SpriteComponent;
 
     BCLASS()
     class SpriteComponent : public Component
@@ -36,10 +35,13 @@ namespace BixEngine::Game
 
         /** Sets the base color of the sprite. */
         void SetColor(SDL_Color color) noexcept { color_ = color; }
+        
         /** Sets the multiplicative tint applied to the texture. */
         void SetTint(SDL_Color tint) noexcept { tint_ = tint; }
+        
         /** Sets the additive tint that brightens the sprite. */
         void SetAdditiveTint(SDL_Color tint) noexcept { additiveTint_ = tint; }
+        
         /** Sets the emission color used by custom materials. */
         void SetEmissionColor(SDL_Color color) noexcept { emissionColor_ = color; }
 
@@ -52,17 +54,22 @@ namespace BixEngine::Game
 
         /** Assigns the SDL texture used for rendering. */
         void SetTexture(Render::Texture* texture) noexcept;
+        
         /** Assigns the UV rectangle to sample from the texture. */
         void SetUVRect(const Math::Rect& uvRect) noexcept;
 
         /** Enables or disables horizontal flipping. */
         void SetFlipX(bool enabled) noexcept { bFlipX_ = enabled; }
+        
         /** Enables or disables vertical flipping. */
         void SetFlipY(bool enabled) noexcept { bFlipY_ = enabled; }
+        
         /** Sets the pivot/origin used for rendering. Values are expressed in normalized coordinates. */
         void SetPivot(const Math::Vector2<float>& pivot) noexcept { pivot_ = pivot; }
+        
         /** Assigns the material/shader identifier for advanced renderers. */
         void SetMaterialId(String materialId) noexcept { materialId_ = std::move(materialId); }
+        
         /** Overrides the blend mode used to composite the texture. */
         void SetBlendMode(SDL_BlendMode mode) noexcept { blendMode_ = mode; }
 

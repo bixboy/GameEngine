@@ -1,17 +1,13 @@
 #pragma once
-
 #include <memory>
 #include <functional>
-
 #include "Core/Math/Rect.h"
-#include "Core/Containers/String.h"
 #include "Engine/Render/Texture.h"
+
 
 namespace BixEngine::Render
 {
-    /**
-     * @brief Shared data backing a sprite frame. Instances are pooled and reused across animations.
-     */
+
     struct SpriteFrameData
     {
         Texture* TexturePtr = nullptr;
@@ -29,9 +25,7 @@ namespace BixEngine::Render
 
     using SpriteFrameHandle = std::shared_ptr<const SpriteFrameData>;
 
-    /**
-     * @brief Lightweight handle that exposes a sprite frame backed by pooled data.
-     */
+
     struct SpriteFrame
     {
         SpriteFrame() = default;

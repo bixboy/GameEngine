@@ -39,50 +39,32 @@ namespace BixEngine::Game
         void BeginPlay() override;
         void Update(float deltaTime) override;
 
-        /** Registers a new animation within the internal animator. */
         void AddAnimation(Render::SpriteAnimation animation);
 
-        /** Directly plays an animation by name. */
         void Play(const String& name);
-        /** Queues an animation to play once before returning to the default state. */
         void PlayOnceThen(const String& name, const String& next);
-        /** Plays an animation for a fixed duration before restoring the previous state. */
         void PlayForDuration(const String& name, float seconds, const String& fallbackState);
 
-        /** Pauses the currently active animation. */
         void Pause();
-        /** Stops playback entirely. */
         void Stop();
 
-        /** Sets the playback speed multiplier. */
         void SetPlaybackSpeed(float speed);
-        /** Overrides the delta time used for animation playback. */
         void SetDeltaTimeOverride(std::optional<float> overrideDelta) noexcept { deltaTimeOverride_ = overrideDelta; }
 
-        /** Returns true when an animation is currently playing. */
         [[nodiscard]] bool IsPlaying() const noexcept;
 
-        /** Adds an additional sprite layer that will be updated each frame. */
         void AddSpriteLayer(SpriteComponent* sprite);
-        /** Removes an existing sprite layer binding. */
         void RemoveSpriteLayer(SpriteComponent* sprite);
-        /** Clears all registered sprite layers. */
         void ClearSpriteLayers();
 
-        /** Registers a new animation state for automatic transitions. */
         void AddState(SpriteAnimationState state);
-        /** Sets the default state used when no transitions match. */
         void SetDefaultState(String stateName);
 
-        /** Enables or disables the debug overlay. */
         void EnableDebug(bool enabled) noexcept { bDebugMode_ = enabled; }
         [[nodiscard]] bool IsDebugEnabled() const noexcept { return bDebugMode_; }
 
-        /** Event triggered when a new animation starts playing. */
         std::function<void(const String&)> OnAnimationStart;
-        /** Event triggered when the current animation completes. */
         std::function<void(const String&)> OnAnimationEnd;
-        /** Event triggered when the frame index changes. */
         std::function<void(const String&, size_t)> OnFrameChanged;
 
         void SetTargetSprite(SpriteComponent* sprite) noexcept;
