@@ -113,7 +113,7 @@ namespace BixEngine::Gui
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.headerPath});
 
-                    Utils::OpenFileInCodeEditor(script.headerPath);
+                    EditorUtils::OpenFileInCodeEditor(script.headerPath);
                 },
                 hasHeader
             });
@@ -129,7 +129,7 @@ namespace BixEngine::Gui
                     if (contentState.openScriptFilesCallback)
                         contentState.openScriptFilesCallback({script.sourcePath});
 
-                    Utils::OpenFileInCodeEditor(script.sourcePath);
+                    EditorUtils::OpenFileInCodeEditor(script.sourcePath);
                 },
                 hasSource
             });
@@ -155,7 +155,7 @@ namespace BixEngine::Gui
                         contentState.openScriptFilesCallback(files);
 
                         for (const auto& f : files)
-                            Utils::OpenFileInCodeEditor(f);
+                            EditorUtils::OpenFileInCodeEditor(f);
                     }
                 },
                 hasHeader || hasSource

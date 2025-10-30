@@ -2,7 +2,7 @@
 
 #include <functional>
 #include "Core/Containers/String.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui

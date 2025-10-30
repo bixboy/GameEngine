@@ -1,6 +1,6 @@
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
-#include "Engine/Gui/Core/GuiSystem.h"
+#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiSystem.h"
 #include "Engine/Gui/Controllers/GuiPanelController.h"
 
 namespace BixEngine::Gui

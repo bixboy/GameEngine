@@ -4,7 +4,7 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 #include "imgui.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 
 struct SDL_Window;
 struct SDL_Renderer;

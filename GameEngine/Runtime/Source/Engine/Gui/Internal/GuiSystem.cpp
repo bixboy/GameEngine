@@ -1,4 +1,4 @@
-#include "Engine/Gui/Core/GuiSystem.h"
+#include "Engine/Gui/Internal/GuiSystem.h"
 
 #include <algorithm>
 #include <filesystem>
@@ -9,11 +9,11 @@
 #include <SDL3/SDL.h>
 
 #include "Core/Logger.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "imgui_internal.h"
-#include "Engine/Gui/Core/GuiDocking.h"
+#include "Engine/Gui/Internal/GuiDocking.h"
 
 namespace BixEngine::Gui
 {

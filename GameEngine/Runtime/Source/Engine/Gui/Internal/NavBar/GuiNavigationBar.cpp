@@ -1,12 +1,12 @@
-﻿#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+﻿#include "Engine/Gui/Internal/NavBar/GuiNavigationBar.h"
 
 #include <string_view>
 
-#include "Engine/Gui/Core/GuiModule.h"
-#include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
-#include "Engine/Gui/Core/GuiSystem.h"
-#include "Engine/Gui/Core/GuiLayoutManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiModule.h"
+#include "Engine/Gui/Internal/NavBar/GuiAssetEditorManager.h"
+#include "Engine/Gui/Internal/GuiSystem.h"
+#include "Engine/Gui/Internal/GuiLayoutManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "imgui.h"
 
 namespace BixEngine::Core

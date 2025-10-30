@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "Core/Logger.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui

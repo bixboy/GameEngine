@@ -1,4 +1,4 @@
-#include "Engine/Gui/Core/GuiLayoutManager.h"
+#include "Engine/Gui/Internal/GuiLayoutManager.h"
 
 #include <algorithm>
 #include <array>
@@ -10,9 +10,9 @@
 
 #include <imgui.h>
 
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
-#include "Engine/Gui/Core/GuiSystem.h"
+#include "Engine/Gui/Internal//GuiManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiSystem.h"
 
 namespace BixEngine::Gui
 {

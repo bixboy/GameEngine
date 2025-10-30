@@ -1,5 +1,5 @@
 #include "Core/EventDispatcher.h"
-#include "Engine/Gui/Core/GuiModule.h"
+#include "Engine/Gui/Internal//GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
 
 namespace BixEngine::Core

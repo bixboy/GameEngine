@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "Core/Logger.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 

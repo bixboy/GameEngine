@@ -1,4 +1,4 @@
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "Core/Logger.h"
 #include <utility>
 

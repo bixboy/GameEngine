@@ -7,8 +7,8 @@
 #include <vector>
 #include <SDL3/SDL_events.h>
 
-#include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
-#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+#include "Engine/Gui/Internal/NavBar/GuiAssetEditorManager.h"
+#include "Engine/Gui/Internal/NavBar/GuiNavigationBar.h"
 
 
 namespace BixEngine

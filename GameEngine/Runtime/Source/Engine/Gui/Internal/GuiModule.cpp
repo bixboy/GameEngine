@@ -1,4 +1,4 @@
-#include "Engine/Gui/Core/GuiModule.h"
+#include "Engine/Gui/Internal/GuiModule.h"
 
 #include <SDL3/SDL.h>
 #include <algorithm>
@@ -16,11 +16,11 @@
 #include "Engine/Systems/Window.h"
 #include "Engine/Gui/DefaultEngineGui.h"
 #include "Engine/Gui/GuiContextFactory.h"
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiLayoutManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
-#include "Engine/Gui/Core/GuiSystem.h"
-#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/Internal/GuiLayoutManager.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiSystem.h"
+#include "Engine/Gui/Internal/NavBar/GuiNavigationBar.h"
 
 #include "Game/Actor.h"
 #include "Graphics/Renderer.h"

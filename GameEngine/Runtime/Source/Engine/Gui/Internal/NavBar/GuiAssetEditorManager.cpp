@@ -1,4 +1,4 @@
-#include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
+#include "Engine/Gui/Internal/NavBar/GuiAssetEditorManager.h"
 
 #include <algorithm>
 #include <array>
@@ -9,10 +9,14 @@
 #include <iterator>
 #include <ranges>
 #include <string_view>
+#include <Engine/Gui/Internal/GuiLayoutManager.h>
 
 #include "Core/Logger.h"
-#include "Engine/Gui/Core/GuiManager.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+#include "Engine/Gui/Controllers/ActorEditorController.h"
+#include "Engine/Gui/Controllers/ComponentEditorController.h"
+#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/Internal/GuiModule.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Utils/EditorUtils.h"
 
 namespace BixEngine::Core
@@ -99,6 +103,7 @@ namespace BixEngine::Core
 
         if (layout == Gui::EditorLayoutType::ActorEditor)
             FocusPanel(panelToFocus);
+        
         else if (layout == Gui::EditorLayoutType::Scene)
             RequestSceneFocus();
     }

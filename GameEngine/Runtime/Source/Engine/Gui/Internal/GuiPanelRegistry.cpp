@@ -1,5 +1,5 @@
-﻿#include "Engine/Gui/Core/GuiPanelRegistry.h"
-#include "Engine/Gui/Core/GuiPanel.h"
+﻿#include "Engine/Gui/Internal/GuiPanelRegistry.h"
+#include "Engine/Gui/Internal/GuiPanel.h"
 
 namespace BixEngine::Gui
 {
