@@ -3,6 +3,8 @@
 #include "Graphics/Renderer.h"
 #include "Engine/Render/Texture.h"
 #include "SDL3/SDL_render.h"
+#include <algorithm>
+#include <cstdint>
 
 namespace BixEngine::Game
 {
@@ -11,9 +13,41 @@ namespace BixEngine::Game
         constexpr SDL_Color kDefaultSpriteColor{255, 255, 255, 255};
         constexpr float kDefaultSpriteWidth = 32.0f;
         constexpr float kDefaultSpriteHeight = 32.0f;
+
+        [[nodiscard]] SDL_Color CombineColor(SDL_Color base, SDL_Color tint, SDL_Color additive, SDL_Color emission) noexcept
+        {
+            auto combineChannel = [](uint8_t baseValue, uint8_t tintValue, uint8_t addValue, uint8_t emissionValue) -> uint8_t
+            {
+                const uint32_t multiplied = static_cast<uint32_t>(baseValue) * static_cast<uint32_t>(tintValue) / 255u;
+                const uint32_t withAdd = multiplied + addValue + emissionValue;
+                return static_cast<uint8_t>(std::min<uint32_t>(255u, withAdd));
+            };
+
+            SDL_Color result{};
+            result.r = combineChannel(base.r, tint.r, additive.r, emission.r);
+            result.g = combineChannel(base.g, tint.g, additive.g, emission.g);
+            result.b = combineChannel(base.b, tint.b, additive.b, emission.b);
+            result.a = static_cast<uint8_t>(std::min<uint32_t>(255u, static_cast<uint32_t>(base.a) * tint.a / 255u));
+            return result;
+        }
+
+        [[nodiscard]] SDL_FlipMode BuildFlipMode(bool flipX, bool flipY) noexcept
+        {
+            SDL_FlipMode mode = SDL_FLIP_NONE;
+            if (flipX)
+                mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_HORIZONTAL);
+            if (flipY)
+                mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_VERTICAL);
+            return mode;
+        }
     }
 
-    SpriteComponent::SpriteComponent(Actor* owner) : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight), uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
+    SpriteComponent::SpriteComponent(Actor* owner)
+        : Component(owner)
+        , color_(kDefaultSpriteColor)
+        , width_(kDefaultSpriteWidth)
+        , height_(kDefaultSpriteHeight)
+        , uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
     {
     }
 
@@ -21,20 +55,25 @@ namespace BixEngine::Game
     {
         auto pos = owner_->GetPosition();
 
-        SDL_FRect destRect{pos.x, pos.y, width_, height_};
+        SDL_FRect destRect{pos.x - pivot_.x * width_, pos.y - pivot_.y * height_, width_, height_};
 
         if (texture_ && texture_->GetNativeHandle())
         {
             SDL_Texture* sdlTexture = static_cast<SDL_Texture*>(texture_->GetNativeHandle());
-            SDL_SetTextureColorMod(sdlTexture, color_.r, color_.g, color_.b);
-            SDL_SetTextureAlphaMod(sdlTexture, color_.a);
+            SDL_SetTextureBlendMode(sdlTexture, blendMode_);
+
+            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_, emissionColor_);
+            SDL_SetTextureColorMod(sdlTexture, combined.r, combined.g, combined.b);
+            SDL_SetTextureAlphaMod(sdlTexture, combined.a);
 
             SDL_FRect srcRect{uvRect_.X, uvRect_.Y, uvRect_.Width, uvRect_.Height};
-            SDL_RenderTexture(renderer.GetSDLRenderer(), sdlTexture, &srcRect, &destRect);
+            SDL_FPoint center{pivot_.x * width_, pivot_.y * height_};
+            SDL_RenderTextureRotated(renderer.GetSDLRenderer(), sdlTexture, &srcRect, &destRect, 0.0, &center, BuildFlipMode(bFlipX_, bFlipY_));
         }
         else
         {
-            renderer.SetColor(color_.r, color_.g, color_.b, color_.a);
+            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_, emissionColor_);
+            renderer.SetColor(combined.r, combined.g, combined.b, combined.a);
             SDL_RenderFillRect(renderer.GetSDLRenderer(), &destRect);
         }
     }

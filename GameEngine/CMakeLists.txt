@@ -126,6 +126,9 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Utils/GuiHelpers.cpp
     Runtime/Source/Engine/Gui/Widgets/GuiWidgetLibrary.cpp
     Runtime/Source/Engine/Gui/Widgets/ActionTooltip.cpp
+    Runtime/Source/Engine/Render/SpriteAtlasUtils.cpp
+    Runtime/Source/Engine/Render/SpriteFramePool.cpp
+    Runtime/Source/Engine/Render/TextureManager.cpp
     Runtime/Source/Engine/Systems/Application.cpp
     Runtime/Source/Engine/Systems/RenderLoop.cpp
     Runtime/Source/Engine/Systems/SdlSystem.cpp
