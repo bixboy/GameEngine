@@ -11,7 +11,7 @@
 #include "Core/Math/Rect.h"
 #include "SDL3/SDL.h"
 #include "Reflection/ReflectionMacros.h"
-#include "SpriteComponent.generated.h"
+#include "SpriteAnimatorComponent.generated.h"
 
 
 namespace BixEngine::Game

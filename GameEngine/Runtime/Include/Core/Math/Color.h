@@ -1,6 +1,5 @@
 #pragma once
 #include <SDL3/SDL_pixels.h>
-
 #include "Core/Containers/String.h"
 
 namespace BixEngine::Math

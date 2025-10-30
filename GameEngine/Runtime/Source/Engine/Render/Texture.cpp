@@ -1,7 +1,8 @@
 #include "Engine/Render/Texture.h"
+
+#include "../../../../ThirdParty/SDL3_image/include/SDL3_image/SDL_image.h"
 #include "Core/Logger.h"
 #include "SDL3/SDL_render.h"
-#include "SDL3_image/SDL_image.h"
 
 
 BixEngine::Render::Texture::~Texture()

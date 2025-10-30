@@ -44,12 +44,8 @@ namespace BixEngine::Game
         }
     }
 
-    SpriteComponent::SpriteComponent(Actor* owner)
-        : Component(owner)
-        , color_(kDefaultSpriteColor)
-        , width_(kDefaultSpriteWidth)
-        , height_(kDefaultSpriteHeight)
-        , uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
+    SpriteComponent::SpriteComponent(Actor* owner): Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth),
+        height_(kDefaultSpriteHeight), uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
     {
     }
 

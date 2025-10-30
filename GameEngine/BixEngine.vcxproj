@@ -1536,6 +1536,7 @@
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Object.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Player.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Scene.generated.h" />
+    <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\SpriteAnimatorComponent.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\SpriteComponent.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\TestScene.generated.h" />
     <ClInclude Include="Runtime\Include\Core\Containers\String.h" />
