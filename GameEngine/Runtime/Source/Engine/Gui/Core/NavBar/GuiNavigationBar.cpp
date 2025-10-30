@@ -1,4 +1,7 @@
 ﻿#include "Engine/Gui/Core/NavBar/GuiNavigationBar.h"
+
+#include <string_view>
+
 #include "Engine/Gui/Core/GuiModule.h"
 #include "Engine/Gui/Core/NavBar/GuiAssetEditorManager.h"
 #include "Engine/Gui/Core/GuiSystem.h"

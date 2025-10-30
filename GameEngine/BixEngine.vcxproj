@@ -360,6 +360,7 @@
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Core\GuiLayoutManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Core\GuiManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>

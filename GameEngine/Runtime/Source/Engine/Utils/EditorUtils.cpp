@@ -9,7 +9,7 @@
     #include <windows.h>
 #endif
 
-namespace BixEngine::Utils
+namespace BixEngine::EditorUtils
 {
     namespace
     {

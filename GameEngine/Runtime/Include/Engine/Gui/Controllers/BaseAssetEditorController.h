@@ -10,6 +10,7 @@
 #include "Engine/Gui/Core/GuiLayoutManager.h"
 
 #include "imgui.h"
+#include "Engine/Gui/Core/GuiDocking.h"
 
 namespace BixEngine::Gui
 {

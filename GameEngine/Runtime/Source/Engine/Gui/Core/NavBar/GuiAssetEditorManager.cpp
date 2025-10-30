@@ -399,7 +399,7 @@ namespace BixEngine::Core
 
     std::string GuiAssetEditorManager::MakeNavigationId(const std::filesystem::path& path, std::string_view typeTag) const
     {
-        const std::string hash = std::format("{:x}", Utils::HashFNV1a(path.generic_string()));
+        const std::string hash = std::format("{:x}", EditorUtils::HashFNV1a(path.generic_string()));
         return std::format("asset_{}_{}", typeTag, hash);
     }
 }

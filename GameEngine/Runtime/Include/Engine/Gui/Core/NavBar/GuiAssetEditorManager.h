@@ -11,9 +11,7 @@
 #include <vector>
 
 #include "Core/Containers/String.h"
-#include "Engine/Gui/Controllers/ActorEditorController.h"
 #include "Engine/Gui/Controllers/BaseAssetEditorController.h"
-#include "Engine/Gui/Controllers/ComponentEditorController.h"
 #include "Engine/Gui/Core/GuiLayoutManager.h"
 
 namespace BixEngine::Gui

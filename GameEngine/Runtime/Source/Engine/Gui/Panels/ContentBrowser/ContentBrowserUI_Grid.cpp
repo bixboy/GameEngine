@@ -14,6 +14,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "Engine/Utils/EditorUtils.h"
+
 namespace BixEngine::Gui
 {
     using namespace Theme;
@@ -246,6 +248,7 @@ namespace BixEngine::Gui
                         std::vector<std::filesystem::path> filesToOpen{};
                         if (entry.HasHeader())
                             filesToOpen.push_back(entry.headerPath);
+                        
                         if (entry.HasSource())
                             filesToOpen.push_back(entry.sourcePath);
 
@@ -255,7 +258,7 @@ namespace BixEngine::Gui
                                 state.openScriptFilesCallback(filesToOpen);
 
                             for (const auto& scriptFile : filesToOpen)
-                                Utils::OpenFileInCodeEditor(scriptFile);
+                                EditorUtils::OpenFileInCodeEditor(scriptFile);
                         }
                     }
                     else if (entry.IsPrefab())
