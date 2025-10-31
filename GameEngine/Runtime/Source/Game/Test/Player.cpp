@@ -118,11 +118,14 @@ namespace BixEngine::Game
         // Lier le sprite à l’animator
         animatorComponent_->AddSpriteLayer(spriteComponent_);
 
+        SpriteAnimatorComponent::SpriteSheetConfig sheet{};
+        sheet.TexturePath = "../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png";
+        sheet.Columns = 4;
+        sheet.Rows = 1;
+        animatorComponent_->SetSpriteSheet(std::move(sheet));
+
         SpriteAnimatorComponent::SpriteAnimationClipConfig idleClip{};
         idleClip.Name = "Idle";
-        idleClip.TexturePath = "../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png";
-        idleClip.Columns = 4;
-        idleClip.Rows = 1;
         idleClip.FrameCount = 4;
         idleClip.FrameRate = 8.0f;
         idleClip.bLoop = true;

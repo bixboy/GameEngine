@@ -30,44 +30,65 @@ namespace BixEngine::Game
 
     namespace
     {
-        bool EditStringField(const char* label, String& value)
+        bool EditStringField(const char* label, String& value, bool* committed = nullptr)
         {
             std::array<char, 512> buffer{};
             const std::string_view current = value.View();
             const std::size_t copyLength = std::min(buffer.size() - 1, current.size());
             std::memcpy(buffer.data(), current.data(), copyLength);
             buffer[copyLength] = '\0';
-            if (ImGui::InputText(label, buffer.data(), buffer.size()))
+            const bool edited = ImGui::InputText(label, buffer.data(), buffer.size());
+            const bool commit = ImGui::IsItemDeactivatedAfterEdit();
+
+            if (edited)
             {
                 value = buffer.data();
-                return true;
             }
 
-            return false;
+            if (committed)
+            {
+                *committed = commit;
+            }
+
+            return edited;
         }
 
-        bool EditIntegerField(const char* label, int& value, int minValue = 0)
+        bool EditIntegerField(const char* label, int& value, int minValue = 0, bool* committed = nullptr)
         {
             int temp = value;
-            if (ImGui::InputInt(label, &temp))
+            const bool edited = ImGui::InputInt(label, &temp);
+            const bool commit = ImGui::IsItemDeactivatedAfterEdit();
+
+            if (edited)
             {
                 value = std::max(temp, minValue);
-                return true;
             }
 
-            return false;
+            if (committed)
+            {
+                *committed = commit;
+            }
+
+            return edited;
         }
 
-        bool EditFloatField(const char* label, float& value, float minValue = 0.0f)
+        bool EditFloatField(const char* label, float& value, float minValue = 0.0f, bool* committed = nullptr)
         {
             float temp = value;
-            if (ImGui::InputFloat(label, &temp))
+            const bool edited = ImGui::InputFloat(label, &temp);
+            const bool commit = ImGui::IsItemDeactivatedAfterEdit();
+
+            if (edited)
             {
                 value = std::max(temp, minValue);
-                return true;
             }
 
-            return false;
+            if (committed)
+            {
+                *committed = commit;
+            }
+
+            return edited;
         }
     }
 
@@ -90,11 +111,25 @@ namespace BixEngine::Game
             }
         }
 
+        if (clipConfigsDirty_)
+        {
+            ReloadAnimations();
+        }
+        else
+        {
+            TryAutoPlay();
+        }
+
         EvaluateStateMachine();
     }
 
     void SpriteAnimatorComponent::Update(float deltaTime)
     {
+        if (clipConfigsDirty_)
+        {
+            ReloadAnimations();
+        }
+
         const float dt = deltaTimeOverride_.has_value() ? deltaTimeOverride_.value() : deltaTime;
         primaryAnimator_.Update(deltaTime, deltaTimeOverride_);
         if (bBlending_)
@@ -316,21 +351,25 @@ namespace BixEngine::Game
         AddSpriteLayer(sprite);
     }
 
+    void SpriteAnimatorComponent::SetSpriteSheet(SpriteSheetConfig sheetConfig)
+    {
+        sheetConfig_.TexturePath = std::move(sheetConfig.TexturePath);
+        sheetConfig_.Columns = std::max(sheetConfig.Columns, 1);
+        sheetConfig_.Rows = std::max(sheetConfig.Rows, 1);
+        sheetConfig_.Padding = std::max(sheetConfig.Padding, 0);
+        sheetConfig_.Margin = std::max(sheetConfig.Margin, 0);
+
+        clipConfigsDirty_ = true;
+        clipBuildFailed_ = false;
+        ReloadAnimations();
+    }
+
     void SpriteAnimatorComponent::SetClips(std::vector<SpriteAnimationClipConfig> clips)
     {
         clipConfigs_ = std::move(clips);
-        if (clipConfigs_.empty())
-        {
-            clipConfigs_.push_back({});
-            clipConfigs_.front().Name = "Animation";
-        }
-
-        if (initialClipName_.IsEmpty())
-        {
-            initialClipName_ = clipConfigs_.front().Name;
-        }
-
+        EnsureDefaultClip();
         clipConfigsDirty_ = true;
+        clipBuildFailed_ = false;
         ReloadAnimations();
     }
 
@@ -363,37 +402,11 @@ namespace BixEngine::Game
             return;
         }
 
-        primaryAnimator_ = Render::SpriteAnimator();
-        blendAnimator_ = Render::SpriteAnimator();
-        activeState_.Clear();
-        queuedState_.Clear();
-        bBlending_ = false;
-        blendTimer_ = 0.0f;
-        blendDuration_ = 0.0f;
-        lastFrameIndex_ = std::numeric_limits<size_t>::max();
-        wasPlaying_ = false;
-
-        bool anyBuilt = false;
-        for (const auto& clip : clipConfigs_)
-        {
-            if (clip.TexturePath.IsEmpty() || clip.Name.IsEmpty())
-            {
-                continue;
-            }
-
-            const bool built = BuildAnimationFromClip(clip, sdlRenderer);
-            if (!built)
-            {
-                continue;
-            }
-
-            // BuildAnimationFromClip adds the animation directly to the animators.
-            anyBuilt = true;
-        }
-
+        const bool rebuilt = RebuildAnimations(sdlRenderer);
+        clipBuildFailed_ = !rebuilt;
         clipConfigsDirty_ = false;
 
-        if (anyBuilt)
+        if (rebuilt)
         {
             TryAutoPlay();
         }
@@ -401,20 +414,86 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::DrawInspectorUI()
     {
-        bool modified = false;
-
         bool autoPlay = bAutoPlayOnLoad_;
         if (ImGui::Checkbox("Auto-play on load", &autoPlay))
         {
             SetAutoPlay(autoPlay);
-            modified = true;
         }
 
         String initialClipCopy = initialClipName_;
-        if (EditStringField("Initial clip", initialClipCopy))
+        bool initialClipCommitted = false;
+        if (EditStringField("Initial clip", initialClipCopy, &initialClipCommitted))
         {
             SetInitialClip(initialClipCopy);
-            modified = true;
+            if (initialClipCommitted && primaryAnimator_.HasAnimation(initialClipName_))
+            {
+                Play(initialClipName_);
+            }
+        }
+
+        ImGui::Separator();
+
+        bool sheetCommitted = false;
+        if (EditStringField("Texture path", sheetConfig_.TexturePath, &sheetCommitted))
+        {
+            if (sheetCommitted)
+            {
+                clipBuildFailed_ = false;
+                clipConfigsDirty_ = true;
+                ReloadAnimations();
+            }
+        }
+
+        int columns = sheetConfig_.Columns;
+        bool columnsCommitted = false;
+        if (EditIntegerField("Columns", columns, 1, &columnsCommitted))
+        {
+            sheetConfig_.Columns = columns;
+            if (columnsCommitted)
+            {
+                clipBuildFailed_ = false;
+                clipConfigsDirty_ = true;
+                ReloadAnimations();
+            }
+        }
+
+        int rows = sheetConfig_.Rows;
+        bool rowsCommitted = false;
+        if (EditIntegerField("Rows", rows, 1, &rowsCommitted))
+        {
+            sheetConfig_.Rows = rows;
+            if (rowsCommitted)
+            {
+                clipBuildFailed_ = false;
+                clipConfigsDirty_ = true;
+                ReloadAnimations();
+            }
+        }
+
+        int padding = sheetConfig_.Padding;
+        bool paddingCommitted = false;
+        if (EditIntegerField("Padding", padding, 0, &paddingCommitted))
+        {
+            sheetConfig_.Padding = padding;
+            if (paddingCommitted)
+            {
+                clipBuildFailed_ = false;
+                clipConfigsDirty_ = true;
+                ReloadAnimations();
+            }
+        }
+
+        int margin = sheetConfig_.Margin;
+        bool marginCommitted = false;
+        if (EditIntegerField("Margin", margin, 0, &marginCommitted))
+        {
+            sheetConfig_.Margin = margin;
+            if (marginCommitted)
+            {
+                clipBuildFailed_ = false;
+                clipConfigsDirty_ = true;
+                ReloadAnimations();
+            }
         }
 
         ImGui::Separator();
@@ -427,18 +506,66 @@ namespace BixEngine::Game
             const std::string headerLabel = clip.Name.IsEmpty() ? ("Clip " + std::to_string(index + 1)) : clip.Name.Std();
             if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
             {
-                modified |= EditStringField("Name", clip.Name);
-                modified |= EditStringField("Texture path", clip.TexturePath);
-                modified |= EditIntegerField("Columns", clip.Columns, 1);
-                modified |= EditIntegerField("Rows", clip.Rows, 1);
-                modified |= EditIntegerField("Start frame", clip.StartFrame, 0);
-                modified |= EditIntegerField("Frame count", clip.FrameCount, 0);
-                modified |= EditIntegerField("Padding", clip.Padding, 0);
-                modified |= EditIntegerField("Margin", clip.Margin, 0);
-                modified |= EditFloatField("Frame rate", clip.FrameRate, 1.0f);
+                const String previousName = clip.Name;
+                bool nameCommitted = false;
+                if (EditStringField("Name", clip.Name, &nameCommitted))
+                {
+                    if (nameCommitted)
+                    {
+                        if (initialClipName_ == previousName)
+                        {
+                            SetInitialClip(clip.Name);
+                        }
+                        clipBuildFailed_ = false;
+                        clipConfigsDirty_ = true;
+                        ReloadAnimations();
+                    }
+                }
+
+                int startFrame = clip.StartFrame;
+                bool startCommitted = false;
+                if (EditIntegerField("Start frame", startFrame, 0, &startCommitted))
+                {
+                    clip.StartFrame = startFrame;
+                    if (startCommitted)
+                    {
+                        clipBuildFailed_ = false;
+                        clipConfigsDirty_ = true;
+                        ReloadAnimations();
+                    }
+                }
+
+                int frameCount = clip.FrameCount;
+                bool countCommitted = false;
+                if (EditIntegerField("Frame count", frameCount, 0, &countCommitted))
+                {
+                    clip.FrameCount = frameCount;
+                    if (countCommitted)
+                    {
+                        clipBuildFailed_ = false;
+                        clipConfigsDirty_ = true;
+                        ReloadAnimations();
+                    }
+                }
+
+                float frameRate = clip.FrameRate;
+                bool rateCommitted = false;
+                if (EditFloatField("Frame rate", frameRate, 1.0f, &rateCommitted))
+                {
+                    clip.FrameRate = frameRate;
+                    if (rateCommitted)
+                    {
+                        clipBuildFailed_ = false;
+                        clipConfigsDirty_ = true;
+                        ReloadAnimations();
+                    }
+                }
+
                 if (ImGui::Checkbox("Loop", &clip.bLoop))
                 {
-                    modified = true;
+                    clipBuildFailed_ = false;
+                    clipConfigsDirty_ = true;
+                    ReloadAnimations();
                 }
 
                 if (ImGui::Button("Remove clip"))
@@ -452,8 +579,22 @@ namespace BixEngine::Game
 
         if (clipToRemove >= 0 && clipToRemove < static_cast<int>(clipConfigs_.size()))
         {
+            const String removedName = clipConfigs_[clipToRemove].Name;
             clipConfigs_.erase(clipConfigs_.begin() + clipToRemove);
-            modified = true;
+            clipBuildFailed_ = false;
+            clipConfigsDirty_ = true;
+            if (initialClipName_ == removedName)
+            {
+                if (!clipConfigs_.empty())
+                {
+                    SetInitialClip(clipConfigs_.front().Name);
+                }
+                else
+                {
+                    initialClipName_.Clear();
+                }
+            }
+            ReloadAnimations();
         }
 
         if (ImGui::Button("Add clip"))
@@ -461,46 +602,22 @@ namespace BixEngine::Game
             SpriteAnimationClipConfig clip{};
             clip.Name = String{"Animation"} + String{std::to_string(static_cast<int>(clipConfigs_.size()) + 1)};
             clipConfigs_.push_back(std::move(clip));
-            modified = true;
-        }
-
-        if (modified)
-        {
+            clipBuildFailed_ = false;
             clipConfigsDirty_ = true;
-        }
-
-        ImGui::BeginDisabled(!clipConfigsDirty_);
-        if (ImGui::Button("Apply animation changes"))
-        {
             ReloadAnimations();
         }
-        ImGui::EndDisabled();
+
+        if (clipBuildFailed_)
+        {
+            ImGui::TextWrapped("Unable to rebuild animations with the current settings. Check the sheet path and frame range.");
+        }
     }
 
-    bool SpriteAnimatorComponent::BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig, SDL_Renderer* sdlRenderer)
+    bool SpriteAnimatorComponent::BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig,
+                                                        const std::vector<Render::SpriteFrame>& frames)
     {
-        if (!sdlRenderer)
-        {
-            return false;
-        }
-
-        Render::TextureManager& textureManager = Render::TextureManager::Get();
-        auto texture = textureManager.LoadTexture(clipConfig.TexturePath, sdlRenderer);
-        if (!texture)
-        {
-            LOG_ERROR(String{"[SpriteAnimatorComponent] Failed to load texture: "} + clipConfig.TexturePath);
-            return false;
-        }
-
-        const int columns = std::max(clipConfig.Columns, 1);
-        const int rows = std::max(clipConfig.Rows, 1);
-        const int padding = std::max(clipConfig.Padding, 0);
-        const int margin = std::max(clipConfig.Margin, 0);
-
-        std::vector<Render::SpriteFrame> frames = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*texture, columns, rows, padding, margin);
         if (frames.empty())
         {
-            LOG_ERROR(String{"[SpriteAnimatorComponent] No frames generated for clip: "} + clipConfig.Name);
             return false;
         }
 
@@ -510,7 +627,6 @@ namespace BixEngine::Game
         frameCount = std::clamp(frameCount, 0, totalFrames - safeStart);
         if (frameCount == 0)
         {
-            LOG_ERROR(String{"[SpriteAnimatorComponent] Invalid frame range for clip: "} + clipConfig.Name);
             return false;
         }
 
@@ -526,6 +642,101 @@ namespace BixEngine::Game
 
         AddAnimation(animation);
         return true;
+    }
+
+    void SpriteAnimatorComponent::EnsureDefaultClip()
+    {
+        if (clipConfigs_.empty())
+        {
+            SpriteAnimationClipConfig clip{};
+            clip.Name = "Animation";
+            clipConfigs_.push_back(std::move(clip));
+        }
+
+        int clipIndex = 1;
+        for (auto& clip : clipConfigs_)
+        {
+            if (clip.Name.IsEmpty())
+            {
+                clip.Name = String{"Animation"} + String{std::to_string(clipIndex)};
+            }
+            ++clipIndex;
+        }
+
+        if (initialClipName_.IsEmpty() && !clipConfigs_.empty())
+        {
+            initialClipName_ = clipConfigs_.front().Name;
+        }
+    }
+
+    bool SpriteAnimatorComponent::RebuildAnimations(SDL_Renderer* sdlRenderer)
+    {
+        if (!sdlRenderer)
+        {
+            return false;
+        }
+
+        if (sheetConfig_.TexturePath.IsEmpty())
+        {
+            return false;
+        }
+
+        Render::TextureManager& textureManager = Render::TextureManager::Get();
+        auto texture = textureManager.LoadTexture(sheetConfig_.TexturePath, sdlRenderer);
+        if (!texture)
+        {
+            LOG_ERROR(String{"[SpriteAnimatorComponent] Failed to load texture: "} + sheetConfig_.TexturePath);
+            return false;
+        }
+
+        const int columns = std::max(sheetConfig_.Columns, 1);
+        const int rows = std::max(sheetConfig_.Rows, 1);
+        const int padding = std::max(sheetConfig_.Padding, 0);
+        const int margin = std::max(sheetConfig_.Margin, 0);
+
+        std::vector<Render::SpriteFrame> frames = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*texture, columns, rows, padding, margin);
+        if (frames.empty())
+        {
+            LOG_ERROR(String{"[SpriteAnimatorComponent] No frames generated for sheet: "} + sheetConfig_.TexturePath);
+            return false;
+        }
+
+        EnsureDefaultClip();
+
+        primaryAnimator_ = Render::SpriteAnimator();
+        blendAnimator_ = Render::SpriteAnimator();
+        activeState_.Clear();
+        queuedState_.Clear();
+        bBlending_ = false;
+        blendTimer_ = 0.0f;
+        blendDuration_ = 0.0f;
+        lastFrameIndex_ = std::numeric_limits<size_t>::max();
+        wasPlaying_ = false;
+
+        bool anyBuilt = false;
+        for (const auto& clip : clipConfigs_)
+        {
+            if (clip.Name.IsEmpty())
+            {
+                continue;
+            }
+
+            const bool built = BuildAnimationFromClip(clip, frames);
+            if (built)
+            {
+                anyBuilt = true;
+            }
+        }
+
+        if (anyBuilt)
+        {
+            if (initialClipName_.IsEmpty() || !primaryAnimator_.HasAnimation(initialClipName_))
+            {
+                initialClipName_ = clipConfigs_.front().Name;
+            }
+        }
+
+        return anyBuilt;
     }
 
     void SpriteAnimatorComponent::ApplyFrame(SpriteBinding& binding, const Render::SpriteFrame* frame, float alphaWeight)

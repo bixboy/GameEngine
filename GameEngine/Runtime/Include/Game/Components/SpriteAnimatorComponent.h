@@ -28,16 +28,20 @@ namespace BixEngine::Game
         std::function<bool(const SpriteAnimatorComponent&)> Condition;
     };
 
-    struct SpriteAnimationClipConfig
+    struct SpriteSheetConfig
     {
-        String Name{"Animation"};
         String TexturePath{};
         int Columns = 1;
         int Rows = 1;
-        int StartFrame = 0;
-        int FrameCount = 0;
         int Padding = 0;
         int Margin = 0;
+    };
+
+    struct SpriteAnimationClipConfig
+    {
+        String Name{"Animation"};
+        int StartFrame = 0;
+        int FrameCount = 0;
         float FrameRate = 12.0f;
         bool bLoop = true;
     };
@@ -85,7 +89,9 @@ namespace BixEngine::Game
 
         void SetTargetSprite(SpriteComponent* sprite) noexcept;
 
+        void SetSpriteSheet(SpriteSheetConfig sheetConfig);
         void SetClips(std::vector<SpriteAnimationClipConfig> clips);
+        [[nodiscard]] const SpriteSheetConfig& GetSpriteSheet() const noexcept { return sheetConfig_; }
         void SetInitialClip(String clipName) noexcept;
         void SetAutoPlay(bool enabled) noexcept;
         [[nodiscard]] bool IsAutoPlayEnabled() const noexcept { return bAutoPlayOnLoad_; }
@@ -109,7 +115,10 @@ namespace BixEngine::Game
         void UpdateDebugWindow();
         void TryAutoPlay();
 
-        bool BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig, SDL_Renderer* sdlRenderer);
+        bool BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig,
+                                    const std::vector<Render::SpriteFrame>& frames);
+        void EnsureDefaultClip();
+        bool RebuildAnimations(SDL_Renderer* sdlRenderer);
 
         Render::SpriteAnimator primaryAnimator_;
         Render::SpriteAnimator blendAnimator_;
@@ -131,8 +140,10 @@ namespace BixEngine::Game
 
         bool bDebugMode_ = false;
 
+        SpriteSheetConfig sheetConfig_{};
         std::vector<SpriteAnimationClipConfig> clipConfigs_;
         bool clipConfigsDirty_ = false;
+        bool clipBuildFailed_ = false;
         String initialClipName_{"Animation"};
         bool bAutoPlayOnLoad_ = true;
     
