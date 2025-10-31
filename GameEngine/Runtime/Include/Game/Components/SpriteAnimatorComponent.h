@@ -3,8 +3,8 @@
 #include "Game/Components/SpriteComponent.h"
 #include "Engine/Render/TextureManager.h"
 #include "Reflection/ReflectionMacros.h"
+#include "Engine/Render/SpriteFrame.h"
 #include <vector>
-#include <memory>
 #include "SpriteAnimatorComponent.generated.h"
 
 
@@ -20,7 +20,7 @@ namespace BixEngine::Game
 
         void BeginPlay() override;
         void Update(float deltaTime) override;
-
+        
         void LoadSpriteSheet(const String& texturePath, int columns, int rows, float frameRate = 8.f, bool loop = true);
 
         void Play();
@@ -29,9 +29,7 @@ namespace BixEngine::Game
         [[nodiscard]] bool IsPlaying() const noexcept { return bPlaying_; }
 
     private:
-        std::shared_ptr<Render::Texture> texture_;
         std::vector<Render::SpriteFrame> frames_;
-
         int totalFrames_ = 0;
         int currentFrame_ = 0;
         float frameRate_ = 8.f;

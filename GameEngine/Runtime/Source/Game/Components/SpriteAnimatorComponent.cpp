@@ -1,7 +1,7 @@
 #include "Game/Components/SpriteAnimatorComponent.h"
-#include "Graphics/Renderer.h"
 #include "Core/Logger.h"
 #include "Engine/Render/SpriteAtlasUtils.h"
+#include "Graphics/Renderer.h"
 #include "Game/Actor.h"
 
 namespace BixEngine::Game
@@ -13,6 +13,12 @@ namespace BixEngine::Game
     void SpriteAnimatorComponent::BeginPlay()
     {
         SpriteComponent::BeginPlay();
+
+        if (!frames_.empty())
+        {
+            SetTexture(frames_[0].GetTexture());
+            SetUVRect(frames_[0].GetUVRect());
+        }
     }
 
     void SpriteAnimatorComponent::Update(float deltaTime)
@@ -47,16 +53,15 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::LoadSpriteSheet(const String& texturePath, int columns, int rows, float frameRate, bool loop)
     {
-        texture_ = Render::TextureManager::Get().LoadTexture(
-            texturePath, Graphics::Renderer::Get()->GetSDLRenderer());
+        auto texture = Render::TextureManager::Get().LoadTexture(texturePath, Graphics::Renderer::Get()->GetSDLRenderer());
 
-        if (!texture_)
+        if (!texture)
         {
             LOG_ERROR("❌ Failed to load spritesheet: " + texturePath);
             return;
         }
 
-        frames_ = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*texture_, columns, rows, 0, 0);
+        frames_ = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*texture, columns, rows);
         totalFrames_ = static_cast<int>(frames_.size());
         frameRate_ = frameRate;
         bLoop_ = loop;
@@ -67,7 +72,7 @@ namespace BixEngine::Game
             SetUVRect(frames_[0].GetUVRect());
         }
 
-        LOG_INFO("Loaded " + String(std::to_string(totalFrames_)) + " frames from " + texturePath);
+        LOG_INFO("✅ Loaded " + String(std::to_string(totalFrames_)) + " frames from " + texturePath);
     }
 
     void SpriteAnimatorComponent::Play()
