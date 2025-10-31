@@ -63,6 +63,7 @@
     <BixEngineSDL3Root Condition="'$(BixEngineSDL3Root)' == ''">$(BixEngineThirdParty)$(BixEngineSDL3Version)\</BixEngineSDL3Root>
     <BixEngineSDL3Include Condition="'$(SDL3_INCLUDE_DIR)' != ''">$(SDL3_INCLUDE_DIR)</BixEngineSDL3Include>
     <BixEngineSDL3Include Condition="'$(BixEngineSDL3Include)' == '' and Exists('$(BixEngineSDL3Root)include')">$(BixEngineSDL3Root)include</BixEngineSDL3Include>
+    <BixEngineSDL3Include Condition="'$(BixEngineSDL3Include)' == ''">$(BixEngineSDL3Root)include</BixEngineSDL3Include>
     <BixEngineSDL3Lib Condition="'$(SDL3_LIB_DIR)' != ''">$(SDL3_LIB_DIR)</BixEngineSDL3Lib>
     <BixEngineSDL3Lib Condition="'$(BixEngineSDL3Lib)' == '' and Exists('$(BixEngineSDL3Root)lib\\$(Platform)')">$(BixEngineSDL3Root)lib\$(Platform)</BixEngineSDL3Lib>
     <BixEngineSDL3Lib Condition="'$(BixEngineSDL3Lib)' == '' and '$(Platform)' == 'Win32' and Exists('$(BixEngineSDL3Root)lib\\x86')">$(BixEngineSDL3Root)lib\x86</BixEngineSDL3Lib>
@@ -73,6 +74,11 @@
     <IntDir>$(ProjectDir)Build\Intermediate\$(Platform)\$(Configuration)\</IntDir>
     <LowercaseConfiguration>$([System.String]::Copy('$(Configuration)').ToLowerInvariant())</LowercaseConfiguration>
     <GeneratedHeadersAdditionalIncludeDirs>$(ProjectDir)Build\$(Platform)\$(Configuration)\Intermediate\GeneratedHeaders;$(ProjectDir)Build\$(Platform)\$(LowercaseConfiguration)\Intermediate\GeneratedHeaders;$(ProjectDir)Build\windows\$(Platform)\$(Configuration)\Intermediate\GeneratedHeaders;$(ProjectDir)Build\windows\$(Platform)\$(LowercaseConfiguration)\Intermediate\GeneratedHeaders</GeneratedHeadersAdditionalIncludeDirs>
+    <BixEngineSDL3ImageRoot Condition="'$(SDL3_IMAGE_DIR)' != ''">$(SDL3_IMAGE_DIR)\</BixEngineSDL3ImageRoot>
+    <BixEngineSDL3ImageRoot Condition="'$(BixEngineSDL3ImageRoot)' == ''">$(BixEngineThirdParty)SDL3_image\</BixEngineSDL3ImageRoot>
+    <BixEngineSDL3ImageInclude Condition="Exists('$(BixEngineSDL3ImageRoot)include\\SDL3_image')">$(BixEngineSDL3ImageRoot)include\SDL3_image</BixEngineSDL3ImageInclude>
+    <BixEngineSDL3ImageInclude Condition="'$(BixEngineSDL3ImageInclude)' == ''">$(BixEngineThirdParty)SDL3_image\include\SDL3_image</BixEngineSDL3ImageInclude>
+    <BixEngineCommonIncludeDirs>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineSDL3ImageInclude);$(BixEngineThirdParty);$(BixEngineThirdParty)stb;$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends</BixEngineCommonIncludeDirs>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
@@ -96,7 +102,7 @@
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -117,20 +123,7 @@
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>
-        $(GeneratedHeadersAdditionalIncludeDirs);
-        $(ProjectDir)Runtime\Include;
-        $(ProjectDir)Runtime\Source\Core\Private;
-        $(ProjectDir)Runtime\Source\Game\Private;
-        $(ProjectDir)Runtime\Source\Graphics\Private;
-        $(ProjectDir)Runtime\Source\Input\Private;
-        $(ProjectDir)Runtime\Source\Math\Private;
-        $(BixEngineSDL3Include);
-        $(BixEngineThirdParty)ImGui;
-        $(BixEngineThirdParty)ImGui\backends;
-        $(ProjectDir)Build\$(Configuration)\$(Platform)\Intermediate\GeneratedHeaders;
-        %(AdditionalIncludeDirectories)
-      </AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <SupportJustMyCode>false</SupportJustMyCode>
       <AdditionalOptions>/FS %(AdditionalOptions)</AdditionalOptions>
@@ -153,7 +146,7 @@
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -176,7 +169,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)Runtime\Include;$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;$(GeneratedHeadersAdditionalIncludeDirs);$(BixEngineSDL3Include);$(BixEngineThirdParty)ImGui;$(BixEngineThirdParty)ImGui\backends;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);$(ProjectDir)Runtime\Source\Core\Private;$(ProjectDir)Runtime\Source\Game\Private;$(ProjectDir)Runtime\Source\Graphics\Private;$(ProjectDir)Runtime\Source\Input\Private;$(ProjectDir)Runtime\Source\Math\Private;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -266,7 +259,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -356,7 +349,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -436,7 +429,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -516,7 +509,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -596,7 +589,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -676,7 +669,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -756,7 +749,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -836,7 +829,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -916,7 +909,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1015,7 +1008,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\App\CustomEngine\GameEngine\Runtime\Include;C:\App\CustomEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\App\CustomEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui;C:\App\CustomEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1099,7 +1092,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1177,7 +1170,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1259,7 +1252,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1340,7 +1333,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
@@ -1425,7 +1418,7 @@
       <EnablePREfast>false</EnablePREfast>
       <OmitFramePointers>false</OmitFramePointers>
       <SDLCheck>true</SDLCheck>
-      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(BixEngineCommonIncludeDirs);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>

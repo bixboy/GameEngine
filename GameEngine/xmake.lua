@@ -73,6 +73,36 @@ local mode = get_config("mode") or "debug"
 
 local generated_dir = path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
 
+-- ────────────────────────────────────────────────────────────────
+-- 📚 Include directories (shared between the engine and executables)
+--   * Runtime/Include                  → public engine headers
+--   * ThirdParty                       → header-only libraries (nlohmann/json, etc.)
+--   * ThirdParty/ImGui (+ backends)    → ImGui sources
+--   * ThirdParty/stb                   → stb_image & stb_image_write
+--   * Generated headers                → reflection output (per platform/config)
+--   * SDL3 / SDL3_image                → SDKs detected above (if available)
+--
+--  The table is filtered to avoid empty strings so Rider/MSBuild receive
+--  a clean list with no duplicate or dangling separators.
+-- ────────────────────────────────────────────────────────────────
+local engine_public_includes = {
+    "Runtime/Include",
+    "ThirdParty",
+    "ThirdParty/ImGui",
+    "ThirdParty/ImGui/backends",
+    "ThirdParty/stb",
+    generated_dir
+}
+
+local function push_if_dir(list, value)
+    if value and value ~= "" then
+        table.insert(list, value)
+    end
+end
+
+push_if_dir(engine_public_includes, sdl3_inc)
+push_if_dir(engine_public_includes, sdl3_image_inc)
+
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║ 🔨 Target: BixHeaderTool                                     ║
 -- ╚══════════════════════════════════════════════════════════════╝
@@ -195,17 +225,14 @@ target("BixEngine")
     add_deps("BixHeaderTool", "GenerateHeaders")
 
     add_files("Runtime/Source/**.cpp")
-    add_includedirs("Runtime/Include", { public = true })
+    add_includedirs(engine_public_includes, { public = true })
     add_includedirs("Runtime/Source")
 
     -- 🧩 ImGui
     add_files("ThirdParty/ImGui/*.cpp")
     add_files("ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp")
     add_files("ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp")
-    add_includedirs("ThirdParty/ImGui", "ThirdParty/ImGui/backends", { public = true })
 
-    -- 🧩 SDL3 + SDL3_image + Generated
-    add_includedirs(sdl3_inc, sdl3_image_inc, generated_dir, { public = true })
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
@@ -219,7 +246,7 @@ target("BixRun")
     add_files("BixRun/main.cpp")
     add_deps("BixEngine")
 
-    add_includedirs("Runtime/Include", sdl3_inc, sdl3_image_inc, generated_dir)
+    add_includedirs(engine_public_includes)
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
     
