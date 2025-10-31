@@ -5,6 +5,8 @@
 #include <memory>
 #include <utility>
 
+#include "Core/Logger.h"
+
 
 namespace BixEngine::Game
 {
@@ -22,16 +24,15 @@ namespace BixEngine::Game
     {
         for (auto& c : components_)
             c->BeginPlay();
-
         
     }
 
     void Actor::Update(float deltaTime)
     {
+        LOG_INFO("Reloading EmptyScene...");
+        
         if (!active_)
-        {
             return;
-        }
 
         if (!has_begun_play_)
         {

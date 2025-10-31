@@ -4,7 +4,7 @@
 #include <fstream>
 #include <sstream>
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     namespace
     {

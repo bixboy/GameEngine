@@ -30,8 +30,8 @@ namespace BixEngine::Game
         [[nodiscard]] bool IsPlaying() const noexcept { return bPlaying_; }
 
     private:
-        std::vector<Render::SpriteFrame> frames_;
-        std::shared_ptr<Render::Texture> loadedTexture_{};
+        std::vector<Ressources::SpriteFrame> frames_;
+        std::shared_ptr<Ressources::Texture> loadedTexture_{};
         int totalFrames_ = 0;
         int currentFrame_ = 0;
         float frameRate_ = 8.f;

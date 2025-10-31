@@ -5,7 +5,7 @@
 #include "Engine/Render/Texture.h"
 
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
 
     struct SpriteFrameData

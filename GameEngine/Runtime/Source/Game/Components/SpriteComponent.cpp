@@ -78,7 +78,7 @@ namespace BixEngine::Game
         }
     }
 
-    void SpriteComponent::ApplyFrame(const Render::SpriteFrame* frame, SDL_Color baseTint, float alpha)
+    void SpriteComponent::ApplyFrame(const Ressources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
     {
         if (!frame || !frame->handle)
         {
@@ -95,7 +95,7 @@ namespace BixEngine::Game
         SetTint(tint);
     }
 
-    void SpriteComponent::SetTexture(Render::Texture* texture) noexcept
+    void SpriteComponent::SetTexture(Ressources::Texture* texture) noexcept
     {
         texture_ = texture;
 

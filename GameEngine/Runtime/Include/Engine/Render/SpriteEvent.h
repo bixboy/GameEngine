@@ -4,7 +4,7 @@
 
 #include "Core/Containers/String.h"
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
 
     struct SpriteEvent

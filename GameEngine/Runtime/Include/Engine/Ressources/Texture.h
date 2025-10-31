@@ -3,7 +3,7 @@
 #include "Core/Containers/String.h"
 #include "SDL3/SDL_render.h"
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     enum class TextureFormat
     {

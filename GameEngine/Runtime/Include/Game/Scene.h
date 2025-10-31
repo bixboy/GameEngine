@@ -104,8 +104,10 @@ namespace BixEngine
             {
                 static_assert(std::is_base_of_v<Actor, T>, "T must derive from Actor");
                 for (auto& a : actors_)
+                {
                     if (auto* ptr = dynamic_cast<T*>(a.get()))
-                        return ptr;
+                        return ptr;   
+                }
                 
                 return nullptr;
             }

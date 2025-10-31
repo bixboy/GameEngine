@@ -104,6 +104,16 @@ namespace BixTool
         // --------------------------
         oss << "#define GENERATED_BODY() \\\n";
         oss << "public: \\\n";
+        if (!baseScoped.empty())
+        {
+            oss << "    using SuperClassType = " << baseScoped << "; \\\n";
+            oss << "    using Super = SuperClassType; \\\n";
+        }
+        else
+        {
+            oss << "    using SuperClassType = void; \\\n";
+        }
+        
         if (hasRegisteredRoot)
         {
             oss << "    using __BixReflection_RootTag = ::Bix::Reflection::detail::RootTag<" << *rootIndexForClass

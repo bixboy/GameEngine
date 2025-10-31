@@ -10,7 +10,7 @@
 #include "Engine/Render/SpriteEvent.h"
 #include "Engine/Render/SpriteFrame.h"
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     /**
      * @brief Describes the playback direction of a sprite animation.

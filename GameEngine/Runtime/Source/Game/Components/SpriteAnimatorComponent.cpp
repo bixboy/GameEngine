@@ -40,6 +40,8 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::Update(float deltaTime)
     {
+        Super::Update(deltaTime);
+        
         if (!bPlaying_ || frames_.empty())
             return;
 
@@ -100,7 +102,7 @@ namespace BixEngine::Game
             return;
         }
 
-        loadedTexture_ = Render::TextureManager::Get().LoadTexture(texturePath, renderer->GetSDLRenderer());
+        loadedTexture_ = Ressources::TextureManager::Get().LoadTexture(texturePath, renderer->GetSDLRenderer());
         if (!loadedTexture_)
         {
             LOG_ERROR("❌ Failed to load spritesheet: " + texturePath);
@@ -112,28 +114,28 @@ namespace BixEngine::Game
         }
 
         const String atlasId = BuildAtlasId(texturePath, columns, rows);
-        std::vector<Render::SpriteFrame> cached = Render::TextureManager::Get().GetCachedAtlas(atlasId);
+        std::vector<Ressources::SpriteFrame> cached = Ressources::TextureManager::Get().GetCachedAtlas(atlasId);
 
         if (!cached.empty())
         {
             frames_.clear();
             frames_.reserve(cached.size());
-            Render::SpriteFramePool& pool = Render::SpriteFramePool::Get();
+            Ressources::SpriteFramePool& pool = Ressources::SpriteFramePool::Get();
             for (const auto& frame : cached)
             {
                 frames_.emplace_back(pool.Acquire(loadedTexture_.get(), frame.GetUVRect()));
             }
             if (!frames_.empty())
             {
-                Render::TextureManager::Get().CacheAtlas(atlasId, frames_);
+                Ressources::TextureManager::Get().CacheAtlas(atlasId, frames_);
             }
         }
         else
         {
-            frames_ = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*loadedTexture_, columns, rows);
+            frames_ = Ressources::SpriteAtlasUtils::LoadFramesFromAtlas(*loadedTexture_, columns, rows);
             if (!frames_.empty())
             {
-                Render::TextureManager::Get().CacheAtlas(atlasId, frames_);
+                Ressources::TextureManager::Get().CacheAtlas(atlasId, frames_);
             }
         }
 

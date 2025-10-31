@@ -1,6 +1,6 @@
 #pragma once
 #include <filesystem>
-#include "Engine/Render/Texture.h"
+#include "Engine/Ressources/Texture.h"
 
 namespace BixEngine::Assets
 {
@@ -8,6 +8,6 @@ namespace BixEngine::Assets
     {
     public:
 
-        static std::shared_ptr<Render::Texture> LoadFromFile(const std::filesystem::path& path, SDL_Renderer* renderer);
+        static std::shared_ptr<Ressources::Texture> LoadFromFile(const std::filesystem::path& path, SDL_Renderer* renderer);
     };
 }

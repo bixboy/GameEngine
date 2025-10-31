@@ -1,10 +1,10 @@
 #include "Game/EmptyScene.h"
-#include "Game/ActorSpawner.h"
 #include "Game/SceneRegistry.h"
 #include "Game/Test/Player.h"
 #include "Input/Input.h"
 #include "Core/Math/Color.h"
 #include "Core/Logger.h"
+#include "Game/BGameplayStatics.h"
 
 
 namespace BixEngine::Game
@@ -31,7 +31,9 @@ namespace BixEngine::Game
 
     void EmptyScene::Update(float deltaTime)
     {
-        for (auto& actor : GetActors())
+        Scene::Update(deltaTime);
+        
+        for (auto& actor: GetActors())
             actor->Update(deltaTime);
     }
 
@@ -48,11 +50,11 @@ namespace BixEngine::Game
         if (!HasRenderer() || !HasInputManager())
             LOG_WARNING("EmptyScene started without full context (renderer or input missing)");
 
-        player_ = ActorSpawner::SpawnActor<Player>(
-            Math::Vector3(kPlayerStart),
-            Math::Vector3(kPlayerSize),
-            Math::Color::Red().ToSDL()
-        );
+        player_ = BGameplayStatics::SpawnActor<Player>(this,
+            kPlayerStart,
+            kPlayerSize,
+            Math::Color::Red().ToSDL());
+
 
         if (player_ && HasInputManager())
             player_->SetupInput(GetInputManager());

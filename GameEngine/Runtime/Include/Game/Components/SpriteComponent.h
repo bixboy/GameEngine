@@ -30,7 +30,7 @@ namespace BixEngine::Game
 
         void Render(Graphics::Renderer& renderer) const override;
 
-        void ApplyFrame(const Render::SpriteFrame* frame, SDL_Color baseTint, float alpha);
+        void ApplyFrame(const Ressources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 
         void SetColor(SDL_Color color) noexcept { color_ = color; }
         
@@ -45,7 +45,7 @@ namespace BixEngine::Game
             height_ = h;
         }
 
-        void SetTexture(Render::Texture* texture) noexcept;
+        void SetTexture(Ressources::Texture* texture) noexcept;
         
         void SetUVRect(const Math::Rect& uvRect) noexcept;
 
@@ -66,7 +66,7 @@ namespace BixEngine::Game
         [[nodiscard]] float GetWidth() const noexcept { return width_; }
         [[nodiscard]] float GetHeight() const noexcept { return height_; }
         
-        [[nodiscard]] Render::Texture* GetTexture() const noexcept { return texture_; }
+        [[nodiscard]] Ressources::Texture* GetTexture() const noexcept { return texture_; }
         [[nodiscard]] const Math::Rect& GetUVRect() const noexcept { return uvRect_; }
         
         [[nodiscard]] bool GetFlipX() const noexcept { return bFlipX_; }
@@ -95,7 +95,7 @@ namespace BixEngine::Game
         BPROPERTY()
         float height_ = 32.f;
 
-        Render::Texture* texture_{nullptr};
+        Ressources::Texture* texture_{nullptr};
         
         Math::Rect uvRect_{};
         

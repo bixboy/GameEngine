@@ -3,9 +3,9 @@
 
 namespace BixEngine::Assets
 {
-    std::shared_ptr<Render::Texture> TextureLoader::LoadFromFile(const std::filesystem::path& path, SDL_Renderer* renderer)
+    std::shared_ptr<Ressources::Texture> TextureLoader::LoadFromFile(const std::filesystem::path& path, SDL_Renderer* renderer)
     {
-        auto texture = std::make_shared<Render::Texture>();
+        auto texture = std::make_shared<Ressources::Texture>();
 
         if (!texture->LoadFromFile(path.string(), renderer))
         {

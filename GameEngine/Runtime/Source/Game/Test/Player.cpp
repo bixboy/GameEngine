@@ -44,6 +44,8 @@ namespace BixEngine::Game
 
     void Player::Update(float deltaTime)
     {
+        Super::Update(deltaTime);
+        
         ApplyMovement(deltaTime);
     }
 

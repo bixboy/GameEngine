@@ -5,7 +5,7 @@
 
 #include "Engine/Render/SpriteFrame.h"
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     /**
      * @brief Thread-safe pool that deduplicates sprite frame data across animators.
@@ -13,14 +13,9 @@ namespace BixEngine::Render
     class SpriteFramePool
     {
     public:
-        /**
-         * @brief Returns the global frame pool instance.
-         */
-        static SpriteFramePool& Get();
 
-        /**
-         * @brief Retrieves or creates a shared frame handle for the given texture/UV pair.
-         */
+        static SpriteFramePool& Get();
+        
         [[nodiscard]] SpriteFrameHandle Acquire(Texture* texture, const Math::Rect& uvRect);
 
     private:

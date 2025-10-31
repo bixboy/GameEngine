@@ -2,7 +2,7 @@
 
 #include <cmath>
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     namespace
     {

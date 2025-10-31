@@ -10,7 +10,7 @@
 
 struct SDL_Renderer;
 
-namespace BixEngine::Render
+namespace BixEngine::Ressources
 {
     class Texture;
 
