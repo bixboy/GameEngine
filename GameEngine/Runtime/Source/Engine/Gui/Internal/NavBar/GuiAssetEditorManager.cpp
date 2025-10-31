@@ -14,6 +14,7 @@
 #include "Core/Logger.h"
 #include "Engine/Gui/Controllers/ActorEditorController.h"
 #include "Engine/Gui/Controllers/ComponentEditorController.h"
+#include "Engine/Gui/Controllers/SpriteAtlasEditorController.h"
 #include "Engine/Gui/Internal/GuiManager.h"
 #include "Engine/Gui/Internal/GuiModule.h"
 #include "Engine/Gui/Internal/GuiPanel.h"
@@ -293,6 +294,11 @@ namespace BixEngine::Core
             typeTag = "component";
             assetType = "Component Prefab";
         }
+        else if (extensionLower == ".atlas")
+        {
+            typeTag = "atlas";
+            assetType = "Sprite Atlas";
+        }
         else
         {
             LOG_WARNING("[GuiAssetEditorManager] Unsupported asset extension: " + path.generic_string());
@@ -305,8 +311,10 @@ namespace BixEngine::Core
         std::shared_ptr<Gui::BaseAssetEditorController::SharedState> sharedState;
         if (assetType == "Actor Prefab")
             sharedState = Gui::ActorEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
-        else
+        else if (assetType == "Component Prefab")
             sharedState = Gui::ComponentEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        else
+            sharedState = Gui::SpriteAtlasEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
 
         if (!sharedState)
         {
@@ -314,7 +322,8 @@ namespace BixEngine::Core
             return false;
         }
 
-        PopulatePrefabMetadata(path, *sharedState);
+        if (assetType == "Actor Prefab" || assetType == "Component Prefab")
+            PopulatePrefabMetadata(path, *sharedState);
 
         AssetEditorEntry entry{};
         entry.assetPath = path;
@@ -327,8 +336,10 @@ namespace BixEngine::Core
         bool created = false;
         if (assetType == "Actor Prefab")
             created = CreateActorPrefabEditor(path, entry, navigationId);
-        else
+        else if (assetType == "Component Prefab")
             created = CreateComponentPrefabEditor(path, entry, navigationId);
+        else
+            created = CreateSpriteAtlasEditor(path, entry, navigationId);
 
         if (!created)
             return false;
@@ -380,6 +391,27 @@ namespace BixEngine::Core
         entry.panels.viewport = nullptr;
         entry.panels.outline = nullptr;
 
+        return true;
+    }
+
+    bool GuiAssetEditorManager::CreateSpriteAtlasEditor(const std::filesystem::path& path, AssetEditorEntry& entry, const std::string& navigationId)
+    {
+        static_cast<void>(path);
+        if (!guiManager_)
+            return false;
+
+        auto atlasState = std::static_pointer_cast<Gui::SpriteAtlasEditorController::SharedState>(entry.sharedState);
+        if (!atlasState)
+            return false;
+
+        const std::string panelId = std::format("{}_atlas", navigationId);
+        Gui::GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Sprite Atlas"});
+        panel.SetVisible(false);
+        guiManager_->AttachController(panel, std::make_unique<Gui::SpriteAtlasEditorController>(atlasState));
+        entry.panels.viewport = &panel;
+        entry.panels.toolbar = nullptr;
+        entry.panels.outline = nullptr;
+        entry.panels.inspector = nullptr;
         return true;
     }
 

@@ -35,17 +35,22 @@ namespace BixEngine::Gui
         bool createScript{false};
         bool createPrefab{false};
         bool createFolder{false};
+        bool createSpriteAtlas{false};
         bool renameEntry{false};
 
         ScriptTemplateType scriptType{ScriptTemplateType::Actor};
         char scriptName[128] = "NewScript";
         char folderName[128] = "NewFolder";
+        char spriteAtlasTexturePath[260] = "";
         char renameBuffer[256] = "";
         String scriptError{};
         String prefabError{};
         String folderError{};
+        String spriteAtlasError{};
         String renameError{};
         std::filesystem::path folderTarget{};
+        std::filesystem::path spriteAtlasTarget{};
+        bool spriteAtlasBrowseTextures{false};
         std::filesystem::path renameTarget{};
         std::filesystem::path renameSecondaryTarget{};
         bool renameTargetIsScriptGroup{false};
@@ -62,6 +67,11 @@ namespace BixEngine::Gui
         std::filesystem::path selectedPrefabScript{};
         bool selectedPrefabIsActor{false};
         bool selectedPrefabIsComponent{false};
+
+        int spriteAtlasColumns{1};
+        int spriteAtlasRows{1};
+        int spriteAtlasPadding{0};
+        int spriteAtlasMargin{0};
     };
 
     struct DirectoryCache

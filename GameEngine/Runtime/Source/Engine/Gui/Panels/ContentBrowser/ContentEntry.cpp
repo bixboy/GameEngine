@@ -28,12 +28,13 @@ namespace BixEngine::Gui
     
     namespace
     {
-        constexpr std::array<const char*, 5> kIcons {{
+        constexpr std::array<const char*, 6> kIcons {{
             "\xef\x81\xbc", // Folder
             "\xef\x87\x83", // File
             "\xef\x84\x9b", // Script
             "\xef\x8f\x88", // Actor prefab
-            "\xef\x89\xb2"  // Component prefab
+            "\xef\x89\xb2", // Component prefab
+            "\xef\x80\x8b"  // Sprite atlas (th icon)
         }};
     }
 
@@ -55,8 +56,9 @@ namespace BixEngine::Gui
         case ContentType::ActorPrefab:     return 1;
         case ContentType::ComponentPrefab: return 2;
         case ContentType::Script:          return 3;
+        case ContentType::SpriteAtlas:     return 4;
         case ContentType::File:
-        default:                             return 4;
+        default:                             return 5;
         }
     }
 }

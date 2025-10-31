@@ -4,6 +4,7 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPopups.h"
+#include "Engine/Ressources/SpriteAtlasFactory.h"
 #include "imgui.h"
 #include <algorithm>
 #include <cctype>
@@ -1218,6 +1219,152 @@ namespace BixEngine::Gui
             ImGui::EndPopup();
         }
 
+        void RenderCreateSpriteAtlasPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
+        {
+            namespace fs = std::filesystem;
+
+            if (requests.createSpriteAtlas)
+            {
+                ImGui::OpenPopup("ContentBrowserCreateSpriteAtlas");
+                requests.createSpriteAtlas = false;
+            }
+
+            if (!ImGui::BeginPopupModal("ContentBrowserCreateSpriteAtlas", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+                return;
+
+            const fs::path targetDirectory = requests.spriteAtlasTarget.empty() ? state.current : requests.spriteAtlasTarget;
+            fs::path relativeTarget = targetDirectory.lexically_relative(state.root);
+            std::string relativeString = relativeTarget.generic_string();
+
+            String locationDisplay = "Content";
+            if (!relativeString.empty() && relativeString != ".")
+            {
+                locationDisplay += '/';
+                locationDisplay += relativeString;
+            }
+
+            Utils::DrawDescriptionText("Create a sprite atlas file next to an existing texture.");
+            Utils::DrawLabelValue("Location", locationDisplay.View().data(), "Content");
+            ImGui::Separator();
+
+            const bool shouldAutofocus = ImGui::IsWindowAppearing();
+            Utils::InputTextWithLabel("Texture Source", requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), ImGuiInputTextFlags_None, shouldAutofocus);
+
+            ImGui::SameLine();
+            if (ImGui::Button("Browse..."))
+                requests.spriteAtlasBrowseTextures = true;
+
+            if (requests.spriteAtlasBrowseTextures)
+            {
+                ImGui::OpenPopup("ContentBrowserSpriteAtlasTexturePicker");
+                requests.spriteAtlasBrowseTextures = false;
+            }
+
+            if (ImGui::BeginPopup("ContentBrowserSpriteAtlasTexturePicker"))
+            {
+                int textureCount = 0;
+                std::error_code iteratorError;
+                for (const auto& entry : fs::directory_iterator(targetDirectory, iteratorError))
+                {
+                    if (!entry.is_regular_file())
+                        continue;
+
+                    std::string extension = entry.path().extension().generic_string();
+                    std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
+                    if (extension != ".png")
+                        continue;
+
+                    ++textureCount;
+                    const std::string displayName = entry.path().filename().generic_string();
+                    if (ImGui::Selectable(displayName.c_str()))
+                    {
+                        std::snprintf(requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), "%s", displayName.c_str());
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+
+                if (iteratorError)
+                {
+                    ImGui::TextDisabled("Unable to read folder: %s", iteratorError.message().c_str());
+                }
+                else if (textureCount == 0)
+                {
+                    ImGui::TextDisabled("No PNG textures found in this folder.");
+                }
+
+                ImGui::EndPopup();
+            }
+
+            requests.spriteAtlasColumns = std::max(1, requests.spriteAtlasColumns);
+            requests.spriteAtlasRows = std::max(1, requests.spriteAtlasRows);
+            requests.spriteAtlasPadding = std::max(0, requests.spriteAtlasPadding);
+            requests.spriteAtlasMargin = std::max(0, requests.spriteAtlasMargin);
+
+            ImGui::InputInt("Columns", &requests.spriteAtlasColumns);
+            ImGui::InputInt("Rows", &requests.spriteAtlasRows);
+            ImGui::InputInt("Padding", &requests.spriteAtlasPadding);
+            ImGui::InputInt("Margin", &requests.spriteAtlasMargin);
+
+            if (!requests.spriteAtlasError.IsEmpty())
+            {
+                Utils::DrawErrorMessage(std::string(requests.spriteAtlasError.View()));
+            }
+
+            const bool confirmed = Utils::DrawConfirmButtons("✅ Create", "Cancel",
+                []() {},
+                [&]()
+                {
+                    ImGui::CloseCurrentPopup();
+                    requests.spriteAtlasError.Clear();
+                    requests.spriteAtlasTarget.clear();
+                    requests.spriteAtlasBrowseTextures = false;
+                });
+
+            if (confirmed)
+            {
+                String textureInput = TrimCopy(String(requests.spriteAtlasTexturePath));
+                if (textureInput.IsEmpty())
+                {
+                    LogAndStoreError(requests.spriteAtlasError, "Texture path cannot be empty.", false);
+                }
+                else
+                {
+                    fs::path texturePath = fs::path(textureInput.View());
+                    if (!texturePath.is_absolute())
+                        texturePath = targetDirectory / texturePath;
+
+                    if (!fs::exists(texturePath))
+                    {
+                        LogAndStoreError(requests.spriteAtlasError, String("Texture not found: ") + texturePath.generic_string(), false);
+                    }
+                    else
+                    {
+                        resources::SpriteAtlasCreationParams params{};
+                        params.texturePath = texturePath;
+                        params.columns = requests.spriteAtlasColumns;
+                        params.rows = requests.spriteAtlasRows;
+                        params.padding = requests.spriteAtlasPadding;
+                        params.margin = requests.spriteAtlasMargin;
+
+                        fs::path atlasPath = texturePath;
+                        atlasPath.replace_extension(".atlas");
+
+                        if (resources::SpriteAtlasFactory::CreateAtlasFile(atlasPath, params, requests.spriteAtlasError))
+                        {
+                            requests.spriteAtlasError.Clear();
+                            selectedEntry = atlasPath.generic_string();
+                            state.cache.dirty = true;
+                            requests.spriteAtlasTarget.clear();
+                            requests.spriteAtlasBrowseTextures = false;
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+                }
+            }
+
+            ImGui::EndPopup();
+        }
+
         void RenderRenameEntryPopup(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requests)
         {
             namespace fs = std::filesystem;
@@ -1528,6 +1675,7 @@ namespace BixEngine::Gui
         RenderCreateScriptPopup(state, selectedEntry, requestPopups);
         RenderCreatePrefabPopup(state, requestPopups);
         RenderCreateFolderPopup(state, selectedEntry, requestPopups);
+        RenderCreateSpriteAtlasPopup(state, selectedEntry, requestPopups);
         RenderRenameEntryPopup(state, selectedEntry, requestPopups);
     }
 }

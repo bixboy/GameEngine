@@ -8,6 +8,7 @@
 #include "imgui.h"
 
 #include <cstdio>
+#include <filesystem>
 
 #include "Engine/Utils/EditorUtils.h"
 
@@ -39,6 +40,19 @@ namespace BixEngine::Gui
             requests.scriptError.Clear();
             requests.createScript = true;
             ClearSelectedParent(requests);
+        }
+
+        void RequestSpriteAtlasCreation(ContentBrowserState& state, PopupRequestState& requests, const std::filesystem::path& target)
+        {
+            requests.spriteAtlasError.Clear();
+            std::snprintf(requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), "%s", "");
+            requests.spriteAtlasColumns = 1;
+            requests.spriteAtlasRows = 1;
+            requests.spriteAtlasPadding = 0;
+            requests.spriteAtlasMargin = 0;
+            requests.spriteAtlasTarget = target.empty() ? state.current : target;
+            requests.spriteAtlasBrowseTextures = false;
+            requests.createSpriteAtlas = true;
         }
 
         bool DeleteScriptFiles(const ContentEntry& entry, String& error)
@@ -94,6 +108,14 @@ namespace BixEngine::Gui
                 [](ContentBrowserState&, const ContentEntry& directory, PopupRequestState& requests, String&)
                 {
                     RequestFolderCreation(requests, directory.path);
+                }
+            });
+
+            actions.push_back({
+                "Create sprite atlas...",
+                [](ContentBrowserState& contentState, const ContentEntry& directory, PopupRequestState& requests, String&)
+                {
+                    RequestSpriteAtlasCreation(contentState, requests, directory.path);
                 }
             });
         }
@@ -170,6 +192,19 @@ namespace BixEngine::Gui
                     selection = actor.SelectionKey();
                     if (contentState.openAssetEditorCallback)
                         contentState.openAssetEditorCallback(actor.path);
+                },
+                static_cast<bool>(state.openAssetEditorCallback)
+            });
+        }
+        else if (entry.IsSpriteAtlas())
+        {
+            actions.push_back({
+                "Open atlas editor",
+                [](ContentBrowserState& contentState, const ContentEntry& atlas, PopupRequestState&, String& selection)
+                {
+                    selection = atlas.SelectionKey();
+                    if (contentState.openAssetEditorCallback)
+                        contentState.openAssetEditorCallback(atlas.path);
                 },
                 static_cast<bool>(state.openAssetEditorCallback)
             });

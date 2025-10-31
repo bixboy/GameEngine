@@ -110,6 +110,7 @@ namespace BixEngine::Core
         bool CreateAssetEditorEntry(const std::filesystem::path& path, AssetEditorEntry& outEntry);
         bool CreateActorPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const std::string& navigationId);
         bool CreateComponentPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const std::string& navigationId);
+        bool CreateSpriteAtlasEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const std::string& navigationId);
         std::shared_ptr<Gui::BaseAssetEditorController::SharedState> BuildSharedState(const std::filesystem::path& path, String stableIdRoot, const std::string& assetType, std::function<void()> onCloseRequest);
         void PopulatePrefabMetadata(const std::filesystem::path& path, Gui::BaseAssetEditorController::SharedState& state);
         std::string MakeNavigationId(const std::filesystem::path& path, std::string_view typeTag) const;
