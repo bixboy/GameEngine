@@ -184,13 +184,16 @@ namespace BixEngine::Gui::ActorInspector
 
             ImVec2 prevCursor = ImGui::GetCursorPos();
             ImGui::SetCursorPos(ImVec2(buttonPosX, buttonPosY));
-            
+
             if (IconButton("🗑", "Remove this component"))
             {
                 componentPendingRemoval = component.get();
             }
 
             ImGui::SetCursorPos(prevCursor);
+            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
+            ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            ImGui::PopStyleVar();
 
             if (open)
             {
