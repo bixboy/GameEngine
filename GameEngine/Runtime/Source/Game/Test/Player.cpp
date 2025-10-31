@@ -10,6 +10,7 @@
 #include "Core/Math/Math.h"
 #include "Game/Components/SpriteAnimatorComponent.h"
 
+
 namespace BixEngine::Game
 {
     Player::Player(): Actor("Player")

@@ -14,7 +14,7 @@ namespace BixEngine::Game
     namespace
     {
         constexpr Math::Vector3 kPlayerStart{320.0f, 240.0f, 0.0f};
-        constexpr Math::Vector3 kPlayerSize{50.0f, 50.0f, 1.0f};
+        constexpr Math::Vector3 kPlayerSize{150.0f, 150.0f, 150.0f};
     }
     
     EmptyScene::EmptyScene(): Scene("EmptyScene")
