@@ -7,6 +7,7 @@
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Game/Actor.h"
 #include "Game/Components/Component.h"
+#include "Reflection/ClassInfo.h"
 
 #include <algorithm>
 #include <memory>
@@ -160,7 +161,23 @@ namespace BixEngine::Gui::ActorInspector
 
             ScopedID componentId(static_cast<int>(index));
 
-            const std::string typeLabel = ToStdString(component->GetTypeName());
+            std::string typeLabel;
+            if (const ::Bix::Reflection::ClassInfo* classInfo = component->GetClass())
+            {
+                if (!classInfo->Name.empty())
+                {
+                    typeLabel = classInfo->Name;
+                }
+                else if (!classInfo->QualifiedName.empty())
+                {
+                    typeLabel = classInfo->QualifiedName;
+                }
+            }
+
+            if (typeLabel.empty())
+            {
+                typeLabel = ToStdString(component->GetTypeName());
+            }
             const std::string treeLabel = "🧩 " + typeLabel;
 
             const float startX = ImGui::GetCursorPosX();
