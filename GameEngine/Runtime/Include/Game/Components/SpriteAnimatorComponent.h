@@ -4,6 +4,7 @@
 #include "Engine/Render/TextureManager.h"
 #include "Reflection/ReflectionMacros.h"
 #include "Engine/Render/SpriteFrame.h"
+#include <memory>
 #include <vector>
 #include "SpriteAnimatorComponent.generated.h"
 
@@ -30,6 +31,7 @@ namespace BixEngine::Game
 
     private:
         std::vector<Render::SpriteFrame> frames_;
+        std::shared_ptr<Render::Texture> loadedTexture_{};
         int totalFrames_ = 0;
         int currentFrame_ = 0;
         float frameRate_ = 8.f;

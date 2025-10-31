@@ -5,6 +5,7 @@
 #include "Game/Actor.h"
 #include "Player.generated.h"
 
+
 namespace BixEngine
 {
     namespace Graphics { class Renderer; }
@@ -50,7 +51,7 @@ namespace BixEngine
                 float moveSpeed_{200.0f};
             
                 BPROPERTY()
-                Math::Vector3 size_{Math::Vector3(32.0f, 32.0f, 1.0f)};
+                Math::Vector3 size_{Math::Vector3(150.f, 150.f, 150.f)};
             
                 SDL_Color color_{255, 255, 255, 255};
             
