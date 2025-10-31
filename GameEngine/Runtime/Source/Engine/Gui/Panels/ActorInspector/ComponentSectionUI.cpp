@@ -176,7 +176,18 @@ namespace BixEngine::Gui::ActorInspector
 
             if (open)
             {
-                DrawClassProperties(component->GetClass(), component.get(), false, nullptr, true);
+                const float cursorBefore = ImGui::GetCursorPosY();
+                const bool drewReflected = DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
+                const float cursorAfterReflected = ImGui::GetCursorPosY();
+
+                component->DrawInspectorUI();
+                const float cursorAfterCustom = ImGui::GetCursorPosY();
+
+                if (!drewReflected && cursorAfterCustom <= cursorBefore + 0.5f && cursorAfterReflected <= cursorBefore + 0.5f)
+                {
+                    Utils::DrawEmptyStateMessage("No editable properties.");
+                }
+
                 ImGui::TreePop();
             }
         }

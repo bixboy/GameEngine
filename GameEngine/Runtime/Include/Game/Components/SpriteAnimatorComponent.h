@@ -28,6 +28,20 @@ namespace BixEngine::Game
         std::function<bool(const SpriteAnimatorComponent&)> Condition;
     };
 
+    struct SpriteAnimationClipConfig
+    {
+        String Name{"Animation"};
+        String TexturePath{};
+        int Columns = 1;
+        int Rows = 1;
+        int StartFrame = 0;
+        int FrameCount = 0;
+        int Padding = 0;
+        int Margin = 0;
+        float FrameRate = 12.0f;
+        bool bLoop = true;
+    };
+
     BCLASS()
     class SpriteAnimatorComponent : public Component
     {
@@ -39,7 +53,9 @@ namespace BixEngine::Game
         void BeginPlay() override;
         void Update(float deltaTime) override;
 
-        void AddAnimation(Render::SpriteAnimation animation);
+        [[nodiscard]] String GetTypeName() const override { return "SpriteAnimatorComponent"; }
+
+        void AddAnimation(const Render::SpriteAnimation& animation);
 
         void Play(const String& name);
         void PlayOnceThen(const String& name, const String& next);
@@ -69,6 +85,15 @@ namespace BixEngine::Game
 
         void SetTargetSprite(SpriteComponent* sprite) noexcept;
 
+        void SetClips(std::vector<SpriteAnimationClipConfig> clips);
+        void SetInitialClip(String clipName) noexcept;
+        void SetAutoPlay(bool enabled) noexcept;
+        [[nodiscard]] bool IsAutoPlayEnabled() const noexcept { return bAutoPlayOnLoad_; }
+        [[nodiscard]] const std::vector<SpriteAnimationClipConfig>& GetClips() const noexcept { return clipConfigs_; }
+        void ReloadAnimations();
+
+        void DrawInspectorUI() override;
+
     protected:
         struct SpriteBinding
         {
@@ -82,6 +107,9 @@ namespace BixEngine::Game
         void EvaluateStateMachine();
         void UpdateBlend(float deltaTime);
         void UpdateDebugWindow();
+        void TryAutoPlay();
+
+        bool BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig, SDL_Renderer* sdlRenderer);
 
         Render::SpriteAnimator primaryAnimator_;
         Render::SpriteAnimator blendAnimator_;
@@ -103,6 +131,11 @@ namespace BixEngine::Game
 
         bool bDebugMode_ = false;
 
+        std::vector<SpriteAnimationClipConfig> clipConfigs_;
+        bool clipConfigsDirty_ = false;
+        String initialClipName_{"Animation"};
+        bool bAutoPlayOnLoad_ = true;
+    
         size_t lastFrameIndex_ = std::numeric_limits<size_t>::max();
         bool wasPlaying_ = false;
     };

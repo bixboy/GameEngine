@@ -8,10 +8,7 @@
 #include "Game/Components/SpriteComponent.h"
 #include "Input/InputManager.h"
 #include "Core/Math/Math.h"
-#include "Engine/Render/SpriteAnimator.h"
-#include "Engine/Render/TextureManager.h"
 #include "Game/Components/SpriteAnimatorComponent.h"
-#include "Graphics/Renderer.h"
 
 namespace BixEngine::Game
 {
@@ -121,39 +118,17 @@ namespace BixEngine::Game
         // Lier le sprite à l’animator
         animatorComponent_->AddSpriteLayer(spriteComponent_);
 
-        // Charger la texture (image ou spritesheet)
-        auto& texMgr = Render::TextureManager::Get();
-        auto texture = texMgr.LoadTexture("../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png", Graphics::Renderer::Get()->GetSDLRenderer());
+        SpriteAnimatorComponent::SpriteAnimationClipConfig idleClip{};
+        idleClip.Name = "Idle";
+        idleClip.TexturePath = "../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png";
+        idleClip.Columns = 4;
+        idleClip.Rows = 1;
+        idleClip.FrameCount = 4;
+        idleClip.FrameRate = 8.0f;
+        idleClip.bLoop = true;
 
-        // Créer les frames
-        std::vector<Render::SpriteFrame> frames;
-        const int frameCount = 4;
-        const int frameWidth = texture->GetWidth() / frameCount;
-        const int frameHeight = texture->GetHeight();
-
-        for (int i = 0; i < frameCount; ++i)
-        {
-            auto frameData = std::make_shared<Render::SpriteFrameData>();
-            frameData->TexturePtr = texture.get();
-            frameData->UVRect = Math::Rect{
-                static_cast<float>(i * frameWidth) / texture->GetWidth(),
-                0.f,
-                static_cast<float>(frameWidth) / texture->GetWidth(),
-                1.f
-            };
-            frames.emplace_back(frameData);
-        }
-
-        // Créer l’animation "Idle"
-        Render::SpriteAnimation idleAnim;
-        idleAnim.Name = "Idle";
-        idleAnim.Frames = frames;
-        idleAnim.FrameRate = 8.f;
-        idleAnim.bLoop = true;
-
-        // Ajouter l’animation et la jouer
-        animatorComponent_->AddAnimation(idleAnim);
-        animatorComponent_->Play("Idle");
+        animatorComponent_->SetInitialClip(idleClip.Name);
+        animatorComponent_->SetClips({idleClip});
 
         SetScale(size_);
     }

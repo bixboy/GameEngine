@@ -2,9 +2,17 @@
 #include "Game/Actor.h"
 #include "Game/Components/SpriteComponent.h"
 #include "Graphics/Renderer.h"
+#include "Engine/Render/SpriteAtlasUtils.h"
+#include "Engine/Render/TextureManager.h"
+#include "Core/Logger.h"
 #include "imgui.h"
+#include <array>
+#include <cstring>
 #include <algorithm>
 #include <cmath>
+#include <string>
+#include <utility>
+#include <vector>
 
 namespace BixEngine::Game
 {
@@ -20,8 +28,54 @@ namespace BixEngine::Game
         }
     }
 
+    namespace
+    {
+        bool EditStringField(const char* label, String& value)
+        {
+            std::array<char, 512> buffer{};
+            const std::string_view current = value.View();
+            const std::size_t copyLength = std::min(buffer.size() - 1, current.size());
+            std::memcpy(buffer.data(), current.data(), copyLength);
+            buffer[copyLength] = '\0';
+            if (ImGui::InputText(label, buffer.data(), buffer.size()))
+            {
+                value = buffer.data();
+                return true;
+            }
+
+            return false;
+        }
+
+        bool EditIntegerField(const char* label, int& value, int minValue = 0)
+        {
+            int temp = value;
+            if (ImGui::InputInt(label, &temp))
+            {
+                value = std::max(temp, minValue);
+                return true;
+            }
+
+            return false;
+        }
+
+        bool EditFloatField(const char* label, float& value, float minValue = 0.0f)
+        {
+            float temp = value;
+            if (ImGui::InputFloat(label, &temp))
+            {
+                value = std::max(temp, minValue);
+                return true;
+            }
+
+            return false;
+        }
+    }
+
     SpriteAnimatorComponent::SpriteAnimatorComponent(Actor* owner): Component(owner)
     {
+        clipConfigs_.push_back({});
+        clipConfigs_.front().Name = "Animation";
+        initialClipName_ = clipConfigs_.front().Name;
     }
 
     void SpriteAnimatorComponent::BeginPlay()
@@ -146,7 +200,7 @@ namespace BixEngine::Game
         }
     }
 
-    void SpriteAnimatorComponent::AddAnimation(Render::SpriteAnimation animation)
+    void SpriteAnimatorComponent::AddAnimation(const Render::SpriteAnimation& animation)
     {
         primaryAnimator_.AddAnimation(animation);
         blendAnimator_.AddAnimation(animation);
@@ -262,12 +316,257 @@ namespace BixEngine::Game
         AddSpriteLayer(sprite);
     }
 
+    void SpriteAnimatorComponent::SetClips(std::vector<SpriteAnimationClipConfig> clips)
+    {
+        clipConfigs_ = std::move(clips);
+        if (clipConfigs_.empty())
+        {
+            clipConfigs_.push_back({});
+            clipConfigs_.front().Name = "Animation";
+        }
+
+        if (initialClipName_.IsEmpty())
+        {
+            initialClipName_ = clipConfigs_.front().Name;
+        }
+
+        clipConfigsDirty_ = true;
+        ReloadAnimations();
+    }
+
+    void SpriteAnimatorComponent::SetInitialClip(String clipName) noexcept
+    {
+        initialClipName_ = std::move(clipName);
+    }
+
+    void SpriteAnimatorComponent::SetAutoPlay(bool enabled) noexcept
+    {
+        const bool wasDisabled = !bAutoPlayOnLoad_;
+        bAutoPlayOnLoad_ = enabled;
+        if (enabled && wasDisabled)
+        {
+            TryAutoPlay();
+        }
+    }
+
+    void SpriteAnimatorComponent::ReloadAnimations()
+    {
+        Graphics::Renderer* renderer = Graphics::Renderer::Get();
+        if (!renderer)
+        {
+            return;
+        }
+
+        SDL_Renderer* sdlRenderer = renderer->GetSDLRenderer();
+        if (!sdlRenderer)
+        {
+            return;
+        }
+
+        primaryAnimator_ = Render::SpriteAnimator();
+        blendAnimator_ = Render::SpriteAnimator();
+        activeState_.Clear();
+        queuedState_.Clear();
+        bBlending_ = false;
+        blendTimer_ = 0.0f;
+        blendDuration_ = 0.0f;
+        lastFrameIndex_ = std::numeric_limits<size_t>::max();
+        wasPlaying_ = false;
+
+        bool anyBuilt = false;
+        for (const auto& clip : clipConfigs_)
+        {
+            if (clip.TexturePath.IsEmpty() || clip.Name.IsEmpty())
+            {
+                continue;
+            }
+
+            const bool built = BuildAnimationFromClip(clip, sdlRenderer);
+            if (!built)
+            {
+                continue;
+            }
+
+            // BuildAnimationFromClip adds the animation directly to the animators.
+            anyBuilt = true;
+        }
+
+        clipConfigsDirty_ = false;
+
+        if (anyBuilt)
+        {
+            TryAutoPlay();
+        }
+    }
+
+    void SpriteAnimatorComponent::DrawInspectorUI()
+    {
+        bool modified = false;
+
+        bool autoPlay = bAutoPlayOnLoad_;
+        if (ImGui::Checkbox("Auto-play on load", &autoPlay))
+        {
+            SetAutoPlay(autoPlay);
+            modified = true;
+        }
+
+        String initialClipCopy = initialClipName_;
+        if (EditStringField("Initial clip", initialClipCopy))
+        {
+            SetInitialClip(initialClipCopy);
+            modified = true;
+        }
+
+        ImGui::Separator();
+
+        int index = 0;
+        int clipToRemove = -1;
+        for (auto& clip : clipConfigs_)
+        {
+            ImGui::PushID(index);
+            const std::string headerLabel = clip.Name.IsEmpty() ? ("Clip " + std::to_string(index + 1)) : clip.Name.Std();
+            if (ImGui::CollapsingHeader(headerLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                modified |= EditStringField("Name", clip.Name);
+                modified |= EditStringField("Texture path", clip.TexturePath);
+                modified |= EditIntegerField("Columns", clip.Columns, 1);
+                modified |= EditIntegerField("Rows", clip.Rows, 1);
+                modified |= EditIntegerField("Start frame", clip.StartFrame, 0);
+                modified |= EditIntegerField("Frame count", clip.FrameCount, 0);
+                modified |= EditIntegerField("Padding", clip.Padding, 0);
+                modified |= EditIntegerField("Margin", clip.Margin, 0);
+                modified |= EditFloatField("Frame rate", clip.FrameRate, 1.0f);
+                if (ImGui::Checkbox("Loop", &clip.bLoop))
+                {
+                    modified = true;
+                }
+
+                if (ImGui::Button("Remove clip"))
+                {
+                    clipToRemove = index;
+                }
+            }
+            ImGui::PopID();
+            ++index;
+        }
+
+        if (clipToRemove >= 0 && clipToRemove < static_cast<int>(clipConfigs_.size()))
+        {
+            clipConfigs_.erase(clipConfigs_.begin() + clipToRemove);
+            modified = true;
+        }
+
+        if (ImGui::Button("Add clip"))
+        {
+            SpriteAnimationClipConfig clip{};
+            clip.Name = String{"Animation"} + String{std::to_string(static_cast<int>(clipConfigs_.size()) + 1)};
+            clipConfigs_.push_back(std::move(clip));
+            modified = true;
+        }
+
+        if (modified)
+        {
+            clipConfigsDirty_ = true;
+        }
+
+        ImGui::BeginDisabled(!clipConfigsDirty_);
+        if (ImGui::Button("Apply animation changes"))
+        {
+            ReloadAnimations();
+        }
+        ImGui::EndDisabled();
+    }
+
+    bool SpriteAnimatorComponent::BuildAnimationFromClip(const SpriteAnimationClipConfig& clipConfig, SDL_Renderer* sdlRenderer)
+    {
+        if (!sdlRenderer)
+        {
+            return false;
+        }
+
+        Render::TextureManager& textureManager = Render::TextureManager::Get();
+        auto texture = textureManager.LoadTexture(clipConfig.TexturePath, sdlRenderer);
+        if (!texture)
+        {
+            LOG_ERROR(String{"[SpriteAnimatorComponent] Failed to load texture: "} + clipConfig.TexturePath);
+            return false;
+        }
+
+        const int columns = std::max(clipConfig.Columns, 1);
+        const int rows = std::max(clipConfig.Rows, 1);
+        const int padding = std::max(clipConfig.Padding, 0);
+        const int margin = std::max(clipConfig.Margin, 0);
+
+        std::vector<Render::SpriteFrame> frames = Render::SpriteAtlasUtils::LoadFramesFromAtlas(*texture, columns, rows, padding, margin);
+        if (frames.empty())
+        {
+            LOG_ERROR(String{"[SpriteAnimatorComponent] No frames generated for clip: "} + clipConfig.Name);
+            return false;
+        }
+
+        const int totalFrames = static_cast<int>(frames.size());
+        const int safeStart = std::clamp(clipConfig.StartFrame, 0, std::max(totalFrames - 1, 0));
+        int frameCount = clipConfig.FrameCount > 0 ? clipConfig.FrameCount : (totalFrames - safeStart);
+        frameCount = std::clamp(frameCount, 0, totalFrames - safeStart);
+        if (frameCount == 0)
+        {
+            LOG_ERROR(String{"[SpriteAnimatorComponent] Invalid frame range for clip: "} + clipConfig.Name);
+            return false;
+        }
+
+        Render::SpriteAnimation animation{};
+        animation.Name = clipConfig.Name;
+        animation.FrameRate = std::max(clipConfig.FrameRate, 1.0f);
+        animation.bLoop = clipConfig.bLoop;
+        animation.Frames.reserve(static_cast<std::size_t>(frameCount));
+        for (int i = 0; i < frameCount; ++i)
+        {
+            animation.Frames.push_back(frames[static_cast<std::size_t>(safeStart + i)]);
+        }
+
+        AddAnimation(animation);
+        return true;
+    }
+
     void SpriteAnimatorComponent::ApplyFrame(SpriteBinding& binding, const Render::SpriteFrame* frame, float alphaWeight)
     {
         if (!binding.Component)
             return;
 
         binding.Component->ApplyFrame(frame, binding.BaseTint, alphaWeight);
+    }
+
+    void SpriteAnimatorComponent::TryAutoPlay()
+    {
+        if (!bAutoPlayOnLoad_)
+        {
+            return;
+        }
+
+        String clipToPlay = initialClipName_;
+        if (clipToPlay.IsEmpty())
+        {
+            for (const auto& clip : clipConfigs_)
+            {
+                if (!clip.Name.IsEmpty())
+                {
+                    clipToPlay = clip.Name;
+                    break;
+                }
+            }
+        }
+
+        if (clipToPlay.IsEmpty())
+        {
+            return;
+        }
+
+        if (!primaryAnimator_.HasAnimation(clipToPlay))
+        {
+            return;
+        }
+
+        Play(clipToPlay);
     }
 
     void SpriteAnimatorComponent::EvaluateStateMachine()
