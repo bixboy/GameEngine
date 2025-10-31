@@ -56,7 +56,7 @@ namespace BixEngine
                 SDL_Color color_{255, 255, 255, 255};
             
                 SpriteComponent* spriteComponent_{nullptr};
-            SpriteAnimatorComponent* animatorComponent_{nullptr};
+                SpriteAnimatorComponent* animatorComponent_{nullptr};
         };
     }
 }
