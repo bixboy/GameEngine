@@ -22,6 +22,8 @@ namespace BixEngine::Game
     {
         for (auto& c : components_)
             c->BeginPlay();
+
+        
     }
 
     void Actor::Update(float deltaTime)

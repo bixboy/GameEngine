@@ -1,21 +1,13 @@
 #include "Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
-
 #include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
-
-#include "Core/Math/Rotator.h"
 #include "Core/Math/Vector2.h"
 #include "Core/Math/Vector3.h"
 #include "Core/Containers/String.h"
-
 #include "SDL3/SDL.h"
-
 #include <algorithm>
 #include <array>
 #include <cctype>
-#include <cfloat>
-#include <cstdint>
-#include <cstring>
 #include <imgui.h>
 #include <string>
 
@@ -103,109 +95,95 @@ namespace BixEngine::Gui::ActorInspector
     bool DrawSupportedProperty(const ::Bix::Reflection::PropertyInfo& property, void* instance, const std::string& label)
     {
         if (!property.IsValid())
-        {
             return false;
-        }
 
         using PropertyUtils::MatchesType;
+
+        // ───────────────────────────────────────
+        // 🏷️ Affiche une seule ligne "Nom : Type"
+        // ───────────────────────────────────────
+        std::string typeName = property.TypeName;
+        if (!typeName.empty())
+        {
+            if (typeName.rfind("class ", 0) == 0) typeName.erase(0, 6);
+            else if (typeName.rfind("struct ", 0) == 0) typeName.erase(0, 7);
+        }
+
+        ImGui::TextUnformatted((label + " : " + typeName).c_str());
+        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+
+        ImGui::PushID(property.Name.c_str());
+        bool changed = false;
+
+        // ───────────────────────────────────────
+        // 🎛️ Widgets selon le type
+        // ───────────────────────────────────────
 
         if (MatchesType(property.TypeName, "bool"))
         {
             bool& value = property.Get<bool>(instance);
-            return ImGui::Checkbox(label.c_str(), &value);
+            ImGui::Checkbox("##value", &value);
+            return true;
         }
 
         if (MatchesType(property.TypeName, "int") || MatchesType(property.TypeName, "int32_t") || MatchesType(property.TypeName, "std::int32_t"))
         {
             int& value = property.Get<int>(instance);
-            return DrawDragControl(label.c_str(), value, 1.0f, nullptr, nullptr, "%d");
-        }
-
-        if (MatchesType(property.TypeName, "std::int64_t") || MatchesType(property.TypeName, "int64_t"))
-        {
-            long long& value = property.Get<long long>(instance);
-            return DrawDragControl(label.c_str(), value, 1.0f);
-        }
-
-        if (MatchesType(property.TypeName, "unsigned int") || MatchesType(property.TypeName, "uint32_t") || MatchesType(property.TypeName, "std::uint32_t"))
-        {
-            unsigned int& value = property.Get<unsigned int>(instance);
-            return DrawDragControl(label.c_str(), value, 1.0f);
+            changed = DrawDragControl("##value", value, 1.0f, nullptr, nullptr, "%d");
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "float"))
         {
             float& value = property.Get<float>(instance);
-            return DrawDragControl(label.c_str(), value, 0.1f, nullptr, nullptr, "%.3f");
+            changed = DrawDragControl("##value", value, 0.1f, nullptr, nullptr, "%.3f");
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "double"))
         {
             double& value = property.Get<double>(instance);
-            return DrawDragControl(label.c_str(), value, 0.1f, nullptr, nullptr, "%.3f");
+            changed = DrawDragControl("##value", value, 0.1f, nullptr, nullptr, "%.3f");
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "Math::Vector2") || MatchesType(property.TypeName, "Vector2"))
         {
             auto& vector = property.Get<Math::Vector2<float>>(instance);
-            float values[2] = {vector.x, vector.y};
-            if (ImGui::DragFloat2(label.c_str(), values, 0.1f))
+            float values[2] = { vector.x, vector.y };
+            if (ImGui::DragFloat2("##value", values, 0.1f))
             {
                 vector.x = values[0];
                 vector.y = values[1];
-                return true;
             }
-            return false;
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "Math::Vector3") || MatchesType(property.TypeName, "Vector3"))
         {
             auto& vector = property.Get<Math::Vector3>(instance);
-            float values[3] = {vector.x, vector.y, vector.z};
-            if (ImGui::DragFloat3(label.c_str(), values, 0.1f))
+            float values[3] = { vector.x, vector.y, vector.z };
+            if (ImGui::DragFloat3("##value", values, 0.1f))
             {
                 vector.x = values[0];
                 vector.y = values[1];
                 vector.z = values[2];
-                return true;
             }
-            return false;
-        }
-
-        if (MatchesType(property.TypeName, "Math::Rotator") || MatchesType(property.TypeName, "Rotator"))
-        {
-            auto& rotator = property.Get<BixEngine::Math::Rotator>(instance);
-            float values[3] = {rotator.pitch, rotator.yaw, rotator.roll};
-            if (ImGui::DragFloat3(label.c_str(), values, 0.1f))
-            {
-                rotator.pitch = values[0];
-                rotator.yaw = values[1];
-                rotator.roll = values[2];
-                return true;
-            }
-            return false;
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "SDL_Color"))
         {
             SDL_Color& color = property.Get<SDL_Color>(instance);
-            float values[4] =
+            float values[4] = { color.r / 255.f, color.g / 255.f, color.b / 255.f, color.a / 255.f };
+            if (ImGui::ColorEdit4("##value", values))
             {
-                static_cast<float>(color.r) / 255.0f,
-                static_cast<float>(color.g) / 255.0f,
-                static_cast<float>(color.b) / 255.0f,
-                static_cast<float>(color.a) / 255.0f,
-            };
-
-            if (ImGui::ColorEdit4(label.c_str(), values))
-            {
-                color.r = static_cast<Uint8>(std::clamp(values[0], 0.0f, 1.0f) * 255.0f + 0.5f);
-                color.g = static_cast<Uint8>(std::clamp(values[1], 0.0f, 1.0f) * 255.0f + 0.5f);
-                color.b = static_cast<Uint8>(std::clamp(values[2], 0.0f, 1.0f) * 255.0f + 0.5f);
-                color.a = static_cast<Uint8>(std::clamp(values[3], 0.0f, 1.0f) * 255.0f + 0.5f);
-                return true;
+                color.r = static_cast<Uint8>(values[0] * 255.f + 0.5f);
+                color.g = static_cast<Uint8>(values[1] * 255.f + 0.5f);
+                color.b = static_cast<Uint8>(values[2] * 255.f + 0.5f);
+                color.a = static_cast<Uint8>(values[3] * 255.f + 0.5f);
             }
-            return false;
+            ImGui::PopID(); return true;
         }
 
         if (MatchesType(property.TypeName, "String") || MatchesType(property.TypeName, "std::string"))
@@ -214,66 +192,58 @@ namespace BixEngine::Gui::ActorInspector
 
             if (MatchesType(property.TypeName, "String"))
             {
-                auto& stringValue = property.Get<BixEngine::String>(instance);
-                const std::string current = stringValue.Std();
-                const std::size_t copyLength = std::min(buffer.size() - 1, current.size());
-                std::memcpy(buffer.data(), current.data(), copyLength);
-                buffer[copyLength] = '\0';
-                if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-                {
+                auto& stringValue = property.Get<String>(instance);
+                std::string current = stringValue.Std();
+                std::strncpy(buffer.data(), current.c_str(), buffer.size() - 1);
+                if (ImGui::InputText("##value", buffer.data(), buffer.size()))
                     stringValue = buffer.data();
-                    return true;
-                }
-                return false;
+            }
+            else
+            {
+                auto& stringValue = property.Get<std::string>(instance);
+                std::strncpy(buffer.data(), stringValue.c_str(), buffer.size() - 1);
+                if (ImGui::InputText("##value", buffer.data(), buffer.size()))
+                    stringValue.assign(buffer.data());
             }
 
-            auto& stringValue = property.Get<std::string>(instance);
-            const std::size_t copyLength = std::min(buffer.size() - 1, stringValue.size());
-            std::memcpy(buffer.data(), stringValue.data(), copyLength);
-            buffer[copyLength] = '\0';
-            if (ImGui::InputText(label.c_str(), buffer.data(), buffer.size()))
-            {
-                stringValue.assign(buffer.data());
-                return true;
-            }
-            return false;
+            ImGui::PopID(); return true;
         }
 
+        // ───────────────────────────────────────
+        // 🧩 Si non reconnu
+        // ───────────────────────────────────────
+        ImGui::PopID();
         return false;
     }
 
+
     void DrawUnsupportedProperty(const ::Bix::Reflection::PropertyInfo& property, const std::string& label)
     {
-        std::string message = property.TypeName;
-        if (!message.empty())
-        {
-            message += " (read-only)";
-        }
-        else
-        {
-            message = "Unsupported";
-        }
-
-        Utils::DrawLabelValue(label.c_str(), message, "");
+        std::string message = property.TypeName.empty() ? "Unsupported" : property.TypeName;
+        ImGui::TextUnformatted((label + " : " + message).c_str());
     }
+
 
     bool DrawReflectedProperty(const ::Bix::Reflection::PropertyInfo& property, void* instance)
     {
         std::string displayName = PropertyUtils::MakeDisplayName(property.Name);
         if (displayName.empty())
-        {
             displayName = property.Name;
-        }
 
         ImGui::PushID(property.Name.c_str());
-        const bool handled = DrawSupportedProperty(property, instance, displayName);
-        if (!handled)
-        {
-            DrawUnsupportedProperty(property, displayName);
-        }
+        bool handled = DrawSupportedProperty(property, instance, displayName);
         ImGui::PopID();
+
+        if (!handled)
+            DrawUnsupportedProperty(property, displayName);
+
+        // ✅ Correctif ici
+        ImGui::Dummy(ImVec2(0.0f, 8.0f));
+
         return handled;
     }
+
+
 
     void GatherClassProperties(const ::Bix::Reflection::ClassInfo& classInfo, std::vector<const ::Bix::Reflection::PropertyInfo*>& outProperties)
     {
@@ -327,11 +297,7 @@ namespace BixEngine::Gui::ActorInspector
         return false;
     }
 
-    bool DrawClassProperties(const ::Bix::Reflection::ClassInfo& classInfo,
-                             void* instance,
-                             bool includeHeader,
-                             const char* headerLabel,
-                             bool showEmptyMessage)
+    bool DrawClassProperties(const ::Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage)
     {
         std::vector<const ::Bix::Reflection::PropertyInfo*> properties;
         properties.reserve(classInfo.Properties.size());

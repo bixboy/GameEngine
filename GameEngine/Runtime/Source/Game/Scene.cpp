@@ -31,6 +31,7 @@ namespace BixEngine::Game
 
         SceneSerializer::EnsureActorFactory(*actor);
         actor->SetOwningScene(this);
+
         actors_.push_back(std::move(actor));
     }
 

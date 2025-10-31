@@ -12,17 +12,7 @@ namespace BixEngine::Game
 {
     /**
      * @class SceneManager
-     * @brief Gère le cycle de vie complet des scènes dans le moteur.
-     *
-     * Le SceneManager est responsable du chargement, déchargement,
-     * activation et gestion du contexte (renderer, input, gui...) pour
-     * toutes les scènes du jeu.
-     *
-     * Il agit comme un équivalent simplifié du système de monde/level d’Unreal Engine :
-     * - Une seule scène active à la fois
-     * - Support du préchargement (scène en mémoire mais non active)
-     * - Gestion automatique du contexte moteur
-     * - Instance globale accessible via GetActiveSceneManager()
+     * @brief Gère le cycle de vie complet des scènes.
      */
     class SceneManager
     {
@@ -78,11 +68,6 @@ namespace BixEngine::Game
          *
          * @tparam TScene Type de la scène à instancier (doit dériver de Scene)
          * @param args Arguments transmis au constructeur de la scène
-         *
-         * Exemple :
-         * @code
-         * sceneManager.EmplaceScene<MyScene>("CustomName");
-         * @endcode
          */
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args)

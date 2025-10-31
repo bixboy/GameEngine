@@ -14,20 +14,22 @@ namespace BixEngine::Game
         constexpr float kDefaultSpriteWidth = 32.0f;
         constexpr float kDefaultSpriteHeight = 32.0f;
 
-        [[nodiscard]] SDL_Color CombineColor(SDL_Color base, SDL_Color tint, SDL_Color additive, SDL_Color emission) noexcept
+        [[nodiscard]] SDL_Color CombineColor(SDL_Color base, SDL_Color tint, SDL_Color additive) noexcept
         {
-            auto combineChannel = [](uint8_t baseValue, uint8_t tintValue, uint8_t addValue, uint8_t emissionValue) -> uint8_t
-            {
-                const uint32_t multiplied = static_cast<uint32_t>(baseValue) * static_cast<uint32_t>(tintValue) / 255u;
-                const uint32_t withAdd = multiplied + addValue + emissionValue;
-                return static_cast<uint8_t>(std::min<uint32_t>(255u, withAdd));
+            auto mult = [](uint8_t a, uint8_t b) -> uint8_t {
+                return static_cast<uint8_t>((int(a) * int(b)) / 255);
             };
 
-            SDL_Color result{};
-            result.r = combineChannel(base.r, tint.r, additive.r, emission.r);
-            result.g = combineChannel(base.g, tint.g, additive.g, emission.g);
-            result.b = combineChannel(base.b, tint.b, additive.b, emission.b);
-            result.a = static_cast<uint8_t>(std::min<uint32_t>(255u, static_cast<uint32_t>(base.a) * tint.a / 255u));
+            auto clamp8 = [](int value) -> uint8_t {
+                return static_cast<uint8_t>(std::clamp(value, 0, 255));
+            };
+
+            SDL_Color result;
+            result.r = clamp8(mult(base.r, tint.r) + additive.r);
+            result.g = clamp8(mult(base.g, tint.g) + additive.g);
+            result.b = clamp8(mult(base.b, tint.b) + additive.b);
+            result.a = mult(base.a, tint.a);
+            
             return result;
         }
 
@@ -60,7 +62,7 @@ namespace BixEngine::Game
             SDL_Texture* sdlTexture = static_cast<SDL_Texture*>(texture_->GetNativeHandle());
             SDL_SetTextureBlendMode(sdlTexture, blendMode_);
 
-            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_, emissionColor_);
+            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_);
             SDL_SetTextureColorMod(sdlTexture, combined.r, combined.g, combined.b);
             SDL_SetTextureAlphaMod(sdlTexture, combined.a);
 
@@ -70,7 +72,7 @@ namespace BixEngine::Game
         }
         else
         {
-            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_, emissionColor_);
+            const SDL_Color combined = CombineColor(color_, tint_, additiveTint_);
             renderer.SetColor(combined.r, combined.g, combined.b, combined.a);
             SDL_RenderFillRect(renderer.GetSDLRenderer(), &destRect);
         }

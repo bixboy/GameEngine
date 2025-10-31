@@ -106,6 +106,7 @@ namespace BixEngine
                 for (auto& a : actors_)
                     if (auto* ptr = dynamic_cast<T*>(a.get()))
                         return ptr;
+                
                 return nullptr;
             }
 
@@ -119,6 +120,7 @@ namespace BixEngine
                 for (auto& a : actors_)
                     if (auto* ptr = dynamic_cast<T*>(a.get()))
                         result.push_back(ptr);
+                
                 return result;
             }
 
