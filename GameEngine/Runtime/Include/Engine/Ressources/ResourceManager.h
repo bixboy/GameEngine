@@ -8,6 +8,7 @@
 #include <mutex>
 
 #include "Engine/Ressources/IResource.h"
+#include "Core/Containers/String.h"
 
 namespace BixEngine::Core
 {

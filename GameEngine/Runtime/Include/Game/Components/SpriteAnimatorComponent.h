@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Game/Components/SpriteComponent.h"
-#include "Engine/Render/TextureManager.h"
 #include "Reflection/ReflectionMacros.h"
-#include "Engine/Render/SpriteFrame.h"
+#include "Engine/Render/SpriteAnimator.h"
+#include "Engine/Ressources/SpriteAtlas.h"
 #include <memory>
 #include <vector>
 #include "SpriteAnimatorComponent.generated.h"
@@ -22,21 +22,19 @@ namespace BixEngine::Game
         void BeginPlay() override;
         void Update(float deltaTime) override;
         
-        void LoadSpriteSheet(const String& texturePath, int columns, int rows, float frameRate = 8.f, bool loop = true);
+        bool LoadSpriteAtlas(const String& atlasPath, const String& defaultAnimation = {});
 
         void Play();
+        void Play(const String& animationName);
         void Stop();
 
-        [[nodiscard]] bool IsPlaying() const noexcept { return bPlaying_; }
+        [[nodiscard]] bool IsPlaying() const noexcept { return animator_.IsPlaying(); }
 
     private:
-        std::vector<Ressources::SpriteFrame> frames_;
-        std::shared_ptr<Ressources::Texture> loadedTexture_{};
-        int totalFrames_ = 0;
-        int currentFrame_ = 0;
-        float frameRate_ = 8.f;
-        float timer_ = 0.f;
-        bool bLoop_ = true;
-        bool bPlaying_ = false;
+        void ApplyCurrentFrame(bool allowFallbackToDefault);
+
+        std::shared_ptr<Ressources::SpriteAtlas> atlas_{};
+        Ressources::SpriteAnimator animator_{};
+        String currentAnimation_{};
     };
 }

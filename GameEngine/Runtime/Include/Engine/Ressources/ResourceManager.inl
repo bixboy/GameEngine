@@ -16,15 +16,21 @@ namespace BixEngine::Core
     std::shared_ptr<T> ResourceManager::Get(const String& path)
     {
         static_assert(std::is_base_of_v<IResource, T>, "T must derive from IResource");
-        std::scoped_lock lock(mutex_);
-
         const std::type_index typeIndex(typeid(T));
-        auto& cache = caches_[typeIndex];
-
-        if (auto it = cache.find(path); it != cache.end())
         {
-            if (auto resource = it->second.lock())
-                return std::static_pointer_cast<T>(resource);
+            std::scoped_lock lock(mutex_);
+            auto cacheIt = caches_.find(typeIndex);
+            if (cacheIt != caches_.end())
+            {
+                auto& cache = cacheIt->second;
+                if (auto it = cache.find(path); it != cache.end())
+                {
+                    if (auto resource = it->second.lock())
+                        return std::static_pointer_cast<T>(resource);
+
+                    cache.erase(it);
+                }
+            }
         }
 
         std::shared_ptr<T> resource = LoadResource<T>(path);
@@ -35,7 +41,11 @@ namespace BixEngine::Core
             resource = GetDefault<T>();
         }
 
-        cache[path] = resource;
+        {
+            std::scoped_lock lock(mutex_);
+            caches_[typeIndex][path] = resource;
+        }
+
         return resource;
     }
 
@@ -68,14 +78,23 @@ namespace BixEngine::Core
     template <typename T>
     std::shared_ptr<T> ResourceManager::LoadResource(const String& path)
     {
-        const auto it = loaders_.find(std::type_index(typeid(T)));
-        if (it == loaders_.end())
+        std::function<std::shared_ptr<IResource>(const String&)> loader;
         {
-            LOG_ERROR("❌ No loader registered for resource type: " + std::string(typeid(T).name()));
-            return nullptr;
+            std::scoped_lock lock(mutex_);
+            const auto it = loaders_.find(std::type_index(typeid(T)));
+            if (it == loaders_.end())
+            {
+                LOG_ERROR("❌ No loader registered for resource type: " + std::string(typeid(T).name()));
+                return nullptr;
+            }
+
+            loader = it->second;
         }
 
-        auto resource = it->second(path);
+        if (!loader)
+            return nullptr;
+
+        auto resource = loader(path);
         return std::static_pointer_cast<T>(resource);
     }
 

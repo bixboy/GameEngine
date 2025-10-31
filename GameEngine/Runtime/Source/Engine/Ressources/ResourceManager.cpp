@@ -1,4 +1,4 @@
-#include "Engine/Ressources//ResourceManager.h"
+#include "Engine/Ressources/ResourceManager.h"
 
 namespace BixEngine::Core
 {

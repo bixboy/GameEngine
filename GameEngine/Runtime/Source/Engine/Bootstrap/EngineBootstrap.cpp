@@ -5,6 +5,9 @@
 #include "Engine/Systems/Window.h"
 #include "Game/Components/ComponentRegistry.h"
 #include "Graphics/Renderer.h"
+#include "Engine/Ressources/ResourceManager.h"
+#include "Engine/Ressources/SpriteAtlas.h"
+#include "Engine/Ressources/Texture.h"
 
 namespace
 {
@@ -62,6 +65,26 @@ namespace BixEngine::Core
             ShutdownAll();
             return false;
         }
+
+        // --- Resource Manager ---
+        LOG_INFO("Configuring resource loaders...");
+        auto& resourceManager = ResourceManager::Get();
+
+        resourceManager.RegisterLoader<Ressources::Texture>([](const String& path) -> std::shared_ptr<Ressources::Texture>
+        {
+            auto texture = std::make_shared<Ressources::Texture>();
+            if (!texture->LoadFromFile(path))
+                return nullptr;
+            return texture;
+        });
+
+        resourceManager.RegisterLoader<Ressources::SpriteAtlas>([](const String& path) -> std::shared_ptr<Ressources::SpriteAtlas>
+        {
+            auto atlas = std::make_shared<Ressources::SpriteAtlas>();
+            if (!atlas->LoadFromFile(path))
+                return nullptr;
+            return atlas;
+        });
 
         // --- GUI ---
         LOG_INFO("Initializing GUI module...");

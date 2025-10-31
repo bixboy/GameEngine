@@ -114,8 +114,10 @@ namespace BixEngine::Game
         // Setup
         animatorComponent_->SetColor(color_);
         animatorComponent_->SetDimensions(size_.x, size_.y);
-        animatorComponent_->LoadSpriteSheet("../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png", 4, 1, 8.f, true);
-        animatorComponent_->Play();
+        if (animatorComponent_->LoadSpriteAtlas("../../../../Resources/Pink_Monster/Pink_Monster.atlas", "Idle"))
+        {
+            animatorComponent_->Play();
+        }
 
         AddComponent(std::move(animator));
         SetScale(size_);

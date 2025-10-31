@@ -1,6 +1,8 @@
-#include "Engine/Ressources//Texture.h"
+#include "Engine/Ressources/Texture.h"
+
 #include "../../../../ThirdParty/SDL3_image/include/SDL3_image/SDL_image.h"
 #include "Core/Logger.h"
+#include "Graphics/Renderer.h"
 #include "SDL3/SDL_render.h"
 
 namespace BixEngine::Ressources
@@ -12,6 +14,18 @@ namespace BixEngine::Ressources
             SDL_DestroyTexture(texture_);
             texture_ = nullptr;
         }
+    }
+
+    bool Texture::LoadFromFile(const String& path)
+    {
+        auto* renderer = Graphics::Renderer::Get();
+        if (!renderer || !renderer->GetSDLRenderer())
+        {
+            LOG_ERROR("Texture::LoadFromFile: renderer is not initialized for " + path);
+            return false;
+        }
+
+        return LoadFromFile(path, renderer->GetSDLRenderer());
     }
 
     bool Texture::LoadFromFile(const String& path, SDL_Renderer* renderer)
