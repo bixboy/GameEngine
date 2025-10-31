@@ -33,6 +33,7 @@ namespace BixEngine::resources
     private:
         ResourceManager() = default;
         ~ResourceManager() = default;
+        
         ResourceManager(const ResourceManager&) = delete;
         ResourceManager& operator=(const ResourceManager&) = delete;
 

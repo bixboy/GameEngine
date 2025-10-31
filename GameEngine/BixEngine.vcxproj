@@ -1522,6 +1522,7 @@
     <ClInclude Include="Runtime\Include\Engine\Ressources\ResourceManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\ResourceManager.inl" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\SpriteAtlas.h" />
+    <ClInclude Include="Runtime\Include\Engine\Ressources\SpriteAtlasUtils.h" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\Texture.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Application.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\ApplicationConfig.h" />

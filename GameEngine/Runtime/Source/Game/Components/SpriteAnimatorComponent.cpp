@@ -36,10 +36,12 @@ namespace BixEngine::Game
         if (!atlas)
         {
             LOG_ERROR("❌ Failed to load sprite atlas: " + atlasPath);
+            
             atlas_.reset();
             animator_.SetSpriteAtlas(nullptr);
             currentAnimation_.Clear();
             SetTexture(nullptr);
+            
             return false;
         }
 

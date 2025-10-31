@@ -24,7 +24,7 @@ namespace BixEngine::resources
     };
 
     /**
-     * @brief Represents a sprite atlas resource containing texture, frames and animations.
+     * @brief Le sprite atlas represente la texture, frames et animations.
      */
     class SpriteAtlas : public IResource
     {

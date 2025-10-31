@@ -82,8 +82,10 @@ namespace BixEngine::resources
             defaultAnimation.frameRate = 12.0f;
             defaultAnimation.loop = true;
             defaultAnimation.frameIndices.resize(frameCount);
+            
             for (size_t i = 0; i < frameCount; ++i)
                 defaultAnimation.frameIndices[i] = i;
+            
             animations_.push_back(std::move(defaultAnimation));
         }
 
