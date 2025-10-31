@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/Containers/String.h"
 
-namespace BixEngine::Core
+namespace BixEngine::resources
 {
     class IResource
     {

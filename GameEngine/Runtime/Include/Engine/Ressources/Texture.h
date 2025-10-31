@@ -1,9 +1,10 @@
 #pragma once
 
 #include "Core/Containers/String.h"
+#include "Engine/Ressources/IResource.h"
 #include "SDL3/SDL_render.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     enum class TextureFormat
     {
@@ -13,12 +14,13 @@ namespace BixEngine::Ressources
         R8,
     };
 
-    class Texture
+    class Texture : public IResource
     {
     public:
         Texture() = default;
         virtual ~Texture();
 
+        bool LoadFromFile(const String& path) override;
         // Charge une texture
         bool LoadFromFile(const String& path, SDL_Renderer* renderer);
 

@@ -2,14 +2,14 @@
 
 #include <functional>
 #include <memory>
-#include <string>
 #include <unordered_map>
 #include <typeindex>
 #include <mutex>
 
 #include "Engine/Ressources/IResource.h"
+#include "Core/Containers/String.h"
 
-namespace BixEngine::Core
+namespace BixEngine::resources
 {
     class ResourceManager
     {

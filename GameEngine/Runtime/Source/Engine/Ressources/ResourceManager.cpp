@@ -1,6 +1,6 @@
-#include "Engine/Ressources//ResourceManager.h"
+#include "Engine/Ressources/ResourceManager.h"
 
-namespace BixEngine::Core
+namespace BixEngine::resources
 {
     void ResourceManager::Purge()
     {

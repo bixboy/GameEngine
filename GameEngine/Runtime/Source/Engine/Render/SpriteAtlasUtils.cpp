@@ -1,23 +1,15 @@
 #include "Engine/Render/SpriteAtlasUtils.h"
-#include "Engine/Render/SpriteFramePool.h"
-#include "Engine/Render/Texture.h"
+
 #include <fstream>
 #include <sstream>
 
-namespace BixEngine::Ressources
+#include "Engine/Render/SpriteFramePool.h"
+#include "Engine/Ressources/Texture.h"
+
+namespace BixEngine::resources
 {
     namespace
     {
-        [[nodiscard]] std::string LoadFile(const std::string& path)
-        {
-            std::ifstream file(path);
-            if (!file.is_open())
-                return {};
-            std::stringstream buffer;
-            buffer << file.rdbuf();
-            return buffer.str();
-        }
-
         [[nodiscard]] float ExtractFloat(const std::string& source, const std::string& key, float defaultValue)
         {
             const std::string token = "\"" + key + "\"";
@@ -88,6 +80,46 @@ namespace BixEngine::Ressources
             const float h = ExtractFloat(block, "h", 0.0f);
             return Math::Rect(x, y, w, h);
         }
+
+        [[nodiscard]] std::string ExtractString(const std::string& source, const std::string& key)
+        {
+            const std::string token = "\"" + key + "\"";
+            size_t pos = source.find(token);
+            if (pos == std::string::npos)
+                return {};
+            pos = source.find(':', pos);
+            if (pos == std::string::npos)
+                return {};
+            size_t quoteStart = source.find('"', pos);
+            if (quoteStart == std::string::npos)
+                return {};
+            size_t quoteEnd = source.find('"', quoteStart + 1);
+            if (quoteEnd == std::string::npos)
+                return {};
+            return source.substr(quoteStart + 1, quoteEnd - quoteStart - 1);
+        }
+    }
+
+    std::string SpriteAtlasUtils::LoadFileContents(const std::string& path)
+    {
+        std::ifstream file(path);
+        if (!file.is_open())
+            return {};
+
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        return buffer.str();
+    }
+
+    SpriteAtlasDefinition SpriteAtlasUtils::ParseDefinition(const std::string& contents)
+    {
+        SpriteAtlasDefinition definition;
+        definition.Columns = ExtractInt(contents, "columns", 1);
+        definition.Rows = ExtractInt(contents, "rows", 1);
+        definition.Padding = ExtractInt(contents, "padding", 0);
+        definition.Margin = ExtractInt(contents, "margin", 0);
+        definition.TexturePath = ExtractString(contents, "texture");
+        return definition;
     }
 
     std::vector<SpriteFrame> SpriteAtlasUtils::LoadFramesFromAtlas(Texture& texture, int columns, int rows, int padding, int margin)
@@ -121,7 +153,7 @@ namespace BixEngine::Ressources
     std::vector<SpriteFrame> SpriteAtlasUtils::LoadFramesFromJSON(Texture& texture, const std::string& jsonPath)
     {
         std::vector<SpriteFrame> frames;
-        const std::string contents = LoadFile(jsonPath);
+        const std::string contents = LoadFileContents(jsonPath);
         if (contents.empty())
             return frames;
 
@@ -154,19 +186,9 @@ namespace BixEngine::Ressources
         return frames;
     }
 
-    std::vector<SpriteAnimation> SpriteAtlasUtils::LoadAnimationsFromAsset(const std::string& assetPath, Texture& texture)
+    std::vector<SpriteAnimation> SpriteAtlasUtils::BuildAnimationsFromContent(const std::string& contents, const std::vector<SpriteFrame>& frames)
     {
         std::vector<SpriteAnimation> animations;
-        const std::string contents = LoadFile(assetPath);
-        if (contents.empty())
-            return animations;
-
-        const int columns = ExtractInt(contents, "columns", 1);
-        const int rows = ExtractInt(contents, "rows", 1);
-        const int padding = ExtractInt(contents, "padding", 0);
-        const int margin = ExtractInt(contents, "margin", 0);
-
-        std::vector<SpriteFrame> frames = LoadFramesFromAtlas(texture, columns, rows, padding, margin);
         if (frames.empty())
             return animations;
 

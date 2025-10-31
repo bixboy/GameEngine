@@ -1,10 +1,9 @@
 #include "Game/Components/SpriteComponent.h"
 #include "Game/Actor.h"
 #include "Graphics/Renderer.h"
-#include "Engine/Render/Texture.h"
+#include "Engine/Ressources/Texture.h"
 #include "SDL3/SDL_render.h"
 #include <algorithm>
-#include <cstdint>
 
 namespace BixEngine::Game
 {
@@ -78,7 +77,7 @@ namespace BixEngine::Game
         }
     }
 
-    void SpriteComponent::ApplyFrame(const Ressources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
+    void SpriteComponent::ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
     {
         if (!frame || !frame->handle)
         {
@@ -95,7 +94,7 @@ namespace BixEngine::Game
         SetTint(tint);
     }
 
-    void SpriteComponent::SetTexture(Ressources::Texture* texture) noexcept
+    void SpriteComponent::SetTexture(resources::Texture* texture) noexcept
     {
         texture_ = texture;
 

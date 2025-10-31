@@ -5,7 +5,7 @@
 
 #include "Engine/Render/SpriteFrame.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     /**
      * @brief Thread-safe pool that deduplicates sprite frame data across animators.
