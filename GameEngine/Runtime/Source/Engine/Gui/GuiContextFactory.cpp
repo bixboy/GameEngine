@@ -134,6 +134,17 @@ namespace BixEngine::Gui
         context.openScriptFilesInEditor = args.openScriptFilesInEditor ? args.openScriptFilesInEditor : DefaultScriptOpener();
         context.openAssetInEditor = args.openAssetInEditor ? args.openAssetInEditor : DefaultAssetOpener();
 
+        context.mouseStatsProvider = [manager = &subsystems_]() -> const Input::MouseStatistics*
+        {
+            if (!manager)
+                return nullptr;
+
+            if (Input::Input* input = manager->GetInputDevice())
+                return &input->GetMouseStatistics();
+
+            return nullptr;
+        };
+
         LOG_INFO("[GuiContextFactory] ✅ Contexte GUI créé avec succès.");
         return context;
     }

@@ -109,6 +109,7 @@ namespace BixEngine::Core
         // --- Event dispatcher + render loop ---
         LOG_INFO("Configuring event dispatcher and render loop...");
         eventDispatcher_.Configure(&guiModule_, &subsystems_);
+        eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         renderLoop_.Configure(&subsystems_, &guiModule_, renderer_.get(), config_.clearColor);
 
         // --- Default GUI panels (debug overlay, FPS counter, etc.) ---
@@ -140,6 +141,7 @@ namespace BixEngine::Core
         const float deltaTime = renderLoop_.CalculateDeltaTime();
 
         // Récupère les événements SDL (fermeture, clavier, etc.)
+        eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         eventDispatcher_.PumpEvents(running_);
         if (!running_)
         {

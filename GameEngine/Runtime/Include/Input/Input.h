@@ -7,6 +7,14 @@
 
 namespace BixEngine::Input
 {
+    struct MouseStatistics
+    {
+        int eventsPerSecond{0};
+        int droppedEventsPerSecond{0};
+        int processedEventsThisFrame{0};
+        int droppedEventsThisFrame{0};
+    };
+
     class Input
     {
     public:
@@ -17,6 +25,9 @@ namespace BixEngine::Input
 
         // Met à jour l'état des entrées (à appeler une fois par frame)
         void PostUpdate() noexcept;
+
+        void UpdateStatistics(float deltaTime) noexcept;
+        void NotifyMouseEventDropped() noexcept;
 
         // Réinitialise tous les états d'entrée (utilisé quand on quitte le viewport)
         void ResetState() noexcept;
@@ -38,6 +49,8 @@ namespace BixEngine::Input
         [[nodiscard]] bool WasMouseButtonReleased(int button) const noexcept;
         [[nodiscard]] std::pair<float, float> GetMouseDelta() const noexcept;
         [[nodiscard]] std::pair<int, int> GetMouseWheel() const noexcept;
+
+        [[nodiscard]] const MouseStatistics& GetMouseStatistics() const noexcept { return mouseStats_; }
 
         // ============================
         // 🔹 Système
@@ -66,10 +79,17 @@ namespace BixEngine::Input
         std::pair<float, float> mouseDelta_{0.0f, 0.0f};
         std::pair<float, float> mouseWheel_{0.0f, 0.0f};
 
+        MouseStatistics mouseStats_{};
+        int mouseEventsProcessedFrame_{0};
+        int mouseEventsDroppedFrame_{0};
+        int mouseEventsAccumulated_{0};
+        int mouseEventsDroppedAccumulated_{0};
+        float mouseStatisticsTimer_{0.0f};
+    
         // ============================
         // Système
         // ============================
-        
+
         bool quitRequested_{false};
     };
 }

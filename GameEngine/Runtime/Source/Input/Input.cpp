@@ -1,5 +1,7 @@
 #include "Input/Input.h"
 
+#include <cmath>
+
 namespace BixEngine::Input
 {
     void Input::ProcessEvent(const SDL_Event& event)
@@ -49,6 +51,7 @@ namespace BixEngine::Input
         case SDL_EVENT_MOUSE_MOTION:
             mouseDelta_.first  += static_cast<float>(event.motion.xrel);
             mouseDelta_.second += static_cast<float>(event.motion.yrel);
+            ++mouseEventsProcessedFrame_;
             break;
 
         case SDL_EVENT_MOUSE_WHEEL:
@@ -71,6 +74,35 @@ namespace BixEngine::Input
         mouseWheel_ = {0, 0};
     }
 
+    void Input::UpdateStatistics(float deltaTime) noexcept
+    {
+        mouseStats_.processedEventsThisFrame = mouseEventsProcessedFrame_;
+        mouseStats_.droppedEventsThisFrame = mouseEventsDroppedFrame_;
+
+        mouseEventsAccumulated_ += mouseEventsProcessedFrame_;
+        mouseEventsDroppedAccumulated_ += mouseEventsDroppedFrame_;
+        mouseStatisticsTimer_ += deltaTime;
+
+        if (mouseStatisticsTimer_ >= 1.0f)
+        {
+            const float inv = mouseStatisticsTimer_ > 0.0f ? (1.0f / mouseStatisticsTimer_) : 0.0f;
+            mouseStats_.eventsPerSecond = static_cast<int>(std::round(static_cast<float>(mouseEventsAccumulated_) * inv));
+            mouseStats_.droppedEventsPerSecond = static_cast<int>(std::round(static_cast<float>(mouseEventsDroppedAccumulated_) * inv));
+
+            mouseEventsAccumulated_ = 0;
+            mouseEventsDroppedAccumulated_ = 0;
+            mouseStatisticsTimer_ = 0.0f;
+        }
+
+        mouseEventsProcessedFrame_ = 0;
+        mouseEventsDroppedFrame_ = 0;
+    }
+
+    void Input::NotifyMouseEventDropped() noexcept
+    {
+        ++mouseEventsDroppedFrame_;
+    }
+
     void Input::ResetState() noexcept
     {
         heldKeys_.clear();
@@ -83,6 +115,13 @@ namespace BixEngine::Input
 
         mouseDelta_ = {0.0f, 0.0f};
         mouseWheel_ = {0, 0};
+
+        mouseStats_ = {};
+        mouseEventsProcessedFrame_ = 0;
+        mouseEventsDroppedFrame_ = 0;
+        mouseEventsAccumulated_ = 0;
+        mouseEventsDroppedAccumulated_ = 0;
+        mouseStatisticsTimer_ = 0.0f;
 
         quitRequested_ = false;
     }

@@ -8,6 +8,7 @@
 #include "Engine/Gui/Controllers/GuiPanelController.h"
 #include "Engine/Gui/Widgets/GuiWidgetLibrary.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Input/Input.h"
 
 #include "imgui.h"
 #include <cstdio>
@@ -51,10 +52,12 @@ namespace BixEngine::Gui
         public:
             StatsPanelController(Core::Timer* timer,
                                  const float* lastDeltaTime,
-                                 std::function<Game::SceneManager*()> sceneProvider)
+                                 std::function<Game::SceneManager*()> sceneProvider,
+                                 std::function<const Input::MouseStatistics*()> mouseStatsProvider)
                 : timer_(timer)
                 , lastDeltaTime_(lastDeltaTime)
                 , sceneManagerProvider_(std::move(sceneProvider))
+                , mouseStatsProvider_(std::move(mouseStatsProvider))
             {
             }
 
@@ -73,6 +76,7 @@ namespace BixEngine::Gui
             {
                 const float fps = timer_ ? timer_->GetFPS() : 0.0f;
                 const float deltaMs = lastDeltaTime_ ? (*lastDeltaTime_ * 1000.0f) : 0.0f;
+                const ImGuiIO& io = ImGui::GetIO();
 
                 if (!std::isnan(fps) && fps > 0.0f)
                     smoothedFps_ = smoothedFps_ * (1.0f - kSmoothingFactor) + fps * kSmoothingFactor;
@@ -112,10 +116,8 @@ namespace BixEngine::Gui
                     if (!sceneManager)
                     {
                         DrawEmptyStateMessage("No active scene.");
-                        return;
                     }
-
-                    if (const Game::Scene* activeScene = sceneManager->GetScene())
+                    else if (const Game::Scene* activeScene = sceneManager->GetScene())
                     {
                         const String& sceneName = activeScene->GetName();
                         const auto view = sceneName.View();
@@ -127,12 +129,32 @@ namespace BixEngine::Gui
                         DrawEmptyStateMessage("No scene is currently loaded.");
                     }
                 }
+
+                Widgets::PanelSection inputSection("Input Statistics");
+                if (inputSection.IsOpen())
+                {
+                    ImGui::Text("Mouse delta: %.1f, %.1f", io.MouseDelta.x, io.MouseDelta.y);
+
+                    const Input::MouseStatistics* stats = mouseStatsProvider_ ? mouseStatsProvider_() : nullptr;
+                    if (!stats)
+                    {
+                        DrawEmptyStateMessage("Mouse statistics unavailable.");
+                    }
+                    else
+                    {
+                        ImGui::Text("Mouse events/s: %d", stats->eventsPerSecond);
+                        ImGui::Text("Dropped events/s: %d", stats->droppedEventsPerSecond);
+                        ImGui::Text("Mouse events/frame: %d", stats->processedEventsThisFrame);
+                        ImGui::Text("Dropped/frame: %d", stats->droppedEventsThisFrame);
+                    }
+                }
             }
 
         private:
             Core::Timer* timer_{nullptr};
             const float* lastDeltaTime_{nullptr};
             std::function<Game::SceneManager*()> sceneManagerProvider_{};
+            std::function<const Input::MouseStatistics*()> mouseStatsProvider_{};
 
             float smoothedFps_{0.0f};
             float smoothedDelta_{0.0f};
@@ -149,7 +171,8 @@ namespace BixEngine::Gui
             "Engine Stats",
             context.timer,
             context.lastDeltaTime,
-            context.sceneManagerProvider);
+            context.sceneManagerProvider,
+            context.mouseStatsProvider);
 
         guiManager.SetPanelDockingArea(registration.panel, DockSpaceRegion::Right);
         return registration.panel;

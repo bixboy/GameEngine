@@ -12,6 +12,7 @@ namespace BixEngine
 {
     namespace Core { class Timer; }
     namespace Game { class SceneManager; class Actor; }
+    namespace Input { struct MouseStatistics; }
 }
 
 struct SDL_Texture;
@@ -35,6 +36,7 @@ namespace BixEngine::Gui
         std::function<std::pair<int, int>()> sceneRenderTextureSizeProvider{};
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
         std::function<void(const std::filesystem::path&)> openAssetInEditor{};
+        std::function<const Input::MouseStatistics*()> mouseStatsProvider{};
         bool bEnableGui{true};
     };
 

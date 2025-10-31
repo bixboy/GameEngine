@@ -117,6 +117,9 @@ namespace BixEngine::Core
 
     void SubsystemManager::UpdateAll(float deltaTime)
     {
+        if (input_)
+            input_->UpdateStatistics(deltaTime);
+
         if (inputManager_)
             inputManager_->Update();
 
@@ -125,6 +128,9 @@ namespace BixEngine::Core
             if (Game::Scene* scene = sceneManager_->GetScene())
                 scene->Update(deltaTime);
         }
+
+        if (input_)
+            input_->PostUpdate();
     }
 
     bool SubsystemManager::ShouldQuit() const noexcept
@@ -147,6 +153,16 @@ namespace BixEngine::Core
         return inputManager_.get();
     }
 
+    Input::Input* SubsystemManager::GetInputDevice() noexcept
+    {
+        return input_.get();
+    }
+
+    const Input::Input* SubsystemManager::GetInputDevice() const noexcept
+    {
+        return input_.get();
+    }
+
     Game::SceneManager* SubsystemManager::GetSceneManager() noexcept
     {
         return sceneManager_.get();
@@ -165,5 +181,11 @@ namespace BixEngine::Core
     const Game::Scene* SubsystemManager::GetScene() const noexcept
     {
         return sceneManager_ ? sceneManager_->GetScene() : nullptr;
+    }
+
+    void SubsystemManager::NotifyMouseEventDropped() noexcept
+    {
+        if (input_)
+            input_->NotifyMouseEventDropped();
     }
 }

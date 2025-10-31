@@ -7,6 +7,7 @@
 #include "Engine/Systems/SdlSystem.h"
 #include "Engine/Gui/Internal/GuiModule.h"
 #include "Engine/Systems/SubsystemManager.h"
+#include "Engine/Editor/EditorSettings.h"
 #include "Core/EventDispatcher.h"
 #include "Engine/Render/RenderLoop.h"
 
@@ -63,6 +64,8 @@ namespace BixEngine::Core
         }
 
         [[nodiscard]] Graphics::Renderer* GetRenderer() const noexcept { return renderer_.get(); }
+        [[nodiscard]] EditorSettings& GetEditorSettings() noexcept { return editorSettings_; }
+        [[nodiscard]] const EditorSettings& GetEditorSettings() const noexcept { return editorSettings_; }
 
     private:
         // Crée la fenêtre principale SDL.
@@ -84,9 +87,11 @@ namespace BixEngine::Core
         std::unique_ptr<Graphics::Renderer> renderer_{};
         
         GuiModule guiModule_{};
-        
+
         SubsystemManager subsystems_{};
-        
+
+        EditorSettings editorSettings_{};
+
         EventDispatcher eventDispatcher_{};
         
         RenderLoop renderLoop_{};

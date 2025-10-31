@@ -44,11 +44,13 @@ namespace BixEngine::Core
         // Distribue un événement SDL à tous les modules concernés.
         void ProcessEvent(const SDL_Event& event);
 
-        
+
         // Met à jour les entrées et la scène active.
         void UpdateAll(float deltaTime);
 
-        
+        void NotifyMouseEventDropped() noexcept;
+
+
         // Retourne true si l’utilisateur demande à quitter (ESC ou close).
         bool ShouldQuit() const noexcept;
 
@@ -57,6 +59,8 @@ namespace BixEngine::Core
         Timer* GetTimer() noexcept;
         const Timer* GetTimer() const noexcept;
         Input::InputManager* GetInputManager() noexcept;
+        Input::Input* GetInputDevice() noexcept;
+        const Input::Input* GetInputDevice() const noexcept;
         Game::SceneManager* GetSceneManager() noexcept;
         Game::Scene* GetActiveScene() noexcept;
         Game::Scene* GetScene() noexcept;

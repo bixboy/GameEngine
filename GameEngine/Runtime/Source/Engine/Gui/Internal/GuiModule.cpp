@@ -21,6 +21,7 @@
 #include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Gui/Internal/GuiSystem.h"
 #include "Engine/Gui/Internal/NavBar/GuiNavigationBar.h"
+#include "Input/Input.h"
 
 #include "Game/Actor.h"
 #include "Graphics/Renderer.h"
@@ -201,6 +202,34 @@ namespace BixEngine::Core
         {
             guiManager_->DrawAll();
             ProcessFocusRequests();
+        }
+
+        if (const Input::Input* input = subsystems.GetInputDevice())
+        {
+            const Input::MouseStatistics& stats = input->GetMouseStatistics();
+            const ImGuiViewport* viewport = ImGui::GetMainViewport();
+            const ImVec2 viewportPos = viewport ? viewport->WorkPos : ImVec2(0.0f, 0.0f);
+
+            ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 12.0f, viewportPos.y + 12.0f), ImGuiCond_Always);
+            ImGui::SetNextWindowBgAlpha(0.35f);
+            ImGui::SetNextWindowViewport(viewport ? viewport->ID : 0);
+
+            const ImGuiWindowFlags overlayFlags =
+                ImGuiWindowFlags_NoDecoration |
+                ImGuiWindowFlags_NoDocking |
+                ImGuiWindowFlags_NoMove |
+                ImGuiWindowFlags_NoInputs |
+                ImGuiWindowFlags_NoNav |
+                ImGuiWindowFlags_NoFocusOnAppearing |
+                ImGuiWindowFlags_NoSavedSettings |
+                ImGuiWindowFlags_AlwaysAutoResize;
+
+            if (ImGui::Begin("##MouseEventsOverlay", nullptr, overlayFlags))
+            {
+                ImGui::Text("Mouse events: %d/s", stats.eventsPerSecond);
+                ImGui::Text("Dropped: %d/s", stats.droppedEventsPerSecond);
+            }
+            ImGui::End();
         }
 
         guiSystem_->EndFrame();
