@@ -4,17 +4,17 @@
 
 #include "Core/Logger.h"
 #include "Engine/Ressources/ResourceManager.h"
+#include "Engine/Ressources/SpriteAtlasUtils.h"
 #include "Engine/Ressources/Texture.h"
-#include "Engine/Render/SpriteAtlasUtils.h"
 
 namespace BixEngine::resources
 {
     namespace
     {
-        [[nodiscard]] String ResolveTexturePath(const String& atlasPath, const std::string& texturePath)
+        [[nodiscard]] String ResolveTexturePath(const String& atlasPath, const String& relativeTexture)
         {
             std::filesystem::path atlasFile(atlasPath.c_str());
-            std::filesystem::path resolved = atlasFile.parent_path() / texturePath;
+            std::filesystem::path resolved = atlasFile.parent_path() / relativeTexture.c_str();
             resolved = resolved.lexically_normal();
             return resolved.generic_string().c_str();
         }
@@ -22,50 +22,80 @@ namespace BixEngine::resources
 
     bool SpriteAtlas::LoadFromFile(const String& path)
     {
-        const std::string contents = SpriteAtlasUtils::LoadFileContents(path.Std());
-        if (contents.empty())
+        SpriteAtlasDefinition definition;
+        std::vector<SpriteAnimationDefinition> animationDefinitions;
+        if (!SpriteAtlasUtils::ParseAtlasFile(path, definition, animationDefinitions))
         {
-            LOG_ERROR("SpriteAtlas::LoadFromFile: unable to read asset: " + path);
+            LOG_ERROR("SpriteAtlas::LoadFromFile: failed to parse atlas " + path);
             return false;
         }
 
-        const SpriteAtlasDefinition definition = SpriteAtlasUtils::ParseDefinition(contents);
-        if (definition.TexturePath.empty())
-        {
-            LOG_ERROR("SpriteAtlas::LoadFromFile: missing texture path in asset: " + path);
-            return false;
-        }
-
-        texturePath_ = ResolveTexturePath(path, definition.TexturePath);
+        texturePath_ = ResolveTexturePath(path, definition.texturePath);
 
         auto& resourceManager = ResourceManager::Get();
         texture_ = resourceManager.Get<Texture>(texturePath_);
         if (!texture_)
         {
-            LOG_ERROR("SpriteAtlas::LoadFromFile: failed to load texture: " + texturePath_);
+            LOG_ERROR("SpriteAtlas::LoadFromFile: unable to load texture " + texturePath_);
             return false;
         }
 
-        frames_ = SpriteAtlasUtils::LoadFramesFromAtlas(*texture_, definition.Columns, definition.Rows, definition.Padding, definition.Margin);
+        frames_ = SpriteAtlasUtils::GenerateFrames(*texture_, definition.columns, definition.rows, definition.padding, definition.margin);
         if (frames_.empty())
         {
             LOG_WARNING("SpriteAtlas::LoadFromFile: atlas has no frames: " + path);
         }
 
-        animations_ = SpriteAtlasUtils::BuildAnimationsFromContent(contents, frames_);
+        animations_.clear();
+        animations_.reserve(animationDefinitions.size());
 
-        if (animations_.empty() && !frames_.empty())
+        const size_t frameCount = frames_.size();
+        for (const auto& animDef : animationDefinitions)
         {
-            SpriteAnimation fallback{};
-            fallback.Name = "Default";
-            fallback.FrameRate = 12.0f;
-            fallback.Frames = frames_;
-            animations_.push_back(std::move(fallback));
+            if (animDef.name.IsEmpty())
+            {
+                LOG_WARNING("SpriteAtlas::LoadFromFile: skipping animation with empty name in " + path);
+                continue;
+            }
+
+            SpriteAnimation animation;
+            animation.name = animDef.name;
+            animation.frameRate = animDef.frameRate;
+            animation.loop = animDef.loop;
+
+            for (size_t frameIndex : animDef.frames)
+            {
+                if (frameIndex < frameCount)
+                    animation.frameIndices.push_back(frameIndex);
+                else
+                    LOG_WARNING("SpriteAtlas::LoadFromFile: frame index out of range in animation '" + animDef.name + "'.");
+            }
+
+            if (!animation.frameIndices.empty())
+                animations_.push_back(std::move(animation));
+        }
+
+        if (animations_.empty() && frameCount > 0)
+        {
+            SpriteAnimation defaultAnimation;
+            defaultAnimation.name = "Default";
+            defaultAnimation.frameRate = 12.0f;
+            defaultAnimation.loop = true;
+            defaultAnimation.frameIndices.resize(frameCount);
+            for (size_t i = 0; i < frameCount; ++i)
+                defaultAnimation.frameIndices[i] = i;
+            animations_.push_back(std::move(defaultAnimation));
         }
 
         BuildAnimationLookup();
-
         return texture_ != nullptr;
+    }
+
+    const SpriteFrame* SpriteAtlas::GetFrame(size_t index) const noexcept
+    {
+        if (index >= frames_.size())
+            return nullptr;
+        return &frames_[index];
     }
 
     const SpriteAnimation* SpriteAtlas::GetAnimation(const String& name) const noexcept
@@ -87,11 +117,10 @@ namespace BixEngine::resources
         for (size_t index = 0; index < animations_.size(); ++index)
         {
             const auto& animation = animations_[index];
-            if (!animation.Name.IsEmpty())
+            if (!animation.name.IsEmpty())
             {
-                animationLookup_[animation.Name] = index;
+                animationLookup_[animation.name] = index;
             }
         }
     }
 }
-

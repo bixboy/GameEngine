@@ -5,15 +5,26 @@
 #include <vector>
 
 #include "Core/Containers/String.h"
+#include "Engine/Render/SpriteFrame.h"
 #include "Engine/Ressources/IResource.h"
-#include "Engine/Render/SpriteAnimator.h"
 
 namespace BixEngine::resources
 {
     class Texture;
 
     /**
-     * @brief Represents a sprite atlas resource containing frames and animations.
+     * @brief Represents an animation clip defined by a sprite atlas.
+     */
+    struct SpriteAnimation
+    {
+        String name{};
+        float frameRate{0.0f};
+        bool loop{true};
+        std::vector<size_t> frameIndices{};
+    };
+
+    /**
+     * @brief Represents a sprite atlas resource containing texture, frames and animations.
      */
     class SpriteAtlas : public IResource
     {
@@ -24,6 +35,9 @@ namespace BixEngine::resources
         bool LoadFromFile(const String& path) override;
 
         [[nodiscard]] const std::vector<SpriteFrame>& GetFrames() const noexcept { return frames_; }
+        [[nodiscard]] const SpriteFrame* GetFrame(size_t index) const noexcept;
+        [[nodiscard]] size_t GetFrameCount() const noexcept { return frames_.size(); }
+
         [[nodiscard]] const std::vector<SpriteAnimation>& GetAnimations() const noexcept { return animations_; }
         [[nodiscard]] const SpriteAnimation* GetAnimation(const String& name) const noexcept;
 
@@ -40,4 +54,3 @@ namespace BixEngine::resources
         String texturePath_{};
     };
 }
-
