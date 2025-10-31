@@ -28,7 +28,7 @@ namespace BixEngine::Game
             result.g = clamp8(mult(base.g, tint.g) + additive.g);
             result.b = clamp8(mult(base.b, tint.b) + additive.b);
             result.a = mult(base.a, tint.a);
-            
+
             return result;
         }
 
@@ -37,10 +37,10 @@ namespace BixEngine::Game
             SDL_FlipMode mode = SDL_FLIP_NONE;
             if (flipX)
                 mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_HORIZONTAL);
-            
+
             if (flipY)
                 mode = static_cast<SDL_FlipMode>(mode | SDL_FLIP_VERTICAL);
-            
+
             return mode;
         }
     }
@@ -79,7 +79,7 @@ namespace BixEngine::Game
 
     void SpriteComponent::ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
     {
-        if (!frame || !frame->handle)
+        if (!frame || !frame->IsValid())
         {
             SetTexture(nullptr);
             SetTint(baseTint);

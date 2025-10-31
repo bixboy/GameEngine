@@ -1,10 +1,10 @@
 #include "Game/Components/SpriteAnimatorComponent.h"
+
 #include "Core/Logger.h"
 #include "Engine/Ressources/ResourceManager.h"
 #include "Engine/Ressources/SpriteAtlas.h"
 #include "Game/Actor.h"
 #include <algorithm>
-#include <string>
 
 namespace BixEngine::Game
 {
@@ -15,7 +15,6 @@ namespace BixEngine::Game
     void SpriteAnimatorComponent::BeginPlay()
     {
         SpriteComponent::BeginPlay();
-
         ApplyCurrentFrame(true);
     }
 
@@ -23,7 +22,7 @@ namespace BixEngine::Game
     {
         Super::Update(deltaTime);
 
-        if (!atlas_ || !animator_.IsPlaying())
+        if (!atlas_)
             return;
 
         animator_.Update(std::max(0.0f, deltaTime));
@@ -38,31 +37,35 @@ namespace BixEngine::Game
         {
             LOG_ERROR("❌ Failed to load sprite atlas: " + atlasPath);
             atlas_.reset();
-            animator_ = resources::SpriteAnimator{};
+            animator_.SetSpriteAtlas(nullptr);
             currentAnimation_.Clear();
             SetTexture(nullptr);
             return false;
         }
 
         atlas_ = std::move(atlas);
-        animator_ = resources::SpriteAnimator{};
+        animator_.SetSpriteAtlas(atlas_);
 
-        for (const auto& animation : atlas_->GetAnimations())
-        {
-            animator_.AddAnimation(animation);
-        }
-
-        if (!defaultAnimation.IsEmpty() && animator_.HasAnimation(defaultAnimation))
+        if (!defaultAnimation.IsEmpty() && atlas_->GetAnimation(defaultAnimation))
         {
             currentAnimation_ = defaultAnimation;
         }
         else if (!atlas_->GetAnimations().empty())
         {
-            currentAnimation_ = atlas_->GetAnimations().front().Name;
+            currentAnimation_ = atlas_->GetAnimations().front().name;
         }
         else
         {
             currentAnimation_.Clear();
+        }
+
+        if (!currentAnimation_.IsEmpty())
+        {
+            animator_.Play(currentAnimation_);
+        }
+        else
+        {
+            animator_.Stop();
         }
 
         ApplyCurrentFrame(true);
@@ -77,13 +80,18 @@ namespace BixEngine::Game
             return;
         }
 
-        if (!animator_.HasAnimation(currentAnimation_))
+        if (!atlas_ || !atlas_->GetAnimation(currentAnimation_))
         {
             LOG_WARNING("⚠️ Animation not found in atlas: " + currentAnimation_);
             return;
         }
 
-        animator_.Play(currentAnimation_);
+        if (!animator_.Play(currentAnimation_))
+        {
+            LOG_WARNING("⚠️ Failed to start animation: " + currentAnimation_);
+            return;
+        }
+
         ApplyCurrentFrame(false);
     }
 
@@ -92,6 +100,12 @@ namespace BixEngine::Game
         if (animationName.IsEmpty())
         {
             LOG_WARNING("⚠️ Cannot play animation with empty name.");
+            return;
+        }
+
+        if (!atlas_ || !atlas_->GetAnimation(animationName))
+        {
+            LOG_WARNING("⚠️ Animation not found in atlas: " + animationName);
             return;
         }
 
@@ -112,13 +126,13 @@ namespace BixEngine::Game
         if (!frame && allowFallbackToDefault && atlas_ && !currentAnimation_.IsEmpty())
         {
             const resources::SpriteAnimation* animation = atlas_->GetAnimation(currentAnimation_);
-            if (animation && !animation->Frames.empty())
+            if (animation && !animation->frameIndices.empty())
             {
-                frame = &animation->Frames.front();
+                frame = atlas_->GetFrame(animation->frameIndices.front());
             }
         }
 
-        if (frame)
+        if (frame && frame->IsValid())
         {
             SetTexture(frame->GetTexture());
             SetUVRect(frame->GetUVRect());

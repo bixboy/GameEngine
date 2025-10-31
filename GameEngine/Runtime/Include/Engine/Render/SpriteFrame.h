@@ -1,42 +1,21 @@
 #pragma once
-#include <memory>
-#include "Core/Math/Rect.h"
-#include "Engine/Ressources/Texture.h"
 
+#include "Core/Math/Rect.h"
 
 namespace BixEngine::resources
 {
+    class Texture;
 
-    struct SpriteFrameData
-    {
-        Texture* TexturePtr = nullptr;
-        Math::Rect UVRect{};
-
-        [[nodiscard]] bool operator==(const SpriteFrameData& other) const noexcept
-        {
-            return TexturePtr == other.TexturePtr &&
-                   UVRect.X == other.UVRect.X &&
-                   UVRect.Y == other.UVRect.Y &&
-                   UVRect.Width == other.UVRect.Width &&
-                   UVRect.Height == other.UVRect.Height;
-        }
-    };
-
-    using SpriteFrameHandle = std::shared_ptr<const SpriteFrameData>;
-
-
+    /**
+     * @brief Represents a single sprite frame referencing a texture region.
+     */
     struct SpriteFrame
     {
-        SpriteFrame() = default;
-        explicit SpriteFrame(SpriteFrameHandle frameHandle) : handle(std::move(frameHandle)) {}
+        Texture* texture{nullptr};
+        Math::Rect uvRect{};
 
-        [[nodiscard]] Texture* GetTexture() const noexcept { return handle ? handle->TexturePtr : nullptr; }
-        [[nodiscard]] const Math::Rect& GetUVRect() const noexcept
-        {
-            static Math::Rect kEmpty{};
-            return handle ? handle->UVRect : kEmpty;
-        }
-
-        SpriteFrameHandle handle;
+        [[nodiscard]] Texture* GetTexture() const noexcept { return texture; }
+        [[nodiscard]] const Math::Rect& GetUVRect() const noexcept { return uvRect; }
+        [[nodiscard]] bool IsValid() const noexcept { return texture != nullptr; }
     };
 }

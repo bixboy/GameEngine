@@ -28,6 +28,7 @@ target_include_directories(BixEngine PRIVATE
     ${BIXENGINE_IMGUI_BACKENDS_DIR}
     ${BIXENGINE_SDL_DIR}
     ${BIXENGINE_GENERATED_DIR}
+    ${BIXENGINE_ROOT}/ThirdParty
     ${BIXENGINE_ROOT}/Tools/BixHeaderTool
 )
 target_include_directories(BixEngine INTERFACE
@@ -36,6 +37,7 @@ target_include_directories(BixEngine INTERFACE
     ${BIXENGINE_IMGUI_BACKENDS_DIR}
     ${BIXENGINE_SDL_DIR}
     ${BIXENGINE_GENERATED_DIR}
+    ${BIXENGINE_ROOT}/ThirdParty
 )
 target_compile_options(BixEngine PRIVATE
     $<$<COMPILE_LANGUAGE:CUDA>:-G>
@@ -126,9 +128,12 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Utils/GuiHelpers.cpp
     Runtime/Source/Engine/Gui/Widgets/GuiWidgetLibrary.cpp
     Runtime/Source/Engine/Gui/Widgets/ActionTooltip.cpp
-    Runtime/Source/Engine/Render/SpriteAtlasUtils.cpp
-    Runtime/Source/Engine/Render/SpriteFramePool.cpp
-    Runtime/Source/Engine/Render/TextureManager.cpp
+    Runtime/Source/Engine/Ressources/AtlasGenerator.cpp
+    Runtime/Source/Engine/Ressources/SpriteAtlasUtils.cpp
+    Runtime/Source/Engine/Ressources/ResourceManager.cpp
+    Runtime/Source/Engine/Ressources/SpriteAtlas.cpp
+    Runtime/Source/Engine/Ressources/Texture.cpp
+    Runtime/Source/Engine/Render/SpriteAnimator.cpp
     Runtime/Source/Engine/Systems/Application.cpp
     Runtime/Source/Engine/Systems/RenderLoop.cpp
     Runtime/Source/Engine/Systems/SdlSystem.cpp
@@ -207,12 +212,30 @@ if(CURRENT_COMPILER_ID STREQUAL "MSVC")
         MSVC_RUNTIME_LIBRARY "MultiThreadedDebugDLL")
 endif()
 # private sourcefiles from sourcebatch c++.build for target BixHeaderTool
-target_sources(BixHeaderTool PRIVATE 
+target_sources(BixHeaderTool PRIVATE
     Tools/BixHeaderTool/FileSystem/FileUtils.cpp
     Tools/BixHeaderTool/Generator/HeaderGenerator.cpp
     Tools/BixHeaderTool/main.cpp
     Tools/BixHeaderTool/Parser/HeaderParser.cpp
     Tools/BixHeaderTool/Parser/TokenUtils.cpp
+)
+
+# target
+add_executable(BixAssetTool "")
+set_target_properties(BixAssetTool PROPERTIES OUTPUT_NAME "BixAssetTool")
+set_target_properties(BixAssetTool PROPERTIES RUNTIME_OUTPUT_DIRECTORY "${CMAKE_SOURCE_DIR}/build/windows/x64/debug")
+target_sources(BixAssetTool PRIVATE
+    Tools/BixAssetTool/main.cpp
+)
+target_include_directories(BixAssetTool PRIVATE
+    ${BIXENGINE_RUNTIME_INCLUDE_DIR}
+    ${BIXENGINE_RUNTIME_SOURCE_DIR}
+    ${BIXENGINE_ROOT}/ThirdParty
+)
+target_compile_features(BixAssetTool PRIVATE cxx_std_20)
+target_link_libraries(BixAssetTool PRIVATE BixEngine SDL3)
+target_link_directories(BixAssetTool PRIVATE
+    ThirdParty/SDL3-3.2.22/lib/x64
 )
 
 # target

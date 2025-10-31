@@ -29,8 +29,6 @@ namespace BixEngine::Game
 
     void Actor::Update(float deltaTime)
     {
-        LOG_INFO("Reloading EmptyScene...");
-        
         if (!active_)
             return;
 
