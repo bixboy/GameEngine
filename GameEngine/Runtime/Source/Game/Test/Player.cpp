@@ -12,7 +12,7 @@
 
 namespace BixEngine::Game
 {
-    Player::Player() : Actor("Player")
+    Player::Player(): Actor("Player")
     {
         InitializeSpriteComponent();
     }
@@ -105,30 +105,19 @@ namespace BixEngine::Game
 
     void Player::InitializeSpriteComponent()
     {
-        // Création du sprite visuel
-        auto sprite = std::make_unique<SpriteComponent>(this, color_, size_.x, size_.y);
-        spriteComponent_ = sprite.get();
-        AddComponent(std::move(sprite));
-
-        // Création du composant d’animation
         auto animator = std::make_unique<SpriteAnimatorComponent>(this);
         animatorComponent_ = animator.get();
+
+        // Setup
+        animatorComponent_->SetColor(color_);
+        animatorComponent_->SetDimensions(size_.x, size_.y);
+        animatorComponent_->LoadSpriteSheet("../../../../Resources/Pink_Monster/Pink_Monster_Idle_4.png", 4, 1, 8.f, true);
+        animatorComponent_->Play();
+
         AddComponent(std::move(animator));
-
-        // Lier le sprite à l’animator
-        animatorComponent_->AddSpriteLayer(spriteComponent_);
-
-        SpriteAnimationClipConfig idleClip{};
-        idleClip.Name = "Idle";
-        idleClip.FrameCount = 4;
-        idleClip.FrameRate = 8.0f;
-        idleClip.bLoop = true;
-
-        animatorComponent_->SetInitialClip(idleClip.Name);
-        animatorComponent_->SetClips({idleClip});
-
         SetScale(size_);
     }
+
 
     void Player::RefreshSpriteComponent()
     {

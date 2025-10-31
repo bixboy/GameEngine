@@ -76,7 +76,7 @@ namespace BixEngine::Gui::ActorInspector
 
         if (entries.empty())
         {
-            Utils::DrawEmptyStateMessage("No components available.");
+            DrawEmptyStateMessage("No components available.");
         }
         else
         {
@@ -125,7 +125,7 @@ namespace BixEngine::Gui::ActorInspector
             return;
         }
 
-        Utils::DrawSeparatorText("Components");
+        DrawSeparatorText("Components");
 
         if (ImGui::Button("+ Add Component"))
         {
@@ -133,13 +133,13 @@ namespace BixEngine::Gui::ActorInspector
         }
 
         ImGui::SameLine();
-        Utils::DrawHelpMarker("Attach new behaviours to this actor.");
+        DrawHelpMarker("Attach new behaviours to this actor.");
         DrawAddComponentPopup(actor);
 
         auto& components = actor.GetComponents();
         if (components.empty())
         {
-            Utils::DrawEmptyStateMessage("Actor has no components.");
+            DrawEmptyStateMessage("Actor has no components.");
             return;
         }
 
@@ -162,17 +162,35 @@ namespace BixEngine::Gui::ActorInspector
 
             const std::string typeLabel = ToStdString(component->GetTypeName());
             const std::string treeLabel = "🧩 " + typeLabel;
-            const bool open = ImGui::TreeNodeEx(
+
+            const float startX = ImGui::GetCursorPosX();
+            const float startY = ImGui::GetCursorPosY();
+
+            bool open = ImGui::TreeNodeEx(
                 component.get(),
                 ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding,
-                "%s",
-                treeLabel.c_str());
+                "%s", treeLabel.c_str()
+            );
 
-            ImGui::SameLine(ImGui::GetContentRegionAvail().x - ImGui::GetFrameHeight() - ImGui::GetStyle().FramePadding.x);
-            if (Utils::IconButton("🗑", "Remove this component"))
+            const float labelWidth = ImGui::CalcTextSize(treeLabel.c_str()).x;
+            const float iconSpacing = ImGui::GetTreeNodeToLabelSpacing();
+
+            const float buttonHeight = ImGui::GetFrameHeight();
+            const float textHeight = ImGui::GetTextLineHeight();
+
+            float centerOffsetY = (textHeight - buttonHeight) * 0.5f;
+            float buttonPosX = startX + labelWidth + iconSpacing + ImGui::GetStyle().ItemInnerSpacing.x;
+            float buttonPosY = startY + centerOffsetY;
+
+            ImVec2 prevCursor = ImGui::GetCursorPos();
+            ImGui::SetCursorPos(ImVec2(buttonPosX, buttonPosY));
+            
+            if (IconButton("🗑", "Remove this component"))
             {
                 componentPendingRemoval = component.get();
             }
+
+            ImGui::SetCursorPos(prevCursor);
 
             if (open)
             {
@@ -185,7 +203,7 @@ namespace BixEngine::Gui::ActorInspector
 
                 if (!drewReflected && cursorAfterCustom <= cursorBefore + 0.5f && cursorAfterReflected <= cursorBefore + 0.5f)
                 {
-                    Utils::DrawEmptyStateMessage("No editable properties.");
+                    DrawEmptyStateMessage("No editable properties.");
                 }
 
                 ImGui::TreePop();

@@ -52,7 +52,6 @@ namespace BixEngine
                 BPROPERTY()
                 Math::Vector3 size_{Math::Vector3(32.0f, 32.0f, 1.0f)};
             
-                BPROPERTY()
                 SDL_Color color_{255, 255, 255, 255};
             
                 SpriteComponent* spriteComponent_{nullptr};

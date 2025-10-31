@@ -34,7 +34,6 @@ namespace BixEngine::Game
 
             [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
 
-        public:
             [[nodiscard]] const std::vector<std::unique_ptr<Component>>& GetComponents() const noexcept { return components_; }
             [[nodiscard]] std::vector<std::unique_ptr<Component>>& GetComponents() noexcept { return components_; }
 
@@ -44,7 +43,10 @@ namespace BixEngine::Game
             bool RemoveComponent(const Component* component);
 
             void SetOwningScene(Scene* scene) noexcept { owningScene_ = scene; }
+        
             [[nodiscard]] Scene* GetOwningScene() const noexcept { return owningScene_; }
+
+            [[nodiscard]] bool HasBegunPlay() const noexcept { return has_begun_play_; }
 
         protected:
             virtual void OnComponentRemoved(const Component& /*component*/) {}
