@@ -1174,8 +1174,6 @@
       <AdditionalOptions>/FS </AdditionalOptions>
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
-    <ClCompile Include="Runtime\Source\Engine\Render\SpriteAtlasUtils.cpp" />
-    <ClCompile Include="Runtime\Source\Engine\Render\SpriteFramePool.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Ressources\ResourceManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1257,6 +1255,7 @@
       <LinkCompiled>true</LinkCompiled>
     </ClCompile>
     <ClCompile Include="Runtime\Source\Engine\Ressources\SpriteAtlas.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Ressources\SpriteAtlasUtils.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Ressources\Texture.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>

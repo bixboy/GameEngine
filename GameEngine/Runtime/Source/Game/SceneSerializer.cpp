@@ -32,7 +32,7 @@ namespace BixEngine::Game
 
             bool WriteString(const String& value)
             {
-                const auto length = static_cast<std::uint32_t>(value.size());
+                const auto length = value.size();
                 return WriteUint32(length) && WriteBytes(value.c_str(), value.size());
             }
 
@@ -44,7 +44,7 @@ namespace BixEngine::Game
                 if (length == 0)
                     return true;
 
-                stream_.write(data, static_cast<std::streamsize>(length));
+                stream_.write(data, length);
                 return static_cast<bool>(stream_);
             }
 
