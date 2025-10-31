@@ -23,7 +23,15 @@ namespace BixEngine::Gui
                 return {};
             }
 
-            return basePath / "Content";
+            const fs::path contentPath = basePath / "Content";
+            if (fs::exists(contentPath))
+                return contentPath;
+
+            const fs::path resourcesPath = basePath / "Resources";
+            if (fs::exists(resourcesPath))
+                return resourcesPath;
+
+            return contentPath;
         }
     }
 

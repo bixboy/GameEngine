@@ -106,6 +106,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Controllers/BaseAssetEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ActorEditorController.cpp
     Runtime/Source/Engine/Gui/Controllers/ComponentEditorController.cpp
+    Runtime/Source/Engine/Gui/Controllers/SpriteAtlasEditorController.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorPanel.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorInspectorState.cpp
     Runtime/Source/Engine/Gui/Panels/ActorInspector/ActorOverviewUI.cpp
@@ -129,6 +130,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/Widgets/GuiWidgetLibrary.cpp
     Runtime/Source/Engine/Gui/Widgets/ActionTooltip.cpp
     Runtime/Source/Engine/Ressources/AtlasGenerator.cpp
+    Runtime/Source/Engine/Ressources/SpriteAtlasFactory.cpp
     Runtime/Source/Engine/Ressources/SpriteAtlasUtils.cpp
     Runtime/Source/Engine/Ressources/ResourceManager.cpp
     Runtime/Source/Engine/Ressources/SpriteAtlas.cpp

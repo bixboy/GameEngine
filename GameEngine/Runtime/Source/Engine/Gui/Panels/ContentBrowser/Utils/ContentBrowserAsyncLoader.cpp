@@ -128,6 +128,16 @@ namespace BixEngine::Gui
                 continue;
             }
 
+            if (extensionLower == ".atlas")
+            {
+                ContentEntry ce{};
+                ce.type = ContentType::SpriteAtlas;
+                ce.path = p;
+                ce.name = p.filename().generic_string();
+                r.entries.push_back(std::move(ce));
+                continue;
+            }
+
             ContentEntry fe{};
             fe.type = ContentType::File;
             fe.path = p;

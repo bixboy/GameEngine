@@ -35,6 +35,9 @@ namespace BixEngine::Gui
             if (extensionLower == ".bixcomponent")
                 return ContentType::ComponentPrefab;
 
+            if (extensionLower == ".atlas")
+                return ContentType::SpriteAtlas;
+
             return ContentType::File;
         }
 
@@ -157,6 +160,19 @@ namespace BixEngine::Gui
             requests.createPrefab = true;
             ClearSelectedPrefab(requests);
         }
+
+        void RequestCreateSpriteAtlas(ContentBrowserState& state, PopupRequestState& requests)
+        {
+            requests.spriteAtlasError.Clear();
+            std::snprintf(requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), "%s", "");
+            requests.spriteAtlasColumns = 1;
+            requests.spriteAtlasRows = 1;
+            requests.spriteAtlasPadding = 0;
+            requests.spriteAtlasMargin = 0;
+            requests.spriteAtlasTarget = state.current;
+            requests.spriteAtlasBrowseTextures = false;
+            requests.createSpriteAtlas = true;
+        }
     }
 
     // ─────────────────────────────────────────────
@@ -187,6 +203,8 @@ namespace BixEngine::Gui
                 RequestCreatePrefab(requests);
             if (ImGui::MenuItem("Create folder..."))
                 RequestCreateFolder(requests, state.current);
+            if (ImGui::MenuItem("Sprite Atlas"))
+                RequestCreateSpriteAtlas(state, requests);
 
             ImGui::EndPopup();
         }
@@ -261,7 +279,7 @@ namespace BixEngine::Gui
                                 EditorUtils::OpenFileInCodeEditor(scriptFile);
                         }
                     }
-                    else if (entry.IsPrefab())
+                    else if (entry.IsPrefab() || entry.IsSpriteAtlas())
                     {
                         if (state.openAssetEditorCallback)
                             state.openAssetEditorCallback(entry.path);

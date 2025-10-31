@@ -16,6 +16,7 @@ namespace BixEngine::Gui
         Script,
         ActorPrefab,
         ComponentPrefab,
+        SpriteAtlas,
     };
 
     // ─────────────────────────────────────────────
@@ -41,12 +42,13 @@ namespace BixEngine::Gui
         [[nodiscard]] bool IsScript() const noexcept { return type == ContentType::Script; }
         [[nodiscard]] bool IsActorPrefab() const noexcept { return type == ContentType::ActorPrefab; }
         [[nodiscard]] bool IsComponentPrefab() const noexcept { return type == ContentType::ComponentPrefab; }
+        [[nodiscard]] bool IsSpriteAtlas() const noexcept { return type == ContentType::SpriteAtlas; }
         [[nodiscard]] bool IsPrefab() const noexcept { return IsActorPrefab() || IsComponentPrefab(); }
 
         [[nodiscard]] bool HasHeader() const noexcept { return !headerPath.empty(); }
         [[nodiscard]] bool HasSource() const noexcept { return !sourcePath.empty(); }
 
-        [[nodiscard]] bool IsAsset() const noexcept { return IsPrefab() || IsScript(); }
+        [[nodiscard]] bool IsAsset() const noexcept { return IsPrefab() || IsScript() || IsSpriteAtlas(); }
 
         [[nodiscard]] String SelectionKey() const;
     };
