@@ -162,17 +162,17 @@ namespace BixEngine::Gui::ActorInspector
             ScopedID componentId(static_cast<int>(index));
 
             std::string typeLabel;
-            if (const ::Bix::Reflection::ClassInfo* classInfo = component->GetClass())
+
+            const ::Bix::Reflection::ClassInfo& classInfo = component->GetClass();
+            if (!classInfo.Name.empty())
             {
-                if (!classInfo->Name.empty())
-                {
-                    typeLabel = classInfo->Name;
-                }
-                else if (!classInfo->QualifiedName.empty())
-                {
-                    typeLabel = classInfo->QualifiedName;
-                }
+                typeLabel = classInfo.Name;
             }
+            else if (!classInfo.QualifiedName.empty())
+            {
+                typeLabel = classInfo.QualifiedName;
+            }
+
 
             if (typeLabel.empty())
             {
