@@ -3,9 +3,8 @@
 #include "Game/Components/SpriteComponent.h"
 #include "Reflection/ReflectionMacros.h"
 #include "Engine/Render/SpriteAnimator.h"
-#include "Engine/Ressources/SpriteAtlas.h"
 #include <memory>
-#include <vector>
+#include "Engine/Ressources/SpriteAtlas.h"
 #include "SpriteAnimatorComponent.generated.h"
 
 
@@ -33,8 +32,8 @@ namespace BixEngine::Game
     private:
         void ApplyCurrentFrame(bool allowFallbackToDefault);
 
-        std::shared_ptr<Ressources::SpriteAtlas> atlas_{};
-        Ressources::SpriteAnimator animator_{};
+        std::shared_ptr<resources::SpriteAtlas> atlas_{};
+        resources::SpriteAnimator animator_{};
         String currentAnimation_{};
     };
 }

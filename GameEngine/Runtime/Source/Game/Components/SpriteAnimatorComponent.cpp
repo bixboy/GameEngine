@@ -32,20 +32,20 @@ namespace BixEngine::Game
 
     bool SpriteAnimatorComponent::LoadSpriteAtlas(const String& atlasPath, const String& defaultAnimation)
     {
-        auto& resourceManager = Core::ResourceManager::Get();
-        auto atlas = resourceManager.Get<Ressources::SpriteAtlas>(atlasPath);
+        auto& resourceManager = resources::ResourceManager::Get();
+        auto atlas = resourceManager.Get<resources::SpriteAtlas>(atlasPath);
         if (!atlas)
         {
             LOG_ERROR("❌ Failed to load sprite atlas: " + atlasPath);
             atlas_.reset();
-            animator_ = Ressources::SpriteAnimator{};
+            animator_ = resources::SpriteAnimator{};
             currentAnimation_.Clear();
             SetTexture(nullptr);
             return false;
         }
 
         atlas_ = std::move(atlas);
-        animator_ = Ressources::SpriteAnimator{};
+        animator_ = resources::SpriteAnimator{};
 
         for (const auto& animation : atlas_->GetAnimations())
         {
@@ -107,11 +107,11 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::ApplyCurrentFrame(bool allowFallbackToDefault)
     {
-        const Ressources::SpriteFrame* frame = animator_.GetCurrentFrame();
+        const resources::SpriteFrame* frame = animator_.GetCurrentFrame();
 
         if (!frame && allowFallbackToDefault && atlas_ && !currentAnimation_.IsEmpty())
         {
-            const Ressources::SpriteAnimation* animation = atlas_->GetAnimation(currentAnimation_);
+            const resources::SpriteAnimation* animation = atlas_->GetAnimation(currentAnimation_);
             if (animation && !animation->Frames.empty())
             {
                 frame = &animation->Frames.front();

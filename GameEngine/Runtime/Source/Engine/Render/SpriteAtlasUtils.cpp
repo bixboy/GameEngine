@@ -6,7 +6,7 @@
 #include "Engine/Render/SpriteFramePool.h"
 #include "Engine/Ressources/Texture.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     namespace
     {

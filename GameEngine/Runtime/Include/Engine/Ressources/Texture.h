@@ -4,7 +4,7 @@
 #include "Engine/Ressources/IResource.h"
 #include "SDL3/SDL_render.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     enum class TextureFormat
     {
@@ -14,7 +14,7 @@ namespace BixEngine::Ressources
         R8,
     };
 
-    class Texture : public Core::IResource
+    class Texture : public IResource
     {
     public:
         Texture() = default;

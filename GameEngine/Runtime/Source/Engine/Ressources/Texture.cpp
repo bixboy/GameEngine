@@ -5,7 +5,7 @@
 #include "Graphics/Renderer.h"
 #include "SDL3/SDL_render.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     Texture::~Texture()
     {

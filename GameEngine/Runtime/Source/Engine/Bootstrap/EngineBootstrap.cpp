@@ -68,21 +68,23 @@ namespace BixEngine::Core
 
         // --- Resource Manager ---
         LOG_INFO("Configuring resource loaders...");
-        auto& resourceManager = ResourceManager::Get();
+        auto& resourceManager = resources::ResourceManager::Get();
 
-        resourceManager.RegisterLoader<Ressources::Texture>([](const String& path) -> std::shared_ptr<Ressources::Texture>
+        resourceManager.RegisterLoader<resources::Texture>([](const String& path) -> std::shared_ptr<resources::Texture>
         {
-            auto texture = std::make_shared<Ressources::Texture>();
+            auto texture = std::make_shared<resources::Texture>();
             if (!texture->LoadFromFile(path))
                 return nullptr;
+            
             return texture;
         });
 
-        resourceManager.RegisterLoader<Ressources::SpriteAtlas>([](const String& path) -> std::shared_ptr<Ressources::SpriteAtlas>
+        resourceManager.RegisterLoader<resources::SpriteAtlas>([](const String& path) -> std::shared_ptr<resources::SpriteAtlas>
         {
-            auto atlas = std::make_shared<Ressources::SpriteAtlas>();
+            auto atlas = std::make_shared<resources::SpriteAtlas>();
             if (!atlas->LoadFromFile(path))
                 return nullptr;
+            
             return atlas;
         });
 

@@ -7,7 +7,7 @@
 #include "Engine/Ressources/Texture.h"
 #include "Engine/Render/SpriteAtlasUtils.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     namespace
     {
@@ -38,7 +38,7 @@ namespace BixEngine::Ressources
 
         texturePath_ = ResolveTexturePath(path, definition.TexturePath);
 
-        auto& resourceManager = Core::ResourceManager::Get();
+        auto& resourceManager = ResourceManager::Get();
         texture_ = resourceManager.Get<Texture>(texturePath_);
         if (!texture_)
         {

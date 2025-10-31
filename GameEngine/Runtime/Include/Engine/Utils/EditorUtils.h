@@ -5,8 +5,6 @@ namespace BixEngine::EditorUtils
 {
     /**
      * @brief Ouvre un fichier source dans l’éditeur de code configuré.
-     * 
-     * @param path Chemin absolu du fichier à ouvrir.
      */
     void OpenFileInCodeEditor(const std::filesystem::path& path);
 

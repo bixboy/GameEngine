@@ -1,11 +1,10 @@
 #pragma once
 #include <memory>
-#include <functional>
 #include "Core/Math/Rect.h"
-#include "Engine/Render/Texture.h"
+#include "Engine/Ressources/Texture.h"
 
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
 
     struct SpriteFrameData

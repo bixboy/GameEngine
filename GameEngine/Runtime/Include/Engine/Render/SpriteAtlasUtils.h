@@ -6,7 +6,7 @@
 #include "Engine/Render/SpriteAnimator.h"
 #include "Engine/Render/SpriteFrame.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     class Texture;
 

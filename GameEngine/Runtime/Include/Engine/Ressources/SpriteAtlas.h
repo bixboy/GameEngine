@@ -8,14 +8,14 @@
 #include "Engine/Ressources/IResource.h"
 #include "Engine/Render/SpriteAnimator.h"
 
-namespace BixEngine::Ressources
+namespace BixEngine::resources
 {
     class Texture;
 
     /**
      * @brief Represents a sprite atlas resource containing frames and animations.
      */
-    class SpriteAtlas : public Core::IResource
+    class SpriteAtlas : public IResource
     {
     public:
         SpriteAtlas() = default;

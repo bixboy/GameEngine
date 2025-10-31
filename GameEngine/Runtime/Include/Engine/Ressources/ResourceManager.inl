@@ -1,7 +1,7 @@
 #pragma once
 #include "Core/Logger.h"
 
-namespace BixEngine::Core
+namespace BixEngine::resources
 {
     inline ResourceManager& ResourceManager::Get()
     {
