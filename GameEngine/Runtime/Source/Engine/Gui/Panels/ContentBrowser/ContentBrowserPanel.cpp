@@ -85,19 +85,23 @@ namespace BixEngine::Gui
             if (!TryCopyFile(source, finalDestination, copyError))
             {
                 state_.error = copyError;
+                
                 String message = "Failed to import file: ";
-                message += source.generic_string();
+                message += String(source.generic_string().c_str());
                 message += " -> ";
                 message += copyError;
+                
                 LOG_ERROR(message);
                 continue;
             }
 
             copiedAny = true;
             state_.error.Clear();
-            selectedEntry_ = finalDestination.generic_string();
+            selectedEntry_ = String(finalDestination.generic_string().c_str());
+            
             String successMessage = "Imported file into Content Browser: ";
-            successMessage += finalDestination.generic_string();
+            successMessage += String(finalDestination.generic_string().c_str());
+
             LOG_INFO(successMessage);
         }
 
