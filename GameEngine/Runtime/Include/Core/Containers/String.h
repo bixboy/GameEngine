@@ -460,6 +460,11 @@ namespace BixEngine
             return String(std::string_view(buffer.data(), static_cast<size_t>(size - 1)));
         }
 
+        [[nodiscard]] std::string ToStdString() const noexcept
+        {
+            return data_;
+        }
+
     private:
         [[nodiscard]] size_type FindInsensitive(std::string_view value, size_type start = 0) const
         {

@@ -183,7 +183,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="BixRun\main.cpp" />
-    <ClCompile Include="Build\windows\x64\debug\Content\Scripts\NewScript.cpp" />
     <ClCompile Include="Runtime\Source\Core\EventDispatcher.cpp" />
     <ClCompile Include="Runtime\Source\Core\FileUtils.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
@@ -356,6 +355,249 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ComponentEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\GuiPanelController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\SpriteAtlasEditorController.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\CreateFolderDialog.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\CreatePrefabDialog.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3_image\include\SDL3_image;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\stb;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\CreateScriptDialog.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\CreateSpriteAtlasDialog.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3_image\include\SDL3_image;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\stb;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\ModalDialog.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3_image\include\SDL3_image;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\stb;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Dialogs\RenameEntryDialog.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Internal\GuiLayoutManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1422,6 +1664,167 @@
     <ClCompile Include="Runtime\Source\Engine\Systems\SubsystemManager.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Systems\Window.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Utils\EditorUtils.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Utils\HeaderGenertorUtils.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3_image\include\SDL3_image;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\stb;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Utils\PrefabUtils.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Utils\ScriptUtils.cpp">
+      <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <Optimization>Disabled</Optimization>
+      <SupportJustMyCode>false</SupportJustMyCode>
+      <AssemblerOutput>NoListing</AssemblerOutput>
+      <AssemblerListingLocation>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</AssemblerListingLocation>
+      <UndefineAllPreprocessorDefinitions>false</UndefineAllPreprocessorDefinitions>
+      <BrowseInformation>false</BrowseInformation>
+      <BrowseInformationFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</BrowseInformationFile>
+      <CompileAs>Default</CompileAs>
+      <UseDynamicDebugging>false</UseDynamicDebugging>
+      <ConformanceMode>true</ConformanceMode>
+      <DiagnosticsFormat>Column</DiagnosticsFormat>
+      <DisableLanguageExtensions>false</DisableLanguageExtensions>
+      <ErrorReporting>Prompt</ErrorReporting>
+      <ExpandAttributedSource>false</ExpandAttributedSource>
+      <ExceptionHandling>Sync</ExceptionHandling>
+      <EnableASAN>false</EnableASAN>
+      <EnableFuzzer>false</EnableFuzzer>
+      <EnableFiberSafeOptimizations>false</EnableFiberSafeOptimizations>
+      <EnableEnhancedInstructionSet>NotSet</EnableEnhancedInstructionSet>
+      <EnableVectorLength>NotSet</EnableVectorLength>
+      <FloatingPointModel>Precise</FloatingPointModel>
+      <ForceConformanceInForLoopScope>true</ForceConformanceInForLoopScope>
+      <GenerateModuleDependencies>false</GenerateModuleDependencies>
+      <GenerateSourceDependencies>false</GenerateSourceDependencies>
+      <GenerateXMLDocumentationFiles>false</GenerateXMLDocumentationFiles>
+      <InlineFunctionExpansion>Default</InlineFunctionExpansion>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <IgnoreStandardIncludePath>false</IgnoreStandardIncludePath>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>Default</LanguageStandard_C>
+      <MinimalRebuild>false</MinimalRebuild>
+      <ModuleDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleDependenciesFile>
+      <ModuleOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ModuleOutputFile>
+      <OmitDefaultLibName>false</OmitDefaultLibName>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <ObjectFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</ObjectFileName>
+      <CallingConvention>Cdecl</CallingConvention>
+      <ProgramDataBaseFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\vc143.pdb</ProgramDataBaseFileName>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <PrecompiledHeaderOutputFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.pch</PrecompiledHeaderOutputFile>
+      <PreprocessToFile>false</PreprocessToFile>
+      <PreprocessKeepComments>false</PreprocessKeepComments>
+      <PreprocessSuppressLineNumbers>false</PreprocessSuppressLineNumbers>
+      <RemoveUnreferencedCodeData>true</RemoveUnreferencedCodeData>
+      <ScanSourceForModuleDependencies>false</ScanSourceForModuleDependencies>
+      <ShowIncludes>false</ShowIncludes>
+      <SourceDependenciesFile>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</SourceDependenciesFile>
+      <SuppressStartupBanner>true</SuppressStartupBanner>
+      <BufferSecurityCheck>true</BufferSecurityCheck>
+      <SmallerTypeCheck>false</SmallerTypeCheck>
+      <SpectreMitigation>false</SpectreMitigation>
+      <StructMemberAlignment>Default</StructMemberAlignment>
+      <TrackerLogDirectory>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\BixEngine.tlog\</TrackerLogDirectory>
+      <TranslateIncludes>false</TranslateIncludes>
+      <MinimalRebuildFromTracking>true</MinimalRebuildFromTracking>
+      <TreatWarningAsError>false</TreatWarningAsError>
+      <TreatWChar_tAsBuiltInType>true</TreatWChar_tAsBuiltInType>
+      <UseFullPaths>true</UseFullPaths>
+      <WarningLevel>Level3</WarningLevel>
+      <XMLDocumentationFileName>C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Intermediate\Win32\Debug\</XMLDocumentationFileName>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <IntelJCCErratum>false</IntelJCCErratum>
+      <BuildStlModules>false</BuildStlModules>
+      <TreatAngleIncludeAsExternal>false</TreatAngleIncludeAsExternal>
+      <ExternalWarningLevel>InheritWarningLevel</ExternalWarningLevel>
+      <TreatExternalTemplatesAsInternal>true</TreatExternalTemplatesAsInternal>
+      <DisableAnalyzeExternal>false</DisableAnalyzeExternal>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;_UNICODE;UNICODE;</PreprocessorDefinitions>
+      <EnablePREfast>false</EnablePREfast>
+      <OmitFramePointers>false</OmitFramePointers>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>C:\Apps\CustomEngine\BixEngine\GameEngine\Runtime\Include;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\Debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\Build\windows\Win32\debug\Intermediate\GeneratedHeaders;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3-3.2.22\include;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\SDL3_image\include\SDL3_image;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\stb;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui;C:\Apps\CustomEngine\BixEngine\GameEngine\ThirdParty\ImGui\backends;</AdditionalIncludeDirectories>
+      <AdditionalOptions>/FS </AdditionalOptions>
+      <LinkCompiled>true</LinkCompiled>
+    </ClCompile>
     <ClCompile Include="Runtime\Source\Game\Actor.cpp" />
     <ClCompile Include="Runtime\Source\Game\BGameplayStatics.cpp" />
     <ClCompile Include="Runtime\Source\Game\Components\SpriteAnimatorComponent.cpp">
@@ -1529,7 +1932,6 @@
     <ClCompile Include="Tools\BixHeaderTool\Parser\TokenUtils.cpp" />
     </ItemGroup>
 <ItemGroup>
-    <ClInclude Include="Build\windows\x64\debug\Content\Scripts\NewScript.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Actor.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Component.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\EmptyScene.generated.h" />
@@ -1538,7 +1940,6 @@
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\Scene.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\SpriteAnimatorComponent.generated.h" />
     <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\SpriteComponent.generated.h" />
-    <ClInclude Include="Build\windows\x64\debug\Intermediate\GeneratedHeaders\TestScene.generated.h" />
     <ClInclude Include="Runtime\Include\Core\Containers\String.h" />
     <ClInclude Include="Runtime\Include\Core\EventDispatcher.h" />
     <ClInclude Include="Runtime\Include\Core\FileUtils.h" />
@@ -1557,6 +1958,12 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ComponentEditorController.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\GuiPanelController.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\CreateFolderDialog.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\CreatePrefabDialog.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\CreateScriptDialog.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\CreateSpriteAtlasDialog.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\ModalDialog.h" />
+    <ClInclude Include="Runtime\Include\Engine\Gui\Dialogs\RenameEntryDialog.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Internal\GuiDocking.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Internal\GuiLayoutManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Gui\Internal\GuiManager.h" />
@@ -1611,6 +2018,9 @@
     <ClInclude Include="Runtime\Include\Engine\Systems\SubsystemManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Systems\Window.h" />
     <ClInclude Include="Runtime\Include\Engine\Utils\EditorUtils.h" />
+    <ClInclude Include="Runtime\Include\Engine\Utils\HeaderGenertorUtils.h" />
+    <ClInclude Include="Runtime\Include\Engine\Utils\PrefabUtils.h" />
+    <ClInclude Include="Runtime\Include\Engine\Utils\ScriptUtils.h" />
     <ClInclude Include="Runtime\Include\Game\Actor.h" />
     <ClInclude Include="Runtime\Include\Game\BGameplayStatics.h" />
     <ClInclude Include="Runtime\Include\Game\Components\Component.h" />
@@ -2077,7 +2487,6 @@
   <Content Include="Build\windows\x64\debug\BixRun.pdb" />
   <Content Include="Build\windows\x64\debug\compile.BixHeaderTool.pdb" />
   <Content Include="Build\windows\x64\debug\compile.BixRun.pdb" />
-  <Content Include="Build\windows\x64\debug\Content\Pink_Monster.atlas" />
   <Content Include="Build\windows\x64\debug\imgui.ini" />
   <Content Include="Build\windows\x64\debug\SDL3.dll" />
   <Content Include="Resources\Pink_Monster\Double_Jump_Dust_5.png" />
@@ -2200,6 +2609,7 @@
 </ItemGroup>
 <ItemGroup>
   <Folder Include="Build\Intermediate\Win32\Debug\BixEngine.tlog\" />
+  <Folder Include="Build\windows\x64\debug\Content\Scripts\" />
   <Folder Include="Runtime\Source\Core\Containers\" />
 </ItemGroup>
 <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

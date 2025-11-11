@@ -6,12 +6,16 @@
 
 namespace BixEngine::Gui
 {
-    void LogAndStoreError(String& storage, String message, bool log = true);
+    bool LogAndStoreError(String& storage, String message, bool log = true);
 
     String ToLowerCopy(const String& value);
+    
     bool CaseInsensitiveLess(const String& lhs, const String& rhs);
+    
     String TrimCopy(String value);
+    
     bool ContainsPathSeparator(const String& value);
+    
     bool MatchesSearch(const String& value, const String& query);
 
     void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory);

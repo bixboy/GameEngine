@@ -13,7 +13,5 @@ namespace BixEngine::Gui
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery);
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups);
-
-    void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath);
 }
 

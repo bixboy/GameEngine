@@ -15,12 +15,13 @@ namespace BixEngine::Gui
     // Gestion centralisée des erreurs et fichiers
     // ─────────────────────────────────────────────
 
-    void LogAndStoreError(String& storage, String message, bool log)
+    bool LogAndStoreError(String& storage, String message, bool log)
     {
         if (log)
             LOG_ERROR(message);
 
         storage = std::move(message);
+        return false;
     }
 
     String ToLowerCopy(const String& value)

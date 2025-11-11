@@ -7,37 +7,29 @@
 
 #include "Engine/Gui/GuiTheme.h"
 #include "imgui.h"
+#include "Engine/Utils/ScriptUtils.h"
 
 namespace BixEngine::Gui::Utils
 {
-    struct TreeNodeData
-    {
-        std::string name;
-        std::vector<TreeNodeData> children;
-        bool isLeaf = false;
-    };
+    using ScriptUtils::TreeNodeData;
 
-    /// Callback déclenché lors d’une action (clic droit, menu...) sur un nœud.
     using TreeNodeCallback = std::function<void(const TreeNodeData&)>;
-
-    /// Callback déclenché lors du survol d’un élément de liste.
     using ListItemCallback = std::function<void(const std::string&)>;
 
     struct GuiStateManager
     {
         std::unordered_map<std::string, bool> PersistentSections;
         std::vector<std::string> SectionStack;
+        
         int SmallFontPushCount = 0;
         ImFont* CachedSmallestFont = nullptr;
 
-        /// Accès global (singleton interne)
         static GuiStateManager& Get()
         {
             static GuiStateManager Instance;
             return Instance;
         }
 
-        /// Réinitialise tout l’état interne
         void Reset() noexcept
         {
             PersistentSections.clear();
@@ -121,29 +113,29 @@ namespace BixEngine::Gui::Utils
     };
 
     // ────────────────────────────────────────────────────────────────
-    // 🎨 Fonctions de base : affichage de sections et messages
+    // affichage de sections et messages
     // ────────────────────────────────────────────────────────────────
 
-    void DrawSectionHeader(const char* title); // Titre avec séparateurs haut/bas
-    void DrawErrorMessage(const std::string& message); // Message d’erreur rouge
+    void DrawSectionHeader(const char* title);
+    void DrawErrorMessage(const std::string& message);
 
-    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel); // Boutons OK / Cancel
+    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel);
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm, const std::function<void()>& onCancel);
 
     // ────────────────────────────────────────────────────────────────
-    // ✏️ Champs texte, étiquettes et infos
+    // Champs texte, étiquettes et infos
     // ────────────────────────────────────────────────────────────────
 
     bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
 
     bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize, const std::function<bool(const char*)>& validator, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false, bool* outIsValid = nullptr);
 
-    void DrawDescriptionText(const char* text); // Texte descriptif (wrap)
-    void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-"); // Label + valeur
-    void DrawEmptyStateMessage(const char* message); // Message grisé "Empty"
+    void DrawDescriptionText(const char* text);
+    void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-");
+    void DrawEmptyStateMessage(const char* message);
 
     // ────────────────────────────────────────────────────────────────
-    // 📜 Listes et arbres (rendu et interaction)
+    // Listes et arbres
     // ────────────────────────────────────────────────────────────────
 
     void DrawScrollableList(const std::vector<std::string>& items, float height,
@@ -158,29 +150,29 @@ namespace BixEngine::Gui::Utils
     void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
 
     // ────────────────────────────────────────────────────────────────
-    // 🔽 Sections repliables (persistantes ou non)
+    // Sections repliables
     // ────────────────────────────────────────────────────────────────
 
-    bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0); // Section simple
-    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0); // État sauvegardé
-    void EndPersistentSection(); // Ferme la section
+    bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
+    void EndPersistentSection();
 
     // ────────────────────────────────────────────────────────────────
-    // 🔍 Recherche et mini-widgets
+    // Recherche et mini-widgets
     // ────────────────────────────────────────────────────────────────
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...", float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None); // Champ recherche
 
-    bool IconButton(const char* icon, const char* tooltip = nullptr); // Bouton carré avec tooltip
-    void DrawHelpMarker(const char* text); // "?" contextuel (tooltip)
+    bool IconButton(const char* icon, const char* tooltip = nullptr);
+    void DrawHelpMarker(const char* text);
 
     // ────────────────────────────────────────────────────────────────
-    // 🔤 Gestion des polices et séparateurs
+    // Gestion des polices et séparateurs
     // ────────────────────────────────────────────────────────────────
 
-    void PushSmallFont(); // Active la plus petite police dispo
-    void PopSmallFont(); // Restaure la police précédente
-    void DrawSeparatorText(const char* text); // Séparateur textuel centré
+    void PushSmallFont();
+    void PopSmallFont();
+    void DrawSeparatorText(const char* text);
 
     ImVec4 AdjustColor(const ImVec4& color, float delta) noexcept;
 
