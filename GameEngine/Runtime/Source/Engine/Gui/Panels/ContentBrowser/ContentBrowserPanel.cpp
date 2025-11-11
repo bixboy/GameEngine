@@ -95,7 +95,7 @@ namespace BixEngine::Gui
 
             copiedAny = true;
             state_.error.Clear();
-            selectedEntry_ = finalDestination.generic_string().c_str();
+            selectedEntry_ = finalDestination.generic_string();
             String successMessage = "Imported file into Content Browser: ";
             successMessage += finalDestination.generic_string();
             LOG_INFO(successMessage);

@@ -145,5 +145,10 @@ namespace BixEngine::Core
 
         void ProcessFocusRequests();
         void FocusSceneViewport();
+
+    private:
+        void DispatchPendingFileDrops();
+
+        std::vector<std::filesystem::path> pendingDroppedFiles_{};
     };
 }

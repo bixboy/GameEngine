@@ -6,6 +6,7 @@
 #include <filesystem>
 #include <functional>
 #include <span>
+#include <string>
 #include <utility>
 #include <vector>
 #include <imgui_internal.h>
@@ -157,21 +158,28 @@ namespace BixEngine::Core
         {
             case SDL_EVENT_DROP_FILE:
             {
-                bool handled = false;
-                if (auto* browser = Gui::ContentBrowserPanel::GetActiveInstance())
+                std::filesystem::path droppedFile{};
+                if (event.drop.data && *event.drop.data)
                 {
-                    if (event.drop.data && *event.drop.data)
-                    {
-                        const std::filesystem::path droppedFile = event.drop.data;
-                        browser->ImportExternalFiles({droppedFile});
-                        handled = true;
-                    }
+#if defined(_WIN32)
+                    const std::string dropString(event.drop.data);
+                    std::u8string dropUtf8;
+                    dropUtf8.reserve(dropString.size());
+                    for (const unsigned char ch : dropString)
+                        dropUtf8.push_back(static_cast<char8_t>(ch));
+                    droppedFile = std::filesystem::path(dropUtf8);
+#else
+                    droppedFile = std::filesystem::path(event.drop.data);
+#endif
                 }
 
                 if (event.drop.data)
                     SDL_free(const_cast<char*>(event.drop.data));
 
-                return handled;
+                if (!droppedFile.empty())
+                    pendingDroppedFiles_.push_back(std::move(droppedFile));
+
+                return true;
             }
             case SDL_EVENT_DROP_TEXT:
             case SDL_EVENT_DROP_COMPLETE:
@@ -185,7 +193,7 @@ namespace BixEngine::Core
             case SDL_EVENT_MOUSE_BUTTON_UP:
 
             case SDL_EVENT_MOUSE_MOTION:
-            
+
             case SDL_EVENT_MOUSE_WHEEL:
                 return io.WantCaptureMouse && !overViewport;
 
@@ -198,6 +206,18 @@ namespace BixEngine::Core
 
         default:
             return false;
+        }
+    }
+
+    void GuiModule::DispatchPendingFileDrops()
+    {
+        if (pendingDroppedFiles_.empty())
+            return;
+
+        if (auto* browser = Gui::ContentBrowserPanel::GetActiveInstance())
+        {
+            browser->ImportExternalFiles(pendingDroppedFiles_);
+            pendingDroppedFiles_.clear();
         }
     }
 
@@ -221,6 +241,7 @@ namespace BixEngine::Core
             return;
 
         subsystems_ = &subsystems;
+        DispatchPendingFileDrops();
         if (navigationBar_)
             navigationBar_->Render();
 
