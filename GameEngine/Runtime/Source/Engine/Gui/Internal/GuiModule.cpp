@@ -21,6 +21,7 @@
 #include "Engine/Gui/Internal/GuiPanel.h"
 #include "Engine/Gui/Internal/GuiSystem.h"
 #include "Engine/Gui/Internal/NavBar/GuiNavigationBar.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Input/Input.h"
 
 #include "Game/Actor.h"
@@ -154,10 +155,35 @@ namespace BixEngine::Core
 
         switch (event.type)
         {
+            case SDL_EVENT_DROP_FILE:
+            {
+                bool handled = false;
+                if (auto* browser = Gui::ContentBrowserPanel::GetActiveInstance())
+                {
+                    if (event.drop.data && *event.drop.data)
+                    {
+                        const std::filesystem::path droppedFile = event.drop.data;
+                        browser->ImportExternalFiles({droppedFile});
+                        handled = true;
+                    }
+                }
+
+                if (event.drop.data)
+                    SDL_free(const_cast<char*>(event.drop.data));
+
+                return handled;
+            }
+            case SDL_EVENT_DROP_TEXT:
+            case SDL_EVENT_DROP_COMPLETE:
+            case SDL_EVENT_DROP_BEGIN:
+            case SDL_EVENT_DROP_POSITION:
+                if (event.drop.data)
+                    SDL_free(const_cast<char*>(event.drop.data));
+                return false;
             case SDL_EVENT_MOUSE_BUTTON_DOWN:
-            
+
             case SDL_EVENT_MOUSE_BUTTON_UP:
-            
+
             case SDL_EVENT_MOUSE_MOTION:
             
             case SDL_EVENT_MOUSE_WHEEL:

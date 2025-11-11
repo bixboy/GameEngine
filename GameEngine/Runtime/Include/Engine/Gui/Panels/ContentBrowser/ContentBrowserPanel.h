@@ -4,6 +4,9 @@
 #include "Engine/Gui/DefaultEngineGui.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
+#include <filesystem>
+#include <vector>
+
 
 namespace BixEngine::Gui
 {
@@ -15,8 +18,12 @@ namespace BixEngine::Gui
 
         void Draw();
 
+        void ImportExternalFiles(const std::vector<std::filesystem::path>& paths);
+
+        static ContentBrowserPanel* GetActiveInstance() noexcept;
+
     private:
-        
+
         void EnsureValidDirectory();
 
         void HandleShortcuts();
@@ -26,7 +33,9 @@ namespace BixEngine::Gui
         char searchBuffer_[256] = "";
         String selectedEntry_;
         PopupRequestState popupRequests_;
+
+        static ContentBrowserPanel* activeInstance_;
     };
-    
+
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context);
 }

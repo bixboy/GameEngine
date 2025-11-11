@@ -1,8 +1,10 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Engine/Gui/Internal/GuiDocking.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
+#include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
 #include "Core/Logger.h"
 #include <filesystem>
+#include <system_error>
 #include "imgui.h"
 
 
@@ -10,6 +12,8 @@ namespace fs = std::filesystem;
 
 namespace BixEngine::Gui
 {
+    ContentBrowserPanel* ContentBrowserPanel::activeInstance_ = nullptr;
+
     using namespace Theme;
     using namespace Utils;
 
@@ -21,6 +25,87 @@ namespace BixEngine::Gui
     {
         state_.openScriptFilesCallback = context.openScriptFilesInEditor;
         state_.openAssetEditorCallback = context.openAssetInEditor;
+        activeInstance_ = this;
+    }
+
+    ContentBrowserPanel* ContentBrowserPanel::GetActiveInstance() noexcept
+    {
+        return activeInstance_;
+    }
+
+    void ContentBrowserPanel::ImportExternalFiles(const std::vector<std::filesystem::path>& paths)
+    {
+        if (paths.empty())
+            return;
+
+        if (!EnsureContentBrowserInitialized(state_))
+            return;
+
+        EnsureValidDirectory();
+
+        namespace fs = std::filesystem;
+
+        const fs::path targetDirectory = (!state_.current.empty() && fs::exists(state_.current) && fs::is_directory(state_.current))
+            ? state_.current
+            : state_.root;
+
+        if (targetDirectory.empty() || !fs::exists(targetDirectory))
+            return;
+
+        bool copiedAny = false;
+
+        for (const auto& source : paths)
+        {
+            if (source.empty())
+                continue;
+
+            std::error_code statusError;
+            if (!fs::exists(source, statusError) || statusError)
+                continue;
+
+            if (!fs::is_regular_file(source, statusError) || statusError)
+                continue;
+
+            fs::path destination = targetDirectory / source.filename();
+
+            std::error_code equivalentError;
+            if (fs::exists(destination) && fs::equivalent(source, destination, equivalentError) && !equivalentError)
+                continue;
+
+            fs::path finalDestination = destination;
+            int suffix = 1;
+            while (fs::exists(finalDestination))
+            {
+                const std::string baseName = destination.stem().string();
+                const std::string extension = destination.extension().string();
+                finalDestination = destination.parent_path() / (baseName + "_" + std::to_string(suffix++) + extension);
+            }
+
+            String copyError;
+            if (!TryCopyFile(source, finalDestination, copyError))
+            {
+                state_.error = copyError;
+                String message = "Failed to import file: ";
+                message += source.generic_string();
+                message += " -> ";
+                message += copyError;
+                LOG_ERROR(message);
+                continue;
+            }
+
+            copiedAny = true;
+            state_.error.Clear();
+            selectedEntry_ = finalDestination.generic_string().c_str();
+            String successMessage = "Imported file into Content Browser: ";
+            successMessage += finalDestination.generic_string();
+            LOG_INFO(successMessage);
+        }
+
+        if (copiedAny)
+        {
+            state_.cache.dirty = true;
+            state_.cache.ClearMeta();
+        }
     }
 
     void ContentBrowserPanel::EnsureValidDirectory()
