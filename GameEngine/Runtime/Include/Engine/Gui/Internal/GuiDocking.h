@@ -1,16 +1,4 @@
 #pragma once
 
-#include <cstdint>
+#include "Engine/Gui/GuiDocking.h"
 
-namespace BixEngine::Gui
-{
-    enum class DockSpaceRegion : std::uint8_t
-    {
-        Center = 0,
-        Left,
-        Right,
-        Bottom,
-        Top,
-        Count
-    };
-}

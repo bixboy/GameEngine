@@ -94,6 +94,7 @@ target_sources(BixEngine PRIVATE
     Runtime/Source/Engine/Gui/DefaultEngineGui.cpp
     Runtime/Source/Engine/Gui/GuiContextFactory.cpp
     Runtime/Source/Engine/Gui/GuiTheme.cpp
+    Runtime/Source/Engine/Gui/GuiPanelBase.cpp
     Runtime/Source/Engine/Gui/Internal/GuiManager.cpp
     Runtime/Source/Engine/Gui/Internal/GuiModule.cpp
     Runtime/Source/Engine/Gui/Internal/NavBar/GuiAssetEditorManager.cpp

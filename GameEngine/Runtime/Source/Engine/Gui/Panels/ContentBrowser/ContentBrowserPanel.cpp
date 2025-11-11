@@ -1,11 +1,13 @@
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Engine/Gui/Internal/GuiDocking.h"
+#include "Engine/Gui/GuiDocking.h"
 #include "Engine/Gui/Utils/GuiHelpers.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserFileUtils.h"
 #include "Core/Logger.h"
 #include <filesystem>
 #include <system_error>
 #include "imgui.h"
+#include <memory>
+#include <stdexcept>
 
 namespace fs = std::filesystem;
 
@@ -22,11 +24,17 @@ namespace BixEngine::Gui
     // Implémentation du Content Browser unique
     // ─────────────────────────────────────────────
 
-    ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context)
+    ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context) : GuiPanelBase("Content Browser")
     {
         state_.openScriptFilesCallback = context.openScriptFilesInEditor;
         state_.openAssetEditorCallback = context.openAssetInEditor;
         activeInstance_ = this;
+    }
+
+    ContentBrowserPanel::~ContentBrowserPanel()
+    {
+        if (activeInstance_ == this)
+            activeInstance_ = nullptr;
     }
 
     ContentBrowserPanel* ContentBrowserPanel::GetActiveInstance() noexcept
@@ -121,7 +129,6 @@ namespace BixEngine::Gui
         if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
             return;
 
-        // Refresh du dossier
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             LOG_INFO("Content Browser refreshed");
@@ -131,13 +138,10 @@ namespace BixEngine::Gui
             state_.cache.ClearMeta();
         }
 
-        // Suppression
         if (ImGui::IsKeyPressed(ImGuiKey_Delete))
         {
             if (!selectedEntry_.IsEmpty())
-            {
                 LOG_WARNING("Delete requested for: " + selectedEntry_);
-            }
         }
     }
 
@@ -148,34 +152,16 @@ namespace BixEngine::Gui
             DrawErrorMessage(state_.error);
             ImGui::Spacing();
             DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
-            
             return;
         }
 
         EnsureValidDirectory();
 
-        // ─────────────────────────────
-        // Barre de navigation du dossier
-        // ─────────────────────────────
-        RenderHeader(state_, selectedEntry_, searchBuffer_);
+        DrawHeader();
         ImGui::Spacing();
+        DrawBody();
 
-        // ─────────────────────────────
-        // Arborescence + fichiers
-        // ─────────────────────────────
-        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
-
-        RenderDirectoryTree(state_, selectedEntry_);
-        ImGui::SameLine();
-
-        const String searchQuery(searchBuffer_);
-        RenderEntries(state_, selectedEntry_, popupRequests_, searchQuery);
-
-        // Popups (création / renommage / erreurs)
         RenderPopups(state_, selectedEntry_, popupRequests_);
-
-        // Raccourcis clavier
-        HandleShortcuts();
 
         if (g_PendingRefreshAfterImport)
         {
@@ -186,24 +172,54 @@ namespace BixEngine::Gui
         }
     }
 
+    void ContentBrowserPanel::DrawHeader()
+    {
+        RenderHeader(state_, selectedEntry_, searchBuffer_);
+    }
+
+    void ContentBrowserPanel::DrawBody()
+    {
+        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
+        RenderDirectoryTree(state_, selectedEntry_);
+        ImGui::SameLine();
+
+        const String searchQuery(searchBuffer_);
+        RenderEntries(state_, selectedEntry_, popupRequests_, searchQuery);
+    }
+
+    void ContentBrowserPanel::OnOpen()
+    {
+        activeInstance_ = this;
+    }
+
+    void ContentBrowserPanel::OnClose()
+    {
+    }
+
     // ─────────────────────────────────────────────
     // Création unique du panneau dockable
     // ─────────────────────────────────────────────
 
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
-        GuiPanel& contentPanel = guiManager.CreatePanel("content_browser", "Content Browser");
-        guiManager.SetPanelDockingArea(contentPanel, DockSpaceRegion::Bottom);
-        contentPanel.SetResizable(true);
-        contentPanel.SetMovable(true);
-        contentPanel.SetCollapsable(true);
-        contentPanel.SetClosable(true);
-        contentPanel.SetBackgroundColor(ContentBackground);
-        contentPanel.AddWindowFlags(ImGuiWindowFlags_NoCollapse);
+        GuiManager::RegisterPanel<ContentBrowserPanel>("Content Browser", context);
 
-        static ContentBrowserPanel browser(context);
-        contentPanel.SetDrawFunction([] { browser.Draw(); });
+        GuiPanelBase* controller = guiManager.CreatePanelByName("Content Browser");
+        if (!controller)
+            throw std::runtime_error("Failed to create Content Browser panel from registry.");
 
-        return contentPanel;
+        GuiPanel* panel = controller->GetPanel();
+        if (!panel)
+            throw std::runtime_error("Content Browser controller has no associated GuiPanel.");
+
+        guiManager.SetPanelDockingArea(*panel, DockSpaceRegion::Bottom);
+        panel->SetResizable(true);
+        panel->SetMovable(true);
+        panel->SetCollapsable(true);
+        panel->SetClosable(true);
+        panel->SetBackgroundColor(ContentBackground);
+        panel->AddWindowFlags(ImGuiWindowFlags_NoCollapse);
+
+        return *panel;
     }
 }

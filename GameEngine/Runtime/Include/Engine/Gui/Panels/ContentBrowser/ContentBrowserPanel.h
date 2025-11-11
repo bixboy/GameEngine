@@ -1,6 +1,6 @@
 #pragma once
-#include "Engine/Gui/Internal/GuiManager.h"
-#include "Engine/Gui/Internal/GuiPanel.h"
+#include "Engine/Gui/GuiManager.h"
+#include "Engine/Gui/GuiPanelBase.h"
 #include "Engine/Gui/DefaultEngineGui.h"
 #include "Engine/Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 
@@ -11,12 +11,19 @@
 namespace BixEngine::Gui
 {
 
-    class ContentBrowserPanel
+    class ContentBrowserPanel : public GuiPanelBase
     {
     public:
         explicit ContentBrowserPanel(const DefaultEngineGuiContext& context);
+        ~ContentBrowserPanel() override;
 
-        void Draw();
+        void Draw() override;
+
+        void DrawHeader() override;
+        void DrawBody() override;
+        void HandleShortcuts() override;
+        void OnOpen() override;
+        void OnClose() override;
 
         void ImportExternalFiles(const std::vector<std::filesystem::path>& paths);
 
@@ -25,8 +32,6 @@ namespace BixEngine::Gui
     private:
 
         void EnsureValidDirectory();
-
-        void HandleShortcuts();
 
         ContentBrowserState state_;
 

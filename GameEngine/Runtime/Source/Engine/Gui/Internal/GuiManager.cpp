@@ -1,7 +1,14 @@
-#include "Engine/Gui/Internal/GuiManager.h"
+#include "Engine/Gui/GuiManager.h"
 #include "Engine/Gui/Internal/GuiPanel.h"
+#include "Engine/Gui/Internal/GuiPanelRegistry.h"
 #include "Engine/Gui/Internal/GuiSystem.h"
 #include "Engine/Gui/Controllers/GuiPanelController.h"
+#include "Engine/Gui/GuiPanelBase.h"
+
+#include <algorithm>
+#include <cctype>
+#include <stdexcept>
+#include <unordered_map>
 
 namespace BixEngine::Gui
 {
@@ -155,8 +162,66 @@ namespace BixEngine::Gui
     {
         if (auto* entry = registry_.FindPanelEntry(name))
             return entry->controller.get();
-        
+
         return nullptr;
+    }
+
+    std::unordered_map<std::string, GuiManager::RegisteredPanel>& GuiManager::StaticPanelRegistry_()
+    {
+        static std::unordered_map<std::string, RegisteredPanel> registry;
+        return registry;
+    }
+
+    String GuiManager::SanitizeIdentifier_(const String& name)
+    {
+        String identifier;
+        identifier.reserve(name.size());
+
+        for (char ch : name.View())
+        {
+            if (std::isalnum(static_cast<unsigned char>(ch)))
+            {
+                identifier += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+            }
+            else if (ch == ' ' || ch == '-' || ch == ':')
+            {
+                identifier += '_';
+            }
+        }
+
+        if (identifier.IsEmpty())
+            identifier = "panel";
+
+        return identifier;
+    }
+
+    void GuiManager::UnregisterPanel(const String& displayName)
+    {
+        StaticPanelRegistry_().erase(displayName.Std());
+    }
+
+    GuiPanelBase* GuiManager::CreatePanelByName(const String& displayName)
+    {
+        auto& staticRegistry = StaticPanelRegistry_();
+        const auto it = staticRegistry.find(displayName.Std());
+        if (it == staticRegistry.end())
+            return nullptr;
+
+        RegisteredPanel& entry = it->second;
+        if (!entry.factory)
+            return nullptr;
+
+        if (GuiPanelBase* existingController = GetControllerAs<GuiPanelBase>(entry.identifier))
+            return existingController;
+
+        auto controller = entry.factory();
+        if (!controller)
+            return nullptr;
+
+        GuiPanel& panel = CreatePanel(entry.identifier, entry.displayName);
+        GuiPanelBase* controllerPtr = controller.get();
+        AttachController(panel, std::move(controller));
+        return controllerPtr;
     }
 
     void GuiManager::AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry)
