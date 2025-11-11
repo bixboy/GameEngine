@@ -355,6 +355,7 @@
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ComponentEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\GuiPanelController.cpp" />
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\SpriteAtlasEditorController.cpp" />
     <ClCompile Include="Runtime\Source\Engine\Gui\Internal\GuiLayoutManager.cpp">
       <RuntimeLibrary>MultiThreadedDebugDll</RuntimeLibrary>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
@@ -1595,10 +1596,8 @@
     <ClInclude Include="Runtime\Include\Engine\Gui\Widgets\GuiWidgetLibrary.h" />
     <ClInclude Include="Runtime\Include\Engine\Render\RenderLoop.h" />
     <ClInclude Include="Runtime\Include\Engine\Render\SpriteAnimator.h" />
-    <ClInclude Include="Runtime\Include\Engine\Render\SpriteAtlasUtils.h" />
     <ClInclude Include="Runtime\Include\Engine\Render\SpriteEvent.h" />
     <ClInclude Include="Runtime\Include\Engine\Render\SpriteFrame.h" />
-    <ClInclude Include="Runtime\Include\Engine\Render\SpriteFramePool.h" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\IResource.h" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\ResourceManager.h" />
     <ClInclude Include="Runtime\Include\Engine\Ressources\ResourceManager.inl" />

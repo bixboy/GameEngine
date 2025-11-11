@@ -21,6 +21,7 @@ namespace BixEngine::resources
         virtual ~Texture();
 
         bool LoadFromFile(const String& path) override;
+        
         // Charge une texture
         bool LoadFromFile(const String& path, SDL_Renderer* renderer);
 

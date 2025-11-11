@@ -98,15 +98,34 @@ namespace BixEngine::Gui
             return;
         }
 
+        // ────────────── Global error ──────────────
         if (!state->error.IsEmpty())
             Utils::DrawErrorMessage(std::string(state->error.View()));
 
+        // ────────────── Atlas section ──────────────
+        ImGui::TextUnformatted("🧩 Sprite Atlas Overview");
+        ImGui::Separator();
+
         DrawAtlasPreview(*state);
+
+        // Affiche dimensions et paramètres du layout
         ImGui::Spacing();
+        ImGui::Text("Texture: %s", state->textureAbsolutePath.filename().string().c_str());
+        ImGui::Text("Grid: %d cols × %d rows", state->definition.columns, state->definition.rows);
+        ImGui::Text("Margin: %d  |  Padding: %d", state->definition.margin, state->definition.padding);
+        ImGui::Separator();
+
+        // ────────────── Animation section ──────────────
+        ImGui::TextUnformatted("🎞️ Animations");
+        ImGui::Separator();
         DrawAnimationSection(*state);
+
+        // ────────────── Save section ──────────────
         ImGui::Spacing();
+        ImGui::Separator();
         DrawSaveSection(*state);
     }
+
 
     void SpriteAtlasEditorController::OnSaveRequested()
     {
@@ -129,390 +148,275 @@ namespace BixEngine::Gui
             return;
         }
 
-        const float textureWidth = static_cast<float>(state.texture->GetWidth());
-        const float textureHeight = static_cast<float>(state.texture->GetHeight());
-        if (textureWidth <= 0.0f || textureHeight <= 0.0f)
+        const float texW = static_cast<float>(state.texture->GetWidth());
+        const float texH = static_cast<float>(state.texture->GetHeight());
+        if (texW <= 0.0f || texH <= 0.0f)
         {
             Utils::DrawEmptyStateMessage("Texture has invalid dimensions.");
             return;
         }
 
         const ImVec2 available = ImGui::GetContentRegionAvail();
-        const float aspect = textureHeight / textureWidth;
-        float displayWidth = available.x;
-        float displayHeight = displayWidth * aspect;
-        if (displayHeight > available.y * 0.6f && available.y > 0.0f)
+        const float aspect = texH / texW;
+        float dispW = available.x;
+        float dispH = dispW * aspect;
+        if (dispH > available.y * 0.5f && available.y > 0)
         {
-            displayHeight = available.y * 0.6f;
-            displayWidth = displayHeight / aspect;
+            dispH = available.y * 0.5f;
+            dispW = dispH / aspect;
         }
 
-        const ImVec2 imageSize(displayWidth, displayHeight);
-        const ImVec2 cursorPos = ImGui::GetCursorScreenPos();
-        ImGui::Image(state.texture->GetNativeHandle(), imageSize);
+        const ImVec2 imgSize(dispW, dispH);
+        const ImVec2 origin = ImGui::GetCursorScreenPos();
+        ImGui::Image(state.texture->GetNativeHandle(), imgSize);
 
-        ImDrawList* drawList = ImGui::GetWindowDrawList();
-        const float scaleX = displayWidth / textureWidth;
-        const float scaleY = displayHeight / textureHeight;
-        const int columns = std::max(1, state.definition.columns);
+        ImDrawList* draw = ImGui::GetWindowDrawList();
+        const float scaleX = dispW / texW;
+        const float scaleY = dispH / texH;
+
+        const int cols = std::max(1, state.definition.columns);
         const int rows = std::max(1, state.definition.rows);
-        const float cellWidth = ComputeCellDimension(textureWidth, columns, state.definition.padding, state.definition.margin);
-        const float cellHeight = ComputeCellDimension(textureHeight, rows, state.definition.padding, state.definition.margin);
+        const float cellW = ComputeCellDimension(texW, cols, state.definition.padding, state.definition.margin);
+        const float cellH = ComputeCellDimension(texH, rows, state.definition.padding, state.definition.margin);
 
-        if (cellWidth <= 0.0f || cellHeight <= 0.0f)
+        int hovered = -1;
+        for (int y = 0; y < rows; ++y)
         {
-            Utils::DrawEmptyStateMessage("Atlas definition produces invalid cells.");
-            return;
-        }
-
-        int hoveredFrame = -1;
-        const bool imageHovered = ImGui::IsItemHovered();
-
-        for (int row = 0; row < rows; ++row)
-        {
-            for (int column = 0; column < columns; ++column)
+            for (int x = 0; x < cols; ++x)
             {
-                const float x0 = static_cast<float>(state.definition.margin) + static_cast<float>(column) * (cellWidth + static_cast<float>(state.definition.padding));
-                const float y0 = static_cast<float>(state.definition.margin) + static_cast<float>(row) * (cellHeight + static_cast<float>(state.definition.padding));
-                const float x1 = x0 + cellWidth;
-                const float y1 = y0 + cellHeight;
+                const float x0 = (state.definition.margin + x * (cellW + state.definition.padding));
+                const float y0 = (state.definition.margin + y * (cellH + state.definition.padding));
+                const float x1 = x0 + cellW;
+                const float y1 = y0 + cellH;
 
-                const ImVec2 min(cursorPos.x + x0 * scaleX, cursorPos.y + y0 * scaleY);
-                const ImVec2 max(cursorPos.x + x1 * scaleX, cursorPos.y + y1 * scaleY);
+                ImVec2 min(origin.x + x0 * scaleX, origin.y + y0 * scaleY);
+                ImVec2 max(origin.x + x1 * scaleX, origin.y + y1 * scaleY);
 
-                const int index = row * columns + column;
-                if (index < static_cast<int>(state.frameSelection.size()) && state.frameSelection[index])
-                {
-                    drawList->AddRectFilled(min, max, IM_COL32(96, 180, 255, 60));
-                }
+                const int idx = y * cols + x;
+                const bool sel = idx < (int)state.frameSelection.size() && state.frameSelection[idx];
 
-                drawList->AddRect(min, max, IM_COL32(255, 255, 255, 90));
+                // surbrillance sélection / hover
+                if (sel)
+                    draw->AddRectFilled(min, max, IM_COL32(90, 180, 255, 70));
+                else if (ImGui::IsMouseHoveringRect(min, max))
+                    draw->AddRectFilled(min, max, IM_COL32(255, 255, 255, 25));
 
-                if (imageHovered && ImGui::IsMouseHoveringRect(min, max))
-                {
-                    hoveredFrame = index;
-                }
+                draw->AddRect(min, max, IM_COL32(255, 255, 255, 90));
+
+                if (ImGui::IsMouseHoveringRect(min, max))
+                    hovered = idx;
             }
         }
 
-        if (hoveredFrame >= 0)
+        // Gestion clic
+        if (hovered >= 0 && ImGui::IsItemHovered())
         {
             const bool append = ImGui::GetIO().KeyShift;
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
-            {
-                ToggleFrameSelection(state, hoveredFrame, append);
-            }
+                ToggleFrameSelection(state, hovered, append);
+
+            // infobulle frame
+            const int col = hovered % cols;
+            const int row = hovered / cols;
+            ImGui::BeginTooltip();
+            ImGui::Text("Frame %d (%d,%d)", hovered, col, row);
+            ImGui::EndTooltip();
         }
     }
 
+
     void SpriteAtlasEditorController::DrawAnimationSection(SharedState& state)
     {
-        ImGui::TextUnformatted("Animations");
-        ImGui::Separator();
-
-        if (ImGui::Button("➕ Add"))
+        if (ImGui::Button("➕ Add Animation"))
         {
-            resources::SpriteAnimationDefinition animation;
-            animation.name = String("Animation ") + String(std::to_string(state.animations.size() + 1));
-            animation.frameRate = 8.0f;
-            animation.loop = true;
-            state.animations.push_back(std::move(animation));
-            state.activeAnimation = static_cast<int>(state.animations.size()) - 1;
+            resources::SpriteAnimationDefinition anim;
+            anim.name = String("Animation ") + String(std::to_string(state.animations.size() + 1));
+            anim.frameRate = 8.f;
+            anim.loop = true;
+            state.animations.push_back(anim);
+            state.activeAnimation = (int)state.animations.size() - 1;
             state.dirty = true;
-            state.previewAnimationIndex = -1;
-            state.previewFrame = 0;
-            state.previewTimer = 0.0f;
-            state.previewPlaying = false;
         }
 
         ImGui::SameLine();
-        const bool canModify = state.activeAnimation >= 0 && state.activeAnimation < static_cast<int>(state.animations.size());
-        ImGui::BeginDisabled(!canModify);
-        if (ImGui::Button("✏️ Rename"))
-        {
-            auto& animation = state.animations[state.activeAnimation];
-            const std::string currentName = animation.name.IsEmpty() ? std::string{} : std::string(animation.name.View());
-            std::snprintf(state.renameBuffer, IM_ARRAYSIZE(state.renameBuffer), "%s", currentName.c_str());
-            ImGui::OpenPopup("SpriteAtlasRenameAnimation");
-        }
-
-        ImGui::SameLine();
+        bool valid = state.activeAnimation >= 0 && state.activeAnimation < (int)state.animations.size();
+        ImGui::BeginDisabled(!valid);
         if (ImGui::Button("❌ Delete"))
-        {
             RemoveSelectedAnimation(state, state.activeAnimation);
-        }
         ImGui::EndDisabled();
 
-        if (ImGui::BeginPopupModal("SpriteAtlasRenameAnimation", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        ImGui::Separator();
+
+        if (ImGui::BeginTable("AnimTable", 2, ImGuiTableFlags_Resizable | ImGuiTableFlags_SizingStretchProp))
         {
-            if (ImGui::IsWindowAppearing())
-                ImGui::SetKeyboardFocusHere();
-
-            ImGui::InputText("New name", state.renameBuffer, IM_ARRAYSIZE(state.renameBuffer));
-
-            Utils::DrawConfirmButtons("Rename", "Cancel",
-                [&]()
-                {
-                    if (state.activeAnimation >= 0 && state.activeAnimation < static_cast<int>(state.animations.size()))
-                    {
-                        auto& animation = state.animations[state.activeAnimation];
-                        animation.name = state.renameBuffer;
-                        state.dirty = true;
-                    }
-
-                    ImGui::CloseCurrentPopup();
-                },
-                []()
-                {
-                    ImGui::CloseCurrentPopup();
-                });
-
-            ImGui::EndPopup();
-        }
-
-        if (ImGui::BeginTable("AtlasAnimationTable", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg))
-        {
-            ImGui::TableSetupColumn("Animations", ImGuiTableColumnFlags_WidthStretch, 0.35f);
-            ImGui::TableSetupColumn("Details", ImGuiTableColumnFlags_WidthStretch, 0.65f);
-
+            ImGui::TableSetupColumn("List", ImGuiTableColumnFlags_WidthStretch, 0.3f);
+            ImGui::TableSetupColumn("Details", ImGuiTableColumnFlags_WidthStretch, 0.7f);
             ImGui::TableNextColumn();
-            if (ImGui::BeginChild("AtlasAnimationList", ImVec2(0, 200), true))
+
+            // Liste animations
+            if (ImGui::BeginChild("AnimList", ImVec2(0, 200), true))
             {
-                if (state.animations.empty())
+                for (int i = 0; i < (int)state.animations.size(); ++i)
                 {
-                    Utils::DrawEmptyStateMessage("No animations defined.");
-                }
-                else
-                {
-                    const int previousActive = state.activeAnimation;
-                    for (int i = 0; i < static_cast<int>(state.animations.size()); ++i)
+                    bool sel = (i == state.activeAnimation);
+                    const std::string label = state.animations[i].name.IsEmpty() ? 
+                        ("Animation " + std::to_string(i + 1)) : std::string(state.animations[i].name.View());
+                    if (ImGui::Selectable(label.c_str(), sel))
                     {
-                        const bool selected = (i == state.activeAnimation);
-                        const String& name = state.animations[i].name;
-                        const std::string label = name.IsEmpty() ? ("Animation " + std::to_string(i + 1)) : std::string(name.View());
-                        if (ImGui::Selectable(label.c_str(), selected))
-                        {
-                            if (state.activeAnimation != i)
-                            {
-                                state.activeAnimation = i;
-                                state.previewAnimationIndex = -1;
-                                state.previewFrame = 0;
-                                state.previewTimer = 0.0f;
-                            }
-                        }
+                        state.activeAnimation = i;
+                        state.previewAnimationIndex = -1;
+                        state.previewFrame = 0;
                     }
-                    if (previousActive != state.activeAnimation)
-                        state.previewPlaying = true;
                 }
             }
             ImGui::EndChild();
 
+            // Détails
             ImGui::TableNextColumn();
-            if (!canModify)
+            if (!valid)
             {
                 Utils::DrawEmptyStateMessage("Select an animation to edit.");
             }
             else
             {
-                auto& animation = state.animations[state.activeAnimation];
-                char nameBuffer[128]{};
-                std::string currentName = animation.name.IsEmpty() ? std::string{} : std::string(animation.name.View());
-                std::strncpy(nameBuffer, currentName.c_str(), sizeof(nameBuffer) - 1);
-                if (ImGui::InputText("Name", nameBuffer, sizeof(nameBuffer)))
+                auto& anim = state.animations[state.activeAnimation];
+
+                char buffer[128]{};
+                std::snprintf(buffer, sizeof(buffer), "%s", anim.name.IsEmpty() ? "" : anim.name.View());
+                if (ImGui::InputText("Name", buffer, sizeof(buffer)))
                 {
-                    animation.name = nameBuffer;
+                    anim.name = buffer;
                     state.dirty = true;
                 }
 
-                if (ImGui::DragFloat("Frame Rate", &animation.frameRate, 0.1f, 0.0f, 120.0f, "%.2f"))
+                if (ImGui::DragFloat("Frame Rate", &anim.frameRate, 0.1f, 0.f, 120.f, "%.2f"))
+                    state.dirty = true;
+                if (ImGui::Checkbox("Loop", &anim.loop))
+                    state.dirty = true;
+
+                ImGui::Separator();
+
+                if (ImGui::Button("🎯 Use selected frames"))
                 {
-                    animation.frameRate = std::max(0.0f, animation.frameRate);
+                    AssignSelectionToAnimation(state, anim);
                     state.dirty = true;
                 }
-
-                if (ImGui::Checkbox("Loop", &animation.loop))
-                    state.dirty = true;
-
-                if (ImGui::Button("Use selected frames"))
-                {
-                    AssignSelectionToAnimation(state, animation);
-                    state.dirty = true;
-                }
-
                 ImGui::SameLine();
-                if (ImGui::Button("Clear frames"))
+                if (ImGui::Button("🧹 Clear"))
                 {
-                    animation.frames.clear();
+                    anim.frames.clear();
                     state.dirty = true;
                 }
 
-                std::string framesList;
-                framesList.reserve(animation.frames.size() * 4);
-                for (size_t idx = 0; idx < animation.frames.size(); ++idx)
-                {
-                    framesList += std::to_string(animation.frames[idx]);
-                    if (idx + 1 < animation.frames.size())
-                        framesList += ", ";
-                }
-
-                ImGui::TextWrapped("Frames: %s", framesList.empty() ? "<none>" : framesList.c_str());
-
-                DrawAnimationPreview(state, animation);
+                DrawAnimationPreview(state, anim);
             }
 
             ImGui::EndTable();
         }
     }
 
-    void SpriteAtlasEditorController::DrawAnimationPreview(SharedState& state, resources::SpriteAnimationDefinition& animation)
-    {
-        ImGui::Separator();
-        ImGui::TextUnformatted("Preview");
 
-        if (!state.texture)
-        {
-            Utils::DrawEmptyStateMessage("Texture preview unavailable.");
-            return;
-        }
+    void SpriteAtlasEditorController::DrawAnimationPreview(SharedState& state, resources::SpriteAnimationDefinition& anim)
+    {
+        ImGui::Spacing();
+        ImGui::SeparatorText("Preview");
 
         EnsureFramesGenerated(state);
-
-        if (state.frames.empty())
+        if (!state.texture || state.frames.empty() || anim.frames.empty())
         {
-            Utils::DrawEmptyStateMessage("Atlas definition produces no frames.");
-            state.previewPlaying = false;
+            Utils::DrawEmptyStateMessage("No frames to preview.");
             return;
         }
 
-        if (animation.frames.empty())
-        {
-            Utils::DrawEmptyStateMessage("Assign frames to preview the animation.");
-            state.previewPlaying = false;
-            return;
-        }
-
+        // Reset au changement d’animation
         if (state.previewAnimationIndex != state.activeAnimation)
         {
             state.previewAnimationIndex = state.activeAnimation;
             state.previewFrame = 0;
             state.previewTimer = 0.0f;
-            state.previewPlaying = animation.frameRate > 0.0f;
+            state.previewPlaying = true;
         }
 
-        if (state.previewFrame < 0)
-            state.previewFrame = 0;
-
-        if (state.previewFrame >= static_cast<int>(animation.frames.size()))
-            state.previewFrame = static_cast<int>(animation.frames.size()) - 1;
-
         const ImGuiIO& io = ImGui::GetIO();
-        if (state.previewPlaying && animation.frameRate > 0.0f)
+        float delta = io.DeltaTime;
+        if (delta <= 0.f) delta = 1.f / 60.f;
+
+        // Frame stepping
+        if (state.previewPlaying && anim.frameRate > 0.f)
         {
-            state.previewTimer += io.DeltaTime;
-            const float frameDuration = animation.frameRate > 0.0f ? 1.0f / animation.frameRate : 0.0f;
-            if (frameDuration > 0.0f)
+            state.previewTimer += delta;
+            float duration = 1.f / anim.frameRate;
+            if (state.previewTimer >= duration)
             {
-                while (state.previewTimer >= frameDuration)
+                state.previewTimer -= duration;
+                state.previewFrame++;
+                if (state.previewFrame >= (int)anim.frames.size())
                 {
-                    state.previewTimer -= frameDuration;
-                    ++state.previewFrame;
-                    if (state.previewFrame >= static_cast<int>(animation.frames.size()))
+                    if (anim.loop)
+                        state.previewFrame = 0;
+                    else
                     {
-                        if (animation.loop)
-                        {
-                            state.previewFrame = 0;
-                        }
-                        else
-                        {
-                            state.previewFrame = static_cast<int>(animation.frames.size()) - 1;
-                            state.previewPlaying = false;
-                        }
+                        state.previewFrame = (int)anim.frames.size() - 1;
+                        state.previewPlaying = false;
                     }
                 }
             }
         }
 
-        const size_t atlasIndex = animation.frames[static_cast<size_t>(state.previewFrame)];
-        if (atlasIndex >= state.frames.size())
-        {
-            Utils::DrawErrorMessage("Animation references an invalid frame index.");
-            state.previewPlaying = false;
+        size_t frameIdx = anim.frames[std::clamp(state.previewFrame, 0, (int)anim.frames.size() - 1)];
+        if (frameIdx >= state.frames.size())
             return;
-        }
 
-        const resources::SpriteFrame& frame = state.frames[atlasIndex];
-        const Math::Rect& uvRect = frame.GetUVRect();
+        const auto& f = state.frames[frameIdx];
+        const auto& uv = f.GetUVRect();
 
-        const float textureWidth = static_cast<float>(state.texture->GetWidth());
-        const float textureHeight = static_cast<float>(state.texture->GetHeight());
-        if (textureWidth <= 0.0f || textureHeight <= 0.0f)
-        {
-            Utils::DrawEmptyStateMessage("Texture has invalid dimensions.");
-            return;
-        }
+        float texW = (float)state.texture->GetWidth();
+        float texH = (float)state.texture->GetHeight();
 
-        const float frameWidth = uvRect.Width;
-        const float frameHeight = uvRect.Height;
-        if (frameWidth <= 0.0f || frameHeight <= 0.0f)
-        {
-            Utils::DrawEmptyStateMessage("Frame dimensions are invalid.");
-            return;
-        }
+        const ImVec2 uv0(uv.X / texW, uv.Y / texH);
+        const ImVec2 uv1((uv.X + uv.Width) / texW, (uv.Y + uv.Height) / texH);
+        const ImVec2 dispSize(uv.Width * state.previewScale, uv.Height * state.previewScale);
 
-        state.previewScale = std::clamp(state.previewScale, 0.25f, 8.0f);
+        ImGui::Image(state.texture->GetNativeHandle(), dispSize, uv0, uv1);
 
-        const ImVec2 uv0(uvRect.X / textureWidth, uvRect.Y / textureHeight);
-        const ImVec2 uv1((uvRect.X + uvRect.Width) / textureWidth, (uvRect.Y + uvRect.Height) / textureHeight);
-        const ImVec2 displaySize(frameWidth * state.previewScale, frameHeight * state.previewScale);
-
-        ImGui::BeginGroup();
-        ImGui::Image(state.texture->GetNativeHandle(), displaySize, uv0, uv1);
-        ImGui::EndGroup();
-
+        // ───────────── Controls ─────────────
         ImGui::Spacing();
-
-        ImGui::PushID("AtlasPreviewControls");
-        if (ImGui::Button(state.previewPlaying ? "Pause" : "Play"))
+        if (ImGui::Button(state.previewPlaying ? "⏸ Pause" : "▶ Play"))
         {
-            if (!state.previewPlaying && animation.frameRate <= 0.0f)
-                state.previewFrame = 0;
+            // Si on reprend après pause, reset le timer pour éviter freeze
+            if (!state.previewPlaying)
+                state.previewTimer = 0.f;
             state.previewPlaying = !state.previewPlaying;
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("Restart"))
+        if (ImGui::Button("⟲ Restart"))
         {
             state.previewFrame = 0;
-            state.previewTimer = 0.0f;
-            state.previewPlaying = animation.frameRate > 0.0f;
+            state.previewTimer = 0.f;
+            state.previewPlaying = true;
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("◀"))
+        if (ImGui::Button("◀ Prev"))
         {
             state.previewPlaying = false;
-            --state.previewFrame;
-            if (state.previewFrame < 0)
-                state.previewFrame = static_cast<int>(animation.frames.size()) - 1;
-            state.previewTimer = 0.0f;
+            state.previewFrame = (state.previewFrame - 1 + (int)anim.frames.size()) % (int)anim.frames.size();
         }
 
         ImGui::SameLine();
-        if (ImGui::Button("▶"))
+        if (ImGui::Button("Next ▶"))
         {
             state.previewPlaying = false;
-            ++state.previewFrame;
-            if (state.previewFrame >= static_cast<int>(animation.frames.size()))
-                state.previewFrame = 0;
-            state.previewTimer = 0.0f;
+            state.previewFrame = (state.previewFrame + 1) % (int)anim.frames.size();
         }
 
         ImGui::SameLine();
-        ImGui::Text("Frame %d / %zu", state.previewFrame + 1, animation.frames.size());
-
-        ImGui::SliderFloat("Scale", &state.previewScale, 0.25f, 8.0f, "%.2fx");
-        ImGui::PopID();
+        ImGui::Text("Frame %d / %zu", state.previewFrame + 1, anim.frames.size());
+        ImGui::SliderFloat("Zoom", &state.previewScale, 0.25f, 8.0f, "%.2fx");
     }
+
+
 
     void SpriteAtlasEditorController::DrawSaveSection(SharedState& state)
     {
