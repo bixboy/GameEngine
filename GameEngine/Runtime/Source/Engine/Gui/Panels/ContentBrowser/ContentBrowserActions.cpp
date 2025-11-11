@@ -77,7 +77,7 @@ namespace BixEngine::Gui
     }
 
     // ─────────────────────────────────────────────
-    // 🛠️  Actions contextuelles du Content Browser
+    // Actions contextuelles du Content Browser
     // ─────────────────────────────────────────────
 
     EntryActionList BuildActionsFor(const ContentBrowserState& state, const ContentEntry& entry)

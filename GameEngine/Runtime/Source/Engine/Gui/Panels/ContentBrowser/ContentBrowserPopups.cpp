@@ -845,14 +845,14 @@ namespace BixEngine::Gui
                 locationDisplay += relativeLocationString;
             }
 
-            Utils::DrawLabelValue("Location", locationDisplay, "Content");
+            DrawLabelValue("Location", locationDisplay, "Content");
 
             const bool shouldAutofocusName = ImGui::IsWindowAppearing();
-            bool create = Utils::InputTextWithLabel("Script name (.h / .cpp)", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocusName);
+            bool create = InputTextWithLabel("Script name (.h / .cpp)", requests.scriptName, IM_ARRAYSIZE(requests.scriptName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocusName);
 
             if (!requests.scriptError.IsEmpty())
             {
-                Utils::DrawErrorMessage(std::string(requests.scriptError.View()));
+                DrawErrorMessage(std::string(requests.scriptError.View()));
             }
 
             String trimmedInput = TrimCopy(String(requests.scriptName));
@@ -861,7 +861,7 @@ namespace BixEngine::Gui
             RemoveExtensionIfPresent(baseNamePreview, kScriptSourceExtension);
 
             ImGui::Spacing();
-            Utils::DrawSeparatorText("Parent (optional)");
+            DrawSeparatorText("Parent (optional)");
             ImGui::TextDisabled("Pick an inheritance target or leave empty for a standalone script.");
 
             const float parentListHeight = ImGui::GetTextLineHeightWithSpacing() * 7.0f;
@@ -1164,17 +1164,17 @@ namespace BixEngine::Gui
 
             String description = "Create a new folder in: ";
             description += displayLabel;
-            Utils::DrawDescriptionText(description.c_str());
+            DrawDescriptionText(description.c_str());
 
             const bool shouldAutofocus = ImGui::IsWindowAppearing();
-            bool create = Utils::InputTextWithLabel("Folder name", requests.folderName, IM_ARRAYSIZE(requests.folderName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocus);
+            bool create = InputTextWithLabel("Folder name", requests.folderName, IM_ARRAYSIZE(requests.folderName), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocus);
 
             if (!requests.folderError.IsEmpty())
             {
-                Utils::DrawErrorMessage(std::string(requests.folderError.View()));
+                DrawErrorMessage(std::string(requests.folderError.View()));
             }
 
-            const bool confirmPressed = Utils::DrawConfirmButtons("Create", "Cancel",
+            const bool confirmPressed = DrawConfirmButtons("Create", "Cancel",
                 []() {},
                 [&]()
                 {
@@ -1273,11 +1273,13 @@ namespace BixEngine::Gui
 
                 for (const auto& entry : fs::directory_iterator(targetDirectory, iteratorError))
                 {
-                    if (!entry.is_regular_file()) continue;
+                    if (!entry.is_regular_file())
+                        continue;
 
                     std::string ext = entry.path().extension().string();
                     std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
-                    if (ext != ".png") continue;
+                    if (ext != ".png")
+                        continue;
 
                     textureCount++;
                     const std::string displayName = entry.path().filename().string();
@@ -1629,7 +1631,6 @@ namespace BixEngine::Gui
 
     void RunBixHeaderTool(const std::filesystem::path& toolPath, const std::filesystem::path& headerPath)
     {
-#if defined(_WIN32)
         std::wstring tool = L"\"" + toolPath.wstring() + L"\"";
         std::wstring header = L"\"" + headerPath.wstring() + L"\"";
         std::wstring cmdLine = tool + L" --single " + header;
@@ -1651,7 +1652,6 @@ namespace BixEngine::Gui
             return;
         }
 
-        // Attend la fin du processus
         WaitForSingleObject(pi.hProcess, INFINITE);
 
         DWORD exitCode = 0;
@@ -1664,11 +1664,6 @@ namespace BixEngine::Gui
             LOG_WARNING("BixHeaderTool exited with code " + String::FromInt(exitCode));
         else
             LOG_INFO("BixHeaderTool finished successfully.");
-#else
-        (void)toolPath;
-        (void)headerPath;
-        LOG_WARNING("BixHeaderTool execution is only supported on Windows platforms.");
-#endif
     }
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups)

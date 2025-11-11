@@ -7,18 +7,19 @@
 #include <system_error>
 #include "imgui.h"
 
-
 namespace fs = std::filesystem;
 
 namespace BixEngine::Gui
 {
+    static bool g_PendingRefreshAfterImport = false;
+
     ContentBrowserPanel* ContentBrowserPanel::activeInstance_ = nullptr;
 
     using namespace Theme;
     using namespace Utils;
 
     // ─────────────────────────────────────────────
-    // 🏗️  Implémentation du Content Browser unique
+    // Implémentation du Content Browser unique
     // ─────────────────────────────────────────────
 
     ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context)
@@ -42,8 +43,6 @@ namespace BixEngine::Gui
             return;
 
         EnsureValidDirectory();
-
-        namespace fs = std::filesystem;
 
         const fs::path targetDirectory = (!state_.current.empty() && fs::exists(state_.current) && fs::is_directory(state_.current))
             ? state_.current
@@ -85,30 +84,29 @@ namespace BixEngine::Gui
             if (!TryCopyFile(source, finalDestination, copyError))
             {
                 state_.error = copyError;
-                
+
                 String message = "Failed to import file: ";
                 message += String(source.generic_string().c_str());
                 message += " -> ";
                 message += copyError;
-                
+
                 LOG_ERROR(message);
                 continue;
             }
 
             copiedAny = true;
             state_.error.Clear();
+
             selectedEntry_ = String(finalDestination.generic_string().c_str());
-            
+
             String successMessage = "Imported file into Content Browser: ";
             successMessage += String(finalDestination.generic_string().c_str());
-
             LOG_INFO(successMessage);
         }
-
+        
         if (copiedAny)
         {
-            state_.cache.dirty = true;
-            state_.cache.ClearMeta();
+            g_PendingRefreshAfterImport = true;
         }
     }
 
@@ -123,15 +121,17 @@ namespace BixEngine::Gui
         if (!ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
             return;
 
-        // 🔁 Refresh du dossier
+        // Refresh du dossier
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
             LOG_INFO("Content Browser refreshed");
             state_.error.Clear();
             EnsureContentBrowserInitialized(state_);
+            state_.cache.dirty = true;
+            state_.cache.ClearMeta();
         }
 
-        // 🗑️ Suppression
+        // Suppression
         if (ImGui::IsKeyPressed(ImGuiKey_Delete))
         {
             if (!selectedEntry_.IsEmpty())
@@ -145,9 +145,10 @@ namespace BixEngine::Gui
     {
         if (!EnsureContentBrowserInitialized(state_))
         {
-            Utils::DrawErrorMessage(state_.error);
+            DrawErrorMessage(state_.error);
             ImGui::Spacing();
-            Utils::DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
+            DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
+            
             return;
         }
 
@@ -173,11 +174,20 @@ namespace BixEngine::Gui
         // Popups (création / renommage / erreurs)
         RenderPopups(state_, selectedEntry_, popupRequests_);
 
+        // Raccourcis clavier
         HandleShortcuts();
+
+        if (g_PendingRefreshAfterImport)
+        {
+            g_PendingRefreshAfterImport = false;
+            state_.cache.dirty = true;
+            state_.cache.ClearMeta();
+            LOG_INFO("Content Browser cache refreshed after import");
+        }
     }
 
     // ─────────────────────────────────────────────
-    // 🧱  Création unique du panneau dockable
+    // Création unique du panneau dockable
     // ─────────────────────────────────────────────
 
     GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)

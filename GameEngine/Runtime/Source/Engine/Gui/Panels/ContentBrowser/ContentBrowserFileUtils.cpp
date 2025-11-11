@@ -12,7 +12,7 @@
 namespace BixEngine::Gui
 {
     // ─────────────────────────────────────────────
-    // 📎  Gestion centralisée des erreurs et fichiers
+    // Gestion centralisée des erreurs et fichiers
     // ─────────────────────────────────────────────
 
     void LogAndStoreError(String& storage, String message, bool log)
@@ -38,6 +38,7 @@ namespace BixEngine::Gui
     {
         const String lhsLower = ToLowerCopy(lhs);
         const String rhsLower = ToLowerCopy(rhs);
+        
         if (lhsLower == rhsLower)
             return lhs.View() < rhs.View();
 
@@ -55,11 +56,15 @@ namespace BixEngine::Gui
         const String::size_type length = value.size();
 
         while (start < length && isSpace(static_cast<unsigned char>(value[start])))
-            ++start;
+        {
+            ++start;   
+        }
 
         String::size_type end = length;
         while (end > start && isSpace(static_cast<unsigned char>(value[end - 1])))
-            --end;
+        {
+            --end;   
+        }
 
         return value.Mid(start, end - start);
     }
@@ -87,7 +92,6 @@ namespace BixEngine::Gui
         if (path.empty())
             return;
 
-#ifdef _WIN32
         std::string command = "explorer ";
         if (isDirectory)
         {
@@ -102,16 +106,6 @@ namespace BixEngine::Gui
             command += "\"";
         }
         std::system(command.c_str());
-#else
-        const fs::path target = isDirectory ? path : path.parent_path();
-        if (target.empty())
-            return;
-
-        std::string command = "xdg-open \"";
-        command += target.string();
-        command += "\"";
-        std::system(command.c_str());
-#endif
     }
 
     namespace
@@ -123,6 +117,7 @@ namespace BixEngine::Gui
 
             String message = error.message();
             LogAndStoreError(storage, std::move(message));
+            
             return false;
         }
     }
@@ -163,9 +158,14 @@ namespace BixEngine::Gui
 
         std::error_code removeError;
         if (recursive)
+        {
             std::filesystem::remove_all(target, removeError);
+        }
         else
-            std::filesystem::remove(target, removeError);
+        {
+            std::filesystem::remove(target, removeError);   
+        }
+        
         return FormatError(removeError, errorStorage);
     }
 
@@ -184,7 +184,7 @@ namespace BixEngine::Gui
             return false;
         }
 
-        file.write(contents.data(), static_cast<std::streamsize>(contents.size()));
+        file.write(contents.data(), contents.size());
         if (!file.good())
         {
             LogAndStoreError(errorStorage, "Failed to write file contents.");
