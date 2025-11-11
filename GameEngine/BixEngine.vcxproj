@@ -1997,6 +1997,7 @@
   <Content Include="Build\windows\x64\debug\BixRun.pdb" />
   <Content Include="Build\windows\x64\debug\compile.BixHeaderTool.pdb" />
   <Content Include="Build\windows\x64\debug\compile.BixRun.pdb" />
+  <Content Include="Build\windows\x64\debug\Content\Pink_Monster.atlas" />
   <Content Include="Build\windows\x64\debug\imgui.ini" />
   <Content Include="Build\windows\x64\debug\SDL3.dll" />
   <Content Include="Resources\Pink_Monster\Double_Jump_Dust_5.png" />

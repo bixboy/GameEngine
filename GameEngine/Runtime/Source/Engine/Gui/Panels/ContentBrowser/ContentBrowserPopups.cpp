@@ -1229,7 +1229,9 @@ namespace BixEngine::Gui
                 requests.createSpriteAtlas = false;
             }
 
-            if (!ImGui::BeginPopupModal("ContentBrowserCreateSpriteAtlas", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            ImGui::SetNextWindowSize(ImVec2(480, 0), ImGuiCond_Always);
+            ImGui::SetNextWindowSizeConstraints(ImVec2(400, 0), ImVec2(600, 600));
+            if (!ImGui::BeginPopupModal("ContentBrowserCreateSpriteAtlas", nullptr, ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoCollapse))
                 return;
 
             const fs::path targetDirectory = requests.spriteAtlasTarget.empty() ? state.current : requests.spriteAtlasTarget;
@@ -1243,12 +1245,12 @@ namespace BixEngine::Gui
                 locationDisplay += relativeString;
             }
 
-            Utils::DrawDescriptionText("Create a sprite atlas file next to an existing texture.");
-            Utils::DrawLabelValue("Location", locationDisplay.View().data(), "Content");
+            DrawDescriptionText("Create a sprite atlas file next to an existing texture.");
+            DrawLabelValue("Location", locationDisplay.View().data(), "Content");
             ImGui::Separator();
 
             const bool shouldAutofocus = ImGui::IsWindowAppearing();
-            Utils::InputTextWithLabel("Texture Source", requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), ImGuiInputTextFlags_None, shouldAutofocus);
+            InputTextWithLabel("Texture Source", requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), ImGuiInputTextFlags_None, shouldAutofocus);
 
             ImGui::SameLine();
             if (ImGui::Button("Browse..."))
@@ -1262,20 +1264,23 @@ namespace BixEngine::Gui
 
             if (ImGui::BeginPopup("ContentBrowserSpriteAtlasTexturePicker"))
             {
+                ImGui::Text("Select texture to use:");
+                ImGui::Separator();
+
+                ImGui::BeginChild("TextureList", ImVec2(300, 200), true);
                 int textureCount = 0;
                 std::error_code iteratorError;
+
                 for (const auto& entry : fs::directory_iterator(targetDirectory, iteratorError))
                 {
-                    if (!entry.is_regular_file())
-                        continue;
+                    if (!entry.is_regular_file()) continue;
 
-                    std::string extension = entry.path().extension().generic_string();
-                    std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c) { return static_cast<char>(std::tolower(c)); });
-                    if (extension != ".png")
-                        continue;
+                    std::string ext = entry.path().extension().string();
+                    std::transform(ext.begin(), ext.end(), ext.begin(), ::tolower);
+                    if (ext != ".png") continue;
 
-                    ++textureCount;
-                    const std::string displayName = entry.path().filename().generic_string();
+                    textureCount++;
+                    const std::string displayName = entry.path().filename().string();
                     if (ImGui::Selectable(displayName.c_str()))
                     {
                         std::snprintf(requests.spriteAtlasTexturePath, IM_ARRAYSIZE(requests.spriteAtlasTexturePath), "%s", displayName.c_str());
@@ -1284,14 +1289,11 @@ namespace BixEngine::Gui
                 }
 
                 if (iteratorError)
-                {
-                    ImGui::TextDisabled("Unable to read folder: %s", iteratorError.message().c_str());
-                }
+                    ImGui::TextDisabled("Error: %s", iteratorError.message().c_str());
                 else if (textureCount == 0)
-                {
-                    ImGui::TextDisabled("No PNG textures found in this folder.");
-                }
+                    ImGui::TextDisabled("No .png textures found.");
 
+                ImGui::EndChild();
                 ImGui::EndPopup();
             }
 
@@ -1307,10 +1309,10 @@ namespace BixEngine::Gui
 
             if (!requests.spriteAtlasError.IsEmpty())
             {
-                Utils::DrawErrorMessage(std::string(requests.spriteAtlasError.View()));
+                DrawErrorMessage(std::string(requests.spriteAtlasError.View()));
             }
 
-            const bool confirmed = Utils::DrawConfirmButtons("✅ Create", "Cancel",
+            const bool confirmed = DrawConfirmButtons("✅ Create", "Cancel",
                 []() {},
                 [&]()
                 {
@@ -1391,22 +1393,22 @@ namespace BixEngine::Gui
 
                 String message = renamingScriptGroup ? String("Rename script: ") : String("Rename: ");
                 message += label;
-                Utils::DrawDescriptionText(message.c_str());
+                DrawDescriptionText(message.c_str());
             }
             else
             {
-                Utils::DrawDescriptionText("Rename the selected entry.");
+                DrawDescriptionText("Rename the selected entry.");
             }
 
             const bool shouldAutofocus = ImGui::IsWindowAppearing();
-            bool rename = Utils::InputTextWithLabel("New name", requests.renameBuffer, IM_ARRAYSIZE(requests.renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocus);
+            bool rename = InputTextWithLabel("New name", requests.renameBuffer, IM_ARRAYSIZE(requests.renameBuffer), ImGuiInputTextFlags_EnterReturnsTrue, shouldAutofocus);
 
             if (!requests.renameError.IsEmpty())
             {
-                Utils::DrawErrorMessage(std::string(requests.renameError.View()));
+                DrawErrorMessage(std::string(requests.renameError.View()));
             }
 
-            const bool confirmPressed = Utils::DrawConfirmButtons("Rename", "Cancel",
+            const bool confirmPressed = DrawConfirmButtons("Rename", "Cancel",
                 []() {},
                 [&]()
                 {
