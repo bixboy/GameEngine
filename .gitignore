@@ -1,147 +1,48 @@
-# ===============================================
-# 🧠  BixEngine / C++ Game Engine GitIgnore
-# ===============================================
+# xmake
+.vscode
+.xmake
+.idea
+build
+vs*/
 
-# --- Core build artifacts ---
-build/
-Build/
-bin/
-Bin/
-binaries/
-Binaries/
-intermediate/
-Intermediate/
-obj/
-*.obj
-*.o
-*.lo
-*.slo
+# Prerequisites
 *.d
-*.idb
-*.ilk
-*.pdb
-*.dwo
-*.mod
-*.smod
 
-# --- Compiled libraries / binaries ---
-*.lib
-*.a
-*.la
-*.lai
-*.so
-*.dylib
-*.dll
-*.exe
-*.out
-*.app
-*.msi
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
 
-# --- Precompiled headers ---
+# Precompiled Headers
 *.gch
 *.pch
 
-# --- Static analyzer & coverage output ---
-*.gcno
-*.gcda
-*.gcov
-*.profraw
-*.profdata
+# Linker files
+*.ilk
 
-# --- Linker / temp files ---
-*.map
-*.exp
-*.log
-*.tlog
+# Debugger Files
+*.pdb
 
-# --- Build system generated files ---
-# (XMake / CMake / MSBuild)
-.xmake/
-.xmake/**
-xmake.lua.bak
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-*.sln
-*.vcxproj
-*.vcxproj.filters
-*.vcxproj.user
-*.user
-*.opensdf
-*.sdf
-*.suo
-*.cache
-*.db
-*.VC.db
-*.VC.VC.opendb
-*.ipch
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
 
-# --- IDE-specific files ---
-.vscode/
-.vs/
-.idea/
-*.swp
-*.swo
-*.bak
-*.tmp
-*.temp
-*.log
-*.userprefs
-*.DS_Store
-Thumbs.db
+# Fortran module files
+*.mod
+*.smod
 
-# --- Generated reflection headers / auto-code ---
-*.generated.h
-*.gen.h
-*_Reflection.h
-*_autogen/
-autogen/
-Generated/
-generated/
-BixGenerated/
-BixHeaderToolOutput/
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
 
-# --- Engine / Tool caches ---
-.cache/
-.temp/
-logs/
-output/
-out/
-dist/
-dump/
-crashlogs/
-crash_reports/
-profiling/
-memory_dumps/
+# Executables
+*.exe
+*.out
+*.app
 
-# --- Third-party or external ---
-third_party/build/
-third_party/bin/
-third_party/lib/
-third_party/tmp/
-third_party/*/obj/
-third_party/*/bin/
-third_party/*/build/
-third_party/*/CMakeFiles/
-
-# --- Project-specific ---
-*.ini
-*.cfg
-*.iml
-*.db-journal
-*.manifest
-*.ipdb
-*.iobj
-
-# --- Editor autosaves ---
-*.autosave
-*.backup
-*.old
-*.orig
-
-# --- System files ---
-.DS_Store
-Thumbs.db
-ehthumbs.db
-desktop.ini
+# debug information files
+*.dwo

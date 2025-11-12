@@ -1,0 +1,309 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+<ItemGroup>
+<Filter Include="Samples">
+      <UniqueIdentifier>{7632EE37-A637-4126-BB43-00A89868DA9E}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Runtime">
+      <UniqueIdentifier>{7DC2C8D5-0690-48F7-9446-C3ABA1773BD5}</UniqueIdentifier>
+    </Filter>
+    </ItemGroup>
+<ItemGroup>
+<ClCompile Include="Runtime\Source\Core\Private\Application.cpp">
+      <Filter>Runtime\Core\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Logger.cpp">
+      <Filter>Runtime\Core\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\DefaultEngineGui.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\BaseAssetEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ActorEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Controllers\ComponentEditorController.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Core\NavBar\GuiAssetEditorManager.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\Panels\ContentBrowser\ContentEntry.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Gui\GuiTheme.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneOutlinerPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\SceneViewportPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\ActorInspectorPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Panels\StatsPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiManager.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiPanel.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\GuiSystem.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Engine\Private\Gui\Widgets\ActionTooltip.cpp">
+      <Filter>Runtime\Engine\Private\Gui</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\ActorSpawner.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Components\SpriteComponent.cpp">
+      <Filter>Runtime\Game\Private\Components</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Scene.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\SceneManager.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\SceneSerializer.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Timer.cpp">
+      <Filter>Runtime\Core\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Core\Private\Window.cpp">
+      <Filter>Runtime\Core\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\EmptyScene.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Object.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Actor.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Test\Player.cpp">
+      <Filter>Runtime\Game\Private\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Test\TestScene.cpp">
+      <Filter>Runtime\Game\Private\Test</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Game\Private\Scripting\ScriptRegistry.cpp">
+      <Filter>Runtime\Game\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Graphics\Private\Renderer.cpp">
+      <Filter>Runtime\Graphics\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Input\Private\Input.cpp">
+      <Filter>Runtime\Input\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Input\Private\InputManager.cpp">
+      <Filter>Runtime\Input\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Color.cpp">
+      <Filter>Runtime\Math\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Rotator.cpp">
+      <Filter>Runtime\Math\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Transform.cpp">
+      <Filter>Runtime\Math\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Vector2.cpp">
+      <Filter>Runtime\Math\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Runtime\Source\Math\Private\Vector3.cpp">
+      <Filter>Runtime\Math\Private</Filter>
+    </ClCompile>
+    <ClCompile Include="Samples\main.cpp">
+      <Filter>Samples</Filter>
+    </ClCompile>
+    </ItemGroup>
+<ItemGroup>
+<ClInclude Include="Runtime\Include\Bix\Core\Application.h">
+      <Filter>Runtime\Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\DefaultEngineGui.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserActions.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserFileUtils.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPanelInternal.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserPopups.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserState.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Grid.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Header.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentBrowserUI_Tree.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Panels\ContentBrowser\ContentEntry.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\GuiTheme.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneOutlinerPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\SceneViewportPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\ActorInspectorPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Panels\StatsPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\Widgets\ActionTooltip.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiManager.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiDocking.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\BixEngine.h">
+      <Filter>Runtime\Include\Engine</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiPanel.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Engine\Gui\GuiSystem.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Core\Logger.h">
+      <Filter>Runtime\Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\ActorSpawner.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Object.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Components\Component.h">
+      <Filter>Runtime\Include\Game\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Components\SpriteComponent.h">
+      <Filter>Runtime\Include\Game\Components</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Scene.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\SceneManager.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\SceneSerializer.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Core\Timer.h">
+      <Filter>Runtime\Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Core\Window.h">
+      <Filter>Runtime\Include\Core</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\EmptyScene.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Actor.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Scripting\ScriptReflection.h">
+      <Filter>Runtime\Include\Game</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Test\Player.h">
+      <Filter>Runtime\Include\Game\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Game\Test\TestScene.h">
+      <Filter>Runtime\Include\Game\Test</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Graphics\Renderer.h">
+      <Filter>Runtime\Include\Graphics</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\BaseAssetEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ActorEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Controllers\ComponentEditorController.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Engine\Gui\Core\NavBar\GuiAssetEditorManager.h">
+      <Filter>Runtime\Include\Engine\Gui</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Input\Input.h">
+      <Filter>Runtime\Include\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Input\InputManager.h">
+      <Filter>Runtime\Include\Input</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Color.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Math.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Rotator.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Transform.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Vector2.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+    <ClInclude Include="Runtime\Include\Bix\Math\Vector3.h">
+      <Filter>Runtime\Include\Math</Filter>
+    </ClInclude>
+  </ItemGroup>
+</Project>
