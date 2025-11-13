@@ -86,13 +86,17 @@ local generated_dir = path.join("Build", plat, arch, mode, "Intermediate", "Gene
 --  a clean list with no duplicate or dangling separators.
 -- ────────────────────────────────────────────────────────────────
 local engine_public_includes = {
-    "Runtime/Include",
+    "src",
     "ThirdParty",
     "ThirdParty/ImGui",
     "ThirdParty/ImGui/backends",
     "ThirdParty/stb",
     generated_dir
 }
+
+for _, dir in ipairs(os.dirs("src/**/public")) do
+    table.insert(engine_public_includes, dir)
+end
 
 local function push_if_dir(list, value)
     if value and value ~= "" then
@@ -114,7 +118,7 @@ target("BixHeaderTool")
     set_policy("build.fence", true)
 
     before_build(function (target)
-        import("core.project.config")
+        local config = import("core.project.config")
         local mode = config.get("mode") or "debug"
         target:set("targetdir", path.join("Build", os.host(), os.arch(), mode))
         print(string.format("[BixHeaderTool] 🎯 Mode actif détecté : %s", mode))
@@ -132,20 +136,20 @@ target("GenerateHeaders")
     add_deps("BixHeaderTool")
 
     before_build(function(target)
-        import("core.project.config")
-        import("Tools.xmake.reflection")
-    
+        local config = import("core.project.config")
+        local reflection = import("Tools.xmake.reflection")
+
         local mode = config.get("mode") or "debug"
         print(string.format("[GenerateHeaders] 🚀 Mode de génération détecté : %s", mode))
-    
+
         if not os.isdir(generated_dir) then
             os.mkdir(generated_dir)
         end
-    
+
         -- 🔍 Vérifie si un .h a changé depuis la dernière génération
         local newest_header_time = 0
         local header_paths = {
-            "Runtime/Include/**.h",
+            "src/**/public/**.h",
             path.join("Build", os.host(), os.arch(), mode, "Content", "**.h")
         }
     
@@ -210,7 +214,6 @@ target("GenerateHeaders")
     
         -- 🚀 Génération seulement si besoin
         if need_regen then
-            local reflection = import("Tools.xmake.reflection")
             reflection.generate_headers(false, generated_dir)
         end
     end)
@@ -224,9 +227,8 @@ target("BixEngine")
     set_default(false)
     add_deps("BixHeaderTool", "GenerateHeaders")
 
-    add_files("Runtime/Source/**.cpp")
+    add_files("src/**/private/**.cpp")
     add_includedirs(engine_public_includes, { public = true })
-    add_includedirs("Runtime/Source")
 
     -- 🧩 ImGui
     add_files("ThirdParty/ImGui/*.cpp")
@@ -243,7 +245,7 @@ target("BixEngine")
 target("BixRun")
     set_kind("binary")
     set_default(true)
-    add_files("BixRun/main.cpp")
+    add_files("src/Main/private/main.cpp")
     add_deps("BixEngine")
 
     add_includedirs(engine_public_includes)
@@ -286,7 +288,6 @@ target("BixRun")
 task("regen")
     set_category("action")
     on_run(function()
-        import("Tools.xmake.reflection")
         print("[BixEngine] ♻️ Regénération manuelle des headers forcée...")
         local reflection = import("Tools.xmake.reflection")
         reflection.generate_headers(true, generated_dir)
