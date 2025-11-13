@@ -264,7 +264,7 @@ target("BixEngine")
     add_includedirs("src", { public = true })
 
     for _, module in ipairs(engine_modules) do
-        local module_group = string.format("Modules/%s", module.name)
+        local module_group = module.name
 
         if os.isdir(module.public_dir) then
             add_includedirs(module.public_dir, { public = true })
@@ -312,25 +312,27 @@ target("BixRun")
     add_links("SDL3", "SDL3_image")
 
     if main_module then
+        local module_group = main_module.name
+
         if os.isdir(main_module.public_dir) then
             add_includedirs(main_module.public_dir)
             add_headerfiles(path.join(main_module.public_dir, "**.h"), {
-                group = "Modules/Main/Public/Headers",
+                group = module_group .. "/Public/Headers",
                 prefixdir = path.join(main_module.name, "Public")
             })
             add_files(path.join(main_module.public_dir, "**.cpp"), {
-                group = "Modules/Main/Public/Sources"
+                group = module_group .. "/Public/Sources"
             })
         end
 
         if os.isdir(main_module.private_dir) then
             add_includedirs(main_module.private_dir)
             add_headerfiles(path.join(main_module.private_dir, "**.h"), {
-                group = "Modules/Main/Private/Headers",
+                group = module_group .. "/Private/Headers",
                 prefixdir = path.join(main_module.name, "Private")
             })
             add_files(path.join(main_module.private_dir, "**.cpp"), {
-                group = "Modules/Main/Private/Sources"
+                group = module_group .. "/Private/Sources"
             })
         end
     end
