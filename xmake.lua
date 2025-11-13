@@ -86,12 +86,14 @@ local function load_reflection_generator()
 end
 
 local function run_header_generation(force)
-    local ok, err = pcall(function()
-        local generator = load_reflection_generator()
-        generator(force or false, get_generated_dir())
-    end)
+    local generator = load_reflection_generator()
+    local ok, errmsg = generator(force or false, get_generated_dir())
     if not ok then
-        raise("échec de la génération des headers : %s", err)
+        if errmsg and errmsg ~= "" then
+            raise("échec de la génération des headers : %s", errmsg)
+        else
+            raise("échec de la génération des headers (raison inconnue)")
+        end
     end
 end
 

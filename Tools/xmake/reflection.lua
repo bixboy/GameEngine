@@ -122,15 +122,16 @@ local function run_generate_headers(force, generated_dir)
     local header_roots = collect_header_roots()
     if not needs_generation(header_roots) then
         cprint("${bright red}[!] Aucun include .generated.h trouvé — rien à générer.")
-        return true
+        return true, nil
     end
 
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
 
     local tool_exe = resolve_tool_binary("BixHeaderTool")
     if not tool_exe then
-        cprint("${bright red}[!] Erreur : BixHeaderTool introuvable, impossible de générer les headers.")
-        return false
+        local message = "BixHeaderTool introuvable, impossible de générer les headers"
+        cprint(string.format("${bright red}[!] Erreur : %s.", message))
+        return false, message
     end
 
     cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
@@ -143,6 +144,7 @@ local function run_generate_headers(force, generated_dir)
 
     local code, stdout, stderr = os.execv(tool_exe, args)
     if code ~= 0 then
+        local message = string.format("BixHeaderTool a retourné le code %d", code)
         cprint("${bright red}[!] Échec de l'exécution de BixHeaderTool :")
         if stdout and stdout ~= "" then
             print(stdout)
@@ -150,7 +152,7 @@ local function run_generate_headers(force, generated_dir)
         if stderr and stderr ~= "" then
             print(stderr)
         end
-        return false
+        return false, message
     end
 
     cprint("${bright green}[✓] BixHeaderTool exécuté avec succès.")
@@ -158,7 +160,7 @@ local function run_generate_headers(force, generated_dir)
     remove_empty_generated(output_dir)
     cprint("${bright green}[+] Fichiers .generated.h mis à jour avec succès.")
     cprint("${bright cyan}──────────────────────────────────────────────\n")
-    return true
+    return true, nil
 end
 
 function M.generate_headers(force, generated_dir)
