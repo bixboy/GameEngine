@@ -1,0 +1,71 @@
+#pragma once
+#include <SDL3/SDL.h>
+#include <iosfwd>
+#include <memory>
+#include "Actor.h"
+#include "Math/Vector2.h"
+#include "Player.generated.h"
+
+
+namespace BixEngine
+{
+    namespace Graphics
+    {
+        class Renderer;
+    }
+
+    namespace Input
+    {
+        class InputManager;
+    }
+
+    namespace Game
+    {
+        class SpriteAnimatorComponent;
+        class SpriteComponent;
+
+        BCLASS()
+
+        class Player : public Actor
+        {
+            GENERATED_BODY()
+
+        public:
+            Player();
+            Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
+
+            void SetupInput(Input::InputManager& inputManager);
+
+            void Update(float deltaTime) override;
+
+            void MoveForward(float value);
+            void MoveRight(float value);
+
+            [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
+            [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
+
+        private:
+            void SerializeBinaryImpl(std::ostream& stream) const override;
+            void DeserializeBinaryImpl(std::istream& stream) override;
+
+            void OnComponentRemoved(const Component& component) override;
+
+            void ApplyMovement(float deltaTime);
+            void InitializeSpriteComponent();
+            void RefreshSpriteComponent();
+
+            Math::Vector2<float> pendingInput_{};
+
+            BPROPERTY()
+            float moveSpeed_{200.0f};
+
+            BPROPERTY()
+            Math::Vector3 size_{Math::Vector3(150.f, 150.f, 150.f)};
+
+            SDL_Color color_{255, 255, 255, 255};
+
+            SpriteComponent* spriteComponent_{nullptr};
+            SpriteAnimatorComponent* animatorComponent_{nullptr};
+        };
+    }
+}
