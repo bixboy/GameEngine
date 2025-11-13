@@ -103,6 +103,42 @@ end
 push_if_dir(engine_public_includes, sdl3_inc)
 push_if_dir(engine_public_includes, sdl3_image_inc)
 
+-- ────────────────────────────────────────────────────────────────
+-- 🧩 Source modules (public/private layout discovery)
+-- ────────────────────────────────────────────────────────────────
+local function discover_modules(root)
+    local modules = {}
+    for _, dir in ipairs(os.dirs(path.join(root, "*"))) do
+        local name = path.basename(dir)
+        local private_dir = path.join(dir, "private")
+        local public_dir = path.join(dir, "public")
+
+        if os.isdir(private_dir) or os.isdir(public_dir) then
+            table.insert(modules, {
+                name = name,
+                root = dir,
+                private_dir = private_dir,
+                public_dir = public_dir
+            })
+        end
+    end
+
+    table.sort(modules, function(a, b) return a.name < b.name end)
+    return modules
+end
+
+local all_modules = discover_modules("src")
+local engine_modules = {}
+local main_module = nil
+
+for _, module in ipairs(all_modules) do
+    if module.name:lower() == "main" then
+        main_module = module
+    else
+        table.insert(engine_modules, module)
+    end
+end
+
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║ 🔨 Target: BixHeaderTool                                     ║
 -- ╚══════════════════════════════════════════════════════════════╝
@@ -224,9 +260,35 @@ target("BixEngine")
     set_default(false)
     add_deps("BixHeaderTool", "GenerateHeaders")
 
-    add_files("src/**.cpp")
     add_includedirs(engine_public_includes, { public = true })
-    add_includedirs("src")
+    add_includedirs("src", { public = true })
+
+    for _, module in ipairs(engine_modules) do
+        local module_group = string.format("Modules/%s", module.name)
+
+        if os.isdir(module.public_dir) then
+            add_includedirs(module.public_dir, { public = true })
+            add_headerfiles(path.join(module.public_dir, "**.h"), {
+                public = true,
+                group = module_group .. "/Public",
+                prefixdir = path.join(module.name, "Public")
+            })
+            add_files(path.join(module.public_dir, "**.cpp"), {
+                group = module_group .. "/Public"
+            })
+        end
+
+        if os.isdir(module.private_dir) then
+            add_includedirs(module.private_dir)
+            add_headerfiles(path.join(module.private_dir, "**.h"), {
+                group = module_group .. "/Private",
+                prefixdir = path.join(module.name, "Private")
+            })
+            add_files(path.join(module.private_dir, "**.cpp"), {
+                group = module_group .. "/Private"
+            })
+        end
+    end
 
     -- 🧩 ImGui
     add_files("ThirdParty/ImGui/*.cpp")
@@ -243,16 +305,39 @@ target("BixEngine")
 target("BixRun")
     set_kind("binary")
     set_default(true)
-    add_files("src/Main/private/main.cpp")
     add_deps("BixEngine")
 
     add_includedirs(engine_public_includes)
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
-    
+
+    if main_module then
+        if os.isdir(main_module.public_dir) then
+            add_includedirs(main_module.public_dir)
+            add_headerfiles(path.join(main_module.public_dir, "**.h"), {
+                group = "Modules/Main/Public",
+                prefixdir = path.join(main_module.name, "Public")
+            })
+            add_files(path.join(main_module.public_dir, "**.cpp"), {
+                group = "Modules/Main/Public"
+            })
+        end
+
+        if os.isdir(main_module.private_dir) then
+            add_includedirs(main_module.private_dir)
+            add_headerfiles(path.join(main_module.private_dir, "**.h"), {
+                group = "Modules/Main/Private",
+                prefixdir = path.join(main_module.name, "Private")
+            })
+            add_files(path.join(main_module.private_dir, "**.cpp"), {
+                group = "Modules/Main/Private"
+            })
+        end
+    end
+
     local content_dir = path.join("Build", plat, arch, mode, "Content")
     if os.isdir(content_dir) then
-    
+
         add_files(path.join(content_dir, "**.cpp"))
         add_includedirs(content_dir, { public = true })
         
