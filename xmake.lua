@@ -33,6 +33,47 @@ local function get_generated_dir()
     return path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
 end
 
+local function canonical_path(dir)
+    if not dir or dir == "" then
+        return nil
+    end
+    local abs = path.absolute(dir)
+    if not abs then
+        return dir
+    end
+    return abs:gsub("\\", "/"):lower()
+end
+
+local function dedupe_paths(paths)
+    local seen = {}
+    local result = {}
+    for _, dir in ipairs(paths) do
+        if dir and dir ~= "" then
+            local key = canonical_path(dir) or dir
+            if not seen[key] then
+                seen[key] = true
+                table.insert(result, dir)
+            end
+        end
+    end
+    return result
+end
+
+local function existing_dirs(...)
+    local result = {}
+    local seen = {}
+    for _, dir in ipairs({...}) do
+        if dir and os.isdir(dir) then
+            local key = canonical_path(dir) or dir
+            if not seen[key] then
+                seen[key] = true
+                table.insert(result, dir)
+            end
+        end
+    end
+    return result
+end
+
 -- ────────────────────────────────────────────────────────────────
 -- Règle includes globaux
 -- ────────────────────────────────────────────────────────────────
@@ -59,26 +100,13 @@ local engine_public_includes = {
 
 for _, dir in ipairs(os.dirs("src/*")) do
     local public_dir = path.join(dir, "Public")
-    if os.isdir(public_dir) then
-        table.insert(engine_public_includes, public_dir)
-    end
     local lowercase_public = path.join(dir, "public")
-    if os.isdir(lowercase_public) then
-        table.insert(engine_public_includes, lowercase_public)
+    for _, candidate in ipairs(existing_dirs(public_dir, lowercase_public)) do
+        table.insert(engine_public_includes, candidate)
     end
 end
 
-do
-    local dedup = {}
-    local filtered = {}
-    for _, dir in ipairs(engine_public_includes) do
-        if dir and dir ~= "" and not dedup[dir] then
-            dedup[dir] = true
-            table.insert(filtered, dir)
-        end
-    end
-    engine_public_includes = filtered
-end
+engine_public_includes = dedupe_paths(engine_public_includes)
 
 -- ────────────────────────────────────────────────────────────────
 -- BixHeaderTool
@@ -103,7 +131,18 @@ target("GenerateHeaders")
     add_deps("BixHeaderTool")
     on_build(function()
         local reflection = import("Tools.xmake.reflection")
-        reflection.generate_headers(false, get_generated_dir())
+        local generator
+        if reflection then
+            if type(reflection.generate_headers) == "function" then
+                generator = reflection.generate_headers
+            elseif type(reflection.run) == "function" then
+                generator = reflection.run
+            elseif type(reflection) == "function" then
+                generator = reflection
+            end
+        end
+        assert(type(generator) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
+        generator(false, get_generated_dir())
     end)
 
 -- ────────────────────────────────────────────────────────────────
@@ -122,19 +161,18 @@ local function create_engine_module(folder)
         add_rules("bix.global_includes")
         add_deps("GenerateHeaders")
 
-        if os.isdir(private_dir) then add_files(private_dir .. "/**.cpp") end
-        if os.isdir(lowercase_private) then add_files(lowercase_private .. "/**.cpp") end
-        if os.isdir(public_dir) then add_headerfiles(public_dir .. "/**.h", {public = true}) end
-        if os.isdir(lowercase_public) then add_headerfiles(lowercase_public .. "/**.h", {public = true}) end
+        for _, dir in ipairs(existing_dirs(private_dir, lowercase_private)) do
+            add_files(path.join(dir, "**.cpp"))
+        end
+        for _, dir in ipairs(existing_dirs(public_dir, lowercase_public)) do
+            add_headerfiles(path.join(dir, "**.h"), {public = true})
+        end
 
-        local include_dirs = {}
-        if os.isdir(public_dir) then table.insert(include_dirs, public_dir) end
-        if os.isdir(lowercase_public) then table.insert(include_dirs, lowercase_public) end
-        if os.isdir(private_dir) then table.insert(include_dirs, private_dir) end
-        if os.isdir(lowercase_private) then table.insert(include_dirs, lowercase_private) end
+        local include_dirs = existing_dirs(public_dir, lowercase_public, private_dir, lowercase_private)
         for _, inc in ipairs(engine_public_includes) do
             table.insert(include_dirs, inc)
         end
+        include_dirs = dedupe_paths(include_dirs)
         if #include_dirs > 0 then
             add_includedirs(table.unpack(include_dirs))
         end
@@ -161,24 +199,22 @@ target("BixMain")
         if mod:lower() ~= "main" then add_deps("Bix" .. mod) end
     end
 
-    add_files("src/Main/Private/**.cpp")
-    add_files("src/Main/private/**.cpp")
-    add_headerfiles("src/Main/Public/**.h")
-    add_headerfiles("src/Main/public/**.h")
-    local main_includes = {}
-    for _, dir in ipairs({
+    for _, dir in ipairs(existing_dirs("src/Main/Private", "src/Main/private")) do
+        add_files(path.join(dir, "**.cpp"))
+    end
+    for _, dir in ipairs(existing_dirs("src/Main/Public", "src/Main/public")) do
+        add_headerfiles(path.join(dir, "**.h"))
+    end
+    local main_includes = existing_dirs(
         "src/Main/Public",
         "src/Main/public",
         "src/Main/Private",
         "src/Main/private"
-    }) do
-        if os.isdir(dir) then
-            table.insert(main_includes, dir)
-        end
-    end
+    )
     for _, inc in ipairs(engine_public_includes) do
         table.insert(main_includes, inc)
     end
+    main_includes = dedupe_paths(main_includes)
     if #main_includes > 0 then
         add_includedirs(table.unpack(main_includes))
     end
@@ -202,7 +238,18 @@ task("regen")
     set_category("action")
     on_run(function()
         local reflection = import("Tools.xmake.reflection")
-        reflection.generate_headers(true, get_generated_dir())
+        local generator
+        if reflection then
+            if type(reflection.generate_headers) == "function" then
+                generator = reflection.generate_headers
+            elseif type(reflection.run) == "function" then
+                generator = reflection.run
+            elseif type(reflection) == "function" then
+                generator = reflection
+            end
+        end
+        assert(type(generator) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
+        generator(true, get_generated_dir())
     end)
 
 task("cleanbuild")

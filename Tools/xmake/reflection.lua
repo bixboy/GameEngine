@@ -2,14 +2,35 @@ import("core.project.config")
 
 local M = {}
 
+local function canonical_path(dir)
+    if not dir or dir == "" then
+        return nil
+    end
+    local abs = path.absolute(dir)
+    if not abs then
+        return dir
+    end
+    return abs:gsub("\\", "/"):lower()
+end
+
+local function push_unique(list, seen, dir)
+    if not dir or dir == "" then
+        return
+    end
+    local key = canonical_path(dir) or dir
+    if not seen[key] then
+        seen[key] = true
+        table.insert(list, dir)
+    end
+end
+
 local function collect_header_roots()
     local roots = {}
-    local visited = {}
+    local seen = {}
 
-    for _, dir in ipairs(os.dirs(path.join(os.projectdir(), "src/**"))) do
-        if os.isdir(dir) and not visited[dir] then
-            visited[dir] = true
-            table.insert(roots, dir)
+    for _, dir in ipairs(os.dirs(path.join(os.projectdir(), "src/*"))) do
+        if os.isdir(dir) then
+            push_unique(roots, seen, dir)
         end
     end
 
@@ -17,9 +38,8 @@ local function collect_header_roots()
     local arch = get_config("arch") or os.arch()
     local mode = get_config("mode") or "debug"
     local content_dir = path.join(os.projectdir(), "Build", plat, arch, mode, "Content")
-    if os.isdir(content_dir) and not visited[content_dir] then
-        visited[content_dir] = true
-        table.insert(roots, content_dir)
+    if os.isdir(content_dir) then
+        push_unique(roots, seen, content_dir)
     end
 
     return roots
@@ -37,8 +57,47 @@ local function needs_generation(roots)
     return false
 end
 
-function M.generate_headers(force, generated_dir)
-    local output_dir = path.join(os.projectdir(), generated_dir)
+local function resolve_tool_binary(name)
+    local plat = get_config("plat") or os.host()
+    local arch = get_config("arch") or os.arch()
+    local mode = get_config("mode") or "debug"
+    local suffix = ""
+    if (plat and plat:lower() == "windows") or os.host() == "windows" then
+        suffix = ".exe"
+    end
+
+    local candidates = {
+        path.join(os.projectdir(), "build", mode, name .. suffix),
+        path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, name .. suffix),
+        path.join(os.projectdir(), "Build", plat, arch, mode, name .. suffix)
+    }
+
+    for _, candidate in ipairs(candidates) do
+        if os.isfile(candidate) then
+            return candidate
+        end
+    end
+
+    return nil
+end
+
+local function remove_empty_generated(output_dir)
+    for _, f in ipairs(os.files(path.join(output_dir, "*.generated.h"))) do
+        local size = os.filesize(f)
+        if size == 0 then
+            cprint(string.format("${dim red}   ✖ Suppression (vide) : %s", f))
+            os.rm(f)
+        else
+            cprint(string.format("${dim green}   ✓ Valide : %s (%d bytes)", f, size))
+        end
+    end
+end
+
+local function run_generate_headers(force, generated_dir)
+    local output_dir = generated_dir
+    if not path.is_absolute(output_dir) then
+        output_dir = path.join(os.projectdir(), generated_dir)
+    end
 
     cprint("${bright cyan}──────────────────────────────────────────────")
     cprint("${bright cyan}[Reflection] Démarrage de la génération des headers...")
@@ -68,24 +127,13 @@ function M.generate_headers(force, generated_dir)
 
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
 
-    local tool_target = "BixHeaderTool"
-    local mode = get_config("mode") or "debug"
-    local tool_exe = path.join(os.projectdir(), "build", mode, tool_target .. ".exe")
-    if not os.isfile(tool_exe) then
-        tool_exe = path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, tool_target .. ".exe")
-    end
-
-    cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
-
-    if not os.isfile(tool_exe) then
+    local tool_exe = resolve_tool_binary("BixHeaderTool")
+    if not tool_exe then
         cprint("${bright red}[!] Erreur : BixHeaderTool introuvable, impossible de générer les headers.")
         return
     end
 
-    if #header_roots == 0 then
-        cprint("${bright red}[!] Aucun dossier d'includes valide à analyser.")
-        return
-    end
+    cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
 
     local args = {}
     for _, dir in ipairs(header_roots) do
@@ -93,30 +141,30 @@ function M.generate_headers(force, generated_dir)
     end
     table.insert(args, output_dir)
 
-    local code, _, err = os.execv(tool_exe, args)
+    local code, stdout, stderr = os.execv(tool_exe, args)
     if code ~= 0 then
         cprint("${bright red}[!] Échec de l'exécution de BixHeaderTool :")
-        if err then
-            print(err)
+        if stdout and stdout ~= "" then
+            print(stdout)
+        end
+        if stderr and stderr ~= "" then
+            print(stderr)
         end
         return
     end
 
     cprint("${bright green}[✓] BixHeaderTool exécuté avec succès.")
-
     cprint("${bright yellow}[*] Nettoyage des fichiers vides...")
-    for _, f in ipairs(os.files(path.join(output_dir, "*.generated.h"))) do
-        local size = os.filesize(f)
-        if size == 0 then
-            cprint(string.format("${dim red}   ✖ Suppression (vide) : %s", f))
-            os.rm(f)
-        else
-            cprint(string.format("${dim green}   ✓ Valide : %s (%d bytes)", f, size))
-        end
-    end
-
+    remove_empty_generated(output_dir)
     cprint("${bright green}[+] Fichiers .generated.h mis à jour avec succès.")
     cprint("${bright cyan}──────────────────────────────────────────────\n")
 end
 
-return M
+M.generate_headers = run_generate_headers
+M.run = run_generate_headers
+
+return setmetatable(M, {
+    __call = function(_, ...)
+        return run_generate_headers(...)
+    end
+})
