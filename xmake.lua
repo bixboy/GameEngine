@@ -139,6 +139,59 @@ for _, module in ipairs(all_modules) do
     end
 end
 
+local function define_module_target(module, opts)
+    local group = opts and opts.group or "Modules"
+
+    target(module.name)
+        set_kind("object")
+        set_group(group)
+        set_default(false)
+        add_deps("BixHeaderTool", "GenerateHeaders")
+
+        add_includedirs(engine_public_includes, { public = true })
+        add_includedirs("src", { public = true })
+
+        if os.isdir(module.public_dir) then
+            add_includedirs(module.public_dir, { public = true })
+            add_headerfiles(path.join(module.public_dir, "**.h"), {
+                public = true,
+                group = "Public",
+                prefixdir = path.join(module.name, "Public")
+            })
+            add_files(path.join(module.public_dir, "**.cpp"), {
+                group = "Private",
+                prefixdir = path.join(module.name, "Public")
+            })
+        end
+
+        if os.isdir(module.private_dir) then
+            add_includedirs(module.private_dir)
+            add_headerfiles(path.join(module.private_dir, "**.h"), {
+                group = "Public",
+                prefixdir = path.join(module.name, "Private")
+            })
+            add_files(path.join(module.private_dir, "**.cpp"), {
+                group = "Private",
+                prefixdir = path.join(module.name, "Private")
+            })
+        end
+    target_end()
+
+    return module.name
+end
+
+local engine_module_targets = {}
+
+for _, module in ipairs(engine_modules) do
+    table.insert(engine_module_targets, define_module_target(module))
+end
+
+local main_module_target = nil
+
+if main_module then
+    main_module_target = define_module_target(main_module, { group = "Executable" })
+end
+
 -- ╔══════════════════════════════════════════════════════════════╗
 -- ║ 🔨 Target: BixHeaderTool                                     ║
 -- ╚══════════════════════════════════════════════════════════════╝
@@ -259,36 +312,12 @@ target("BixEngine")
     set_kind("static")
     set_default(false)
     add_deps("BixHeaderTool", "GenerateHeaders")
+    if #engine_module_targets > 0 then
+        add_deps(table.unpack(engine_module_targets))
+    end
 
     add_includedirs(engine_public_includes, { public = true })
     add_includedirs("src", { public = true })
-
-    for _, module in ipairs(engine_modules) do
-        local module_group = module.name
-
-        if os.isdir(module.public_dir) then
-            add_includedirs(module.public_dir, { public = true })
-            add_headerfiles(path.join(module.public_dir, "**.h"), {
-                public = true,
-                group = module_group .. "/Public/Headers",
-                prefixdir = path.join(module.name, "Public")
-            })
-            add_files(path.join(module.public_dir, "**.cpp"), {
-                group = module_group .. "/Public/Sources"
-            })
-        end
-
-        if os.isdir(module.private_dir) then
-            add_includedirs(module.private_dir)
-            add_headerfiles(path.join(module.private_dir, "**.h"), {
-                group = module_group .. "/Private/Headers",
-                prefixdir = path.join(module.name, "Private")
-            })
-            add_files(path.join(module.private_dir, "**.cpp"), {
-                group = module_group .. "/Private/Sources"
-            })
-        end
-    end
 
     -- 🧩 ImGui
     add_files("ThirdParty/ImGui/*.cpp")
@@ -306,36 +335,13 @@ target("BixRun")
     set_kind("binary")
     set_default(true)
     add_deps("BixEngine")
+    if main_module_target then
+        add_deps(main_module_target)
+    end
 
     add_includedirs(engine_public_includes)
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
-
-    if main_module then
-        local module_group = main_module.name
-
-        if os.isdir(main_module.public_dir) then
-            add_includedirs(main_module.public_dir)
-            add_headerfiles(path.join(main_module.public_dir, "**.h"), {
-                group = module_group .. "/Public/Headers",
-                prefixdir = path.join(main_module.name, "Public")
-            })
-            add_files(path.join(main_module.public_dir, "**.cpp"), {
-                group = module_group .. "/Public/Sources"
-            })
-        end
-
-        if os.isdir(main_module.private_dir) then
-            add_includedirs(main_module.private_dir)
-            add_headerfiles(path.join(main_module.private_dir, "**.h"), {
-                group = module_group .. "/Private/Headers",
-                prefixdir = path.join(main_module.name, "Private")
-            })
-            add_files(path.join(main_module.private_dir, "**.cpp"), {
-                group = module_group .. "/Private/Sources"
-            })
-        end
-    end
 
     local content_dir = path.join("Build", plat, arch, mode, "Content")
     if os.isdir(content_dir) then
