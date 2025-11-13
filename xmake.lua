@@ -10,59 +10,6 @@ set_optimize("faster")
 add_moduledirs(path.join(os.projectdir(), "Tools/xmake"))
 
 -- ────────────────────────────────────────────────────────────────
--- Fonction de génération (avec import local)
--- ────────────────────────────────────────────────────────────────
-local function run_reflection_generation_once()
-    if _ENV.__bix_headers_generated then
-        return
-    end
-    _ENV.__bix_headers_generated = true
-
-    -- import ici (dans la portée d’exécution, pas au chargement)
-    local config = import("core.project.config")
-    local reflection = import("Tools.xmake.reflection")
-
-    local mode = config.get("mode") or "debug"
-    local plat = config.get("plat") or os.host()
-    local arch = config.get("arch") or os.arch()
-    local gen_dir = path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
-
-    if not os.isdir(gen_dir) then os.mkdir(gen_dir) end
-
-    local headers   = os.files("src/**.h")
-    local generated = os.files(path.join(gen_dir, "*.generated.h"))
-    local need_regen = (#generated == 0)
-    local newest_generated_time = 0
-    for _, gen in ipairs(generated) do
-        newest_generated_time = math.max(newest_generated_time, os.mtime(gen))
-    end
-    for _, header in ipairs(headers) do
-        local content = io.readfile(header)
-        if content and content:find("%.generated%.h") then
-            if os.mtime(header) > newest_generated_time then
-                need_regen = true
-                print("[Reflection] 🔄 Header plus récent détecté : " .. header)
-                break
-            end
-        end
-    end
-    if need_regen then
-        print("[Reflection] 🚀 Génération des headers...")
-        reflection.generate_headers(false, gen_dir)
-    else
-        print("[Reflection] ✅ Aucun changement — génération sautée.")
-    end
-    local found = false
-    for _, f in ipairs(os.files(path.join(gen_dir, "*.generated.h"))) do
-        found = true
-        break
-    end
-    if not found then
-        raise("[Reflection] ❌ Aucun *.generated.h produit dans " .. gen_dir)
-    end
-end
-
--- ────────────────────────────────────────────────────────────────
 -- SDL3
 -- ────────────────────────────────────────────────────────────────
 local root = os.projectdir()
@@ -137,10 +84,6 @@ local function create_engine_module(folder)
         add_rules("bix.global_includes")
         add_deps("BixHeaderTool")
 
-        before_build(function()
-            run_reflection_generation_once()
-        end)
-
         if os.isdir(private_dir) then add_files(private_dir .. "/**.cpp") end
         if os.isdir(public_dir) then add_headerfiles(public_dir .. "/**.h", {public = true}) end
         add_includedirs(public_dir, private_dir, table.unpack(engine_public_includes))
@@ -161,10 +104,6 @@ target("BixMain")
     set_group("Runtime")
     add_rules("bix.global_includes")
     add_deps("BixHeaderTool")
-
-    before_build(function()
-        run_reflection_generation_once()
-    end)
 
     for _, dir in ipairs(os.dirs("src/*")) do
         local mod = path.basename(dir)
@@ -194,7 +133,6 @@ task("regen")
     set_category("action")
     on_run(function()
         _ENV.__bix_headers_generated = nil
-        run_reflection_generation_once()
     end)
 
 task("cleanbuild")
