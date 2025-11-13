@@ -122,7 +122,7 @@ local function run_generate_headers(force, generated_dir)
     local header_roots = collect_header_roots()
     if not needs_generation(header_roots) then
         cprint("${bright red}[!] Aucun include .generated.h trouvé — rien à générer.")
-        return
+        return true
     end
 
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
@@ -130,7 +130,7 @@ local function run_generate_headers(force, generated_dir)
     local tool_exe = resolve_tool_binary("BixHeaderTool")
     if not tool_exe then
         cprint("${bright red}[!] Erreur : BixHeaderTool introuvable, impossible de générer les headers.")
-        return
+        return false
     end
 
     cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
@@ -150,7 +150,7 @@ local function run_generate_headers(force, generated_dir)
         if stderr and stderr ~= "" then
             print(stderr)
         end
-        return
+        return false
     end
 
     cprint("${bright green}[✓] BixHeaderTool exécuté avec succès.")
@@ -158,13 +158,11 @@ local function run_generate_headers(force, generated_dir)
     remove_empty_generated(output_dir)
     cprint("${bright green}[+] Fichiers .generated.h mis à jour avec succès.")
     cprint("${bright cyan}──────────────────────────────────────────────\n")
+    return true
 end
 
-M.generate_headers = run_generate_headers
-M.run = run_generate_headers
+function M.generate_headers(force, generated_dir)
+    return run_generate_headers(force, generated_dir)
+end
 
-return setmetatable(M, {
-    __call = function(_, ...)
-        return run_generate_headers(...)
-    end
-})
+return M

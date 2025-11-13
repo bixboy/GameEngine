@@ -74,6 +74,27 @@ local function existing_dirs(...)
     return result
 end
 
+local reflection_generator
+local function load_reflection_generator()
+    if not reflection_generator then
+        local reflection = import("Tools.xmake.reflection")
+        assert(type(reflection) == "table", "Tools.xmake.reflection doit retourner une table")
+        assert(type(reflection.generate_headers) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
+        reflection_generator = reflection.generate_headers
+    end
+    return reflection_generator
+end
+
+local function run_header_generation(force)
+    local ok, err = pcall(function()
+        local generator = load_reflection_generator()
+        generator(force or false, get_generated_dir())
+    end)
+    if not ok then
+        raise("échec de la génération des headers : %s", err)
+    end
+end
+
 -- ────────────────────────────────────────────────────────────────
 -- Règle includes globaux
 -- ────────────────────────────────────────────────────────────────
@@ -129,20 +150,9 @@ target("GenerateHeaders")
     set_kind("phony")
     set_default(false)
     add_deps("BixHeaderTool")
+    set_policy("build.fence", true)
     on_build(function()
-        local reflection = import("Tools.xmake.reflection")
-        local generator
-        if reflection then
-            if type(reflection.generate_headers) == "function" then
-                generator = reflection.generate_headers
-            elseif type(reflection.run) == "function" then
-                generator = reflection.run
-            elseif type(reflection) == "function" then
-                generator = reflection
-            end
-        end
-        assert(type(generator) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
-        generator(false, get_generated_dir())
+        run_header_generation(false)
     end)
 
 -- ────────────────────────────────────────────────────────────────
@@ -237,19 +247,7 @@ target("BixMain")
 task("regen")
     set_category("action")
     on_run(function()
-        local reflection = import("Tools.xmake.reflection")
-        local generator
-        if reflection then
-            if type(reflection.generate_headers) == "function" then
-                generator = reflection.generate_headers
-            elseif type(reflection.run) == "function" then
-                generator = reflection.run
-            elseif type(reflection) == "function" then
-                generator = reflection
-            end
-        end
-        assert(type(generator) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
-        generator(true, get_generated_dir())
+        run_header_generation(true)
     end)
 
 task("cleanbuild")
