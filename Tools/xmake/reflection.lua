@@ -1,63 +1,42 @@
-local config = import("core.project.config")
+import("core.project.config")
 local M = {}
 
-local function get_config_or_default(name, default)
-    if config and config.get then
-        local value = config.get(name)
-        if value ~= nil then
-            return value
-        end
-    end
-    return default
-end
+function generate_headers(force, generated_dir)
 
-function M.generate_headers(force, generated_dir)
     cprint("${bright cyan}──────────────────────────────────────────────")
     cprint("${bright cyan}[Reflection] Démarrage de la génération des headers...")
     cprint("${bright cyan}──────────────────────────────────────────────")
 
-    local plat = get_config_or_default("plat", os.host())
-    local arch = get_config_or_default("arch", os.arch())
-    local mode = get_config_or_default("mode", "debug")
+    cprint(string.format("${dim blue}→ Dossier de sortie : %s", generated_dir))
 
-    local content_path = path.join(os.projectdir(), "Build", plat, arch, mode, "Content")
-    local generated_abs = path.join(os.projectdir(), generated_dir)
-
-    cprint(string.format("${dim blue}→ Dossier de sortie : %s", generated_abs))
-
+    -- 1️⃣ Suppression des anciens fichiers si --force
     if force then
         cprint("${bright yellow}[*] Suppression complète des fichiers générés (--force)")
-        if os.isdir(generated_abs) then
-            for _, f in ipairs(os.files(path.join(generated_abs, "*.generated.h"))) do
+        if os.isdir(generated_dir) then
+            for _, f in ipairs(os.files(path.join(generated_dir, "*.generated.h"))) do
                 cprint(string.format("${dim red}   ✖ Suppression : %s", f))
                 os.rm(f)
             end
         end
     end
 
-    if not os.isdir(generated_abs) then
-        cprint(string.format("${bright yellow}[*] Création du dossier manquant : %s", generated_abs))
-        os.mkdir(generated_abs)
+    -- 2️⃣ Création du dossier s'il n'existe pas
+    if not os.isdir(generated_dir) then
+        cprint(string.format("${bright yellow}[*] Création du dossier manquant : %s", generated_dir))
+        os.mkdir(generated_dir)
     else
         cprint("${dim green}[✓] Dossier de génération déjà présent.")
     end
 
+    -- 3️⃣ Scan des headers pour trouver les includes .generated.h
     local gen_names = {}
     cprint("${bright yellow}[*] Recherche des includes .generated.h dans les headers...")
 
-    local header_patterns = {
-        "src/**/public/**.h"
-    }
-
-    if os.isdir(content_path) then
-        table.insert(header_patterns, path.join(content_path, "**.h"))
-    end
-
-    for _, pattern in ipairs(header_patterns) do
-        for _, header in ipairs(os.files(pattern)) do
+    local function scan_headers(path_pattern)
+        for _, header in ipairs(os.files(path_pattern)) do
             local content = io.readfile(header)
             if content then
-                local inc = content:match([[#include%s+"([%w_]+%.generated%.h)"]])
+                local inc = content:match([[#include%s+"(%w+%.generated%.h)"]])
                 if inc then
                     gen_names[inc] = true
                     cprint(string.format("${dim white}   + Trouvé : %s (dans %s)", inc, header))
@@ -66,10 +45,22 @@ function M.generate_headers(force, generated_dir)
         end
     end
 
-    local count = 0
-    for _ in pairs(gen_names) do
-        count = count + 1
+    -- 🔍 Chemin dynamique vers le dossier Content
+    local plat = get_config("plat") or os.host()
+    local arch = get_config("arch") or os.arch()
+    local mode = get_config("mode") or "debug"
+    local content_path = path.join(os.projectdir(), "Build", plat, arch, mode, "Content")
+    
+    -- Scans
+    scan_headers("src/**.h")
+    
+    if os.isdir(content_path) then
+        local content_pattern = path.join(content_path, "**.h")
+        scan_headers(content_pattern)
     end
+
+    local count = 0
+    for _ in pairs(gen_names) do count = count + 1 end
 
     if count == 0 then
         cprint("${bright red}[!] Aucun include .generated.h trouvé — rien à générer.")
@@ -78,45 +69,50 @@ function M.generate_headers(force, generated_dir)
         cprint(string.format("${bright green}[✓] %d includes trouvés, génération en cours...", count))
     end
 
+    -- 4️⃣ Création des fichiers stub manquants
     cprint("${bright yellow}[*] Exécution de BixHeaderTool pour générer les headers réels...")
-
+    
+    -- Recherche automatique du binaire
     local tool_target = "BixHeaderTool"
-    local mode_dir = get_config_or_default("mode", "debug")
-
-    local tool_exe = path.join(os.projectdir(), "build", mode_dir, tool_target .. ".exe")
+    local mode = get_config("mode") or "debug"
+    
+    -- XMake place les binaires ici par défaut :
+    local tool_exe = path.join(os.projectdir(), "build", mode, tool_target .. ".exe")
+    
     if not os.isfile(tool_exe) then
-        tool_exe = path.join(os.projectdir(), "Build", os.host(), os.arch(), mode_dir, tool_target .. ".exe")
+        -- Fallback : version alternative si tu utilises ton dossier Build personnalisé
+        tool_exe = path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, tool_target .. ".exe")
     end
-
+    
     cprint(string.format("${dim blue}→ Résolution du binaire : %s", tool_exe))
-
+    
     if not os.isfile(tool_exe) then
         cprint("${bright red}[!] Erreur : BixHeaderTool introuvable, impossible de générer les headers.")
         return
     end
-
-    local header_roots = {
-        path.join(os.projectdir(), "src")
+    
+    -- Arguments
+    local args = {
+        path.join(os.projectdir(), "src"),
+        path.join(os.projectdir(), "Build", os.host(), os.arch(), mode, "Content"),
+        path.join(os.projectdir(), generated_dir)
     }
-
-    if os.isdir(content_path) then
-        table.insert(header_roots, content_path)
-    else
-        table.insert(header_roots, path.join(os.projectdir(), "src"))
-    end
-
-    table.insert(header_roots, generated_abs)
-
-    local ok = os.execv(tool_exe, header_roots)
+    
+    -- Exécution
+    local ok, out, err = os.execv(tool_exe, args)
     if ok ~= 0 then
-        cprint("${bright red}[!] Échec de l'exécution de BixHeaderTool :" .. tostring(ok))
+        cprint("${bright red}[!] Échec de l'exécution de BixHeaderTool :")
+        print(err or "Erreur inconnue")
         return
     end
-
+    
     cprint("${bright green}[✓] BixHeaderTool exécuté avec succès.")
 
+
+    -- 6️⃣ Nettoyage des fichiers vides
     cprint("${bright yellow}[*] Nettoyage des fichiers vides...")
-    for _, f in ipairs(os.files(path.join(generated_abs, "*.generated.h"))) do
+    for _, f in ipairs(os.files(path.join(generated_dir, "*.generated.h"))) do
+
         local size = os.filesize(f)
         if size == 0 then
             cprint(string.format("${dim red}   ✖ Suppression (vide) : %s", f))

@@ -2,8 +2,8 @@
 #include <istream>
 #include <ostream>
 #include "Containers/String.h"
-#include "Object.generated.h"
 #include "Math/Transform.h"
+#include "Object.generated.h"
 
 
 namespace BixEngine::Game
