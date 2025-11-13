@@ -131,6 +131,18 @@ local all_modules = discover_modules("src")
 local engine_modules = {}
 local main_module = nil
 
+local function collect_public_dirs(modules)
+    local dirs = {}
+    for _, module in ipairs(modules) do
+        if module.public_dir and os.isdir(module.public_dir) then
+            table.insert(dirs, module.public_dir)
+        end
+    end
+    return dirs
+end
+
+local all_module_public_dirs = collect_public_dirs(all_modules)
+
 for _, module in ipairs(all_modules) do
     if module.name:lower() == "main" then
         main_module = module
@@ -150,6 +162,9 @@ local function define_module_target(module, opts)
 
         add_includedirs(engine_public_includes, { public = true })
         add_includedirs("src", { public = true })
+        if #all_module_public_dirs > 0 then
+            add_includedirs(all_module_public_dirs, { public = true })
+        end
 
         if os.isdir(module.public_dir) then
             add_includedirs(module.public_dir, { public = true })
