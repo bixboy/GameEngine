@@ -77,10 +77,19 @@ end
 local reflection_generator
 local function load_reflection_generator()
     if not reflection_generator then
-        local reflection = import("Tools.xmake.reflection")
-        assert(type(reflection) == "table", "Tools.xmake.reflection doit retourner une table")
-        assert(type(reflection.generate_headers) == "function", "Tools.xmake.reflection doit exposer la fonction generate_headers")
-        reflection_generator = reflection.generate_headers
+        local script_path = path.join(os.projectdir(), "Tools/xmake/reflection.lua")
+        if not os.isfile(script_path) then
+            raise("fichier de génération introuvable : %s", script_path)
+        end
+        local reflection = dofile(script_path)
+        if type(reflection) ~= "table" then
+            raise("Tools/xmake/reflection doit retourner une table, reçu : %s", type(reflection))
+        end
+        local generator = reflection.generate_headers
+        if type(generator) ~= "function" then
+            raise("Tools/xmake/reflection doit exposer la fonction generate_headers")
+        end
+        reflection_generator = generator
     end
     return reflection_generator
 end

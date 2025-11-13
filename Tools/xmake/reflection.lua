@@ -1,6 +1,15 @@
-import("core.project.config")
-
 local M = {}
+
+local function config_value(name)
+    local getter = rawget(_G, "get_config")
+    if type(getter) == "function" then
+        local value = getter(name)
+        if value ~= nil then
+            return value
+        end
+    end
+    return nil
+end
 
 local function canonical_path(dir)
     if not dir or dir == "" then
@@ -34,9 +43,9 @@ local function collect_header_roots()
         end
     end
 
-    local plat = get_config("plat") or os.host()
-    local arch = get_config("arch") or os.arch()
-    local mode = get_config("mode") or "debug"
+    local plat = config_value("plat") or os.host()
+    local arch = config_value("arch") or os.arch()
+    local mode = config_value("mode") or "debug"
     local content_dir = path.join(os.projectdir(), "Build", plat, arch, mode, "Content")
     if os.isdir(content_dir) then
         push_unique(roots, seen, content_dir)
@@ -58,9 +67,9 @@ local function needs_generation(roots)
 end
 
 local function resolve_tool_binary(name)
-    local plat = get_config("plat") or os.host()
-    local arch = get_config("arch") or os.arch()
-    local mode = get_config("mode") or "debug"
+    local plat = config_value("plat") or os.host()
+    local arch = config_value("arch") or os.arch()
+    local mode = config_value("mode") or "debug"
     local suffix = ""
     if (plat and plat:lower() == "windows") or os.host() == "windows" then
         suffix = ".exe"
