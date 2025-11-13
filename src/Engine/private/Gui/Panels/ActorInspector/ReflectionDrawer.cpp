@@ -1,15 +1,17 @@
-#include "Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
-#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Engine/Gui/Utils/GuiHelpers.h"
-#include "Core/Math/Vector2.h"
-#include "Core/Math/Vector3.h"
-#include "Core/Containers/String.h"
+#include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
+#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Utils/GuiHelpers.h"
+#include "Math/Vector2.h"
+#include "Math/Vector3.h"
+#include "Containers/String.h"
 #include "SDL3/SDL.h"
-#include <algorithm>
 #include <array>
 #include <cctype>
 #include <imgui.h>
 #include <string>
+
+#include "ClassInfo.h"
+#include "PropertyInfo.h"
 
 namespace BixEngine::Gui::ActorInspector
 {

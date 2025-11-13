@@ -68,7 +68,7 @@ namespace BixEngine::Core
     };
 }
 
-#include "Game/Scene.h"
+#include "Scene.h"
 
 namespace BixEngine::Core
 {

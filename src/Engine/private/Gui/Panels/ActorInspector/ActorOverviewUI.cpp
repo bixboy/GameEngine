@@ -1,12 +1,12 @@
-#include "Engine/Gui/Panels/ActorInspector/ActorOverviewUI.h"
+#include "Gui/Panels/ActorInspector/ActorOverviewUI.h"
 
-#include "Engine/Gui/Panels/ActorInspector/ActorInspectorState.h"
-#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Engine/Gui/Panels/ActorInspector/ReflectionDrawer.h"
-#include "Engine/Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
+#include "Gui/Panels/ActorInspector/ActorInspectorState.h"
+#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
+#include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Engine/Gui/Utils/GuiHelpers.h"
-#include "Game/Actor.h"
+#include "Gui/Utils/GuiHelpers.h"
+#include "Actor.h"
 
 #include <imgui.h>
 #include <string>

@@ -1,14 +1,11 @@
-#include "Engine/Gui/Panels/ActorInspector/ImGuiControls.h"
-
-#include <algorithm>
+#include "Gui/Panels/ActorInspector/ImGuiControls.h"
 #include <string>
-
 #include <imgui_internal.h>
+
+#include "Gui/Utils/GuiHelpers.h"
 
 namespace BixEngine::Gui::ActorInspector
 {
-    using namespace Theme;
-    using namespace Utils;
 
     ImVec2 DrawBadge(const char* label, const ImVec4& backgroundColor, const ImVec4& textColor)
     {
@@ -37,7 +34,7 @@ namespace BixEngine::Gui::ActorInspector
 
         bool changed = false;
         const char* idLabel = label ? label : "Vector3Control";
-        ScopedID idScope(idLabel);
+        Utils::ScopedID idScope(idLabel);
 
         ImGui::Columns(2, nullptr, false);
         ImGui::SetColumnWidth(0, 120.0f);
@@ -46,22 +43,22 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::NextColumn();
 
         ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
+        Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4.0f, 0.0f));
 
         constexpr const char* axisLabels[3] = {"X", "Y", "Z"};
-        const ImVec4 axisColors[3] = {AxisColorX, AxisColorY, AxisColorZ};
+        const ImVec4 axisColors[3] = {Theme::AxisColorX, Theme::AxisColorY, Theme::AxisColorZ};
 
         for (int index = 0; index < 3; ++index)
         {
-            ScopedID axisId(index);
+            Utils::ScopedID axisId(index);
 
             if (index > 0)
                 ImGui::SameLine(0.0f, 4.0f);
 
             const ImVec4& baseColor = axisColors[index];
-            ScopedColor button(ImGuiCol_Button, baseColor);
-            ScopedColor hovered(ImGuiCol_ButtonHovered, AdjustColor(baseColor, 0.12f));
-            ScopedColor active(ImGuiCol_ButtonActive, AdjustColor(baseColor, -0.10f));
+            Utils::ScopedColor button(ImGuiCol_Button, baseColor);
+            Utils::ScopedColor hovered(ImGuiCol_ButtonHovered, Utils::AdjustColor(baseColor, 0.12f));
+            Utils::ScopedColor active(ImGuiCol_ButtonActive, Utils::AdjustColor(baseColor, -0.10f));
 
             if (ImGui::Button(axisLabels[index], ImVec2(26.0f, 26.0f)))
             {
@@ -82,21 +79,20 @@ namespace BixEngine::Gui::ActorInspector
         return changed;
     }
 
-    PersistentSectionScope::PersistentSectionScope(const char* label, const std::string& contextId, bool defaultOpen,
-                                                   ImGuiTreeNodeFlags flags)
-        : isOpen_(BeginPersistentSection(label, contextId, defaultOpen, flags))
+    PersistentSectionScope::PersistentSectionScope(const char* label, const std::string& contextId, bool defaultOpen, ImGuiTreeNodeFlags flags)
+        : isOpen_(Utils::BeginPersistentSection(label, contextId, defaultOpen, flags))
     {
     }
 
     PersistentSectionScope::~PersistentSectionScope()
     {
         if (isOpen_)
-            EndPersistentSection();
+            Utils::EndPersistentSection();
     }
 
     SectionContainer::SectionContainer(const char* id)
         : idScope_(id)
-          , background_(ImGuiCol_ChildBg, SectionBackground)
+          , background_(ImGuiCol_ChildBg, Theme::SectionBackground)
           , rounding_(ImGuiStyleVar_ChildRounding, 5.0f)
           , padding_(ImGuiStyleVar_WindowPadding, ImVec2(10.0f, 6.0f))
     {

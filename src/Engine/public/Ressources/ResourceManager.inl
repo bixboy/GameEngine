@@ -1,5 +1,5 @@
 #pragma once
-#include "Core/Logger.h"
+#include "Logger.h"
 
 namespace BixEngine::resources
 {

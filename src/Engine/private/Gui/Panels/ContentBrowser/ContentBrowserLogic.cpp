@@ -8,31 +8,36 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/GuiWidgetLibrary.h"
 #include "Utils/EditorUtils.h"
-#include "imgui.h"
+#include "Utils/FilesUtils.h"
+#include "Utils/StringUtils.h"
+
 #include <filesystem>
 #include <unordered_map>
 #include <ranges>
-
-#include "Utils/FilesUtils.h"
-#include "Utils/StringUtils.h"
+#include <imgui.h>
 
 namespace BixEngine::Gui
 {
     using namespace Utils;
+    namespace fs = std::filesystem;
 
     // ─────────────────────────────────────────────
-    // 🔧  Fichiers et helpers
+    // 🔧 Helpers
     // ─────────────────────────────────────────────
 
     static bool DeleteScriptFiles(const ContentEntry& entry, String& error)
     {
-        const auto tryRemove = [&](const path& path)
+        auto tryRemove = [&](const fs::path& p)
         {
-            return path.empty() || FileUtils::TryRemove(path, false, error);
+            return p.empty() || FileUtils::TryRemove(p, false, error);
         };
 
         return tryRemove(entry.headerPath) && tryRemove(entry.sourcePath);
     }
+
+    // ─────────────────────────────────────────────
+    // 📂 Cache du répertoire
+    // ─────────────────────────────────────────────
 
     static bool RefreshDirectoryCache(ContentBrowserState& state)
     {
@@ -42,83 +47,87 @@ namespace BixEngine::Gui
         state.cache.entries.clear();
         state.cache.dirty = false;
         state.cache.directory = state.current;
+
         std::unordered_map<String, ContentEntry> scriptGroups;
-
         std::error_code error;
-        for (const auto& entry : fs::directory_iterator(state.current, error))
-        {
-            const path& path = entry.path();
 
+        for (auto& entry : fs::directory_iterator(state.current, error))
+        {
+            const fs::path p = entry.path();
+
+            // ──────────────── Dossier ────────────────
             if (entry.is_directory())
             {
-                state.cache.entries.push_back({
+                state.cache.entries.push_back(ContentEntry{
+                    .name = p.filename().generic_string(),
+                    .path = p,
                     .type = ContentType::Directory,
-                    .path = path,
-                    .name = path.filename().generic_string()
+                    .extension = "",
+                    .headerPath = {},
+                    .sourcePath = {}
                 });
                 continue;
             }
 
-            const String ext = StringUtils::ToLowerCopy(path.extension().generic_string());
+            // ──────────────── Extension ────────────────
+            const String ext = StringUtils::ToLowerCopy(p.extension().generic_string());
+
+            // ──────────────── Scripts (.h/.cpp) ────────────────
             if (ext == ".h" || ext == ".cpp")
             {
-                auto& group = scriptGroups[StringUtils::ToLowerCopy(path.stem().generic_string())];
-                group.type = ContentType::Script;
-                group.path = path.parent_path();
-                group.name = path.stem().generic_string();
+                auto key = StringUtils::ToLowerCopy(p.stem().generic_string());
+                auto& group = scriptGroups[key];
 
-                if (ext == ".h")
-                {
-                    group.headerPath = path;
-                }
-                else
-                {
-                    group.sourcePath = path;
-                }
+                group.name = p.stem().generic_string();
+                group.path = p.parent_path();
+                group.type = ContentType::Script;
+
+                if (ext == ".h") group.headerPath = p;
+                else group.sourcePath = p;
 
                 continue;
             }
 
-            auto type = ContentType::File;
-            if (ext == ".bixactor")
-            {
-                type = ContentType::ActorPrefab;
-            }
-            else if (ext == ".bixcomponent")
-            {
-                type = ContentType::ComponentPrefab;
-            }
-            else if (ext == ".atlas")
-            {
-                type = ContentType::SpriteAtlas;
-            }
+            // ──────────────── Type de fichier ────────────────
+            ContentType type = ContentType::File;
 
-            state.cache.entries.push_back({
+            if (ext == ".bixactor")      type = ContentType::ActorPrefab;
+            else if (ext == ".bixcomponent") type = ContentType::ComponentPrefab;
+            else if (ext == ".atlas")    type = ContentType::SpriteAtlas;
+
+            // ❗ FIX : avant c’était `.type = Directory` → FAUX
+            state.cache.entries.push_back(ContentEntry{
+                .name = p.filename().generic_string(),
+                .path = p,
                 .type = type,
-                .path = path,
-                .name = path.filename().generic_string()
+                .extension = ext,
+                .headerPath = {},
+                .sourcePath = {}
             });
         }
 
+        // Ajouter les scripts regroupés
         for (auto& [_, script] : scriptGroups)
-        {
             state.cache.entries.push_back(std::move(script));
-        }
 
+        // Tri
         std::ranges::sort(state.cache.entries, [](const ContentEntry& a, const ContentEntry& b)
         {
-            const int pa = GetSortPriority(a.type);
-            const int pb = GetSortPriority(b.type);
-            return pa == pb ? FileUtils::CaseInsensitiveLess(a.name, b.name) : pa < pb;
+            int pa = GetSortPriority(a.type);
+            int pb = GetSortPriority(b.type);
+
+            if (pa != pb) return pa < pb;
+            return FileUtils::CaseInsensitiveLess(a.name, b.name);
         });
 
         return !error;
     }
 
     // ─────────────────────────────────────────────
-    // 📁 Popups (création / renommage)
+    // 📦 Popups
     // ─────────────────────────────────────────────
-    void RenderPopups(ContentBrowserState& state, String& selected, PopupRequestState& requests)
+
+    void RenderPopups(ContentBrowserState& state, String& selected, PopupRequestState& req)
     {
         static CreatePrefabDialog prefab(state, selected);
         static CreateScriptDialog script(state, selected);
@@ -126,52 +135,27 @@ namespace BixEngine::Gui
         static CreateSpriteAtlasDialog atlas(state, selected);
         static RenameEntryDialog rename(state, selected);
 
-        if (requests.createPrefab)
+        if (req.createPrefab) { prefab.Open(); req.createPrefab = false; }
+        if (req.createScript) { script.Open(); req.createScript = false; }
+        if (req.createFolder) { folder.Open(state.current); req.createFolder = false; }
+        if (req.createSpriteAtlas) { atlas.Open(state.current); req.createSpriteAtlas = false; }
+        if (req.renameEntry)
         {
-            prefab.Open();
-            requests.createPrefab = false;
+            rename.Open(req.renameTarget, req.renameSecondaryTarget, req.renameTargetIsScriptGroup);
+            req.renameEntry = false;
         }
 
-        if (requests.createScript)
-        {
-            script.Open();
-            requests.createScript = false;
-        }
-        if (requests.createFolder)
-        {
-            folder.Open(state.current);
-            requests.createFolder = false;
-        }
-        if (requests.createSpriteAtlas)
-        {
-            atlas.Open(state.current);
-            requests.createSpriteAtlas = false;
-        }
-        if (requests.renameEntry)
-        {
-            rename.Open(requests.renameTarget, requests.renameSecondaryTarget, requests.renameTargetIsScriptGroup);
-            requests.renameEntry = false;
-        }
-
-        if (prefab.IsOpen())
-            prefab.Render();
-
-        if (script.IsOpen())
-            script.Render();
-
-        if (folder.IsOpen())
-            folder.Render();
-
-        if (atlas.IsOpen())
-            atlas.Render();
-
-        if (rename.IsOpen())
-            rename.Render();
+        if (prefab.IsOpen()) prefab.Render();
+        if (script.IsOpen()) script.Render();
+        if (folder.IsOpen()) folder.Render();
+        if (atlas.IsOpen()) atlas.Render();
+        if (rename.IsOpen()) rename.Render();
     }
 
     // ─────────────────────────────────────────────
     // 🧭 Header
     // ─────────────────────────────────────────────
+
     void RenderHeader(ContentBrowserState& state, String& selected, char (&search)[256])
     {
         ScopedColor bg(ImGuiCol_ChildBg, Theme::HeaderBackground);
@@ -183,35 +167,29 @@ namespace BixEngine::Gui
         }
 
         ImGui::PushID("Header");
+        Widgets::DrawPanelHeader({ .title = "Content Browser" });
 
-        Widgets::DrawPanelHeader({.title = "Content Browser"});
         Widgets::PanelToolbar bar{};
 
+        // Boutons Content + Up
         bar.AddLeft([&]
         {
-            ScopedStyle s1(ImGuiStyleVar_FrameRounding, 5.f);
-            ScopedStyle s2(ImGuiStyleVar_ItemSpacing, ImVec2(5, 0));
-
-            if (ImGui::Button("Content", {76, 24}))
+            if (ImGui::Button("Content"))
                 state.current = state.root;
+
             selected.Clear();
 
             ImGui::SameLine();
             ImGui::BeginDisabled(state.current == state.root);
 
-            if (ImGui::Button("Up", {76, 24}))
+            if (ImGui::Button("Up"))
             {
                 auto parent = state.current.parent_path();
                 auto rel = parent.lexically_relative(state.root);
 
-                if (rel.empty() || rel.generic_string().starts_with(".."))
-                {
-                    state.current = state.root;
-                }
-                else
-                {
-                    state.current = parent;
-                }
+                state.current = (rel.empty() || rel.string().starts_with(".."))
+                    ? state.root
+                    : parent;
 
                 selected.Clear();
             }
@@ -219,41 +197,41 @@ namespace BixEngine::Gui
             ImGui::EndDisabled();
         });
 
+        // Fil d'Ariane
         bar.AddLeft([&]
         {
-            ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(3, 0));
-            ScopedStyle pad(ImGuiStyleVar_FramePadding, ImVec2(6, 4));
-
-            path path = state.root;
+            fs::path cur = state.root;
             std::vector<fs::path> segs;
 
-            for (auto& p : state.current.lexically_relative(state.root))
-            {
-                segs.push_back(p);
-            }
+            for (auto& seg : state.current.lexically_relative(state.root))
+                segs.push_back(seg);
 
             if (ImGui::Button("Content##Breadcrumb"))
+            {
                 state.current = state.root;
-            selected.Clear();
+                selected.Clear();
+            }
 
-            for (size_t i = 0; i < segs.size(); ++i)
+            for (size_t i = 0; i < segs.size(); i++)
             {
                 ImGui::SameLine();
-                ImGui::TextUnformatted("›");
+                ImGui::Text(">");
                 ImGui::SameLine();
-                path /= segs[i];
-                ScopedID id(static_cast<int>(i));
+
+                cur /= segs[i];
+                ScopedID id((int)i);
+
                 if (ImGui::Button(segs[i].string().c_str()))
                 {
-                    state.current = path;
+                    state.current = cur;
                     selected.Clear();
                 }
             }
         });
 
+        // Recherche
         bar.AddRight([&]
         {
-            ScopedStyle s(ImGuiStyleVar_FrameRounding, 4);
             ImGui::SetNextItemWidth(200);
             SearchInput("##Search", search, IM_ARRAYSIZE(search), "Search...");
         });
@@ -266,61 +244,52 @@ namespace BixEngine::Gui
     // ─────────────────────────────────────────────
     // 🌳 Directory Tree
     // ─────────────────────────────────────────────
+
     void RenderDirectoryTree(ContentBrowserState& state, String& selected)
     {
-        static std::unordered_map<std::string, std::vector<path>> cache;
+        static std::unordered_map<std::string, std::vector<fs::path>> cache;
         static bool expand = false, collapse = false;
 
-        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(4, 2));
-        if (!ImGui::BeginChild("Tree", {Theme::ContentTreeWidth, 0}, true))
+        if (!ImGui::BeginChild("Tree", { Theme::ContentTreeWidth, 0 }, true))
         {
             ImGui::EndChild();
             return;
         }
 
-        ScopedColor bg(ImGuiCol_ChildBg, Theme::ContentTreeBackground);
-
-        if (ImGui::Button("➕"))
-        {
-            expand = true;
-            collapse = false;
-        }
+        if (ImGui::Button("+")) { expand = true; collapse = false; }
         ImGui::SameLine();
-        if (ImGui::Button("➖"))
-        {
-            collapse = true;
-            expand = false;
-        }
-
+        if (ImGui::Button("-")) { collapse = true; expand = false; }
         ImGui::SameLine();
-        if (ImGui::Button("🔄"))
-            cache.clear();
+        if (ImGui::Button("Reload")) cache.clear();
 
         ImGui::Separator();
 
-        if (ImGui::BeginChild("TreeInner", {0, 0}, false, ImGuiWindowFlags_AlwaysVerticalScrollbar))
+        if (ImGui::BeginChild("TreeInner"))
         {
-            const auto draw = [&](auto&& self, const path& dir)-> void
+            std::function<void(const fs::path&)> draw;
+            draw = [&](const fs::path& dir)
             {
-                std::error_code err;
-
-                const bool isSel = fs::equivalent(dir, state.current, err);
-                const String id = dir.generic_string();
+                std::error_code ec;
+                bool isSel = fs::equivalent(dir, state.current, ec);
+                String id = dir.generic_string();
 
                 if (expand || collapse)
                     ImGui::SetNextItemOpen(expand, ImGuiCond_Always);
 
                 bool open = ImGui::TreeNodeEx(
-                    id.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth |
+                    id.c_str(),
+                    ImGuiTreeNodeFlags_OpenOnArrow |
+                    ImGuiTreeNodeFlags_SpanFullWidth |
                     (isSel ? ImGuiTreeNodeFlags_Selected : 0),
                     "%s  %s",
                     GetIcon(ContentType::Directory),
                     dir.filename().string().c_str());
 
-
                 if (ImGui::IsItemClicked())
+                {
                     state.current = dir;
-                selected.Clear();
+                    selected.Clear();
+                }
 
                 if (open)
                 {
@@ -340,32 +309,28 @@ namespace BixEngine::Gui
                     }
 
                     for (auto& c : children)
-                    {
-                        self(self, c);
-                    }
+                        draw(c);
 
                     ImGui::TreePop();
                 }
             };
 
             if (fs::exists(state.root))
-            {
-                draw(draw, state.root);
-            }
+                draw(state.root);
             else
-            {
                 DrawEmptyStateMessage("Content directory not found.");
-            }
         }
 
         ImGui::EndChild();
         ImGui::EndChild();
+
         expand = collapse = false;
     }
 
     // ─────────────────────────────────────────────
     // 🗂️ Grid View
     // ─────────────────────────────────────────────
+
     void RenderEntries(ContentBrowserState& state, String& selected, PopupRequestState& req, const String& query)
     {
         if (!RefreshDirectoryCache(state))
@@ -374,45 +339,28 @@ namespace BixEngine::Gui
             return;
         }
 
-        ScopedColor bg(ImGuiCol_ChildBg, Theme::ContentBackground);
-        if (!ImGui::BeginChild("Grid", {0, 0}, true))
+        if (!ImGui::BeginChild("Grid", { 0,0 }, true))
         {
             ImGui::EndChild();
             return;
         }
 
-        if (ImGui::BeginPopupContextWindow(
-            "GridCtx", ImGuiPopupFlags_MouseButtonRight | ImGuiPopupFlags_NoOpenOverItems))
+        // Menu clic droit
+        if (ImGui::BeginPopupContextWindow("GridCtx"))
         {
-            if (ImGui::MenuItem("New Script"))
-            {
-                req.createScript = true;
-            }
-
-            if (ImGui::MenuItem("New Prefab"))
-            {
-                req.createPrefab = true;
-            }
-
-            if (ImGui::MenuItem("New Folder"))
-            {
-                req.createFolder = true;
-            }
-
-            if (ImGui::MenuItem("New Sprite Atlas"))
-            {
-                req.createSpriteAtlas = true;
-            }
-
+            if (ImGui::MenuItem("New Script")) req.createScript = true;
+            if (ImGui::MenuItem("New Prefab")) req.createPrefab = true;
+            if (ImGui::MenuItem("New Folder")) req.createFolder = true;
+            if (ImGui::MenuItem("New Sprite Atlas")) req.createSpriteAtlas = true;
             ImGui::EndPopup();
         }
 
-        constexpr float cell = Theme::ThumbnailSize + Theme::ThumbnailPadding;
-        const int cols = std::max(1, static_cast<int>(ImGui::GetContentRegionAvail().x / cell));
+        const float cell = Theme::ThumbnailSize + Theme::ThumbnailPadding;
+        const int cols = std::max(1, int(ImGui::GetContentRegionAvail().x / cell));
 
         if (ImGui::BeginTable("Entries", cols, ImGuiTableFlags_SizingFixedFit))
         {
-            for (const auto& entry : state.cache.entries)
+            for (auto& entry : state.cache.entries)
             {
                 if (!StringUtils::MatchesSearch(entry.name, query))
                     continue;
@@ -420,12 +368,12 @@ namespace BixEngine::Gui
                 ImGui::TableNextColumn();
                 ScopedID id(entry.SelectionKey().c_str());
 
-                const bool sel = (selected == entry.SelectionKey());
-                const ImVec4 base = sel ? ImVec4(0.2f, 0.35f, 0.6f, 0.9f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
+                bool sel = (selected == entry.SelectionKey());
+                ImVec4 base = sel ? ImVec4(0.2f,0.35f,0.6f,0.9f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
 
                 ScopedColor b(ImGuiCol_Button, base);
 
-                if (ImGui::Button(GetIcon(entry.type), {Theme::ThumbnailSize, Theme::ThumbnailSize}))
+                if (ImGui::Button(GetIcon(entry.type), { Theme::ThumbnailSize, Theme::ThumbnailSize }))
                 {
                     if (entry.IsDirectory())
                     {
@@ -433,15 +381,14 @@ namespace BixEngine::Gui
                         state.cache.dirty = true;
                         selected.Clear();
                     }
-                    else
-                    {
-                        selected = entry.SelectionKey();
-                    }
+                    else selected = entry.SelectionKey();
                 }
 
+                // Double click
                 if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selected = entry.SelectionKey();
+
                     if (entry.IsDirectory())
                     {
                         state.current = entry.path;
@@ -450,22 +397,21 @@ namespace BixEngine::Gui
                     }
                     else if (entry.IsScript())
                     {
-                        std::vector<path> files;
-                        if (entry.HasHeader())
-                            files.push_back(entry.headerPath);
-
-                        if (entry.HasSource())
-                            files.push_back(entry.sourcePath);
+                        std::vector<fs::path> files;
+                        if (entry.HasHeader()) files.push_back(entry.headerPath);
+                        if (entry.HasSource()) files.push_back(entry.sourcePath);
 
                         for (auto& f : files)
-                        {
                             EditorUtils::OpenFileInCodeEditor(f);
-                        }
                     }
                     else if (entry.IsPrefab() || entry.IsSpriteAtlas())
-                        if (state.openAssetEditorCallback) state.openAssetEditorCallback(entry.path);
+                    {
+                        if (state.openAssetEditorCallback)
+                            state.openAssetEditorCallback(entry.path);
+                    }
                 }
 
+                // Menu contextuel par item
                 if (ImGui::BeginPopupContextItem("EntryCtx"))
                 {
                     if (ImGui::MenuItem("Rename"))
@@ -482,21 +428,23 @@ namespace BixEngine::Gui
                     }
 
                     if (ImGui::MenuItem("Show in Explorer"))
-                    {
                         EditorUtils::ShowPathInExplorer(entry.path, entry.IsDirectory());
-                    }
 
                     ImGui::EndPopup();
                 }
 
-                if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", entry.name.c_str());
+                // Label
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", entry.name.c_str());
+
                 if (sel)
                 {
-                    ScopedColor t(ImGuiCol_Text, ImVec4(1, 0.85f, 0.3f, 1));
+                    ScopedColor t(ImGuiCol_Text, ImVec4(1,0.85f,0.3f,1));
                     ImGui::TextWrapped("%s", entry.name.c_str());
                 }
                 else ImGui::TextWrapped("%s", entry.name.c_str());
             }
+
             ImGui::EndTable();
         }
 

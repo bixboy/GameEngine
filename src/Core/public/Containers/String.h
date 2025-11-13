@@ -1,6 +1,7 @@
 #pragma once
 #include <algorithm>
 #include <cctype>
+#include <format>
 #include <initializer_list>
 #include <iterator>
 #include <ostream>
@@ -569,4 +570,15 @@ namespace std
             return std::hash<std::string_view>{}(value.View());
         }
     };
+    
+    template <>
+    struct std::formatter<BixEngine::String> : std::formatter<std::string_view>
+    {
+        auto format(const BixEngine::String& s, std::format_context& ctx) const
+        {
+            return std::formatter<std::string_view>::format(s.View(), ctx);
+        }
+    };
+
+
 }

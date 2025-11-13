@@ -1,12 +1,10 @@
 #pragma once
-
-#include "Engine/Gui/GuiTheme.h"
-#include "Engine/Gui/Utils/GuiHelpers.h"
-
-#include <cfloat>
+#include "Gui/GuiTheme.h"
+#include "Gui/Utils/GuiHelpers.h"
 #include <imgui.h>
 #include <string>
 #include <type_traits>
+
 
 namespace BixEngine::Gui::ActorInspector
 {

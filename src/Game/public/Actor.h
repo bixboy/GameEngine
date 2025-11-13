@@ -4,9 +4,9 @@
 #include <vector>
 #include "Object.h"
 #include "Components/Component.h"
-#include "Actor.generated.h"
 #include "Scene.h"
 #include "Math/Transform.h"
+#include "Actor.generated.h"
 
 
 namespace BixEngine::Game

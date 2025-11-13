@@ -1,9 +1,9 @@
 ﻿#include "Utils/EditorUtils.h"
 #include "Logger.h"
-#include <string>
-#include <filesystem>
-#include <windows.h>
 
+#include <filesystem>
+#include <string>
+#include <windows.h>
 
 namespace BixEngine::EditorUtils
 {
@@ -42,10 +42,9 @@ namespace BixEngine::EditorUtils
         }
     }
 
-
-    // ─────────────────────────────────────────────────────────────
-    // Configuration de l’éditeur
-    // ─────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────
+    // Configuration
+    // ─────────────────────────────────────────────
 
     void SetPreferredCodeEditor(const std::string& command)
     {
@@ -61,9 +60,9 @@ namespace BixEngine::EditorUtils
         return g_EditorCommand;
     }
 
-    // ─────────────────────────────────────────────────────────────
-    // Ouverture de fichiers dans l’éditeur
-    // ─────────────────────────────────────────────────────────────
+    // ─────────────────────────────────────────────
+    // Ouverture d’un fichier dans l’éditeur
+    // ─────────────────────────────────────────────
 
     void OpenFileInCodeEditor(const std::filesystem::path& path)
     {
@@ -90,17 +89,61 @@ namespace BixEngine::EditorUtils
         {
             const DWORD err = GetLastError();
             LOG_ERROR(
-                "[EditorUtils] Échec de CreateProcessA pour " + g_EditorCommand + ". Code erreur : " + std::to_string(
-                    err));
+                "[EditorUtils] Échec de CreateProcessA pour " + g_EditorCommand +
+                ". Code erreur : " + std::to_string(err));
 
+            // Fallback
             std::wstring wpath = path.wstring();
-            auto wcmd = std::wstring(g_EditorCommand.begin(), g_EditorCommand.end());
+            std::wstring wcmd(g_EditorCommand.begin(), g_EditorCommand.end());
             ShellExecuteW(nullptr, L"open", wcmd.c_str(), wpath.c_str(), nullptr, SW_SHOWNORMAL);
-
             return;
         }
 
         CloseHandle(pi.hProcess);
         CloseHandle(pi.hThread);
+    }
+
+    // ─────────────────────────────────────────────
+    // Ouvrir l’explorateur Windows
+    // ─────────────────────────────────────────────
+
+    void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory)
+    {
+        if (path.empty())
+            return;
+
+        std::wstring wpath = path.wstring();
+
+        if (isDirectory)
+        {
+            // Ouvre un dossier
+            ShellExecuteW(nullptr, L"open", wpath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
+        }
+        else
+        {
+            // Sélectionne le fichier dans l'explorateur
+            std::wstring cmd = L"/select,\"" + wpath + L"\"";
+            ShellExecuteW(nullptr, L"open", L"explorer.exe", cmd.c_str(), nullptr, SW_SHOWNORMAL);
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    // Hash FNV-1a 64-bit
+    // ─────────────────────────────────────────────
+
+    std::uint64_t HashFNV1a(std::string_view str)
+    {
+        constexpr std::uint64_t FNV_OFFSET = 14695981039346656037ull;
+        constexpr std::uint64_t FNV_PRIME  = 1099511628211ull;
+
+        std::uint64_t hash = FNV_OFFSET;
+
+        for (unsigned char c : str)
+        {
+            hash ^= c;
+            hash *= FNV_PRIME;
+        }
+
+        return hash;
     }
 }

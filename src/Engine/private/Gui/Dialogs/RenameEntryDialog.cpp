@@ -2,7 +2,6 @@
 #include "Logger.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-#include "tils/FilesUtils.h"
 #include "Utils/FilesUtils.h"
 
 using namespace BixEngine::Gui;

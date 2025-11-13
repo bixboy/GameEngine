@@ -1,10 +1,9 @@
 #pragma once
-
-#include "Reflection/BixReflection.h"
-
+#include "BixReflection.h"
 #include <string>
 #include <string_view>
 #include <vector>
+
 
 namespace BixEngine::Gui::ActorInspector
 {
@@ -18,10 +17,8 @@ namespace BixEngine::Gui::ActorInspector
     void DrawUnsupportedProperty(const Bix::Reflection::PropertyInfo& property, const std::string& label);
     bool DrawReflectedProperty(const Bix::Reflection::PropertyInfo& property, void* instance);
 
-    void GatherClassProperties(const Bix::Reflection::ClassInfo& classInfo,
-                               std::vector<const Bix::Reflection::PropertyInfo*>& outProperties);
+    void GatherClassProperties(const Bix::Reflection::ClassInfo& classInfo, std::vector<const Bix::Reflection::PropertyInfo*>& outProperties);
     bool IsSubclassOf(const Bix::Reflection::ClassInfo& type, const Bix::Reflection::ClassInfo& base);
 
-    bool DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader,
-                             const char* headerLabel, bool showEmptyMessage);
+    bool DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage);
 }

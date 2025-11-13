@@ -3,6 +3,7 @@
 #include <iosfwd>
 #include <memory>
 #include "Actor.h"
+#include "Math/Vector2.h"
 #include "Player.generated.h"
 
 

@@ -2,6 +2,8 @@
 #include <stdexcept>
 #include <string_view>
 #include <utility>
+
+#include "Actor.h"
 #include "Timer.h"
 #include "Systems/Window.h"
 #include "SceneSerializer.h"
