@@ -1,272 +1,368 @@
 -- ╔══════════════════════════════════════════════════════════════╗
--- ║ 🧱 BixEngine - build with reflection header generation       ║
+-- ║ 🧱  XMake build script for BixEngine                         ║
 -- ╚══════════════════════════════════════════════════════════════╝
 
 set_xmakever("3.0.4")
 add_rules("mode.debug", "mode.release")
+
 set_languages("cxx20")
 set_warnings("allextra")
 set_optimize("faster")
+
+-- ────────────────────────────────────────────────────────────────
+-- 🔧 Module directory (for custom build tools)
+-- ────────────────────────────────────────────────────────────────
 add_moduledirs(path.join(os.projectdir(), "Tools/xmake"))
 
 -- ────────────────────────────────────────────────────────────────
--- SDL3
+-- 🧩 SDL3 Configuration
 -- ────────────────────────────────────────────────────────────────
-local root = os.projectdir()
-local sdl3_inc = path.join(root, "ThirdParty/SDL3-3.2.22/include")
-local sdl3_lib = path.join(root, "ThirdParty/SDL3-3.2.22/lib/x64")
-local sdl3_image_inc = path.join(root, "ThirdParty/SDL3_image/include/SDL3_image")
-local sdl3_image_lib = path.join(root, "ThirdParty/SDL3_image/lib/x64")
+option("sdl3_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire include de SDL3")
+    set_default(os.getenv("SDL3_DIR") or "")
+option_end()
+
+option("sdl3_lib_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire lib de SDL3")
+    set_default(os.getenv("SDL3_LIB_DIR") or "")
+option_end()
+
+local sdl3_inc = get_config("sdl3_dir") or ""
+local sdl3_lib = get_config("sdl3_lib_dir") or ""
+
+if (sdl3_inc == "" and sdl3_lib == "") then
+    sdl3_inc = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/include")
+    sdl3_lib = path.join(os.projectdir(), "ThirdParty/SDL3-3.2.22/lib/x64")
+elseif (sdl3_inc == "" or sdl3_lib == "") then
+    print("❌ Veuillez définir *à la fois* sdl3_dir et sdl3_lib_dir pour utiliser SDL3 externe.")
+end
+
 
 -- ────────────────────────────────────────────────────────────────
--- Helpers
+-- 🧩 SDL3_image Configuration
 -- ────────────────────────────────────────────────────────────────
-local function current_triplet()
-    local plat = get_config("plat") or os.host()
-    local arch = get_config("arch") or os.arch()
-    local mode = get_config("mode") or "debug"
-    return plat, arch, mode
-end
+option("sdl3_image_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire include de SDL3_image")
+    set_default(os.getenv("SDL3_IMAGE_DIR") or "")
+option_end()
 
-local function get_generated_dir()
-    local plat, arch, mode = current_triplet()
-    return path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
-end
+option("sdl3_image_lib_dir")
+    set_showmenu(true)
+    set_description("Chemin vers le répertoire lib de SDL3_image")
+    set_default(os.getenv("SDL3_IMAGE_LIB_DIR") or "")
+option_end()
 
-local function canonical_path(dir)
-    if not dir or dir == "" then
-        return nil
-    end
-    local abs = path.absolute(dir)
-    if not abs then
-        return dir
-    end
-    return abs:gsub("\\", "/"):lower()
-end
+local sdl3_image_inc = get_config("sdl3_image_dir") or ""
+local sdl3_image_lib = get_config("sdl3_image_lib_dir") or ""
 
-local function dedupe_paths(paths)
-    local seen = {}
-    local result = {}
-    for _, dir in ipairs(paths) do
-        if dir and dir ~= "" then
-            local key = canonical_path(dir) or dir
-            if not seen[key] then
-                seen[key] = true
-                table.insert(result, dir)
-            end
-        end
-    end
-    return result
-end
-
-local function existing_dirs(...)
-    local result = {}
-    local seen = {}
-    for _, dir in ipairs({...}) do
-        if dir and os.isdir(dir) then
-            local key = canonical_path(dir) or dir
-            if not seen[key] then
-                seen[key] = true
-                table.insert(result, dir)
-            end
-        end
-    end
-    return result
-end
-
-local reflection_generator
-local function load_reflection_generator()
-    if not reflection_generator then
-        local script_path = path.join(os.projectdir(), "Tools/xmake/reflection.lua")
-        if not os.isfile(script_path) then
-            raise("fichier de génération introuvable : %s", script_path)
-        end
-        local reflection = dofile(script_path)
-        if type(reflection) ~= "table" then
-            raise("Tools/xmake/reflection doit retourner une table, reçu : %s", type(reflection))
-        end
-        local generator = reflection.generate_headers
-        if type(generator) ~= "function" then
-            raise("Tools/xmake/reflection doit exposer la fonction generate_headers")
-        end
-        reflection_generator = generator
-    end
-    return reflection_generator
-end
-
-local function run_header_generation(force)
-    local generator = load_reflection_generator()
-    local ok, errmsg = generator(force or false, get_generated_dir())
-    if not ok then
-        if errmsg and errmsg ~= "" then
-            raise("échec de la génération des headers : %s", errmsg)
-        else
-            raise("échec de la génération des headers (raison inconnue)")
-        end
-    end
+if (sdl3_image_inc == "" and sdl3_image_lib == "") then
+    sdl3_image_inc = path.join(os.projectdir(), "ThirdParty/SDL3_image/include/SDL3_image")
+    sdl3_image_lib = path.join(os.projectdir(), "ThirdParty/SDL3_image/lib/x64")
+    
 end
 
 -- ────────────────────────────────────────────────────────────────
--- Règle includes globaux
+-- 🗂️ Generated headers directory
 -- ────────────────────────────────────────────────────────────────
-rule("bix.global_includes")
-    on_load(function(target)
-        target:add("includedirs", "src/Reflection/Public", {public = true})
-        target:add("includedirs", get_generated_dir(), {public = true})
-    end)
+local plat = get_config("plat") or os.host()
+local arch = get_config("arch") or os.arch()
+local mode = get_config("mode") or "debug"
+
+local generated_dir = path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
 
 -- ────────────────────────────────────────────────────────────────
--- Includes communs
+-- 📚 Include directories (shared between the engine and executables)
+--   * Runtime/Include                  → public engine headers
+--   * ThirdParty                       → header-only libraries (nlohmann/json, etc.)
+--   * ThirdParty/ImGui (+ backends)    → ImGui sources
+--   * ThirdParty/stb                   → stb_image & stb_image_write
+--   * Generated headers                → reflection output (per platform/config)
+--   * SDL3 / SDL3_image                → SDKs detected above (if available)
+--
+--  The table is filtered to avoid empty strings so Rider/MSBuild receive
+--  a clean list with no duplicate or dangling separators.
 -- ────────────────────────────────────────────────────────────────
 local engine_public_includes = {
-    "src",
+    "Runtime/Include",
     "ThirdParty",
     "ThirdParty/ImGui",
     "ThirdParty/ImGui/backends",
     "ThirdParty/stb",
-    "src/Reflection/Public",
-    get_generated_dir(),
-    sdl3_inc,
-    sdl3_image_inc
+    generated_dir
 }
 
-for _, dir in ipairs(os.dirs("src/*")) do
-    local public_dir = path.join(dir, "Public")
-    local lowercase_public = path.join(dir, "public")
-    for _, candidate in ipairs(existing_dirs(public_dir, lowercase_public)) do
-        table.insert(engine_public_includes, candidate)
+local function push_if_dir(list, value)
+    if value and value ~= "" then
+        table.insert(list, value)
     end
 end
 
-engine_public_includes = dedupe_paths(engine_public_includes)
+push_if_dir(engine_public_includes, sdl3_inc)
+push_if_dir(engine_public_includes, sdl3_image_inc)
 
--- ────────────────────────────────────────────────────────────────
--- BixHeaderTool
--- ────────────────────────────────────────────────────────────────
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🔨 Target: BixHeaderTool                                     ║
+-- ╚══════════════════════════════════════════════════════════════╝
 target("BixHeaderTool")
     set_kind("binary")
     set_default(false)
-    set_group("Tools/HeaderTool")
-    add_files("Tools/BixHeaderTool/**.cpp")
-    add_includedirs("Tools/BixHeaderTool", {public = true})
-    before_build(function(t)
-        local _, _, mode = current_triplet()
-        t:set("targetdir", path.join("Build", os.host(), os.arch(), mode))
+    set_plat(os.host())
+    set_arch(os.arch())
+    set_policy("build.fence", true)
+
+    before_build(function (target)
+        import("core.project.config")
+        local mode = config.get("mode") or "debug"
+        target:set("targetdir", path.join("Build", os.host(), os.arch(), mode))
+        print(string.format("[BixHeaderTool] 🎯 Mode actif détecté : %s", mode))
+        print(string.format("[BixHeaderTool] 📦 Sortie : %s", target:targetdir()))
     end)
 
--- ────────────────────────────────────────────────────────────────
--- Phony target to drive header generation before compilation
--- ────────────────────────────────────────────────────────────────
+    add_files("Tools/BixHeaderTool/**.cpp")
+    add_includedirs("Tools/BixHeaderTool", { public = true })
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🧩 Target: GenerateHeaders (pré-build header generation)      ║
+-- ╚══════════════════════════════════════════════════════════════╝
 target("GenerateHeaders")
     set_kind("phony")
-    set_default(false)
     add_deps("BixHeaderTool")
-    set_policy("build.fence", true)
-    on_build(function()
-        run_header_generation(false)
+
+    before_build(function(target)
+        import("core.project.config")
+        import("Tools.xmake.reflection")
+    
+        local mode = config.get("mode") or "debug"
+        print(string.format("[GenerateHeaders] 🚀 Mode de génération détecté : %s", mode))
+    
+        if not os.isdir(generated_dir) then
+            os.mkdir(generated_dir)
+        end
+    
+        -- 🔍 Vérifie si un .h a changé depuis la dernière génération
+        local newest_header_time = 0
+        local header_paths = {
+            "Runtime/Include/**.h",
+            path.join("Build", os.host(), os.arch(), mode, "Content", "**.h")
+        }
+    
+        for _, pattern in ipairs(header_paths) do
+            for _, header in ipairs(os.files(pattern)) do
+                local mtime = os.mtime(header)
+                if mtime > newest_header_time then
+                    newest_header_time = mtime
+                end
+            end
+        end
+    
+        -- 🔍 Vérifie les .generated.h existants
+        local newest_generated_time = 0
+        local has_generated = false
+        for _, gen in ipairs(os.files(path.join(generated_dir, "*.generated.h"))) do
+            has_generated = true
+            local mtime = os.mtime(gen)
+            if mtime > newest_generated_time then
+                newest_generated_time = mtime
+            end
+        end
+    
+        -- 🧩 Recherche uniquement les headers qui contiennent un include .generated.h
+        local headers_with_generated = {}
+        for _, pattern in ipairs(header_paths) do
+            for _, header in ipairs(os.files(pattern)) do
+                local content = io.readfile(header)
+                if content and content:find('#include%s+"[%w_]+%.generated%.h"') then
+                    table.insert(headers_with_generated, header)
+                end
+            end
+        end
+    
+        -- 🧠 Vérifie uniquement pour ces headers si un .generated.h manque
+        local missing_generated = {}
+        for _, header in ipairs(headers_with_generated) do
+            local stem = path.basename(header):gsub("%.h$", "")
+            local gen_path = path.join(generated_dir, stem .. ".generated.h")
+            if not os.isfile(gen_path) then
+                table.insert(missing_generated, gen_path)
+            end
+        end
+    
+        -- 🧠 Décision
+        local need_regen = false
+        if not has_generated then
+            print("[GenerateHeaders] ⚠️ Aucun fichier généré trouvé — première génération requise.")
+            need_regen = true
+        elseif #missing_generated > 0 then
+            print("[GenerateHeaders] ⚠️ Fichiers générés manquants détectés :")
+            for _, f in ipairs(missing_generated) do
+                print("   - " .. f)
+            end
+            need_regen = true
+        elseif newest_header_time > newest_generated_time then
+            print("[GenerateHeaders] 🔄 Des headers contenant du reflection ont été modifiés — régénération nécessaire.")
+            need_regen = true
+        else
+            print("[GenerateHeaders] ⏩ Aucun changement détecté — génération sautée.")
+        end
+    
+        -- 🚀 Génération seulement si besoin
+        if need_regen then
+            local reflection = import("Tools.xmake.reflection")
+            reflection.generate_headers(false, generated_dir)
+        end
     end)
 
--- ────────────────────────────────────────────────────────────────
--- Modules automatiques
--- ────────────────────────────────────────────────────────────────
-local function create_engine_module(folder)
-    local name = "Bix" .. path.basename(folder)
-    local private_dir = path.join(folder, "Private")
-    local lowercase_private = path.join(folder, "private")
-    local public_dir  = path.join(folder, "Public")
-    local lowercase_public = path.join(folder, "public")
+    
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ ⚙️ Target: BixEngine (core static library)                   ║
+-- ╚══════════════════════════════════════════════════════════════╝
+target("BixEngine")
+    set_kind("static")
+    set_default(false)
+    add_deps("BixHeaderTool", "GenerateHeaders")
 
-    target(name)
-        set_group("Engine/" .. path.basename(folder))
-        set_kind("static")
-        add_rules("bix.global_includes")
-        add_deps("GenerateHeaders")
+    add_files("Runtime/Source/**.cpp")
+    add_includedirs(engine_public_includes, { public = true })
+    add_includedirs("Runtime/Source")
 
-        for _, dir in ipairs(existing_dirs(private_dir, lowercase_private)) do
-            add_files(path.join(dir, "**.cpp"))
-        end
-        for _, dir in ipairs(existing_dirs(public_dir, lowercase_public)) do
-            add_headerfiles(path.join(dir, "**.h"), {public = true})
-        end
+    -- 🧩 ImGui
+    add_files("ThirdParty/ImGui/*.cpp")
+    add_files("ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp")
+    add_files("ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp")
 
-        local include_dirs = existing_dirs(public_dir, lowercase_public, private_dir, lowercase_private)
-        for _, inc in ipairs(engine_public_includes) do
-            table.insert(include_dirs, inc)
-        end
-        include_dirs = dedupe_paths(include_dirs)
-        if #include_dirs > 0 then
-            add_includedirs(table.unpack(include_dirs))
-        end
-end
-
-for _, dir in ipairs(os.dirs("src/*")) do
-    if path.basename(dir):lower() ~= "main" then
-        create_engine_module(dir)
-    end
-end
-
--- ────────────────────────────────────────────────────────────────
--- Exécutable principal
--- ────────────────────────────────────────────────────────────────
-target("BixMain")
-    set_kind("binary")
-    set_default(true)
-    set_group("Runtime")
-    add_rules("bix.global_includes")
-    add_deps("GenerateHeaders")
-
-    for _, dir in ipairs(os.dirs("src/*")) do
-        local mod = path.basename(dir)
-        if mod:lower() ~= "main" then add_deps("Bix" .. mod) end
-    end
-
-    for _, dir in ipairs(existing_dirs("src/Main/Private", "src/Main/private")) do
-        add_files(path.join(dir, "**.cpp"))
-    end
-    for _, dir in ipairs(existing_dirs("src/Main/Public", "src/Main/public")) do
-        add_headerfiles(path.join(dir, "**.h"))
-    end
-    local main_includes = existing_dirs(
-        "src/Main/Public",
-        "src/Main/public",
-        "src/Main/Private",
-        "src/Main/private"
-    )
-    for _, inc in ipairs(engine_public_includes) do
-        table.insert(main_includes, inc)
-    end
-    main_includes = dedupe_paths(main_includes)
-    if #main_includes > 0 then
-        add_includedirs(table.unpack(main_includes))
-    end
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
+    
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🚀 Target: BixRun (exécutable principal)                     ║
+-- ╚══════════════════════════════════════════════════════════════╝
+target("BixRun")
+    set_kind("binary")
+    set_default(true)
+    add_files("BixRun/main.cpp")
+    add_deps("BixEngine")
+
+    add_includedirs(engine_public_includes)
+    add_linkdirs(sdl3_lib, sdl3_image_lib)
+    add_links("SDL3", "SDL3_image")
+    
+    local content_dir = path.join("Build", plat, arch, mode, "Content")
+    if os.isdir(content_dir) then
+    
+        add_files(path.join(content_dir, "**.cpp"))
+        add_includedirs(content_dir, { public = true })
+        
+        print("[BixEngine] 🧩 Inclusion des scripts utilisateur depuis : " .. content_dir)
+    else
+        print("[BixEngine] ⚠️ Aucun dossier Content trouvé à : " .. content_dir)
+    end
 
     after_build(function(target)
         local exe_dir = path.directory(target:targetfile())
-        for _, dll in ipairs({
+        local dlls =
+        {
             path.join(sdl3_lib, "SDL3.dll"),
-            path.join(sdl3_image_lib, "SDL3_image.dll")
-        }) do
-            if os.isfile(dll) then os.cp(dll, exe_dir) end
+            path.join(sdl3_image_lib, "SDL3_image.dll"),
+        }
+    
+        for _, dll_path in ipairs(dlls) do
+            if os.isfile(dll_path) then
+                os.cp(dll_path, exe_dir)
+                print("[BixEngine] 📦 Copie de " .. path.filename(dll_path) .. " → " .. exe_dir)
+            else
+                print("[BixEngine] ⚠️ DLL manquante : " .. dll_path)
+            end
         end
     end)
 
--- ────────────────────────────────────────────────────────────────
--- Tâches utilitaires
--- ────────────────────────────────────────────────────────────────
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🧰 Task: regen (regenerate reflection headers)                ║
+-- ╚══════════════════════════════════════════════════════════════╝
 task("regen")
     set_category("action")
     on_run(function()
-        run_header_generation(true)
+        import("Tools.xmake.reflection")
+        print("[BixEngine] ♻️ Regénération manuelle des headers forcée...")
+        local reflection = import("Tools.xmake.reflection")
+        reflection.generate_headers(true, generated_dir)
     end)
 
-task("cleanbuild")
+    set_menu {
+        usage = "xmake regen [options]",
+        description = "Regénère les fichiers d'en-tête générés (reflection)",
+        options = {
+            { nil, "force", "k", nil, "Forcer la régénération complète avant la compilation" }
+        }
+    }
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🏗️ Task: fullbuild (regen + full rebuild)                    ║
+-- ╚══════════════════════════════════════════════════════════════╝
+task("fullbuild")
     set_category("action")
     on_run(function()
-        print("[BixEngine] 🧹 Clean + rebuild")
-        os.tryrm("Build")
-        os.tryrm(".xmake")
-        os.exec("xmake f -c")
+        import("core.project.task")
+        import("core.base.option")
+
+        task.run("regen", { force = option.get("force") or false })
         os.exec("xmake build")
     end)
+    set_menu {
+        usage = "xmake fullbuild [options]",
+        description = "Régénère les headers puis reconstruit entièrement BixEngine",
+        options = {
+            { nil, "force", "k", nil, "Forcer la régénération complète avant la compilation" }
+        }
+    }
+
+-- ╔══════════════════════════════════════════════════════════════╗
+-- ║ 🧹 Task: cleanbuild (clean + full rebuild + run)              ║
+-- ╚══════════════════════════════════════════════════════════════╝
+task("cleanbuild")
+    set_category("action")
+
+    on_run(function()
+        import("core.project.task")
+        import("core.project.config")
+
+        os.exec(string.format("xmake f -m %s", mode))
+        
+        print("[BixEngine] 🧹 Nettoyage complet du projet...")
+
+        os.exec("xmake clean -a")
+        os.tryrm(".xmake")
+        os.tryrm("Build")
+        os.tryrm("Intermediate")
+        os.tryrm("bin")
+        os.tryrm("Binaries")
+        os.tryrm("logs")
+        os.tryrm("crashlogs")
+        os.tryrm("SDL3.dll")
+
+        print("[BixEngine] ✅ Nettoyage terminé.")
+        print("[BixEngine] ⚙️  Regénération des headers...")
+        
+        os.exec(string.format("xmake f -m %s", mode))
+
+         print(string.format("[BixEngine] 🔨 Reconstruction de BixHeaderTool (mode: %s)...", mode))
+        os.exec("xmake build BixHeaderTool")
+
+        print("[BixEngine] ⚙️  Regénération des headers...")
+        task.run("regen", { force = true })
+
+        print("[BixEngine] 🏗️ Reconstruction complète du moteur...")
+        os.exec("xmake build BixRun")
+
+        print("[BixEngine] 🚀 Lancement du moteur...")
+        os.exec("xmake run BixRun")
+    end)
+
+    set_menu {
+        usage = "xmake cleanbuild",
+        description = "Nettoie, regénère et reconstruit entièrement BixEngine."
+    }
