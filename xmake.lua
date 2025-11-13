@@ -19,27 +19,32 @@ local sdl3_image_inc = path.join(root, "ThirdParty/SDL3_image/include/SDL3_image
 local sdl3_image_lib = path.join(root, "ThirdParty/SDL3_image/lib/x64")
 
 -- ────────────────────────────────────────────────────────────────
+-- Helpers
+-- ────────────────────────────────────────────────────────────────
+local function current_triplet()
+    local plat = get_config("plat") or os.host()
+    local arch = get_config("arch") or os.arch()
+    local mode = get_config("mode") or "debug"
+    return plat, arch, mode
+end
+
+local function get_generated_dir()
+    local plat, arch, mode = current_triplet()
+    return path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
+end
+
+-- ────────────────────────────────────────────────────────────────
 -- Règle includes globaux
 -- ────────────────────────────────────────────────────────────────
 rule("bix.global_includes")
     on_load(function(target)
-        local config = import("core.project.config")
-        local plat = config.get("plat") or os.host()
-        local arch = config.get("arch") or os.arch()
-        local mode = config.get("mode") or "debug"
-        local gen_dir = path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
         target:add("includedirs", "src/Reflection/Public", {public = true})
-        target:add("includedirs", gen_dir, {public = true})
+        target:add("includedirs", get_generated_dir(), {public = true})
     end)
 
 -- ────────────────────────────────────────────────────────────────
 -- Includes communs
 -- ────────────────────────────────────────────────────────────────
-local plat = get_config("plat") or os.host()
-local arch = get_config("arch") or os.arch()
-local mode = get_config("mode") or "debug"
-local gen_dir = path.join("Build", plat, arch, mode, "Intermediate", "GeneratedHeaders")
-
 local engine_public_includes = {
     "src",
     "ThirdParty",
@@ -47,13 +52,32 @@ local engine_public_includes = {
     "ThirdParty/ImGui/backends",
     "ThirdParty/stb",
     "src/Reflection/Public",
-    gen_dir,
+    get_generated_dir(),
     sdl3_inc,
     sdl3_image_inc
 }
+
 for _, dir in ipairs(os.dirs("src/*")) do
     local public_dir = path.join(dir, "Public")
-    if os.isdir(public_dir) then table.insert(engine_public_includes, public_dir) end
+    if os.isdir(public_dir) then
+        table.insert(engine_public_includes, public_dir)
+    end
+    local lowercase_public = path.join(dir, "public")
+    if os.isdir(lowercase_public) then
+        table.insert(engine_public_includes, lowercase_public)
+    end
+end
+
+do
+    local dedup = {}
+    local filtered = {}
+    for _, dir in ipairs(engine_public_includes) do
+        if dir and dir ~= "" and not dedup[dir] then
+            dedup[dir] = true
+            table.insert(filtered, dir)
+        end
+    end
+    engine_public_includes = filtered
 end
 
 -- ────────────────────────────────────────────────────────────────
@@ -61,13 +85,25 @@ end
 -- ────────────────────────────────────────────────────────────────
 target("BixHeaderTool")
     set_kind("binary")
+    set_default(false)
     set_group("Tools/HeaderTool")
     add_files("Tools/BixHeaderTool/**.cpp")
     add_includedirs("Tools/BixHeaderTool", {public = true})
     before_build(function(t)
-        local config = import("core.project.config")
-        local mode = config.get("mode") or "debug"
+        local _, _, mode = current_triplet()
         t:set("targetdir", path.join("Build", os.host(), os.arch(), mode))
+    end)
+
+-- ────────────────────────────────────────────────────────────────
+-- Phony target to drive header generation before compilation
+-- ────────────────────────────────────────────────────────────────
+target("GenerateHeaders")
+    set_kind("phony")
+    set_default(false)
+    add_deps("BixHeaderTool")
+    on_build(function()
+        local reflection = import("Tools.xmake.reflection")
+        reflection.generate_headers(false, get_generated_dir())
     end)
 
 -- ────────────────────────────────────────────────────────────────
@@ -76,17 +112,32 @@ target("BixHeaderTool")
 local function create_engine_module(folder)
     local name = "Bix" .. path.basename(folder)
     local private_dir = path.join(folder, "Private")
+    local lowercase_private = path.join(folder, "private")
     local public_dir  = path.join(folder, "Public")
+    local lowercase_public = path.join(folder, "public")
 
     target(name)
         set_group("Engine/" .. path.basename(folder))
         set_kind("static")
         add_rules("bix.global_includes")
-        add_deps("BixHeaderTool")
+        add_deps("GenerateHeaders")
 
         if os.isdir(private_dir) then add_files(private_dir .. "/**.cpp") end
+        if os.isdir(lowercase_private) then add_files(lowercase_private .. "/**.cpp") end
         if os.isdir(public_dir) then add_headerfiles(public_dir .. "/**.h", {public = true}) end
-        add_includedirs(public_dir, private_dir, table.unpack(engine_public_includes))
+        if os.isdir(lowercase_public) then add_headerfiles(lowercase_public .. "/**.h", {public = true}) end
+
+        local include_dirs = {}
+        if os.isdir(public_dir) then table.insert(include_dirs, public_dir) end
+        if os.isdir(lowercase_public) then table.insert(include_dirs, lowercase_public) end
+        if os.isdir(private_dir) then table.insert(include_dirs, private_dir) end
+        if os.isdir(lowercase_private) then table.insert(include_dirs, lowercase_private) end
+        for _, inc in ipairs(engine_public_includes) do
+            table.insert(include_dirs, inc)
+        end
+        if #include_dirs > 0 then
+            add_includedirs(table.unpack(include_dirs))
+        end
 end
 
 for _, dir in ipairs(os.dirs("src/*")) do
@@ -103,7 +154,7 @@ target("BixMain")
     set_default(true)
     set_group("Runtime")
     add_rules("bix.global_includes")
-    add_deps("BixHeaderTool")
+    add_deps("GenerateHeaders")
 
     for _, dir in ipairs(os.dirs("src/*")) do
         local mod = path.basename(dir)
@@ -111,8 +162,26 @@ target("BixMain")
     end
 
     add_files("src/Main/Private/**.cpp")
+    add_files("src/Main/private/**.cpp")
     add_headerfiles("src/Main/Public/**.h")
-    add_includedirs("src/Main/Public", "src/Main/Private", table.unpack(engine_public_includes))
+    add_headerfiles("src/Main/public/**.h")
+    local main_includes = {}
+    for _, dir in ipairs({
+        "src/Main/Public",
+        "src/Main/public",
+        "src/Main/Private",
+        "src/Main/private"
+    }) do
+        if os.isdir(dir) then
+            table.insert(main_includes, dir)
+        end
+    end
+    for _, inc in ipairs(engine_public_includes) do
+        table.insert(main_includes, inc)
+    end
+    if #main_includes > 0 then
+        add_includedirs(table.unpack(main_includes))
+    end
     add_linkdirs(sdl3_lib, sdl3_image_lib)
     add_links("SDL3", "SDL3_image")
 
@@ -132,7 +201,8 @@ target("BixMain")
 task("regen")
     set_category("action")
     on_run(function()
-        _ENV.__bix_headers_generated = nil
+        local reflection = import("Tools.xmake.reflection")
+        reflection.generate_headers(true, get_generated_dir())
     end)
 
 task("cleanbuild")
