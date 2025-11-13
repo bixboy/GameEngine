@@ -156,12 +156,14 @@ local function define_module_target(m, group)
             add_headerfiles(path.join(m.public, "**.h"), {
                 public = true,
                 group = "Public",
-                prefixdir = path.join(m.name, "Public")
+                prefixdir = path.join(m.name, "Public"),
+                rootdir = m.public
             })
 
             add_files(path.join(m.public, "**.cpp"), {
                 group = "Private",
-                prefixdir = path.join(m.name, "Public")
+                prefixdir = path.join(m.name, "Public"),
+                rootdir = m.public
             })
         end
 
@@ -171,12 +173,14 @@ local function define_module_target(m, group)
 
             add_headerfiles(path.join(m.private, "**.h"), {
                 group = "Private",
-                prefixdir = path.join(m.name, "Private")
+                prefixdir = path.join(m.name, "Private"),
+                rootdir = m.private
             })
 
             add_files(path.join(m.private, "**.cpp"), {
                 group = "Private",
-                prefixdir = path.join(m.name, "Private")
+                prefixdir = path.join(m.name, "Private"),
+                rootdir = m.private
             })
         end
 
