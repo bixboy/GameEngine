@@ -270,22 +270,22 @@ target("BixEngine")
             add_includedirs(module.public_dir, { public = true })
             add_headerfiles(path.join(module.public_dir, "**.h"), {
                 public = true,
-                group = module_group .. "/Public",
+                group = module_group .. "/Public/Headers",
                 prefixdir = path.join(module.name, "Public")
             })
             add_files(path.join(module.public_dir, "**.cpp"), {
-                group = module_group .. "/Public"
+                group = module_group .. "/Public/Sources"
             })
         end
 
         if os.isdir(module.private_dir) then
             add_includedirs(module.private_dir)
             add_headerfiles(path.join(module.private_dir, "**.h"), {
-                group = module_group .. "/Private",
+                group = module_group .. "/Private/Headers",
                 prefixdir = path.join(module.name, "Private")
             })
             add_files(path.join(module.private_dir, "**.cpp"), {
-                group = module_group .. "/Private"
+                group = module_group .. "/Private/Sources"
             })
         end
     end
@@ -315,22 +315,22 @@ target("BixRun")
         if os.isdir(main_module.public_dir) then
             add_includedirs(main_module.public_dir)
             add_headerfiles(path.join(main_module.public_dir, "**.h"), {
-                group = "Modules/Main/Public",
+                group = "Modules/Main/Public/Headers",
                 prefixdir = path.join(main_module.name, "Public")
             })
             add_files(path.join(main_module.public_dir, "**.cpp"), {
-                group = "Modules/Main/Public"
+                group = "Modules/Main/Public/Sources"
             })
         end
 
         if os.isdir(main_module.private_dir) then
             add_includedirs(main_module.private_dir)
             add_headerfiles(path.join(main_module.private_dir, "**.h"), {
-                group = "Modules/Main/Private",
+                group = "Modules/Main/Private/Headers",
                 prefixdir = path.join(main_module.name, "Private")
             })
             add_files(path.join(main_module.private_dir, "**.cpp"), {
-                group = "Modules/Main/Private"
+                group = "Modules/Main/Private/Sources"
             })
         end
     end
