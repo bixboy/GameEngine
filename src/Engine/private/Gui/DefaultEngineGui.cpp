@@ -61,15 +61,11 @@ namespace BixEngine::Gui
                     return panels;
                 }
 
-                panels.sceneViewportPanel = TryCreatePanel("SceneViewport", CreateSceneViewportPanel, guiManager_,
-                                                           context_);
+                panels.sceneViewportPanel = TryCreatePanel("SceneViewport", CreateSceneViewportPanel, guiManager_, context_);
                 panels.statsPanel = TryCreatePanel("Stats", CreateStatsPanel, guiManager_, context_);
-                panels.sceneOutlinerPanel = TryCreatePanel("SceneOutliner", CreateSceneOutlinerPanel, guiManager_,
-                                                           context_);
-                panels.actorInspectorPanel = TryCreatePanel("ActorInspector", CreateActorInspectorPanel, guiManager_,
-                                                            context_);
-                panels.contentBrowserPanel = TryCreatePanel("ContentBrowser", CreateContentBrowserPanel, guiManager_,
-                                                            context_);
+                panels.sceneOutlinerPanel = TryCreatePanel("SceneOutliner", CreateSceneOutlinerPanel, guiManager_, context_);
+                panels.actorInspectorPanel = TryCreatePanel("ActorInspector", CreateActorInspectorPanel, guiManager_, context_);
+                panels.contentBrowserPanel = TryCreatePanel("ContentBrowser", CreateContentBrowserPanel, guiManager_, context_);
 
                 // Enregistre les panneaux dans la map
                 panels.allPanels =

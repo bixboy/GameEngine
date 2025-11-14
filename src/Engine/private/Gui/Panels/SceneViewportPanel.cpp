@@ -1,14 +1,11 @@
 #include "Gui/Panels/SceneViewportPanel.h"
-
 #include <SDL3/SDL_render.h>
-
+#include "imgui.h"
 #include "Gui/GuiManager.h"
 #include "Gui/Internal/GuiPanel.h"
+#include "Gui/GuiTheme.h"
 #include "Gui/Utils/GuiHelpers.h"
 
-#include "imgui.h"
-#include "Gui/GuiDocking.h"
-#include "Gui/GuiTheme.h"
 
 namespace BixEngine::Gui
 {
@@ -16,93 +13,105 @@ namespace BixEngine::Gui
 
     namespace
     {
-        ImVec2 ComputeImageSize(const ImVec2& availableSize, int textureWidth, int textureHeight) noexcept
+        ImVec2 ComputeImageSize(const ImVec2& availableSize, int textureWidth, int textureHeight)
         {
-            if (availableSize.x <= 0.0f || availableSize.y <= 0.0f || textureWidth <= 0 || textureHeight <= 0)
-                return ImVec2{0.0f, 0.0f};
+            if (availableSize.x <= 0.0f || availableSize.y <= 0.0f || textureWidth <= 0 || textureWidth <= 0)
+                return ImVec2{0,0};
 
-            const float textureAspect = static_cast<float>(textureWidth) / static_cast<float>(textureHeight);
-            ImVec2 imageSize = availableSize;
-            const float availableAspect = availableSize.x / availableSize.y;
+            const float texAspect = static_cast<float>(textureWidth) / textureHeight;
+            const float availAspect = availableSize.x / availableSize.y;
 
-            if (availableAspect > textureAspect)
-            {
-                imageSize.x = availableSize.y * textureAspect;
-            }
+            ImVec2 final = availableSize;
+            if (availAspect > texAspect)
+                final.x = final.y * texAspect;
             else
-            {
-                imageSize.y = availableSize.x / textureAspect;
-            }
+                final.y = final.x / texAspect;
 
-            return imageSize;
+            return final;
         }
 
-        void DrawViewportTexture(SDL_Texture* texture, const ImVec2& size, const ImVec2& cursorScreenPos)
+        void DrawTexture(SDL_Texture* texture, const ImVec2& pos, const ImVec2& size)
         {
-            if (!texture || size.x <= 0.0f || size.y <= 0.0f)
+            if (!texture || size.x <= 0 || size.y <= 0)
                 return;
 
-            ImVec2 min = cursorScreenPos;
-            auto max = ImVec2{cursorScreenPos.x + size.x, cursorScreenPos.y + size.y};
-
-            ImDrawList* drawList = ImGui::GetWindowDrawList();
-            drawList->AddImage(texture, min, max);
+            ImGui::GetWindowDrawList()->AddImage(
+                texture,
+                pos,
+                ImVec2(pos.x + size.x, pos.y + size.y)
+            );
         }
+    }
+    
+    SceneViewportPanel::SceneViewportPanel(const DefaultEngineGuiContext& context) : GuiPanelBase("scene_viewport") , context_(context)
+    {
+        if (GuiPanel* p = GuiPanelBase::GetPanel())
+        {
+            p->SetTitle("Scene");
+            p->SetBackgroundColor(Theme::ViewportBackground);
+            p->SetCollapsable(false);
+            p->SetClosable(false);
+            p->AddWindowFlags(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        }
+    }
+    
+    void SceneViewportPanel::Draw()
+    {
+        ScopedID id("SceneViewport");
+
+        const ImVec2 avail = ImGui::GetContentRegionAvail();
+        const ImVec2 cursor = ImGui::GetCursorScreenPos();
+
+        if (avail.x <= 0 || avail.y <= 0)
+        {
+            ImGui::TextUnformatted("Viewport unavailable.");
+            return;
+        }
+
+        SDL_Texture* texture = context_.sceneRenderTextureProvider ? context_.sceneRenderTextureProvider() : nullptr;
+
+        const auto size = context_.sceneRenderTextureSizeProvider ? context_.sceneRenderTextureSizeProvider() : std::pair{0,0};
+
+        if (!texture || size.first <= 0 || size.second <= 0)
+        {
+            ImGui::Dummy(avail);
+            const ImVec2 txtSize = ImGui::CalcTextSize("No scene is currently available.");
+
+            ImVec2 center = cursor;
+            center.x += (avail.x - txtSize.x) * 0.5f;
+            center.y += (avail.y - txtSize.y) * 0.5f;
+
+            ImGui::GetWindowDrawList()->AddText(
+                center,
+                ImGui::GetColorU32(ImGuiCol_TextDisabled),
+                "No scene is currently available."
+            );
+            
+            return;
+        }
+
+        const ImVec2 imgSize = ComputeImageSize(avail, size.first, size.second);
+        ImVec2 drawPos = cursor;
+
+        drawPos.x += (avail.x - imgSize.x) * 0.5f;
+        drawPos.y += (avail.y - imgSize.y) * 0.5f;
+
+        DrawTexture(texture, drawPos, imgSize);
+        ImGui::Dummy(avail);
+
+        ImVec2 overlayPos = { drawPos.x + 12.f, drawPos.y + 12.f };
+        ImGui::GetWindowDrawList()->AddText(overlayPos, ImGui::GetColorU32(ImVec4(1,1,1,0.8f)), "Scene Viewport"
+        );
     }
 
     GuiPanel& CreateSceneViewportPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
-        GuiPanel& viewportPanel = guiManager.CreatePanel("scene_viewport", "Scene");
-        guiManager.SetPanelDockingArea(viewportPanel, DockSpaceRegion::Center, ImGuiCond_FirstUseEver);
-        viewportPanel.SetBackgroundColor(Theme::ViewportBackground);
-        viewportPanel.SetCollapsable(false);
-        viewportPanel.SetClosable(false);
-        viewportPanel.AddWindowFlags(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
+        auto registration = guiManager.RegisterUtilityPanel<SceneViewportPanel>("scene_viewport","Scene Viewport",
+            context.sceneManagerProvider,
+            context.selectedActorGetter,
+            context.selectedActorSetter);
 
-        viewportPanel.SetDrawFunction([
-                textureProvider = context.sceneRenderTextureProvider,
-                sizeProvider = context.sceneRenderTextureSizeProvider
-            ]()
-            {
-                ScopedID viewportId("SceneViewportPanel");
-
-                const ImVec2 available = ImGui::GetContentRegionAvail();
-                if (available.x <= 0.0f || available.y <= 0.0f)
-                {
-                    ImGui::TextUnformatted("Viewport unavailable.");
-                    return;
-                }
-
-                SDL_Texture* texture = textureProvider ? textureProvider() : nullptr;
-                std::pair<int, int> size = sizeProvider ? sizeProvider() : std::pair{0, 0};
-
-                if (!texture || size.first <= 0 || size.second <= 0)
-                {
-                    const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-                    ImGui::Dummy(available);
-                    const ImVec2 textSize = ImGui::CalcTextSize("No scene is currently available.");
-                    ImVec2 textPos = cursorScreenPos;
-                    textPos.x += (available.x - textSize.x) * 0.5f;
-                    textPos.y += (available.y - textSize.y) * 0.5f;
-                    ImGui::GetWindowDrawList()->AddText(textPos, ImGui::GetColorU32(ImGuiCol_TextDisabled),
-                                                        "No scene is currently available.");
-                    return;
-                }
-
-                const ImVec2 imageSize = ComputeImageSize(available, size.first, size.second);
-                const ImVec2 cursorScreenPos = ImGui::GetCursorScreenPos();
-                ImVec2 imagePos = cursorScreenPos;
-                imagePos.x += (available.x - imageSize.x) * 0.5f;
-                imagePos.y += (available.y - imageSize.y) * 0.5f;
-
-                DrawViewportTexture(texture, imageSize, imagePos);
-                ImGui::Dummy(available);
-
-                const auto infoPos = ImVec2{imagePos.x + 12.0f, imagePos.y + 12.0f};
-                const ImU32 infoColor = ImGui::GetColorU32(ImVec4{1.0f, 1.0f, 1.0f, 0.8f});
-                ImGui::GetWindowDrawList()->AddText(infoPos, infoColor, "Scene Viewport");
-            });
-
-        return viewportPanel;
+        guiManager.SetPanelDockingArea(registration.panel, DockSpaceRegion::Center);
+        return registration.panel;
     }
 }

@@ -49,7 +49,7 @@ namespace BixEngine::Core
             return true;
 
         if (!guiSystem_)
-            guiSystem_ = std::make_unique<Gui::GuiSystem>();
+            guiSystem_ = std::make_unique<GuiSystem>();
 
         if (!guiSystem_->Initialize(window.GetSDLWindow(), renderer.GetSDLRenderer()))
         {
@@ -61,8 +61,8 @@ namespace BixEngine::Core
             return false;
         }
 
-        guiManager_ = std::make_unique<Gui::GuiManager>(*guiSystem_);
-        layoutManager_ = std::make_unique<Gui::GuiLayoutManager>(*guiSystem_, *guiManager_);
+        guiManager_ = std::make_unique<GuiManager>(*guiSystem_);
+        layoutManager_ = std::make_unique<GuiLayoutManager>(*guiSystem_, *guiManager_);
         navigationBar_ = std::make_unique<GuiNavigationBar>(*guiSystem_, *layoutManager_, *this);
         DestroySceneViewportTexture();
 
@@ -115,8 +115,6 @@ namespace BixEngine::Core
 
         if (assetEditorManager_)
         {
-            // Reset any asset editors before rebuilding the default GUI panels to avoid
-            // keeping stale ImGui panel handles after a project or layout reload.
             assetEditorManager_->RemoveAllEditors();
         }
 
@@ -126,8 +124,10 @@ namespace BixEngine::Core
         DestroySceneViewportTexture();
         navigationBar_.reset();
         assetEditorManager_.reset();
+        
         if (layoutManager_)
             layoutManager_.reset();
+        
         guiManager_.reset();
 
         if (guiSystem_)
@@ -156,50 +156,42 @@ namespace BixEngine::Core
 
         switch (event.type)
         {
+            
         case SDL_EVENT_DROP_FILE:
+        {
+            std::filesystem::path droppedFile{};
+            if (event.drop.data && *event.drop.data)
             {
-                std::filesystem::path droppedFile{};
-                if (event.drop.data && *event.drop.data)
+                const std::string dropString(event.drop.data);
+                
+                std::u8string dropUtf8;
+                dropUtf8.reserve(dropString.size());
+                
+                for (const unsigned char ch : dropString)
                 {
-#if defined(_WIN32)
-                    const std::string dropString(event.drop.data);
-                    std::u8string dropUtf8;
-                    dropUtf8.reserve(dropString.size());
-                    for (const unsigned char ch : dropString)
-                        dropUtf8.push_back(static_cast<char8_t>(ch));
-                    droppedFile = std::filesystem::path(dropUtf8);
-#else
-                    droppedFile = std::filesystem::path(event.drop.data);
-#endif
+                    dropUtf8.push_back(static_cast<char8_t>(ch));    
                 }
-
-                if (event.drop.data)
-                    SDL_free(const_cast<char*>(event.drop.data));
-
-                if (!droppedFile.empty())
-                    pendingDroppedFiles_.push_back(std::move(droppedFile));
-
-                return true;
+                
+                droppedFile = std::filesystem::path(dropUtf8);
             }
-        case SDL_EVENT_DROP_TEXT:
-        case SDL_EVENT_DROP_COMPLETE:
-        case SDL_EVENT_DROP_BEGIN:
+
+            if (event.drop.data)
+                SDL_free(const_cast<char*>(event.drop.data));
+
+            if (!droppedFile.empty())
+                pendingDroppedFiles_.push_back(std::move(droppedFile));
+
+            return true;
+        }
+            
         case SDL_EVENT_DROP_POSITION:
             if (event.drop.data)
                 SDL_free(const_cast<char*>(event.drop.data));
+            
             return false;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
-
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-
-        case SDL_EVENT_MOUSE_MOTION:
 
         case SDL_EVENT_MOUSE_WHEEL:
             return io.WantCaptureMouse && !overViewport;
-
-        case SDL_EVENT_KEY_DOWN:
-
-        case SDL_EVENT_KEY_UP:
 
         case SDL_EVENT_TEXT_INPUT:
             return io.WantCaptureKeyboard && !overViewport;
@@ -214,7 +206,7 @@ namespace BixEngine::Core
         if (pendingDroppedFiles_.empty())
             return;
 
-        if (auto* browser = Gui::ContentBrowserPanel::GetActiveInstance())
+        if (auto* browser = ContentBrowserPanel::GetActiveInstance())
         {
             browser->ImportExternalFiles(pendingDroppedFiles_);
             pendingDroppedFiles_.clear();
@@ -289,8 +281,6 @@ namespace BixEngine::Core
         subsystems_ = &subsystems;
         if (assetEditorManager_)
         {
-            // Reset any asset editors before rebuilding the default GUI panels to avoid
-            // keeping stale ImGui panel handles after a project or layout reload.
             assetEditorManager_->RemoveAllEditors();
         }
 
@@ -309,9 +299,9 @@ namespace BixEngine::Core
         focusRequests_.clear();
         selectedActor_ = nullptr;
 
-        Gui::DefaultEngineGuiContextFactory contextFactory(subsystems);
+        DefaultEngineGuiContextFactory contextFactory(subsystems);
 
-        Gui::DefaultEngineGuiContextArgs contextArgs{
+        DefaultEngineGuiContextArgs contextArgs{
             subsystems,
             lastDeltaTime_,
             &selectedActor_,
@@ -342,8 +332,8 @@ namespace BixEngine::Core
             OpenAssetEditor(assetPath);
         };
 
-        const Gui::DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
-        const Gui::DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
+        const DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
+        const DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
         viewportPanel_ = panels.sceneViewportPanel;
         statsPanel_ = panels.statsPanel;
         outlinerPanel_ = panels.sceneOutlinerPanel;
@@ -352,9 +342,9 @@ namespace BixEngine::Core
 
         if (layoutManager_)
         {
-            std::array<Gui::GuiPanel*, 5> scenePanelBuffer{};
+            std::array<GuiPanel*, 5> scenePanelBuffer{};
             std::size_t count = 0;
-            auto pushScenePanel = [&](Gui::GuiPanel* panel)
+            auto pushScenePanel = [&](GuiPanel* panel)
             {
                 if (panel)
                     scenePanelBuffer[count++] = panel;
@@ -367,8 +357,7 @@ namespace BixEngine::Core
             pushScenePanel(statsPanel_);
 
             const std::span panelsSpan(scenePanelBuffer.data(), count);
-            layoutManager_->RegisterPanels(Gui::EditorLayoutType::Scene, panelsSpan,
-                                           Gui::GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
+            layoutManager_->RegisterPanels(EditorLayoutType::Scene, panelsSpan, GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
         }
 
         if (assetEditorManager_)

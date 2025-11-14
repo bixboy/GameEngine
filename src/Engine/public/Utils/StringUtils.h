@@ -29,4 +29,10 @@ namespace BixEngine::StringUtils
      * @param isDirectory  True pour ouvrir le dossier, false pour sélectionner un fichier.
      */
     void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory);
+
+
+    String MakeSafeIdentifier(const std::string& raw);
+
+    void TrimCarriageReturn(std::string& v);
+
 }

@@ -137,13 +137,13 @@ namespace BixEngine::Gui
                             if (hasName)
                             {
                                 ImGui::TreeNodeEx(actor.get(), actorFlags, "%.*s (%.*s)",
-                                                  static_cast<int>(actorNameView.size()), actorNameView.data(),
-                                                  static_cast<int>(actorTypeView.size()), actorTypeView.data());
+                                    static_cast<int>(actorNameView.size()), actorNameView.data(),
+                                    static_cast<int>(actorTypeView.size()), actorTypeView.data());
                             }
                             else
                             {
                                 ImGui::TreeNodeEx(actor.get(), actorFlags, "<Unnamed> (%.*s)",
-                                                  static_cast<int>(actorTypeView.size()), actorTypeView.data());
+                                    static_cast<int>(actorTypeView.size()), actorTypeView.data());
                             }
 
                             if (ImGui::IsItemClicked() && selectedActorSetter_)
@@ -174,9 +174,7 @@ namespace BixEngine::Gui
 
     GuiPanel& CreateSceneOutlinerPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {
-        auto registration = guiManager.RegisterUtilityPanel<SceneOutlinerPanelController>(
-            "scene_outliner",
-            "Scene Outliner",
+        auto registration = guiManager.RegisterUtilityPanel<SceneOutlinerPanelController>("scene_outliner","Scene Outliner",
             context.sceneManagerProvider,
             context.selectedActorGetter,
             context.selectedActorSetter);

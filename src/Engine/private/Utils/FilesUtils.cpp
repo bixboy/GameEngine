@@ -4,6 +4,7 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <imgui.h>
 
 
 namespace BixEngine::FileUtils
@@ -236,5 +237,59 @@ namespace BixEngine::FileUtils
 
         file.close();
         return true;
+    }
+
+    // ─────────────────────────────────────────────
+    // Extrait le display name
+    // ─────────────────────────────────────────────
+
+    String ExtractDisplayName(const std::filesystem::path& path)
+    {
+        if (path.empty())
+            return "Asset";
+
+        const auto filename = path.filename().generic_string();
+        if (!filename.empty())
+            return String{filename};
+
+        const auto stem = path.stem().generic_string();
+        if (!stem.empty())
+            return String{stem};
+
+        return String{path.generic_string()};
+    }
+
+    // ─────────────────────────────────────────────
+    // Nomalise le path
+    // ─────────────────────────────────────────────
+    
+    std::filesystem::path NormalizePath(const std::filesystem::path& path)
+    {
+        if (path.empty())
+            return {};
+
+        auto p = path;
+        p = p.make_preferred();
+        
+        return p.lexically_normal();
+    }
+
+
+    // ─────────────────────────────────────────────
+    // Trouve le chemin ini
+    // ─────────────────────────────────────────────
+    
+    std::filesystem::path ResolveUserConfigPath(const char* fileName)
+    {
+        const ImGuiIO& io = ImGui::GetIO();
+        std::filesystem::path base;
+
+        if (io.IniFilename && ImGui::GetIO().IniFilename[0] != '\0')
+            base = std::filesystem::path(io.IniFilename).parent_path();
+
+        if (base.empty())
+            base = std::filesystem::current_path();
+
+        return base / fileName;
     }
 }

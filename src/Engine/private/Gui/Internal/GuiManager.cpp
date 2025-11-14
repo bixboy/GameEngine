@@ -72,6 +72,7 @@ namespace BixEngine::Gui
     {
         GuiPanel& panel = registry_.AddPanel(name, title);
         panel.SetTitle(MakeStableTitle(panel.GetTitle(), panel.GetName()));
+        
         return panel;
     }
 
@@ -370,24 +371,19 @@ namespace BixEngine::Gui
         auto it = registry.find(displayName.Std());
 
         if (it == registry.end())
-            return nullptr; // panneau non enregistré
+            return nullptr;
 
         RegisteredPanel& entry = it->second;
 
-        // Créer dynamiquement le GuiPanelBase
-        auto instance = entry.factory(); // unique_ptr<GuiPanelBase>
+        auto instance = entry.factory();
 
         GuiPanelBase* rawPtr = instance.get();
 
-        // Le PanelBase doit être associé à un GuiPanel ImGui
         GuiPanel& panel = CreatePanel(entry.identifier, entry.displayName);
 
-        // On attache automatiquement le controller PanelBase
         auto controller = std::unique_ptr<GuiPanelController>(rawPtr);
         AttachController(panel, std::move(controller));
-
-        // Important : factory() retourne un unique_ptr.
-        // On a transféré l’ownership dans AttachController(), donc on release.
+        
         instance.release();
 
         return rawPtr;
