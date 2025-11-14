@@ -14,7 +14,7 @@ namespace BixEngine::Gui::ActorInspector
 {
     using namespace Theme;
     using namespace Utils;
-    using namespace Widgets;
+    using namespace BixEngine::Gui::Widgets;
 
     void TransformInspectorSection::Draw(Game::Actor& actor)
     {

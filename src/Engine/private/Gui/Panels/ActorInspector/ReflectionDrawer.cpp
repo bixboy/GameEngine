@@ -15,7 +15,7 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
-    using namespace Widgets;
+    using namespace BixEngine::Gui::Widgets;
 
     namespace PropertyUtils
     {

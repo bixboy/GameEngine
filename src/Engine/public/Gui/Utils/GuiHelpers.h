@@ -1,10 +1,13 @@
 #pragma once
 #include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "Gui/GuiTheme.h"
+#include "Gui/Widgets/Styling/ScopedColor.h"
+#include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"
 #include "Utils/ScriptUtils.h"
 
@@ -48,46 +51,27 @@ namespace BixEngine::Gui::Utils
         ~ScopedID() { ImGui::PopID(); }
     };
 
-    /// Gère automatiquement PushStyleVar / PopStyleVar.
-    struct ScopedStyle
-    {
-        ScopedStyle(ImGuiStyleVar var, const ImVec2& value) { ImGui::PushStyleVar(var, value); }
-        ScopedStyle(ImGuiStyleVar var, float value) { ImGui::PushStyleVar(var, value); }
-        ~ScopedStyle() { ImGui::PopStyleVar(); }
-    };
+    using ScopedStyle = BixEngine::Gui::Widgets::ScopedStyle;
+    using ScopedColor = BixEngine::Gui::Widgets::ScopedColor;
 
-    /// Gère automatiquement PushStyleColor / PopStyleColor.
-    struct ScopedColor
+    class ScopedStyleColor
     {
-        ScopedColor(ImGuiCol color, const ImVec4& value) { ImGui::PushStyleColor(color, value); }
-        ~ScopedColor() { ImGui::PopStyleColor(); }
-    };
-
-    struct ScopedStyleColor
-    {
-        ScopedStyleColor(ImGuiCol color, const ImVec4& value) : applied(true)
+    public:
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value)
         {
-            ImGui::PushStyleColor(color, value);
+            colorScope_.emplace(color, value);
         }
 
-        ScopedStyleColor(ImGuiCol color, const ImVec4& value, bool condition) : applied(condition)
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value, bool condition)
         {
-            if (applied)
+            if (condition)
             {
-                ImGui::PushStyleColor(color, value);
-            }
-        }
-
-        ~ScopedStyleColor()
-        {
-            if (applied)
-            {
-                ImGui::PopStyleColor();
+                colorScope_.emplace(color, value);
             }
         }
 
     private:
-        bool applied;
+        std::optional<BixEngine::Gui::Widgets::ScopedColor> colorScope_{};
     };
 
     /// Gère automatiquement PushFont / PopFont.
