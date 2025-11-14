@@ -1,4 +1,4 @@
-#include "Gui/Panels/ActorInspector/ComponentSectionUI.h"
+#include "Gui/Panels/ActorInspector/ComponentInspectorSection.h"
 
 #include "Gui/Panels/ActorInspector/ImGuiControls.h"
 #include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
@@ -13,6 +13,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <utility>
 
 #include <imgui.h>
 
@@ -21,7 +22,59 @@ namespace BixEngine::Gui::ActorInspector
     using namespace Theme;
     using namespace Utils;
 
-    void DrawAddComponentPopup(Game::Actor& actor)
+    namespace
+    {
+        struct ComponentClassEntry
+        {
+            const Bix::Reflection::ClassInfo* info{nullptr};
+            std::string label;
+        };
+
+        std::vector<ComponentClassEntry> BuildComponentEntries()
+        {
+            const auto& componentClass = Game::Component::StaticClass();
+
+            std::vector<ComponentClassEntry> entries;
+            entries.reserve(32);
+
+            for (auto* classInfo : Bix::Reflection::GetAllClasses())
+            {
+                if (!classInfo || classInfo == &componentClass)
+                {
+                    continue;
+                }
+
+                if (!IsSubclassOf(*classInfo, componentClass))
+                {
+                    continue;
+                }
+
+                if (classInfo->IsAbstract || !classInfo->CanConstruct())
+                {
+                    continue;
+                }
+
+                ComponentClassEntry entry{};
+                entry.info = classInfo;
+                entry.label = !classInfo->Name.empty() ? classInfo->Name : classInfo->QualifiedName;
+                if (entry.label.empty())
+                {
+                    entry.label = "Component";
+                }
+
+                entries.push_back(std::move(entry));
+            }
+
+            std::sort(entries.begin(), entries.end(), [](const ComponentClassEntry& lhs, const ComponentClassEntry& rhs)
+            {
+                return lhs.label < rhs.label;
+            });
+
+            return entries;
+        }
+    }
+
+    void ComponentInspectorSection::DrawAddComponentPopup(Game::Actor& actor)
     {
         if (!ImGui::BeginPopup("AddComponentPopup"))
         {
@@ -31,50 +84,7 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::TextUnformatted("Add Component");
         ImGui::Separator();
 
-        const auto& componentClass = Game::Component::StaticClass();
-
-        struct ComponentClassEntry
-        {
-            const Bix::Reflection::ClassInfo* info{nullptr};
-            std::string label;
-        };
-
-        std::vector<ComponentClassEntry> entries;
-        entries.reserve(32);
-
-        for (auto* classInfo : Bix::Reflection::GetAllClasses())
-        {
-            if (!classInfo || classInfo == &componentClass)
-            {
-                continue;
-            }
-
-            if (!IsSubclassOf(*classInfo, componentClass))
-            {
-                continue;
-            }
-
-            if (classInfo->IsAbstract || !classInfo->CanConstruct())
-            {
-                continue;
-            }
-
-            ComponentClassEntry entry{};
-            entry.info = classInfo;
-            entry.label = !classInfo->Name.empty() ? classInfo->Name : classInfo->QualifiedName;
-            if (entry.label.empty())
-            {
-                entry.label = "Component";
-            }
-
-            entries.push_back(std::move(entry));
-        }
-
-        std::sort(entries.begin(), entries.end(), [](const ComponentClassEntry& lhs, const ComponentClassEntry& rhs)
-        {
-            return lhs.label < rhs.label;
-        });
-
+        const std::vector<ComponentClassEntry> entries = BuildComponentEntries();
         if (entries.empty())
         {
             DrawEmptyStateMessage("No components available.");
@@ -113,7 +123,7 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::EndPopup();
     }
 
-    void DrawComponentSection(Game::Actor& actor)
+    void ComponentInspectorSection::Draw(Game::Actor& actor)
     {
         const std::string contextId = BuildActorContextId(actor);
         PersistentSectionScope section("Components", contextId);
@@ -174,7 +184,6 @@ namespace BixEngine::Gui::ActorInspector
             {
                 typeLabel = classInfo.QualifiedName;
             }
-
 
             if (typeLabel.empty())
             {

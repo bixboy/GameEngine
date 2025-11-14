@@ -1,9 +1,6 @@
 #include "Gui/Panels/ActorInspectorPanel.h"
 
-#include "Gui/Panels/ActorInspector/ActorOverviewUI.h"
-#include "Gui/Panels/ActorInspector/ComponentSectionUI.h"
-#include "Gui/Panels/ActorInspector/ImGuiControls.h"
-#include "Gui/Panels/ActorInspector/TransformSectionUI.h"
+#include "Gui/Panels/ActorInspector/ActorInspectorSection.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
 #include "Gui/GuiManager.h"
@@ -16,6 +13,7 @@
 
 #include <imgui.h>
 #include <functional>
+#include <utility>
 
 #include "Gui/GuiDocking.h"
 
@@ -35,7 +33,17 @@ namespace BixEngine::Gui
                 : sceneManagerProvider_(std::move(sceneProvider))
                   , selectedActorGetter_(std::move(selectionGetter))
                   , selectedActorSetter_(std::move(selectionSetter))
+                  , sections_(ActorInspector::BuildActorInspectorSections())
+                  , registeredFactoryCount_(ActorInspector::GetRegisteredActorInspectorFactoryCount())
             {
+            }
+
+            void RegisterSection(ActorInspector::ActorInspectorSectionPtr section)
+            {
+                if (section)
+                {
+                    sections_.emplace_back(std::move(section));
+                }
             }
 
         protected:
@@ -62,6 +70,13 @@ namespace BixEngine::Gui
                     return;
                 }
 
+                const std::size_t currentFactoryCount = ActorInspector::GetRegisteredActorInspectorFactoryCount();
+                if (currentFactoryCount != registeredFactoryCount_)
+                {
+                    sections_ = ActorInspector::BuildActorInspectorSections();
+                    registeredFactoryCount_ = currentFactoryCount;
+                }
+
                 Game::Actor* selectedActor = selectedActorGetter_ ? selectedActorGetter_() : nullptr;
                 if (!selectedActor)
                 {
@@ -78,15 +93,21 @@ namespace BixEngine::Gui
                     return;
                 }
 
-                ActorInspector::DrawGeneralSection(*selectedActor);
-                ActorInspector::DrawTransformSection(*selectedActor);
-                ActorInspector::DrawComponentSection(*selectedActor);
+                for (auto& section : sections_)
+                {
+                    if (section)
+                    {
+                        section->Draw(*selectedActor);
+                    }
+                }
             }
 
         private:
             std::function<Game::SceneManager*()> sceneManagerProvider_{};
             std::function<Game::Actor*()> selectedActorGetter_{};
             std::function<void(Game::Actor*)> selectedActorSetter_{};
+            ActorInspector::ActorInspectorSectionList sections_{};
+            std::size_t registeredFactoryCount_{0};
         };
     }
 
