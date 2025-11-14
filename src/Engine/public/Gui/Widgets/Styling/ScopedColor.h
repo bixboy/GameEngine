@@ -1,4 +1,5 @@
 #pragma once
+#include "Gui/Widgets/Internal/ImGuiScopeBase.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui::Widgets
@@ -9,7 +10,7 @@ namespace BixEngine::Gui::Widgets
      * Utiliser cette classe pour appliquer temporairement une couleur à un contrôle.
      * Les PopStyleColor nécessaires sont automatiquement effectués à la destruction.
      */
-    class ScopedColor
+    class ScopedColor : private Internal::ImGuiScopeBase
     {
     public:
         ScopedColor(ImGuiCol colorIndex, const ImVec4& color) noexcept;
@@ -20,7 +21,5 @@ namespace BixEngine::Gui::Widgets
         ScopedColor(ScopedColor&&) = delete;
         ScopedColor& operator=(ScopedColor&&) = delete;
 
-    private:
-        bool engaged_{false};
     };
 }

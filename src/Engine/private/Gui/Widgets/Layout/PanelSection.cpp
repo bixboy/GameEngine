@@ -1,6 +1,7 @@
 #include "Gui/Widgets/Layout/PanelSection.h"
 
 #include "Gui/Widgets/Layout/Spacing.h"
+#include "imgui.h"
 
 namespace BixEngine::Gui::Widgets
 {

@@ -2,6 +2,7 @@
 
 #include "Gui/Widgets/Controls/TextHelpers.h"
 #include "Gui/Widgets/Styling/ThemeHelpers.h"
+#include "imgui.h"
 
 namespace BixEngine::Gui::Widgets
 {

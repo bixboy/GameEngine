@@ -1,5 +1,7 @@
 #include "Gui/Widgets/Controls/TextHelpers.h"
 
+#include "imgui.h"
+
 namespace BixEngine::Gui::Widgets::Controls::TextHelpers
 {
     void DrawPropertyLabel(const char* label, float columnWidth) noexcept

@@ -1,4 +1,5 @@
 #pragma once
+#include "Gui/Widgets/Internal/ImGuiScopeBase.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui::Widgets
@@ -10,7 +11,7 @@ namespace BixEngine::Gui::Widgets
      * même en cas de retour anticipé. Utiliser une instance sur la pile pour chaque
      * personnalisation de style temporaire (padding, spacing, etc.).
      */
-    class ScopedStyle
+    class ScopedStyle : private Internal::ImGuiScopeBase
     {
     public:
         ScopedStyle(ImGuiStyleVar variable, float value) noexcept;
@@ -22,7 +23,5 @@ namespace BixEngine::Gui::Widgets
         ScopedStyle(ScopedStyle&&) = delete;
         ScopedStyle& operator=(ScopedStyle&&) = delete;
 
-    private:
-        bool engaged_{false};
     };
 }

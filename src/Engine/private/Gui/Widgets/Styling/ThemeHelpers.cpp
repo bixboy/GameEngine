@@ -1,6 +1,7 @@
 #include "Gui/Widgets/Styling/ThemeHelpers.h"
 
 #include <algorithm>
+#include "imgui.h"
 
 namespace BixEngine::Gui::Widgets::ThemeHelpers
 {
