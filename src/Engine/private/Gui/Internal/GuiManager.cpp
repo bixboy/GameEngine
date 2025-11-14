@@ -1,26 +1,48 @@
 #include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
-#include "Gui/Internal/GuiPanelRegistry.h"
-#include "Gui/Internal/GuiSystem.h"
-#include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/GuiPanelBase.h"
 
 #include <algorithm>
 #include <cctype>
 #include <stdexcept>
-#include <unordered_map>
 
-#include "Gui/GuiDocking.h"
 #include "Gui/Dialogs/ModalDialog.h"
+#include "Gui/GuiPanelBase.h"
+#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Internal/GuiSystem.h"
+#include "imgui.h"
 
 namespace BixEngine::Gui
 {
+    namespace
+    {
+        bool TitleHasStableSuffix(const String& title)
+        {
+            return title.View().find("###") != String::ViewType::npos;
+        }
+
+        String MakeStableTitle(String baseTitle, const String& identifier)
+        {
+            if (TitleHasStableSuffix(baseTitle))
+                return baseTitle;
+
+            baseTitle += "###";
+            baseTitle += identifier;
+            return baseTitle;
+        }
+    }
+
     GuiManager::GuiManager(GuiSystem& guiSystem) : guiSystem_(&guiSystem)
     {
+        assetEditors_.SetGuiManager(this);
+
         registry_.OnPanelCreated = [this](GuiPanel& panel)
         {
             if (guiSystem_)
                 guiSystem_->RegisterPanel(panel);
+
+            panel.OnFocus = [this, &panel]()
+            {
+                history_.RecordVisit(panel.GetName());
+            };
 
             if (OnPanelCreated)
                 OnPanelCreated(panel);
@@ -28,6 +50,8 @@ namespace BixEngine::Gui
 
         registry_.OnPanelRemoved = [this](GuiPanel& panel)
         {
+            OnPanelRemovedInternal_(panel);
+
             if (guiSystem_)
                 guiSystem_->UnregisterPanel(panel);
 
@@ -39,11 +63,15 @@ namespace BixEngine::Gui
     GuiManager::~GuiManager()
     {
         registry_.Clear();
+        childPanels_.Clear();
+        history_.Clear();
     }
 
     GuiPanel& GuiManager::CreatePanel(String name, String title)
     {
-        return registry_.AddPanel(std::move(name), std::move(title));
+        GuiPanel& panel = registry_.AddPanel(name, title);
+        panel.SetTitle(MakeStableTitle(panel.GetTitle(), panel.GetName()));
+        return panel;
     }
 
     void GuiManager::RemovePanel(const String& name)
@@ -86,8 +114,12 @@ namespace BixEngine::Gui
 
     void GuiManager::DrawAll()
     {
-        for (auto* panel : registry_.GetAllPanels())
+        for (GuiPanel* panel : registry_.GetAllPanels())
+        {
+            if (!panel)
+                continue;
             panel->Draw();
+        }
     }
 
     std::vector<GuiPanel*> GuiManager::GetPanels()
@@ -104,7 +136,7 @@ namespace BixEngine::Gui
     {
         auto* entry = registry_.FindPanelEntry(name);
         if (!entry || !entry->panel)
-            throw std::runtime_error("Panel not found in registry.");
+            throw std::runtime_error("GuiManager::AttachController — panel introuvable");
 
         return AttachController(*entry->panel, std::move(controller));
     }
@@ -113,13 +145,20 @@ namespace BixEngine::Gui
     {
         auto* entry = registry_.FindPanelEntry(panel);
         if (!entry || !controller)
-            throw std::runtime_error("Invalid controller attachment.");
+            throw std::runtime_error("GuiManager::AttachController — paramètres invalides");
 
         if (entry->controller)
+        {
+            childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
+                                       { RemovePanel(childName); });
             entry->controller->DetachFromPanel();
+            entry->controller->UnbindManager();
+        }
+
+        controller->BindManager(*this);
+        controller->AttachToPanel(*entry->panel);
 
         GuiPanelController& ref = *controller;
-        controller->AttachToPanel(*entry->panel);
         entry->controller = std::move(controller);
 
         AttachDrawFunction_(*entry);
@@ -132,9 +171,13 @@ namespace BixEngine::Gui
         {
             if (entry->controller)
             {
+                childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
+                                            { RemovePanel(childName); });
                 entry->controller->DetachFromPanel();
+                entry->controller->UnbindManager();
                 entry->controller.reset();
             }
+
             entry->panel->SetDrawFunction(nullptr);
         }
     }
@@ -145,7 +188,10 @@ namespace BixEngine::Gui
         {
             if (entry->controller)
             {
+                childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
+                                            { RemovePanel(childName); });
                 entry->controller->DetachFromPanel();
+                entry->controller->UnbindManager();
                 entry->controller.reset();
             }
 
@@ -157,7 +203,6 @@ namespace BixEngine::Gui
     {
         if (auto* entry = registry_.FindPanelEntry(name))
             return entry->controller.get();
-
         return nullptr;
     }
 
@@ -165,8 +210,135 @@ namespace BixEngine::Gui
     {
         if (auto* entry = registry_.FindPanelEntry(name))
             return entry->controller.get();
-
         return nullptr;
+    }
+
+    GuiPanel& GuiManager::OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config)
+    {
+        String finalName = config.name;
+        if (finalName.IsEmpty())
+        {
+            finalName = parent.GetPanel().GetName();
+            finalName += "::Child";
+            finalName += std::to_string(childCounter_++).c_str();
+        }
+
+        String finalTitle = config.title.IsEmpty() ? String{"Child Panel"} : config.title;
+        GuiPanel& panel = CreatePanel(finalName, finalTitle);
+
+        panel.SetWindowFlags(config.windowFlags);
+        panel.SetClosable(true);
+        panel.SetVisible(true);
+
+        switch (config.kind)
+        {
+        case GuiPanelController::ChildPanelKind::FloatingWindow:
+            panel.ResetDockingPreference();
+            break;
+        case GuiPanelController::ChildPanelKind::SecondaryDocked:
+            panel.SetDockingPreference(config.dockRegion, config.dockCondition);
+            break;
+        case GuiPanelController::ChildPanelKind::PersistentPopup:
+            panel.ResetDockingPreference();
+            panel.AddWindowFlags(ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking);
+            break;
+        }
+
+        if (config.requestFocus)
+            panel.RequestFocus();
+
+        childPanels_.RegisterChild(parent, panel.GetName(), config.closeWithParent);
+        return panel;
+    }
+
+    void GuiManager::CloseChildPanels(GuiPanelController& parent)
+    {
+        childPanels_.RemoveChildren(parent, [this](const String& childName)
+        { RemovePanel(childName); });
+    }
+
+    bool GuiManager::NavigateBack()
+    {
+        if (const String* target = history_.NavigateBack())
+            return FocusPanel(*target);
+        return false;
+    }
+
+    bool GuiManager::NavigateForward()
+    {
+        if (const String* target = history_.NavigateForward())
+            return FocusPanel(*target);
+        return false;
+    }
+
+    void GuiManager::NavigateHome()
+    {
+        if (const String* target = history_.NavigateHome())
+            FocusPanel(*target);
+    }
+
+    bool GuiManager::FocusPanel(const String& name)
+    {
+        if (GuiPanel* panel = FindPanel(name))
+        {
+            panel->SetVisible(true);
+            panel->RequestFocus();
+            return true;
+        }
+        return false;
+    }
+
+    void GuiManager::RegisterWorkspace(WorkspaceRegistry::Workspace workspace)
+    {
+        workspaces_.RegisterWorkspace(std::move(workspace));
+    }
+
+    bool GuiManager::ActivateWorkspace(const String& name)
+    {
+        return workspaces_.ActivateWorkspace(name, *this);
+    }
+
+    const WorkspaceRegistry::Workspace* GuiManager::GetActiveWorkspace() const noexcept
+    {
+        return workspaces_.GetActiveWorkspace();
+    }
+
+    void GuiManager::RegisterLayoutManager(GuiLayoutManager& layoutManager) noexcept
+    {
+        layoutManager_ = &layoutManager;
+        workspaces_.SetLayoutManager(&layoutManager);
+    }
+
+    void GuiManager::AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry)
+    {
+        if (!entry.panel || !entry.controller)
+            return;
+
+        GuiPanel* panel = entry.panel.get();
+        GuiPanelController* controller = entry.controller.get();
+
+        panel->SetDrawFunction([this, controller, panel]()
+        {
+            controller->DrawPanel();
+            if (panel->IsFocused())
+                history_.RecordVisit(panel->GetName());
+        });
+    }
+
+    void GuiManager::OnPanelRemovedInternal_(GuiPanel& panel)
+    {
+        assetEditors_.UnregisterPanel(panel.GetName());
+        childPanels_.UnregisterChildByName(panel.GetName());
+
+        if (auto* entry = registry_.FindPanelEntry(panel))
+        {
+            if (entry->controller)
+            {
+                entry->controller->DetachFromPanel();
+                entry->controller->UnbindManager();
+                entry->controller.reset();
+            }
+        }
     }
 
     std::unordered_map<std::string, GuiManager::RegisteredPanel>& GuiManager::StaticPanelRegistry_()
@@ -183,63 +355,14 @@ namespace BixEngine::Gui
         for (char ch : name.View())
         {
             if (std::isalnum(static_cast<unsigned char>(ch)))
-            {
                 identifier += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-            }
             else if (ch == ' ' || ch == '-' || ch == ':')
-            {
                 identifier += '_';
-            }
         }
 
         if (identifier.IsEmpty())
             identifier = "panel";
 
         return identifier;
-    }
-
-    void GuiManager::UnregisterPanel(const String& displayName)
-    {
-        StaticPanelRegistry_().erase(displayName.Std());
-    }
-
-    GuiPanelBase* GuiManager::CreatePanelByName(const String& displayName)
-    {
-        auto& staticRegistry = StaticPanelRegistry_();
-        const auto it = staticRegistry.find(displayName.Std());
-        if (it == staticRegistry.end())
-            return nullptr;
-
-        RegisteredPanel& entry = it->second;
-        if (!entry.factory)
-            return nullptr;
-
-        if (GuiPanelBase* existingController = GetControllerAs<GuiPanelBase>(entry.identifier))
-            return existingController;
-
-        auto controller = entry.factory();
-        if (!controller)
-            return nullptr;
-
-        GuiPanel& panel = CreatePanel(entry.identifier, entry.displayName);
-        GuiPanelBase* controllerPtr = controller.get();
-        AttachController(panel, std::move(controller));
-        return controllerPtr;
-    }
-
-    void GuiManager::AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry)
-    {
-        if (!entry.panel)
-            return;
-
-        if (entry.controller)
-        {
-            GuiPanelController* ctrl = entry.controller.get();
-            entry.panel->SetDrawFunction([ctrl]() { ctrl->DrawPanel(); });
-        }
-        else
-        {
-            entry.panel->SetDrawFunction(nullptr);
-        }
     }
 }

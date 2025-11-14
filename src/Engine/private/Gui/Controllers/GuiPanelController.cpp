@@ -1,6 +1,9 @@
 #include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/Internal/GuiPanel.h"
 
+#include <stdexcept>
+
+#include "Gui/GuiManager.h"
+#include "Gui/Internal/GuiPanel.h"
 
 namespace BixEngine::Gui
 {
@@ -35,5 +38,53 @@ namespace BixEngine::Gui
     const GuiPanel& GuiPanelController::GetPanel() const noexcept
     {
         return *panel_;
+    }
+
+    GuiPanel& GuiPanelController::OpenChildPanel(const ChildPanelConfig& config)
+    {
+        if (!guiManager_)
+            throw std::runtime_error("GuiPanelController::OpenChildPanel — aucun GuiManager associé.");
+
+        return guiManager_->OpenChildPanel(*this, config);
+    }
+
+    void GuiPanelController::CloseChildPanels()
+    {
+        if (!guiManager_)
+            return;
+
+        guiManager_->CloseChildPanels(*this);
+    }
+
+    bool GuiPanelController::NavigateBack()
+    {
+        if (!guiManager_)
+            return false;
+
+        return guiManager_->NavigateBack();
+    }
+
+    bool GuiPanelController::NavigateForward()
+    {
+        if (!guiManager_)
+            return false;
+
+        return guiManager_->NavigateForward();
+    }
+
+    void GuiPanelController::NavigateHome()
+    {
+        if (!guiManager_)
+            return;
+
+        guiManager_->NavigateHome();
+    }
+
+    void GuiPanelController::NavigateToPanel(const String& name)
+    {
+        if (!guiManager_)
+            return;
+
+        guiManager_->FocusPanel(name);
     }
 }

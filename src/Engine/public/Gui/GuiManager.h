@@ -1,4 +1,6 @@
 #pragma once
+
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <span>
@@ -8,18 +10,23 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "Containers/String.h"
-#include "Gui/GuiDocking.h"
-#include "Gui/Internal/GuiPanelRegistry.h"
-#include "imgui.h"
 
+#include "Containers/String.h"
+#include "Gui/Controllers/GuiPanelController.h"
+#include "Gui/GuiDocking.h"
+#include "Gui/Internal/AssetEditorRegistry.h"
+#include "Gui/Internal/ChildPanelManager.h"
+#include "Gui/Internal/GuiPanelRegistry.h"
+#include "Gui/Internal/PanelHistory.h"
+#include "Gui/Internal/WorkspaceRegistry.h"
+#include "imgui.h"
 
 namespace BixEngine::Gui
 {
-    class GuiSystem;
+    class GuiLayoutManager;
     class GuiPanel;
-    class GuiPanelController;
     class GuiPanelBase;
+    class GuiSystem;
 
     template <typename ControllerT>
     struct PanelRegistration
@@ -29,8 +36,11 @@ namespace BixEngine::Gui
     };
 
     /**
-     * @brief Central entry point that orchestrates panel creation, registration and
-     * controller binding for the editor GUI.
+     * @brief Gestionnaire central des panneaux ImGui et de leurs contrôleurs.
+     *
+     * Il orchestre l'ouverture/fermeture des panneaux, assure la liaison avec les
+     * contrôleurs, maintient l'historique de navigation ainsi que les workspaces
+     * et fournit un registre commun pour les éditeurs d'assets.
      */
     class GuiManager
     {
@@ -49,6 +59,15 @@ namespace BixEngine::Gui
         PanelT& CreatePanelOfType(String name, String title, Args&&... args)
         {
             return registry_.AddPanelOfType<PanelT>(std::move(name), std::move(title), std::forward<Args>(args)...);
+        }
+
+        template <typename ControllerT, typename... Args>
+        ControllerT& OpenPanel(String name, String title, Args&&... args)
+        {
+            GuiPanel& panel = CreatePanel(std::move(name), std::move(title));
+            auto controller = std::make_unique<ControllerT>(std::forward<Args>(args)...);
+            ControllerT& ref = static_cast<ControllerT&>(AttachController(panel, std::move(controller)));
+            return ref;
         }
 
         void RemovePanel(const String& name);
@@ -89,7 +108,26 @@ namespace BixEngine::Gui
             return {panel, controllerRef};
         }
 
-        /** Registers a panel type inside the static factory. */
+        GuiPanel& OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config);
+        void CloseChildPanels(GuiPanelController& parent);
+
+        bool NavigateBack();
+        bool NavigateForward();
+        void NavigateHome();
+        bool FocusPanel(const String& name);
+
+        [[nodiscard]] PanelHistory& GetHistory() noexcept { return history_; }
+        [[nodiscard]] const PanelHistory& GetHistory() const noexcept { return history_; }
+
+        void RegisterWorkspace(WorkspaceRegistry::Workspace workspace);
+        bool ActivateWorkspace(const String& name);
+        [[nodiscard]] const WorkspaceRegistry::Workspace* GetActiveWorkspace() const noexcept;
+
+        void RegisterLayoutManager(GuiLayoutManager& layoutManager) noexcept;
+
+        [[nodiscard]] AssetEditorRegistry& GetAssetEditorRegistry() noexcept { return assetEditors_; }
+        [[nodiscard]] const AssetEditorRegistry& GetAssetEditorRegistry() const noexcept { return assetEditors_; }
+
         template <typename PanelT, typename... Args>
         static void RegisterPanel(const String& displayName, Args&&... args)
         {
@@ -103,18 +141,13 @@ namespace BixEngine::Gui
             entry.factory = [argsTuple]() mutable -> std::unique_ptr<GuiPanelBase>
             {
                 return std::apply([](auto&... captured)
-                {
-                    return std::make_unique<PanelT>(captured...);
-                }, argsTuple);
+                { return std::make_unique<PanelT>(captured...); }, argsTuple);
             };
 
             registry[displayName.Std()] = std::move(entry);
         }
 
-        /** Removes a panel factory entry from the static registry. */
         static void UnregisterPanel(const String& displayName);
-
-        /** Creates a panel instance using the static registry. */
         GuiPanelBase* CreatePanelByName(const String& displayName);
 
         std::function<void(GuiPanel&)> OnPanelCreated;
@@ -132,9 +165,16 @@ namespace BixEngine::Gui
         static String SanitizeIdentifier_(const String& name);
 
         GuiSystem* guiSystem_{nullptr};
-        GuiPanelRegistry registry_;
+        GuiPanelRegistry registry_{};
+        PanelHistory history_{};
+        ChildPanelManager childPanels_{};
+        WorkspaceRegistry workspaces_{};
+        AssetEditorRegistry assetEditors_{};
+        GuiLayoutManager* layoutManager_{nullptr};
+        std::uint64_t childCounter_{0};
 
         void AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry);
+        void OnPanelRemovedInternal_(GuiPanel& panel);
     };
 }
 

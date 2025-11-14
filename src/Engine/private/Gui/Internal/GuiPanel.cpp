@@ -90,6 +90,12 @@ namespace BixEngine::Gui
 
         ImGui::PushID(name_.c_str());
 
+        if (requestFocus_)
+        {
+            ImGui::SetNextWindowFocus();
+            requestFocus_ = false;
+        }
+
         if (usePosition_)
             ImGui::SetNextWindowPos(position_, positionCondition_);
 

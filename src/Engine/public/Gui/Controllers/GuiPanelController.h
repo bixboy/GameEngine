@@ -1,7 +1,14 @@
 #pragma once
 
+#include <functional>
+#include <vector>
+
+#include "Containers/String.h"
+#include "Gui/GuiDocking.h"
+
 namespace BixEngine::Gui
 {
+    class GuiManager;
     class GuiPanel;
 
     /**
@@ -32,15 +39,65 @@ namespace BixEngine::Gui
         void DetachFromPanel();
 
         /**
+         * @brief Attache le contrôleur au GuiManager actif.
+         */
+        void BindManager(GuiManager& manager) noexcept { guiManager_ = &manager; }
+
+        /**
+         * @brief Détache le contrôleur de tout GuiManager.
+         */
+        void UnbindManager() noexcept { guiManager_ = nullptr; }
+
+        /**
          * Executes the draw routine of the controller for the attached panel.
          */
         void DrawPanel();
+
+        enum class ChildPanelKind
+        {
+            FloatingWindow,
+            SecondaryDocked,
+            PersistentPopup
+        };
+
+        struct ChildPanelConfig
+        {
+            String name{};                ///< Identifiant interne stable
+            String title{};               ///< Titre visible ImGui
+            ChildPanelKind kind{ChildPanelKind::FloatingWindow};
+            DockSpaceRegion dockRegion{DockSpaceRegion::Center};
+            ImGuiCond dockCondition{ImGuiCond_Appearing};
+            ImGuiWindowFlags windowFlags{ImGuiWindowFlags_None};
+            bool closeWithParent{true};
+            bool requestFocus{true};
+        };
 
     protected:
         GuiPanelController() = default;
 
         [[nodiscard]] GuiPanel& GetPanel() noexcept;
         [[nodiscard]] const GuiPanel& GetPanel() const noexcept;
+
+        [[nodiscard]] GuiManager* GetGuiManager() noexcept { return guiManager_; }
+        [[nodiscard]] const GuiManager* GetGuiManager() const noexcept { return guiManager_; }
+
+        /**
+         * @brief Crée ou récupère un panneau enfant géré par le GuiManager.
+         */
+        GuiPanel& OpenChildPanel(const ChildPanelConfig& config);
+
+        /**
+         * @brief Ferme tous les panneaux enfants appartenant à ce contrôleur.
+         */
+        void CloseChildPanels();
+
+        /**
+         * @brief Navigation dans l'historique global.
+         */
+        bool NavigateBack();
+        bool NavigateForward();
+        void NavigateHome();
+        void NavigateToPanel(const String& name);
 
         virtual void OnAttach(GuiPanel& panel)
         {
@@ -56,6 +113,7 @@ namespace BixEngine::Gui
 
     private:
         GuiPanel* panel_{nullptr};
+        GuiManager* guiManager_{nullptr};
     };
 }
 

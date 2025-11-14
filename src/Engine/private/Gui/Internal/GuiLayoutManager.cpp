@@ -25,6 +25,8 @@ namespace BixEngine::Gui
 
     GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager) : guiSystem_(&guiSystem), guiManager_(&guiManager)
     {
+        guiManager.RegisterLayoutManager(*this);
+
         dockspaceNames_[EditorLayoutType::Scene] = "SceneDockspace";
         dockspaceNames_[EditorLayoutType::ActorEditor] = "ActorEditorDockspace";
 
