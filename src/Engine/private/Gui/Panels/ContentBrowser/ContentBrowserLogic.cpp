@@ -414,21 +414,61 @@ namespace BixEngine::Gui
                 // Menu contextuel par item
                 if (ImGui::BeginPopupContextItem("EntryCtx"))
                 {
+                    const bool isScript = entry.IsScript();
+
                     if (ImGui::MenuItem("Rename"))
                     {
-                        req.renameTarget = entry.path;
+                        if (isScript)
+                        {
+                            req.renameTarget = entry.headerPath;
+                            req.renameSecondaryTarget = entry.sourcePath;
+                            req.renameTargetIsScriptGroup = true;
+                        }
+                        else
+                        {
+                            req.renameTarget = entry.path;
+                            req.renameSecondaryTarget.clear();
+                            req.renameTargetIsScriptGroup = false;
+                        }
+
                         req.renameEntry = true;
                     }
 
                     if (ImGui::MenuItem("Delete"))
                     {
                         String err;
-                        FileUtils::TryRemove(entry.path, entry.IsDirectory(), err);
-                        state.cache.dirty = true;
+                        const bool removed = isScript
+                            ? DeleteScriptFiles(entry, err)
+                            : FileUtils::TryRemove(entry.path, entry.IsDirectory(), err);
+
+                        if (!removed)
+                        {
+                            state.error = err;
+                        }
+                        else
+                        {
+                            state.error.Clear();
+                            selected.Clear();
+                            state.cache.dirty = true;
+                        }
                     }
 
                     if (ImGui::MenuItem("Show in Explorer"))
-                        EditorUtils::ShowPathInExplorer(entry.path, entry.IsDirectory());
+                    {
+                        fs::path targetPath = entry.path;
+                        bool targetIsDirectory = entry.IsDirectory();
+
+                        if (isScript)
+                        {
+                            targetPath = !entry.headerPath.empty() ? entry.headerPath : entry.sourcePath;
+                            targetIsDirectory = false;
+
+                            if (targetPath.empty())
+                                targetPath = entry.path;
+                        }
+
+                        EditorUtils::ShowPathInExplorer(targetPath, targetIsDirectory);
+                    }
 
                     ImGui::EndPopup();
                 }

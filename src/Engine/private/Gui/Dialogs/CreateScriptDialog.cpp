@@ -447,7 +447,8 @@ void CreateScriptDialog::DrawContent()
     }
 
     // Succès : maj état, sélection, fermeture
-    selectedEntry_ = headerPath.generic_string().c_str();
+    const path selectionKey = headerPath.parent_path() / baseNameStr;
+    selectedEntry_ = selectionKey.generic_string().c_str();
     scriptError_.Clear();
     
     ClearParentSelection();
