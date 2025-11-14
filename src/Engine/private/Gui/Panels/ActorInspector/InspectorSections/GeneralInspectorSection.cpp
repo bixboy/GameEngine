@@ -1,4 +1,4 @@
-#include "Gui/Panels/ActorInspector/GeneralInspectorSection.h"
+#include "Gui/Panels/ActorInspector/InspectorSections/GeneralInspectorSection.h"
 
 #include "Gui/Panels/ActorInspector/ActorInspectorState.h"
 #include "Gui/Panels/ActorInspector/ImGuiControls.h"
@@ -10,6 +10,7 @@
 
 #include <imgui.h>
 #include <string>
+
 
 namespace BixEngine::Gui::ActorInspector
 {

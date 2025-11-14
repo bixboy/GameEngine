@@ -13,7 +13,7 @@ namespace BixEngine::Gui::ActorInspector
 
     template <typename T>
     bool DrawDragControl(const char* label, T& value, float speed = 1.0f, const void* minValue = nullptr,
-                         const void* maxValue = nullptr, const char* format = nullptr)
+        const void* maxValue = nullptr, const char* format = nullptr)
     {
         ImGuiDataType dataType{};
         if constexpr (std::is_same_v<T, int>)

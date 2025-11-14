@@ -1,4 +1,4 @@
-#include "Gui/Panels/ActorInspector/ComponentInspectorSection.h"
+#include "Gui/Panels/ActorInspector/InspectorSections/ComponentInspectorSection.h"
 
 #include "Gui/Panels/ActorInspector/ImGuiControls.h"
 #include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
@@ -16,6 +16,7 @@
 #include <utility>
 
 #include <imgui.h>
+
 
 namespace BixEngine::Gui::ActorInspector
 {

@@ -1,11 +1,5 @@
 #pragma once
-
-#include "Gui/Panels/ActorInspector/ActorInspectorSection.h"
-
-namespace BixEngine::Game
-{
-    class Actor;
-}
+#include "Gui/Panels/ActorInspector/InspectorSections/ActorInspectorSection.h"
 
 namespace BixEngine::Gui::ActorInspector
 {

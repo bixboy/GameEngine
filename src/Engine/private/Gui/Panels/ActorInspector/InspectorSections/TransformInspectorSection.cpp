@@ -1,4 +1,4 @@
-#include "Gui/Panels/ActorInspector/TransformInspectorSection.h"
+#include "Gui/Panels/ActorInspector/InspectorSections/TransformInspectorSection.h"
 
 #include "Gui/Panels/ActorInspector/ImGuiControls.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
@@ -8,6 +8,7 @@
 #include "Math/Vector3.h"
 #include <algorithm>
 #include <string>
+
 
 namespace BixEngine::Gui::ActorInspector
 {
