@@ -37,8 +37,7 @@ namespace BixEngine::resources
          * @brief Loads and parses a JSON atlas description.
          * @return True if parsing succeeded.
          */
-        bool ParseAtlasFile(const String& path, SpriteAtlasDefinition& outDefinition,
-                            std::vector<SpriteAnimationDefinition>& outAnimations);
+        bool ParseAtlasFile(const String& path, SpriteAtlasDefinition& outDefinition, std::vector<SpriteAnimationDefinition>& outAnimations);
 
         /**
          * @brief Generates sprite frames using a grid layout definition.

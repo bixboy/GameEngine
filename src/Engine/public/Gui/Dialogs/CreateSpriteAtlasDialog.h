@@ -1,10 +1,10 @@
 #pragma once
 #include <filesystem>
 #include <vector>
+#include <string>
 #include "Containers/String.h"
 #include "Gui/Dialogs/ModalDialog.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-
 
 namespace BixEngine::Gui
 {
@@ -41,6 +41,7 @@ namespace BixEngine::Gui
         path framesDir_;
         path texturePath_;
         std::vector<path> textureCandidates_;
+
         char texturePathBuffer_[260];
 
         String atlasError_;

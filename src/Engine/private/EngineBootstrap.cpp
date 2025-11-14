@@ -1,13 +1,11 @@
-#include "Bootstrap/EngineBootstrap.h"
-
+#include "EngineBootstrap.h"
 #include "Logger.h"
 #include "Containers/String.h"
 #include "Systems/Window.h"
 #include "Components/ComponentRegistry.h"
 #include "Renderer.h"
 #include "Ressources/ResourceManager.h"
-#include "Ressources/SpriteAtlas.h"
-#include "Ressources/Texture.h"
+#include "Ressources/Loaders/ResourceLoaders.h"
 
 namespace
 {
@@ -68,26 +66,8 @@ namespace BixEngine::Core
 
         // --- Resource Manager ---
         LOG_INFO("Configuring resource loaders...");
-        auto& resourceManager = resources::ResourceManager::Get();
+        resources::RegisterAllResourceLoaders(renderer_->GetSDLRenderer());
 
-        resourceManager.RegisterLoader<resources::Texture>([](const String& path) -> std::shared_ptr<resources::Texture>
-        {
-            auto texture = std::make_shared<resources::Texture>();
-            if (!texture->LoadFromFile(path))
-                return nullptr;
-
-            return texture;
-        });
-
-        resourceManager.RegisterLoader<resources::SpriteAtlas>(
-            [](const String& path) -> std::shared_ptr<resources::SpriteAtlas>
-            {
-                auto atlas = std::make_shared<resources::SpriteAtlas>();
-                if (!atlas->LoadFromFile(path))
-                    return nullptr;
-
-                return atlas;
-            });
 
         // --- GUI ---
         LOG_INFO("Initializing GUI module...");

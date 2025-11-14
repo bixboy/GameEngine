@@ -1,4 +1,4 @@
-#include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
+﻿#include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Ressources/AtlasGenerator.h"
 #include "Ressources/SpriteAtlasFactory.h"
@@ -7,6 +7,9 @@
 
 #include <algorithm>
 #include <cstdio>
+
+#include "Ressources/ResourceManager.h"
+#include "Ressources/Texture.h"
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
@@ -161,10 +164,52 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
 {
     DrawSeparatorText("Texture source");
 
-    const bool pathEdited = InputTextWithLabel("Texture (.png)", texturePathBuffer_, IM_ARRAYSIZE(texturePathBuffer_),
-        ImGuiInputTextFlags_None);
+    ImGui::Columns(2, nullptr, false);
 
-    if (pathEdited)
+    //
+    // ───────────────────────────────────────────
+    // LEFT COLUMN — PNG LIST
+    // ───────────────────────────────────────────
+    //
+    ImGui::Text("PNG files:");
+    ImGui::Separator();
+
+    ImGui::BeginChild("PNG_LIST", ImVec2(0, 250), true);
+
+    for (const auto& candidate : textureCandidates_)
+    {
+        const std::string display = GetDisplayName(candidate);
+        const bool selected = (candidate == texturePath_);
+
+        if (ImGui::Selectable(display.c_str(), selected))
+        {
+            SetTexturePath(candidate);
+            atlasError_.Clear();
+        }
+    }
+
+    if (textureCandidates_.empty())
+        ImGui::TextDisabled("No PNG textures found.");
+
+    ImGui::EndChild();
+
+    if (ImGui::Button("Refresh"))
+        RefreshTextureCandidates();
+
+    ImGui::NextColumn();
+
+
+    //
+    // ───────────────────────────────────────────
+    // RIGHT COLUMN — PREVIEW + PATH
+    // ───────────────────────────────────────────
+    //
+    ImGui::Text("Selected texture:");
+    ImGui::Separator();
+
+    const bool edited = InputTextWithLabel("Path", texturePathBuffer_, IM_ARRAYSIZE(texturePathBuffer_));
+
+    if (edited)
     {
         if (texturePathBuffer_[0] == '\0')
             texturePath_.clear();
@@ -172,50 +217,52 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
             texturePath_ = path(texturePathBuffer_);
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button("Use selection"))
+    ImGui::Spacing();
+    ImGui::Text("Preview:");
+
+    // No texture selected
+    if (texturePath_.empty() || !fs::exists(texturePath_))
     {
-        const path selected = GetSelectedContentPath();
-        if (!selected.empty() && selected.extension() == ".png")
-        {
-            SetTexturePath(selected);
-            atlasError_.Clear();
-        }
-        else
-        {
-            FileUtils::LogAndStoreError(atlasError_, "Select a PNG texture in the Content Browser to use it.", false);
-        }
+        ImGui::TextDisabled("No texture selected.");
+        ImGui::Columns(1);
+        return;
     }
 
-    ImGui::SameLine();
-    if (ImGui::Button("Refresh list"))
-        RefreshTextureCandidates();
+    // Load texture resource
+    auto tex = resources::ResourceManager::Get().Get<resources::Texture>(
+        texturePath_.generic_string().c_str()
+    );
 
-    const char* preview = texturePathBuffer_[0] != '\0' ? texturePathBuffer_ : "(none)";
-
-    if (ImGui::BeginCombo("Available PNG files", preview))
+    if (!tex)
     {
-        for (const auto& candidate : textureCandidates_)
-        {
-            const std::string display = GetDisplayName(candidate);
-            const bool selected = (!texturePath_.empty() && candidate == texturePath_);
-
-            if (ImGui::Selectable(display.c_str(), selected))
-            {
-                SetTexturePath(candidate);
-                atlasError_.Clear();
-            }
-
-            if (selected)
-                ImGui::SetItemDefaultFocus();
-        }
-        ImGui::EndCombo();
+        ImGui::TextDisabled("Failed to load texture.");
+        ImGui::Columns(1);
+        return;
     }
-    else if (textureCandidates_.empty())
+
+    if (!tex->GetNativeHandle())
     {
-        ImGui::TextDisabled("No PNG textures found in this directory.");
+        ImGui::TextDisabled("Texture invalid or not loaded.");
+        ImGui::Columns(1);
+        return;
     }
+
+    //
+    // Display preview (SDL_Texture*)
+    //
+    float previewW = 128.0f;
+    float aspect = (float)tex->GetWidth() / (float)tex->GetHeight();
+    float previewH = previewW / aspect;
+
+    // ImGui SDL renderer backend — correct way :
+    ImGui::Image(tex->GetNativeHandle(), ImVec2(previewW, previewH));
+
+    ImGui::Text("Size: %d x %d", tex->GetWidth(), tex->GetHeight());
+    ImGui::Text("File: %s", texturePath_.filename().string().c_str());
+
+    ImGui::Columns(1);
 }
+
 
 // ─────────────────────────────────────────────────────────────
 // Atlas Generation
@@ -378,7 +425,7 @@ void CreateSpriteAtlasDialog::SetTexturePath(const path& newPath)
     std::snprintf(texturePathBuffer_, IM_ARRAYSIZE(texturePathBuffer_), "%s", display.c_str());
 }
 
-CreateSpriteAtlasDialog::path CreateSpriteAtlasDialog::ResolveTexturePath() const
+path CreateSpriteAtlasDialog::ResolveTexturePath() const
 {
     if (!texturePath_.empty())
     {
@@ -420,14 +467,15 @@ std::string CreateSpriteAtlasDialog::GetDisplayName(const path& value) const
     {
         std::error_code relativeError;
         path relative = fs::relative(value, state_.root, relativeError);
-        if (!relativeError && !relative.empty() && relative.native().rfind("..", 0) != 0)
+        
+        if (!relativeError && !relative.empty() && relative.native().rfind(L"..", 0) != 0)
             return relative.generic_string();
     }
 
     return value.generic_string();
 }
 
-CreateSpriteAtlasDialog::path CreateSpriteAtlasDialog::GetSelectedContentPath() const
+path CreateSpriteAtlasDialog::GetSelectedContentPath() const
 {
     if (selectedEntry_.IsEmpty())
         return {};
