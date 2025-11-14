@@ -74,6 +74,7 @@ namespace BixEngine::Gui
         case Section::Toolbar:
             DrawToolbar();
             break;
+            
         case Section::Inspector:
             DrawInspector();
             break;
@@ -117,8 +118,8 @@ namespace BixEngine::Gui
 
         Utils::DrawLabelValue("Name", state->assetDisplayName.View().data(), "Prefab");
         Utils::DrawLabelValue("Path", state->assetPath.generic_string(), "");
-        Utils::DrawLabelValue("Script", state->primaryClassName.empty() ? "Unknown" : state->primaryClassName.c_str(),
-                              "Unknown");
+        Utils::DrawLabelValue("Script", state->primaryClassName.empty() ? "Unknown" : state->primaryClassName.c_str(), "Unknown");
+        
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
     }

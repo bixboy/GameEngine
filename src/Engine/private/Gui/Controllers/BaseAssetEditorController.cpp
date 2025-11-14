@@ -76,17 +76,27 @@ namespace BixEngine::Gui
 
         title += " - ";
         if (state_ && !state_->assetDisplayName.IsEmpty())
+        {
             title += state_->assetDisplayName;
+        }
         else
+        {
             title += "Untitled";
+        }
 
         title += "###";
         if (!stablePanelId_.IsEmpty())
+        {
             title += stablePanelId_;
+        }
         else if (state_ && !state_->stableIdRoot.IsEmpty())
+        {
             title += state_->stableIdRoot;
+        }
         else
+        {
             title += "AssetEditor";
+        }
 
         panel.SetTitle(std::move(title));
     }

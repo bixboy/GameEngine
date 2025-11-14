@@ -513,9 +513,7 @@ namespace BixEngine::Gui
         if (!layoutChanged && static_cast<int>(state.frames.size()) == expectedCount)
             return;
 
-        auto frames = resources::SpriteAtlasUtils::GenerateFrames(*state.texture, columns, rows,
-                                                                  state.definition.padding, state.definition.margin);
-
+        auto frames = resources::SpriteAtlasUtils::GenerateFrames(*state.texture, columns, rows, state.definition.padding, state.definition.margin);
         if (frames.empty())
         {
             state.frames.clear();
@@ -557,8 +555,7 @@ namespace BixEngine::Gui
         state.frameSelection[frameIndex] = !state.frameSelection[frameIndex];
     }
 
-    void SpriteAtlasEditorController::AssignSelectionToAnimation(SharedState& state,
-                                                                 resources::SpriteAnimationDefinition& animation)
+    void SpriteAtlasEditorController::AssignSelectionToAnimation(SharedState& state, resources::SpriteAnimationDefinition& animation)
     {
         animation.frames.clear();
         for (int index = 0; index < static_cast<int>(state.frameSelection.size()); ++index)
@@ -577,8 +574,7 @@ namespace BixEngine::Gui
         }
 
         String saveError;
-        if (!resources::SpriteAtlasFactory::SaveAtlasFile(state.atlasPath, state.definition, state.animations,
-                                                          saveError))
+        if (!resources::SpriteAtlasFactory::SaveAtlasFile(state.atlasPath, state.definition, state.animations, saveError))
         {
             state.error = saveError;
             return false;
@@ -594,6 +590,7 @@ namespace BixEngine::Gui
     {
         if (state.definition.columns <= 0 || state.definition.rows <= 0)
             return 0;
+        
         return state.definition.columns * state.definition.rows;
     }
 
