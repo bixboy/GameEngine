@@ -1,8 +1,11 @@
 #include "Gui/Internal/GuiLayoutManager.h"
 #include <algorithm>
 #include <array>
+#include <cctype>
 #include <filesystem>
 #include <fstream>
+#include <format>
+#include <optional>
 #include <string_view>
 #include <system_error>
 #include <unordered_set>
@@ -19,8 +22,77 @@ namespace BixEngine::Gui
     {
         constexpr auto kRootDockspaceWindow = "EditorRootDockspace";
         constexpr std::string_view kLayoutStorageFileName = "imgui_layouts.dat";
-        constexpr std::string_view kFileVersionLine = "Version:1";
+        constexpr std::string_view kFileVersionLineV1 = "Version:1";
+        constexpr std::string_view kFileVersionLineV2 = "Version:2";
         constexpr std::string_view kActiveLayoutPrefix = "Active=";
+        constexpr std::string_view kRegionIdsPrefix = "RegionIds=";
+
+        using DockRegionArray = std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)>;
+
+        std::string SerializeRegionIds(const DockRegionArray& ids)
+        {
+            std::string result{"RegionIds="};
+            for (std::size_t i = 0; i < ids.size(); ++i)
+            {
+                result += std::format("0x{:08X}", ids[i]);
+                if (i + 1 < ids.size())
+                    result += ',';
+            }
+            return result;
+        }
+
+        std::string_view TrimWhitespace(std::string_view value)
+        {
+            while (!value.empty() && std::isspace(static_cast<unsigned char>(value.front())))
+                value.remove_prefix(1);
+
+            while (!value.empty() && std::isspace(static_cast<unsigned char>(value.back())))
+                value.remove_suffix(1);
+
+            return value;
+        }
+
+        DockRegionArray ParseRegionIds(const std::string& line)
+        {
+            DockRegionArray ids{};
+            if (line.rfind(kRegionIdsPrefix.data(), 0) != 0)
+                return ids;
+
+            std::string_view values(line);
+            values.remove_prefix(kRegionIdsPrefix.size());
+
+            std::size_t index = 0;
+            while (!values.empty() && index < ids.size())
+            {
+                const std::size_t commaPos = values.find(',');
+                std::string_view token = (commaPos == std::string_view::npos)
+                                             ? values
+                                             : values.substr(0, commaPos);
+
+                token = TrimWhitespace(token);
+
+                if (!token.empty())
+                {
+                    try
+                    {
+                        const unsigned long parsed = std::stoul(std::string(token), nullptr, 0);
+                        ids[index] = static_cast<ImGuiID>(parsed);
+                    }
+                    catch (...)
+                    {
+                        ids[index] = 0;
+                    }
+                }
+
+                ++index;
+                if (commaPos == std::string_view::npos)
+                    break;
+
+                values.remove_prefix(commaPos + 1);
+            }
+
+            return ids;
+        }
     }
 
     GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager) : guiSystem_(&guiSystem), guiManager_(&guiManager)
@@ -74,8 +146,10 @@ namespace BixEngine::Gui
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        const std::string serialized = guiSystem_->SaveLayoutToMemory();
-        layoutData_[currentLayout_] = serialized;
+        StoredLayout record{};
+        record.serialized = guiSystem_->SaveLayoutToMemory();
+        record.dockRegionIds = guiSystem_->GetDockRegionIds();
+        layoutData_[currentLayout_] = std::move(record);
     }
 
     void GuiLayoutManager::SaveAllLayoutsToDisk()
@@ -134,15 +208,25 @@ namespace BixEngine::Gui
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
+        DockRegionArray regionIds{};
+
         auto it = layoutData_.find(layout);
-        if (it != layoutData_.end() && !it->second.empty())
+        if (it != layoutData_.end())
         {
-            guiSystem_->LoadLayoutFromMemory(it->second);
+            const StoredLayout& record = it->second;
+            if (!record.serialized.empty())
+                guiSystem_->LoadLayoutFromMemory(record.serialized);
+            else
+                guiSystem_->RequestDefaultDockLayout();
+
+            regionIds = record.dockRegionIds;
         }
         else
         {
             guiSystem_->RequestDefaultDockLayout();
         }
+
+        guiSystem_->SetDockRegionIds(regionIds);
 
         initializedLayouts_.insert(layout);
     }
@@ -280,15 +364,33 @@ namespace BixEngine::Gui
         if (!file.is_open())
             return;
 
+        std::optional<std::string> pendingLine;
+        bool versionParsed = false;
+        bool supportsRegionIds = false;
+
         std::string line;
-        while (std::getline(file, line))
+        while (true)
         {
+            if (pendingLine)
+            {
+                line = std::move(*pendingLine);
+                pendingLine.reset();
+            }
+            else if (!std::getline(file, line))
+            {
+                break;
+            }
+
             TrimTrailingCarriageReturn_(line);
             if (line.empty())
                 continue;
 
-            if (line.rfind(kFileVersionLine.data(), 0) == 0)
+            if (!versionParsed && (line == kFileVersionLineV1 || line == kFileVersionLineV2))
+            {
+                supportsRegionIds = (line == kFileVersionLineV2);
+                versionParsed = true;
                 continue;
+            }
 
             if (line.rfind(kActiveLayoutPrefix.data(), 0) == 0)
             {
@@ -324,10 +426,11 @@ namespace BixEngine::Gui
                 }
             }
 
-            std::string data(dataSize, '\0');
+            StoredLayout record{};
             if (dataSize > 0)
             {
-                file.read(data.data(), dataSize);
+                record.serialized.resize(dataSize);
+                file.read(record.serialized.data(), dataSize);
                 if (!file)
                     break;
             }
@@ -343,7 +446,27 @@ namespace BixEngine::Gui
                 file.get();
             }
 
-            layoutData_[*layoutType] = std::move(data);
+            if (supportsRegionIds)
+            {
+                std::string regionLine;
+                if (std::getline(file, regionLine))
+                {
+                    TrimTrailingCarriageReturn_(regionLine);
+                    if (!regionLine.empty())
+                    {
+                        if (regionLine.rfind(kRegionIdsPrefix.data(), 0) == 0)
+                        {
+                            record.dockRegionIds = ParseRegionIds(regionLine);
+                        }
+                        else
+                        {
+                            pendingLine = std::move(regionLine);
+                        }
+                    }
+                }
+            }
+
+            layoutData_[*layoutType] = std::move(record);
         }
     }
 
@@ -366,7 +489,7 @@ namespace BixEngine::Gui
         if (!file.is_open())
             return;
 
-        file << kFileVersionLine << '\n';
+        file << kFileVersionLineV2 << '\n';
         file << kActiveLayoutPrefix << LayoutTypeToString(currentLayout_) << '\n';
 
         constexpr std::array<EditorLayoutType, 2> layoutOrder = {
@@ -377,14 +500,20 @@ namespace BixEngine::Gui
         for (EditorLayoutType type : layoutOrder)
         {
             const auto it = layoutData_.find(type);
-            const std::string* dataPtr = (it != layoutData_.end()) ? &it->second : nullptr;
+            const StoredLayout* record = (it != layoutData_.end()) ? &it->second : nullptr;
+            const std::string* dataPtr = record ? &record->serialized : nullptr;
 
             file << LayoutTypeToString(type) << '\n';
             const size_t size = dataPtr ? dataPtr->size() : 0;
             file << size << '\n';
-            if (dataPtr && !dataPtr->empty())
-                file.write(dataPtr->data(), dataPtr->size());
+            if (dataPtr && size > 0)
+                file.write(dataPtr->data(), size);
             file << '\n';
+
+            DockRegionArray regionIds{};
+            if (record)
+                regionIds = record->dockRegionIds;
+            file << SerializeRegionIds(regionIds) << '\n';
         }
     }
 

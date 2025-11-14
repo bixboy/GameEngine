@@ -1,4 +1,5 @@
 #pragma once
+#include <array>
 #include <filesystem>
 #include <optional>
 #include <span>
@@ -6,6 +7,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
+#include "Gui/GuiDocking.h"
+#include "imgui.h"
 
 namespace BixEngine::Gui
 {
@@ -71,12 +75,18 @@ namespace BixEngine::Gui
         static std::string LayoutTypeToString(EditorLayoutType type);
         static std::optional<EditorLayoutType> LayoutTypeFromString(const std::string& value);
 
+        struct StoredLayout
+        {
+            std::string serialized;
+            std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)> dockRegionIds{};
+        };
+
         GuiSystem* guiSystem_{nullptr};
         GuiManager* guiManager_{nullptr};
 
         EditorLayoutType currentLayout_{EditorLayoutType::Scene};
         std::optional<EditorLayoutType> pendingLayout_{};
-        std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> layoutData_{};
+        std::unordered_map<EditorLayoutType, StoredLayout, EditorLayoutTypeHash> layoutData_{};
         std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> dockspaceNames_{};
         std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>, EditorLayoutTypeHash> layoutPanels_{};
         std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_{};

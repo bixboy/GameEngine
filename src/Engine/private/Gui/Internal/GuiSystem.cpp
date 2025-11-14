@@ -140,6 +140,11 @@ namespace BixEngine::Gui
         pendingDockUpdates_.clear();
     }
 
+    void GuiSystem::SetDockRegionIds(const std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)>& ids) noexcept
+    {
+        dockRegionIds_ = ids;
+    }
+
     std::string GuiSystem::SaveLayoutToMemory() const
     {
         if (!ImGui::GetCurrentContext())
@@ -304,6 +309,9 @@ namespace BixEngine::Gui
         const char* dockLabel = dockspaceLabel_.empty() ? "EngineDockSpace::DockSpace" : dockspaceLabel_.c_str();
         dockspaceId_ = ImGui::GetID(dockLabel);
 
+        if (dockRegionIds_[static_cast<std::size_t>(DockSpaceRegion::Center)] == 0 && dockspaceId_ != 0)
+            dockRegionIds_[static_cast<std::size_t>(DockSpaceRegion::Center)] = dockspaceId_;
+
         if (rebuildDockLayout_)
         {
             BuildDefaultDockLayout_(*viewport, dockspaceId_, dockFlags, dockspacePos, dockspaceSize);
@@ -432,6 +440,8 @@ namespace BixEngine::Gui
             ImGuiID dockId = dockRegionIds_[index];
             if (dockId == 0)
                 dockId = dockRegionIds_[static_cast<std::size_t>(DockSpaceRegion::Center)];
+            if (dockId == 0)
+                dockId = dockspaceId_;
 
             if (dockId == 0)
             {
