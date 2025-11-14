@@ -115,9 +115,7 @@ namespace BixEngine::Gui::ActorInspector
                     }
                 }
 
-                const std::string& tooltip = !entry.info->QualifiedName.empty()
-                                                 ? entry.info->QualifiedName
-                                                 : entry.label;
+                const std::string& tooltip = !entry.info->QualifiedName.empty() ? entry.info->QualifiedName : entry.label;
                 ShowTooltip(tooltip.c_str(), ImGuiHoveredFlags_DelayShort);
             }
         }
