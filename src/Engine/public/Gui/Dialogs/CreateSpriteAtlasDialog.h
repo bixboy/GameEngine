@@ -11,8 +11,10 @@ namespace BixEngine::Gui
     class CreateSpriteAtlasDialog : public ModalDialog
     {
     public:
+        using ModalDialog::Open;
+        
         CreateSpriteAtlasDialog(ContentBrowserState& state, String& selectedEntry);
-
+        
         void Open(const path& sourcePath);
 
     protected:
