@@ -16,7 +16,8 @@ namespace BixEngine::Gui
     {
         bool TitleHasStableSuffix(const String& title)
         {
-            return title.View().find("###") != String::ViewType::npos;
+            auto view = title.View();
+            return view.find("###") != view.npos;
         }
 
         String MakeStableTitle(String baseTitle, const String& identifier)
@@ -93,11 +94,7 @@ namespace BixEngine::Gui
     {
         return registry_.FindPanel(name);
     }
-
-    const GuiPanel* GuiManager::FindPanel(const String& name) const noexcept
-    {
-        return registry_.FindPanel(name);
-    }
+    
 
     void GuiManager::SetPanelDockingArea(const String& name, DockSpaceRegion area, ImGuiCond condition)
     {
@@ -123,11 +120,6 @@ namespace BixEngine::Gui
     }
 
     std::vector<GuiPanel*> GuiManager::GetPanels()
-    {
-        return registry_.GetAllPanels();
-    }
-
-    std::vector<const GuiPanel*> GuiManager::GetPanels() const
     {
         return registry_.GetAllPanels();
     }
@@ -218,7 +210,7 @@ namespace BixEngine::Gui
         String finalName = config.name;
         if (finalName.IsEmpty())
         {
-            finalName = parent.GetPanel().GetName();
+            finalName = parent.GetPanel()->GetName();
             finalName += "::Child";
             finalName += std::to_string(childCounter_++).c_str();
         }
@@ -365,4 +357,40 @@ namespace BixEngine::Gui
 
         return identifier;
     }
+
+    void GuiManager::UnregisterPanel(const String& displayName)
+    {
+        auto& registry = StaticPanelRegistry_();
+        registry.erase(displayName.Std());
+    }
+
+    GuiPanelBase* GuiManager::CreatePanelByName(const String& displayName)
+    {
+        auto& registry = StaticPanelRegistry_();
+        auto it = registry.find(displayName.Std());
+
+        if (it == registry.end())
+            return nullptr; // panneau non enregistré
+
+        RegisteredPanel& entry = it->second;
+
+        // Créer dynamiquement le GuiPanelBase
+        auto instance = entry.factory(); // unique_ptr<GuiPanelBase>
+
+        GuiPanelBase* rawPtr = instance.get();
+
+        // Le PanelBase doit être associé à un GuiPanel ImGui
+        GuiPanel& panel = CreatePanel(entry.identifier, entry.displayName);
+
+        // On attache automatiquement le controller PanelBase
+        auto controller = std::unique_ptr<GuiPanelController>(rawPtr);
+        AttachController(panel, std::move(controller));
+
+        // Important : factory() retourne un unique_ptr.
+        // On a transféré l’ownership dans AttachController(), donc on release.
+        instance.release();
+
+        return rawPtr;
+    }
+
 }

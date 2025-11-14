@@ -52,9 +52,11 @@ namespace BixEngine::Gui
 
         if (guiManager_)
         {
+            // Retirer callback d'autoclose si existant
             if (GuiPanel* panel = guiManager_->FindPanel(entry.panelName))
                 panel->OnClose = nullptr;
 
+            // 🚀 Correction ici : remove a single panel
             guiManager_->RemovePanel(entry.panelName);
         }
 

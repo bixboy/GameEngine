@@ -1,10 +1,8 @@
 #pragma once
-
-#include <functional>
-#include <vector>
-
 #include "Containers/String.h"
+#include "Gui/DefaultEngineGui.h"
 #include "Gui/GuiDocking.h"
+
 
 namespace BixEngine::Gui
 {
@@ -13,10 +11,6 @@ namespace BixEngine::Gui
 
     /**
      * Base class for high level panel controllers.
-     *
-     * Controllers encapsulate the behaviour and rendering logic for a GuiPanel.
-     * They can be attached to any panel through GuiManager and reused across
-     * different contexts which keeps GuiPanel itself agnostic of editor logic.
      */
     class GuiPanelController
     {
@@ -25,6 +19,7 @@ namespace BixEngine::Gui
 
         GuiPanelController(const GuiPanelController&) = delete;
         GuiPanelController& operator=(const GuiPanelController&) = delete;
+        
         GuiPanelController(GuiPanelController&&) noexcept = delete;
         GuiPanelController& operator=(GuiPanelController&&) noexcept = delete;
 
@@ -72,11 +67,12 @@ namespace BixEngine::Gui
             bool requestFocus{true};
         };
 
+        [[nodiscard]] virtual GuiPanel* GetPanel() noexcept;
+        [[nodiscard]] virtual const GuiPanel* GetPanel() const noexcept;
+
     protected:
         GuiPanelController() = default;
-
-        [[nodiscard]] GuiPanel& GetPanel() noexcept;
-        [[nodiscard]] const GuiPanel& GetPanel() const noexcept;
+        
 
         [[nodiscard]] GuiManager* GetGuiManager() noexcept { return guiManager_; }
         [[nodiscard]] const GuiManager* GetGuiManager() const noexcept { return guiManager_; }

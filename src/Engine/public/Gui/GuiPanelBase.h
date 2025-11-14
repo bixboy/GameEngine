@@ -52,8 +52,8 @@ namespace BixEngine::Gui
         [[nodiscard]] const String& GetPanelName() const noexcept { return panelName_; }
 
         /** Provides access to the underlying GuiPanel window object. */
-        [[nodiscard]] GuiPanel* GetPanel() noexcept { return panel_; }
-        [[nodiscard]] const GuiPanel* GetPanel() const noexcept { return panel_; }
+        [[nodiscard]] GuiPanel* GetPanel() noexcept override { return panel_; }
+        [[nodiscard]] const GuiPanel* GetPanel() const noexcept override { return panel_; }
 
     protected:
         void RequestClose();

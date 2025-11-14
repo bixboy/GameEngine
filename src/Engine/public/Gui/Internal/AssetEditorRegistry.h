@@ -46,10 +46,10 @@ namespace BixEngine::Gui
         [[nodiscard]] const EditorEntry* FindEntry(const std::filesystem::path& assetPath) const noexcept;
         [[nodiscard]] bool HasOpenEditor(const std::filesystem::path& assetPath) const noexcept;
 
-        template <typename ControllerT, typename... Args>
-        ControllerT& OpenEditor(const std::filesystem::path& assetPath,
-                                BaseAssetEditorController::PanelConfig config,
-                                Args&&... args);
+        // ⬇️ Ces helpers restent accessibles pour GuiManager
+        [[nodiscard]] static std::filesystem::path NormalizePath(const std::filesystem::path& path);
+        [[nodiscard]] static String MakePanelName(const std::filesystem::path& path);
+        [[nodiscard]] static String ExtractDisplayName(const std::filesystem::path& path);
 
     private:
         struct PathHash
@@ -62,11 +62,5 @@ namespace BixEngine::Gui
 
         std::unordered_map<std::filesystem::path, EditorEntry, PathHash> editors_{};
         GuiManager* guiManager_{nullptr};
-
-        [[nodiscard]] static std::filesystem::path NormalizePath(const std::filesystem::path& path);
-        [[nodiscard]] static String MakePanelName(const std::filesystem::path& path);
-        [[nodiscard]] static String ExtractDisplayName(const std::filesystem::path& path);
     };
 }
-
-#include "Gui/Internal/AssetEditorRegistry.inl"

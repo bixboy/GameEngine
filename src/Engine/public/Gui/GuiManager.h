@@ -21,6 +21,7 @@
 #include "Gui/Internal/WorkspaceRegistry.h"
 #include "imgui.h"
 
+
 namespace BixEngine::Gui
 {
     class GuiLayoutManager;
@@ -56,32 +57,24 @@ namespace BixEngine::Gui
         GuiPanel& CreatePanel(String name, String title);
 
         template <typename PanelT, typename... Args>
-        PanelT& CreatePanelOfType(String name, String title, Args&&... args)
-        {
-            return registry_.AddPanelOfType<PanelT>(std::move(name), std::move(title), std::forward<Args>(args)...);
-        }
+        PanelT& CreatePanelOfType(String name, String title, Args&&... args);
 
         template <typename ControllerT, typename... Args>
-        ControllerT& OpenPanel(String name, String title, Args&&... args)
-        {
-            GuiPanel& panel = CreatePanel(std::move(name), std::move(title));
-            auto controller = std::make_unique<ControllerT>(std::forward<Args>(args)...);
-            ControllerT& ref = static_cast<ControllerT&>(AttachController(panel, std::move(controller)));
-            return ref;
-        }
+        ControllerT& OpenPanel(String name, String title, Args&&... args);
+
+        template <typename ControllerT, typename... Args>
+        ControllerT& OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args);
 
         void RemovePanel(const String& name);
         void RemovePanels(std::span<GuiPanel*> panels);
 
         [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
-        [[nodiscard]] const GuiPanel* FindPanel(const String& name) const noexcept;
 
         void SetPanelDockingArea(const String& name, DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver);
         void SetPanelDockingArea(GuiPanel& panel, DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver);
 
         void DrawAll();
         [[nodiscard]] std::vector<GuiPanel*> GetPanels();
-        [[nodiscard]] std::vector<const GuiPanel*> GetPanels() const;
 
         GuiPanelController& AttachController(const String& name, std::unique_ptr<GuiPanelController> controller);
         GuiPanelController& AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelController> controller);
@@ -92,21 +85,10 @@ namespace BixEngine::Gui
         [[nodiscard]] const GuiPanelController* GetController(const String& name) const noexcept;
 
         template <typename T>
-        T* GetControllerAs(const String& name) noexcept
-        {
-            if (auto* base = GetController(name))
-                return dynamic_cast<T*>(base);
-            return nullptr;
-        }
+        T* GetControllerAs(const String& name) noexcept;
 
         template <typename ControllerT, typename... Args>
-        PanelRegistration<ControllerT> RegisterUtilityPanel(String name, String title, Args&&... args)
-        {
-            GuiPanel& panel = CreatePanel(std::move(name), std::move(title));
-            auto controller = std::make_unique<ControllerT>(std::forward<Args>(args)...);
-            ControllerT& controllerRef = static_cast<ControllerT&>(AttachController(panel, std::move(controller)));
-            return {panel, controllerRef};
-        }
+        PanelRegistration<ControllerT> RegisterUtilityPanel(String name, String title, Args&&... args);
 
         GuiPanel& OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config);
         void CloseChildPanels(GuiPanelController& parent);
@@ -129,23 +111,7 @@ namespace BixEngine::Gui
         [[nodiscard]] const AssetEditorRegistry& GetAssetEditorRegistry() const noexcept { return assetEditors_; }
 
         template <typename PanelT, typename... Args>
-        static void RegisterPanel(const String& displayName, Args&&... args)
-        {
-            auto& registry = StaticPanelRegistry_();
-            RegisteredPanel entry{};
-            entry.displayName = displayName;
-            entry.identifier = SanitizeIdentifier_(displayName);
-
-            using TupleType = std::tuple<std::decay_t<Args>...>;
-            TupleType argsTuple(std::forward<Args>(args)...);
-            entry.factory = [argsTuple]() mutable -> std::unique_ptr<GuiPanelBase>
-            {
-                return std::apply([](auto&... captured)
-                { return std::make_unique<PanelT>(captured...); }, argsTuple);
-            };
-
-            registry[displayName.Std()] = std::move(entry);
-        }
+        static void RegisterPanel(const String& displayName, Args&&... args);
 
         static void UnregisterPanel(const String& displayName);
         GuiPanelBase* CreatePanelByName(const String& displayName);
@@ -177,4 +143,6 @@ namespace BixEngine::Gui
         void OnPanelRemovedInternal_(GuiPanel& panel);
     };
 }
+
+#include "Gui/GuiManager.inl"
 

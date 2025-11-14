@@ -30,14 +30,14 @@ namespace BixEngine::Gui
         OnDraw(*panel_);
     }
 
-    GuiPanel& GuiPanelController::GetPanel() noexcept
+    GuiPanel* GuiPanelController::GetPanel() noexcept
     {
-        return *panel_;
+        return panel_;
     }
 
-    const GuiPanel& GuiPanelController::GetPanel() const noexcept
+    const GuiPanel* GuiPanelController::GetPanel() const noexcept
     {
-        return *panel_;
+        return panel_;
     }
 
     GuiPanel& GuiPanelController::OpenChildPanel(const ChildPanelConfig& config)
