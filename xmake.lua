@@ -133,7 +133,6 @@ end
 -- =====================================================================
 -- 🧩 Module Target Definition
 -- =====================================================================
-
 local function define_module_target(m, group)
     target(m.name)
         set_kind("object")
@@ -142,47 +141,58 @@ local function define_module_target(m, group)
 
         add_deps("BixHeaderTool", "GenerateHeaders")
 
-        -- GLOBAL includes
+        -- Includes globaux
         add_includedirs(engine_public_includes, { public = true })
         add_includedirs("src", { public = true })
         if #all_public_dirs > 0 then
             add_includedirs(all_public_dirs, { public = true })
         end
 
-        -- PUBLIC directory
+        --------------------------------------------------------
+        -- PUBLIC
+        --------------------------------------------------------
         if os.isdir(m.public) then
             add_includedirs(m.public, { public = true })
 
             add_headerfiles(path.join(m.public, "**.h"), {
-                public = true,
-                group = "Public",
+                public   = true,
+                group    = "Public",
                 prefixdir = path.join(m.name, "Public")
+                -- ❌ rootdir ENLEVÉ
             })
 
             add_files(path.join(m.public, "**.cpp"), {
-                group = "Private",
+                group     = "Public",
                 prefixdir = path.join(m.name, "Public")
+                -- ❌ rootdir ENLEVÉ
             })
         end
 
-        -- PRIVATE directory
+        --------------------------------------------------------
+        -- PRIVATE
+        --------------------------------------------------------
         if os.isdir(m.private) then
             add_includedirs(m.private)
 
             add_headerfiles(path.join(m.private, "**.h"), {
-                group = "Private",
+                public   = false,
+                group    = "Private",
                 prefixdir = path.join(m.name, "Private")
+                -- ❌ rootdir ENLEVÉ
             })
 
             add_files(path.join(m.private, "**.cpp"), {
-                group = "Private",
+                group     = "Private",
                 prefixdir = path.join(m.name, "Private")
+                -- ❌ rootdir ENLEVÉ
             })
         end
 
     target_end()
     return m.name
 end
+
+
 
 -- Register all module targets
 local engine_targets = {}
