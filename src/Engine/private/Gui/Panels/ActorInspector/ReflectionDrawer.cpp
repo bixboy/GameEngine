@@ -1,5 +1,5 @@
 #include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
-#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
@@ -15,6 +15,8 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
+    using namespace Widgets;
+
     namespace PropertyUtils
     {
         bool MatchesType(const std::string& typeName, std::string_view expectedSuffix)

@@ -5,7 +5,7 @@
 #include "Gui/GuiManager.h"
 #include "Gui/Internal/GuiPanel.h"
 #include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/Widgets/GuiWidgetLibrary.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Input.h"
 #include "imgui.h"
@@ -24,17 +24,6 @@ namespace BixEngine::Gui
     {
         constexpr float kSmoothingFactor = 0.1f;
         constexpr float kUpdateInterval = 0.25f;
-
-        ImVec4 ComputeFpsColor(float fps) noexcept
-        {
-            if (fps < 30.0f)
-                return {1.0f, 0.2f, 0.2f, 1.0f};
-
-            if (fps < 60.0f)
-                return {1.0f, 1.0f, 0.2f, 1.0f};
-
-            return {0.2f, 1.0f, 0.2f, 1.0f};
-        }
 
         std::string FormatValue(float value, const char* format)
         {
@@ -99,19 +88,26 @@ namespace BixEngine::Gui
 
                 std::vector<Widgets::MetricDisplay> metrics;
                 metrics.reserve(4);
-                metrics.push_back({
-                    "Average FPS", FormatValue(displayedFps_, "%.1f"), ComputeFpsColor(displayedFps_),
-                    "Smoothed framerate"
-                });
-                metrics.push_back({
-                    "Average Frame Time", FormatValue(displayedDelta_, "%.2f ms"), ImVec4{0.8f, 0.8f, 1.0f, 1.0f},
-                    "Smoothed frame time"
-                });
-                metrics.push_back({"Instant FPS", FormatValue(fps, "%.1f"), ComputeFpsColor(fps), "Current frame"});
-                metrics.push_back({
-                    "Instant Frame Time", FormatValue(deltaMs, "%.2f ms"), ImVec4{0.6f, 0.9f, 1.0f, 1.0f},
-                    "Current frame"
-                });
+                metrics.emplace_back(
+                    "Average FPS",
+                    FormatValue(displayedFps_, "%.1f"),
+                    Widgets::Metrics::ColorForFps(displayedFps_),
+                    "Smoothed framerate");
+                metrics.emplace_back(
+                    "Average Frame Time",
+                    FormatValue(displayedDelta_, "%.2f ms"),
+                    ImVec4{0.8f, 0.8f, 1.0f, 1.0f},
+                    "Smoothed frame time");
+                metrics.emplace_back(
+                    "Instant FPS",
+                    FormatValue(fps, "%.1f"),
+                    Widgets::Metrics::ColorForFps(fps),
+                    "Current frame");
+                metrics.emplace_back(
+                    "Instant Frame Time",
+                    FormatValue(deltaMs, "%.2f ms"),
+                    ImVec4{0.6f, 0.9f, 1.0f, 1.0f},
+                    "Current frame");
 
                 Widgets::DrawMetricsTable(metrics, 160.0f);
 

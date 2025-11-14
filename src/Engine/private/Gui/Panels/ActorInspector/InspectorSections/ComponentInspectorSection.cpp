@@ -1,6 +1,6 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/ComponentInspectorSection.h"
 
-#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
@@ -22,6 +22,7 @@ namespace BixEngine::Gui::ActorInspector
 {
     using namespace Theme;
     using namespace Utils;
+    using namespace Widgets;
 
     namespace
     {

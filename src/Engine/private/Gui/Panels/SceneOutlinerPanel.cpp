@@ -7,7 +7,7 @@
 #include "Gui/Internal/GuiPanel.h"
 #include "Gui/Controllers/GuiPanelController.h"
 #include "Gui/Utils/GuiHelpers.h"
-#include "Gui/Widgets/GuiWidgetLibrary.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Containers/String.h"
 
 #include "imgui.h"

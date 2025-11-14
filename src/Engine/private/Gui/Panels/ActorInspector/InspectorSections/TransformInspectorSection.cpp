@@ -1,6 +1,6 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/TransformInspectorSection.h"
 
-#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Actor.h"
@@ -14,6 +14,7 @@ namespace BixEngine::Gui::ActorInspector
 {
     using namespace Theme;
     using namespace Utils;
+    using namespace Widgets;
 
     void TransformInspectorSection::Draw(Game::Actor& actor)
     {
