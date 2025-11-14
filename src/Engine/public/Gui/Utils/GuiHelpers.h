@@ -191,4 +191,6 @@ namespace BixEngine::Gui::Utils
     void ShowTooltip(const char* text, ImGuiHoveredFlags flags = Theme::TooltipHoverFlags);
     bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left,
                              ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
+
+    ImTextureRef ToTextureRef(void* nativeHandle);
 }

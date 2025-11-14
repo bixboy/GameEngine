@@ -254,8 +254,15 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     float aspect = (float)tex->GetWidth() / (float)tex->GetHeight();
     float previewH = previewW / aspect;
 
-    // ImGui SDL renderer backend — correct way :
-    ImGui::Image(tex->GetNativeHandle(), ImVec2(previewW, previewH));
+    const ImTextureRef previewRef = Utils::ToTextureRef(tex->GetNativeHandle());
+    if (previewRef.GetTexID() == ImTextureID_Invalid)
+    {
+        ImGui::TextDisabled("Unable to prepare texture preview.");
+        ImGui::Columns(1);
+        return;
+    }
+
+    ImGui::Image(previewRef, ImVec2(previewW, previewH));
 
     ImGui::Text("Size: %d x %d", tex->GetWidth(), tex->GetHeight());
     ImGui::Text("File: %s", texturePath_.filename().string().c_str());

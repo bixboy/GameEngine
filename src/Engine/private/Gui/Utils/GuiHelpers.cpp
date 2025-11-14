@@ -2,6 +2,8 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cstdint>
+#include <type_traits>
 
 namespace
 {
@@ -422,5 +424,20 @@ namespace BixEngine::Gui::Utils
     bool IsItemDoubleClicked(ImGuiMouseButton button, ImGuiHoveredFlags flags) noexcept
     {
         return ImGui::IsItemHovered(flags) && ImGui::IsMouseDoubleClicked(button);
+    }
+
+    ImTextureRef ToTextureRef(void* nativeHandle)
+    {
+        if (!nativeHandle)
+            return ImTextureRef();
+
+        if constexpr (std::is_pointer_v<ImTextureID>)
+        {
+            return ImTextureRef(reinterpret_cast<ImTextureID>(nativeHandle));
+        }
+        else
+        {
+            return ImTextureRef(static_cast<ImTextureID>(reinterpret_cast<uintptr_t>(nativeHandle)));
+        }
     }
 }

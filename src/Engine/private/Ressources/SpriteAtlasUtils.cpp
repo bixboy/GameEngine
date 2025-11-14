@@ -1,4 +1,5 @@
 #include "Ressources/SpriteAtlasUtils.h"
+#include <algorithm>
 #include <fstream>
 #include <nlohmann/json.hpp>
 #include "Logger.h"
@@ -91,6 +92,25 @@ namespace BixEngine::resources
                                                               int margin)
     {
         std::vector<SpriteFrame> frames;
+        columns = std::max(columns, 0);
+        rows = std::max(rows, 0);
+        padding = std::max(padding, 0);
+        margin = std::max(margin, 0);
+
+        if (columns == 0 && rows == 0)
+        {
+            columns = 1;
+            rows = 1;
+        }
+        else if (columns == 0)
+        {
+            columns = 1;
+        }
+        else if (rows == 0)
+        {
+            rows = 1;
+        }
+
         if (!ValidateGrid(columns, rows))
             return frames;
 
