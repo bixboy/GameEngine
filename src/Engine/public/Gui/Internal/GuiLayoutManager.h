@@ -91,6 +91,7 @@ namespace BixEngine::Gui
         std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>, EditorLayoutTypeHash> layoutPanels_{};
         std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_{};
         std::unordered_set<EditorLayoutType, EditorLayoutTypeHash> initializedLayouts_{};
+        std::unordered_set<EditorLayoutType, EditorLayoutTypeHash> pendingLayoutInitialization_{};
 
         bool dockspaceDirty_{true};
         bool switchRequested_{false};

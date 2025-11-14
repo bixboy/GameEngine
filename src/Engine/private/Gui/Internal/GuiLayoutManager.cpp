@@ -167,10 +167,18 @@ namespace BixEngine::Gui
             break;
         case LayoutRegistrationMode::LoadIfUninitialized:
             if (!initializedLayouts_.contains(layout))
-                LoadLayout(layout);
+            {
+                if (currentLayout_ == layout)
+                    LoadLayout(layout);
+                else
+                    pendingLayoutInitialization_.insert(layout);
+            }
             break;
         case LayoutRegistrationMode::ForceLoad:
-            LoadLayout(layout);
+            if (currentLayout_ == layout)
+                LoadLayout(layout);
+            else
+                pendingLayoutInitialization_.insert(layout);
             break;
         }
     }
@@ -207,6 +215,14 @@ namespace BixEngine::Gui
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
+
+        if (layout != currentLayout_)
+        {
+            pendingLayoutInitialization_.insert(layout);
+            return;
+        }
+
+        pendingLayoutInitialization_.erase(layout);
 
         DockRegionArray regionIds{};
 
@@ -319,6 +335,7 @@ namespace BixEngine::Gui
 
         currentLayout_ = newLayout;
         dockspaceDirty_ = true;
+        pendingLayoutInitialization_.erase(newLayout);
         EnsureDockspaceForCurrentLayout_();
         LoadLayout(newLayout);
         ApplyPanelVisibility_();
