@@ -25,9 +25,7 @@ namespace BixEngine::Gui
         void DrawTextureSelector();
 
         bool TryGenerateAtlas();
-
-        void RenameGeneratedAtlasIfNeeded(const std::string& desiredBaseName);
-
+        
         char atlasName_[128];
 
         int columns_;
@@ -50,7 +48,6 @@ namespace BixEngine::Gui
         void SetTexturePath(const path& newPath);
         [[nodiscard]] path ResolveTexturePath() const;
         [[nodiscard]] std::string GetDisplayName(const path& value) const;
-        [[nodiscard]] path GetSelectedContentPath() const;
         void TryAutoConfigureFromTexture();
     };
 }
