@@ -168,7 +168,14 @@ namespace BixEngine::Gui
 
         const ImVec2 imgSize(dispW, dispH);
         const ImVec2 origin = ImGui::GetCursorScreenPos();
-        ImGui::Image(state.texture->GetNativeHandle(), imgSize);
+        const ImTextureRef previewRef = Utils::ToTextureRef(state.texture->GetNativeHandle());
+        if (previewRef.GetTexID() == ImTextureID_Invalid)
+        {
+            Utils::DrawEmptyStateMessage("Texture preview unavailable.");
+            return;
+        }
+
+        ImGui::Image(previewRef, imgSize);
 
         ImDrawList* draw = ImGui::GetWindowDrawList();
         const float scaleX = dispW / texW;
@@ -379,7 +386,14 @@ namespace BixEngine::Gui
         const ImVec2 uv1((uv.X + uv.Width) / texW, (uv.Y + uv.Height) / texH);
         const ImVec2 dispSize(uv.Width * state.previewScale, uv.Height * state.previewScale);
 
-        ImGui::Image(state.texture->GetNativeHandle(), dispSize, uv0, uv1);
+        const ImTextureRef frameRef = Utils::ToTextureRef(state.texture->GetNativeHandle());
+        if (frameRef.GetTexID() == ImTextureID_Invalid)
+        {
+            Utils::DrawEmptyStateMessage("Texture preview unavailable.");
+            return;
+        }
+
+        ImGui::Image(frameRef, dispSize, uv0, uv1);
 
         // ───────────── Controls ─────────────
         ImGui::Spacing();

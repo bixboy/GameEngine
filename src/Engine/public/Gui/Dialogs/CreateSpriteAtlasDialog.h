@@ -1,9 +1,10 @@
 #pragma once
 #include <filesystem>
+#include <vector>
+#include <string>
 #include "Containers/String.h"
 #include "Gui/Dialogs/ModalDialog.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-
 
 namespace BixEngine::Gui
 {
@@ -21,11 +22,10 @@ namespace BixEngine::Gui
         // UI rendering
         void DrawHeader();
         void DrawInputFields();
+        void DrawTextureSelector();
 
         bool TryGenerateAtlas();
-
-        void RenameGeneratedAtlasIfNeeded(const std::string& desiredBaseName);
-
+        
         char atlasName_[128];
 
         int columns_;
@@ -33,7 +33,21 @@ namespace BixEngine::Gui
         float frameRate_;
         bool loop_;
 
+        int padding_;
+        int margin_;
+
         path framesDir_;
+        path texturePath_;
+        std::vector<path> textureCandidates_;
+
+        char texturePathBuffer_[260];
+
         String atlasError_;
+
+        void RefreshTextureCandidates();
+        void SetTexturePath(const path& newPath);
+        [[nodiscard]] path ResolveTexturePath() const;
+        [[nodiscard]] std::string GetDisplayName(const path& value) const;
+        void TryAutoConfigureFromTexture();
     };
 }

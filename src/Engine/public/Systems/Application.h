@@ -2,7 +2,7 @@
 #include <memory>
 #include <type_traits>
 #include "Systems/ApplicationConfig.h"
-#include "Bootstrap/EngineBootstrap.h"
+#include "EngineBootstrap.h"
 
 
 namespace BixEngine::Game
