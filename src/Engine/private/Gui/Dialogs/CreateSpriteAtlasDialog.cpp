@@ -7,9 +7,14 @@
 
 #include <algorithm>
 #include <cstdio>
+#include <cctype>
+#include <optional>
+#include <limits>
+#include <cmath>
 
 #include "Ressources/ResourceManager.h"
 #include "Ressources/Texture.h"
+#include "Ressources/SpriteAtlasUtils.h"
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
@@ -20,6 +25,106 @@ using BixEngine::resources::SpriteAtlasFactory;
 namespace
 {
     namespace fs = std::filesystem;
+
+    struct GridDetectionResult
+    {
+        int columns{0};
+        int rows{0};
+        int padding{0};
+        int margin{0};
+    };
+
+    [[nodiscard]] int ExtractTrailingFrameCount(const std::string& stem)
+    {
+        if (stem.empty())
+            return 0;
+
+        size_t index = stem.size();
+        while (index > 0 && std::isdigit(static_cast<unsigned char>(stem[index - 1])))
+            --index;
+
+        if (index == stem.size())
+            return 0;
+
+        if (index == 0)
+            return 0;
+
+        const char separator = stem[index - 1];
+        if (separator != '_' && separator != '-' && separator != ' ')
+            return 0;
+
+        const std::string digits = stem.substr(index);
+        try
+        {
+            const long long value = std::stoll(digits);
+            if (value <= 0 || value > std::numeric_limits<int>::max())
+                return 0;
+            return static_cast<int>(value);
+        }
+        catch (...)
+        {
+            return 0;
+        }
+    }
+
+    [[nodiscard]] std::optional<GridDetectionResult> DetectGridFromFrameCount(int frameCount, int texWidth,
+                                                                              int texHeight)
+    {
+        if (frameCount <= 0 || texWidth <= 0 || texHeight <= 0)
+            return std::nullopt;
+
+        const float targetAspect = static_cast<float>(texWidth) / static_cast<float>(texHeight);
+
+        struct Candidate
+        {
+            int columns;
+            int rows;
+            float score;
+        };
+
+        std::optional<Candidate> best;
+
+        for (int rows = 1; rows <= frameCount; ++rows)
+        {
+            if (frameCount % rows != 0)
+                continue;
+
+            const int columns = frameCount / rows;
+            if (columns <= 0)
+                continue;
+
+            if (texWidth % columns != 0 || texHeight % rows != 0)
+                continue;
+
+            const float aspect = static_cast<float>(columns) / static_cast<float>(rows);
+            const float score = std::abs(aspect - targetAspect);
+
+            if (!best.has_value() || score < best->score - 1e-4f ||
+                (std::abs(score - best->score) <= 1e-4f && columns >= best->columns))
+            {
+                best = Candidate{columns, rows, score};
+            }
+        }
+
+        if (!best.has_value())
+            return std::nullopt;
+
+        return GridDetectionResult{best->columns, best->rows, 0, 0};
+    }
+
+    [[nodiscard]] std::optional<GridDetectionResult> DetectGridFromAspect(int texWidth, int texHeight)
+    {
+        if (texWidth <= 0 || texHeight <= 0)
+            return std::nullopt;
+
+        if (texWidth >= texHeight && texHeight > 0 && texWidth % texHeight == 0)
+            return GridDetectionResult{texWidth / texHeight, 1, 0, 0};
+
+        if (texHeight > texWidth && texWidth > 0 && texHeight % texWidth == 0)
+            return GridDetectionResult{1, texHeight / texWidth, 0, 0};
+
+        return GridDetectionResult{1, 1, 0, 0};
+    }
 }
 
 // ─────────────────────────────────────────────────────────────
@@ -215,6 +320,8 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
             texturePath_.clear();
         else
             texturePath_ = path(texturePathBuffer_);
+
+        TryAutoConfigureFromTexture();
     }
 
     ImGui::Spacing();
@@ -263,6 +370,29 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     }
 
     ImGui::Image(previewRef, ImVec2(previewW, previewH));
+
+    const ImVec2 imageMin = ImGui::GetItemRectMin();
+    const ImVec2 imageMax = ImGui::GetItemRectMax();
+    const float scaleX = (imageMax.x - imageMin.x) / static_cast<float>(tex->GetWidth());
+    const float scaleY = (imageMax.y - imageMin.y) / static_cast<float>(tex->GetHeight());
+
+    auto frames = resources::SpriteAtlasUtils::GenerateFrames(*tex, columns_, rows_, padding_, margin_);
+    if (!frames.empty())
+    {
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        for (const auto& frame : frames)
+        {
+            const auto& rect = frame.uvRect;
+            const ImVec2 min(imageMin.x + rect.x * scaleX, imageMin.y + rect.y * scaleY);
+            const ImVec2 max(imageMin.x + (rect.x + rect.width) * scaleX,
+                             imageMin.y + (rect.y + rect.height) * scaleY);
+            drawList->AddRect(min, max, IM_COL32(255, 255, 255, 160));
+        }
+    }
+    else
+    {
+        ImGui::TextDisabled("Unable to compute frame slices with the current layout.");
+    }
 
     ImGui::Text("Size: %d x %d", tex->GetWidth(), tex->GetHeight());
     ImGui::Text("File: %s", texturePath_.filename().string().c_str());
@@ -430,6 +560,45 @@ void CreateSpriteAtlasDialog::SetTexturePath(const path& newPath)
 
     const std::string display = GetDisplayName(texturePath_);
     std::snprintf(texturePathBuffer_, IM_ARRAYSIZE(texturePathBuffer_), "%s", display.c_str());
+
+    TryAutoConfigureFromTexture();
+}
+
+void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
+{
+    if (texturePath_.empty())
+        return;
+
+    if (!fs::exists(texturePath_))
+        return;
+
+    auto texture = resources::ResourceManager::Get().Get<resources::Texture>(
+        texturePath_.generic_string().c_str());
+
+    if (!texture)
+        return;
+
+    const int texWidth = texture->GetWidth();
+    const int texHeight = texture->GetHeight();
+    if (texWidth <= 0 || texHeight <= 0)
+        return;
+
+    std::optional<GridDetectionResult> detected;
+
+    const int frameCount = ExtractTrailingFrameCount(texturePath_.stem().string());
+    if (frameCount > 0)
+        detected = DetectGridFromFrameCount(frameCount, texWidth, texHeight);
+
+    if (!detected.has_value())
+        detected = DetectGridFromAspect(texWidth, texHeight);
+
+    if (!detected.has_value())
+        return;
+
+    columns_ = std::max(1, detected->columns);
+    rows_ = std::max(1, detected->rows);
+    padding_ = std::max(0, detected->padding);
+    margin_ = std::max(0, detected->margin);
 }
 
 path CreateSpriteAtlasDialog::ResolveTexturePath() const

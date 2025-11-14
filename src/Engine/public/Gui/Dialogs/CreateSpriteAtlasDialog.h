@@ -51,5 +51,6 @@ namespace BixEngine::Gui
         [[nodiscard]] path ResolveTexturePath() const;
         [[nodiscard]] std::string GetDisplayName(const path& value) const;
         [[nodiscard]] path GetSelectedContentPath() const;
+        void TryAutoConfigureFromTexture();
     };
 }
