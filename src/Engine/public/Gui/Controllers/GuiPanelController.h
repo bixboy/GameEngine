@@ -1,7 +1,7 @@
 #pragma once
 #include "Containers/String.h"
-#include "Gui/DefaultEngineGui.h"
 #include "Gui/GuiDocking.h"
+#include "imgui.h"
 
 
 namespace BixEngine::Gui

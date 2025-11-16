@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <filesystem>
 #include <functional>
 #include <memory>
 #include <span>
@@ -13,6 +14,7 @@
 #include <stdexcept>
 
 #include "Containers/String.h"
+#include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Controllers/GuiPanelController.h"
 #include "Gui/GuiDocking.h"
 #include "Gui/Internal/AssetEditorRegistry.h"
