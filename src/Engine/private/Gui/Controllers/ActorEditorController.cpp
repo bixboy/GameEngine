@@ -7,6 +7,7 @@
 #include "imgui.h"
 #include "Gui/GuiDocking.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
+#include "Gui/Controllers/InspectorVariableDrawer.h"
 
 namespace BixEngine::Gui
 {
@@ -196,6 +197,9 @@ namespace BixEngine::Gui
                               "Unknown");
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
+
+        Inspector::DrawExposedVariablesSection(*state, "Variables exposées",
+                                               "ActorInspectorVariables", "Aucune variable exposée pour cet acteur.");
     }
 
     void ActorEditorController::DrawViewportGrid_(const ImVec2& size)

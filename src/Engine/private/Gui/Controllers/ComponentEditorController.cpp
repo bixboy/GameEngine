@@ -4,6 +4,7 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
+#include "Gui/Controllers/InspectorVariableDrawer.h"
 
 namespace BixEngine::Gui
 {
@@ -119,8 +120,12 @@ namespace BixEngine::Gui
         Utils::DrawLabelValue("Name", state->assetDisplayName.View().data(), "Prefab");
         Utils::DrawLabelValue("Path", state->assetPath.generic_string(), "");
         Utils::DrawLabelValue("Script", state->primaryClassName.empty() ? "Unknown" : state->primaryClassName.c_str(), "Unknown");
-        
+
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
+
+        Inspector::DrawExposedVariablesSection(*state, "Variables du composant",
+                                               "ComponentInspectorVariables",
+                                               "Aucune variable exposée pour ce composant.");
     }
 }
