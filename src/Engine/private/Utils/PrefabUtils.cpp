@@ -1,5 +1,6 @@
 #include "Utils/PrefabUtils.h"
 #include <functional>
+#include <filesystem>
 #include <algorithm>
 #include <cctype>
 #include <sstream>
@@ -19,7 +20,7 @@ namespace BixEngine::PrefabUtils
                 "Actor (Engine)",
                 "BixEngine::Game::Actor",
                 "Game/Actor.h",
-                path{},
+                path{"src/Game/public/Actor.h"},
                 true,
                 false,
                 true
@@ -28,7 +29,7 @@ namespace BixEngine::PrefabUtils
                 "Component (Engine)",
                 "BixEngine::Game::Component",
                 "Game/Components/Component.h",
-                path{},
+                path{"src/Game/public/Components/Component.h"},
                 false,
                 true,
                 true
@@ -37,7 +38,7 @@ namespace BixEngine::PrefabUtils
                 "Player (Engine)",
                 "BixEngine::Game::Player",
                 "Test/Player.h",
-                path{},
+                path{"src/Game/public/Test/Player.h"},
                 true,
                 false,
                 true
@@ -46,7 +47,7 @@ namespace BixEngine::PrefabUtils
                 "Sprite Component (Engine)",
                 "BixEngine::Game::SpriteComponent",
                 "Components/SpriteComponent.h",
-                path{},
+                path{"src/Game/public/Components/SpriteComponent.h"},
                 false,
                 true,
                 true
@@ -55,7 +56,7 @@ namespace BixEngine::PrefabUtils
                 "Sprite Animator Component (Engine)",
                 "BixEngine::Game::SpriteAnimatorComponent",
                 "Components/SpriteAnimatorComponent.h",
-                path{},
+                path{"src/Game/public/Components/SpriteAnimatorComponent.h"},
                 false,
                 true,
                 true
@@ -135,6 +136,96 @@ namespace BixEngine::PrefabUtils
         }
 
         return escaped.str();
+    }
+
+    static std::string Trim(std::string_view input)
+    {
+        const auto first = input.find_first_not_of(" \t");
+        const auto last = input.find_last_not_of(" \t");
+
+        if (first == std::string_view::npos)
+            return {};
+
+        return std::string{input.substr(first, last - first + 1)};
+    }
+
+    static std::filesystem::path ResolveHeaderPath(const std::filesystem::path& headerPath,
+                                                   const std::string& includePath,
+                                                   const std::filesystem::path& scriptsDir)
+    {
+        if (!headerPath.empty() && std::filesystem::exists(headerPath))
+            return headerPath;
+
+        if (!includePath.empty())
+        {
+            const auto candidate = scriptsDir / includePath;
+            if (std::filesystem::exists(candidate))
+                return candidate;
+        }
+
+        return {};
+    }
+
+    std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath,
+                                                                 const std::string& includePath,
+                                                                 const std::filesystem::path& scriptsDir)
+    {
+        std::vector<ExposedVariableMetadata> variables;
+
+        const auto resolved = ResolveHeaderPath(headerPath, includePath, scriptsDir);
+        if (resolved.empty())
+            return variables;
+
+        std::ifstream stream(resolved);
+        if (!stream.is_open())
+            return variables;
+
+        std::string line;
+        bool pendingProperty = false;
+        while (std::getline(stream, line))
+        {
+            if (line.find("BPROPERTY") != std::string::npos)
+            {
+                pendingProperty = true;
+                continue;
+            }
+
+            if (!pendingProperty)
+                continue;
+
+            pendingProperty = false;
+            std::string trimmed = Trim(line);
+            if (trimmed.empty())
+                continue;
+
+            if (trimmed.back() == ';')
+                trimmed.pop_back();
+
+            const auto eqPos = trimmed.find('=');
+            std::string declaration = eqPos == std::string::npos ? trimmed : trimmed.substr(0, eqPos);
+            std::string defaultPart = eqPos == std::string::npos ? std::string{} : Trim(trimmed.substr(eqPos + 1));
+
+            const auto bracePos = declaration.find('{');
+            if (defaultPart.empty() && bracePos != std::string::npos)
+                defaultPart = Trim(declaration.substr(bracePos));
+
+            if (bracePos != std::string::npos)
+                declaration = declaration.substr(0, bracePos);
+
+            declaration = Trim(declaration);
+            const auto spacePos = declaration.find_last_of(" \t");
+            if (spacePos == std::string::npos || spacePos + 1 >= declaration.size())
+                continue;
+
+            ExposedVariableMetadata meta{};
+            meta.type = Trim(declaration.substr(0, spacePos));
+            meta.name = Trim(declaration.substr(spacePos + 1));
+            meta.defaultValue = std::move(defaultPart);
+
+            variables.push_back(std::move(meta));
+        }
+
+        return variables;
     }
 
     // ============================================================================

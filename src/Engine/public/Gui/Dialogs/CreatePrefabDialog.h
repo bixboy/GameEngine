@@ -28,13 +28,16 @@ namespace BixEngine::Gui
         // Logic helpers
         void ClearSelection();
         void SetSelectedScript(const std::string& className, const std::string& includePath,
-                               const std::string& assetBaseName, bool isActor, bool isComponent);
+                               const std::string& assetBaseName, bool isActor, bool isComponent,
+                               const std::filesystem::path& headerPath);
 
         char searchBuffer_[128]{};
+        char assetNameBuffer_[128]{};
 
         String selectedClass_;
         String selectedInclude_;
         String selectedAssetBaseName_;
+        std::filesystem::path selectedHeaderPath_{};
 
         bool selectedIsActor_ = false;
         bool selectedIsComponent_ = false;

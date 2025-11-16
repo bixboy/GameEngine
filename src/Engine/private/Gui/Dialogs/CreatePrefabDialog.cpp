@@ -4,7 +4,9 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 
 #include <algorithm>
+#include <cstdio>
 #include <cctype>
+#include <filesystem>
 #include <sstream>
 #include <vector>
 
@@ -14,6 +16,7 @@
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
+namespace fs = std::filesystem;
 
 
 // ============================================================================
@@ -36,16 +39,24 @@ void CreatePrefabDialog::ClearSelection()
     selectedClass_.Clear();
     selectedInclude_.Clear();
     selectedAssetBaseName_.Clear();
+    selectedHeaderPath_.clear();
+    std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", "Prefab");
     selectedIsActor_ = false;
     selectedIsComponent_ = false;
 }
 
 void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath,
-                                           const std::string& assetBaseName, bool isActor, bool isComponent)
+                                           const std::string& assetBaseName, bool isActor, bool isComponent,
+                                           const std::filesystem::path& headerPath)
 {
     selectedClass_ = className.c_str();
     selectedInclude_ = includePath.c_str();
     selectedAssetBaseName_ = assetBaseName.c_str();
+    selectedHeaderPath_ = headerPath;
+    std::string sanitized = PrefabUtils::SanitizeAssetName(assetBaseName);
+    if (sanitized.empty())
+        sanitized = PrefabUtils::SanitizeAssetName(className);
+    std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", sanitized.c_str());
     selectedIsActor_ = isActor || (!isComponent);
     selectedIsComponent_ = isComponent;
 }
@@ -125,7 +136,7 @@ void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::Pref
         if (ImGui::Selectable(label.c_str(), isSelected))
         {
             SetSelectedScript(candidate.className, candidate.includePath, candidate.assetBaseName, candidate.isActor,
-                              candidate.isComponent);
+                              candidate.isComponent, candidate.headerPath);
             prefabError_.Clear();
         }
 
@@ -158,9 +169,16 @@ void CreatePrefabDialog::DrawDetailsSectionUI()
     DrawLabelValue("Script", selectedClass_.IsEmpty() ? "None" : selectedClass_.View().data(), "None");
     DrawLabelValue("Type", typeLabel, "Actor");
 
-    std::string baseName = selectedAssetBaseName_.IsEmpty() ? (selectedClass_.IsEmpty() ? "Prefab"
-        : PrefabUtils::SanitizeAssetName(selectedClass_.View().data()))
-        : selectedAssetBaseName_.ToStdString();
+    InputTextWithLabel("Prefab name", assetNameBuffer_, IM_ARRAYSIZE(assetNameBuffer_),
+        ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
+
+    std::string baseName = PrefabUtils::SanitizeAssetName(assetNameBuffer_);
+    if (baseName.empty())
+    {
+        baseName = selectedAssetBaseName_.IsEmpty() ? (selectedClass_.IsEmpty() ? "Prefab"
+            : PrefabUtils::SanitizeAssetName(selectedClass_.View().data()))
+            : PrefabUtils::SanitizeAssetName(selectedAssetBaseName_.ToStdString());
+    }
 
     path relDir = state_.current.lexically_relative(state_.root);
 
@@ -190,7 +208,12 @@ bool CreatePrefabDialog::DrawActionButtons()
     const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
     const char* type = makeComponent ? "Component" : "Actor";
 
-    std::string baseName = selectedAssetBaseName_.IsEmpty() ? selectedClass_.View().data() : selectedAssetBaseName_.View().data();
+    std::string baseName = PrefabUtils::SanitizeAssetName(assetNameBuffer_);
+    if (baseName.empty())
+    {
+        baseName = selectedAssetBaseName_.IsEmpty() ? selectedClass_.View().data() : selectedAssetBaseName_.View().data();
+        baseName = PrefabUtils::SanitizeAssetName(baseName);
+    }
 
     path target = state_.current / (baseName + ext);
     if (fs::exists(target))
@@ -207,7 +230,31 @@ bool CreatePrefabDialog::DrawActionButtons()
     if (!selectedInclude_.IsEmpty())
         json << ",\n  \"include\": \"" << PrefabUtils::EscapeJson(selectedInclude_.ToStdString()) << "\"";
 
-    json << "\n}\n";
+    auto exposedVars = PrefabUtils::ExtractExposedVariables(selectedHeaderPath_, selectedInclude_.ToStdString(), state_.root / "Scripts");
+    if (!exposedVars.empty())
+    {
+        json << ",\n  \"variables\": [\n";
+        for (std::size_t i = 0; i < exposedVars.size(); ++i)
+        {
+            const auto& var = exposedVars[i];
+            json << "    { \"name\": \"" << PrefabUtils::EscapeJson(var.name) << "\"";
+            if (!var.type.empty())
+                json << ", \"type\": \"" << PrefabUtils::EscapeJson(var.type) << "\"";
+            if (!var.defaultValue.empty())
+                json << ", \"default\": \"" << PrefabUtils::EscapeJson(var.defaultValue) << "\"";
+            json << " }";
+            if (i + 1 < exposedVars.size())
+                json << ",";
+            json << "\n";
+        }
+        json << "  ]\n";
+    }
+    else
+    {
+        json << "\n";
+    }
+
+    json << "}\n";
 
     if (FileUtils::TryWriteFile(target, json.str(), prefabError_))
     {
