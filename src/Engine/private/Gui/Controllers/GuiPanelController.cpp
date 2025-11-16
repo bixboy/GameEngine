@@ -3,7 +3,7 @@
 #include <stdexcept>
 
 #include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 
 namespace BixEngine::Gui
 {

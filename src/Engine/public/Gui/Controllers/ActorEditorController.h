@@ -4,7 +4,6 @@
 #include <memory>
 #include "Containers/String.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
-#include "Gui/Internal/GuiPanel.h"
 
 struct ImVec2;
 

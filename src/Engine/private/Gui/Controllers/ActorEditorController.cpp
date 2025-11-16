@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <utility>
 #include "Logger.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include "Gui/GuiDocking.h"

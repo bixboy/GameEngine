@@ -1,6 +1,6 @@
 #include "Gui/Internal/AssetEditorRegistry.h"
 #include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include <algorithm>
 #include "Utils/FilesUtils.h"
 

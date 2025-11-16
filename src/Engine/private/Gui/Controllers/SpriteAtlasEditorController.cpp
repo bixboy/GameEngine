@@ -2,7 +2,7 @@
 #include <algorithm>
 #include <cstdio>
 #include "Logger.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Ressources/SpriteAtlasFactory.h"
 #include "Ressources/Texture.h"

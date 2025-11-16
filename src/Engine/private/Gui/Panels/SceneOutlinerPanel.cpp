@@ -14,21 +14,17 @@ namespace BixEngine::Gui
 {
     using namespace Utils;
 
-    SceneOutlinerPanel::SceneOutlinerPanel(std::function<Game::SceneManager*()> sceneProvider,
-                                           std::function<Game::Actor*()> selectionGetter,
-                                           std::function<void(Game::Actor*)> selectionSetter)
+    SceneOutlinerPanel::SceneOutlinerPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
         : GuiPanelBase("scene_outliner"),
-          sceneManagerProvider_(std::move(sceneProvider)),
-          selectedActorGetter_(std::move(selectionGetter)),
-          selectedActorSetter_(std::move(selectionSetter))
+        sceneManagerProvider_(std::move(sceneProvider)),
+        selectedActorGetter_(std::move(selectionGetter)),
+        selectedActorSetter_(std::move(selectionSetter))
     {
         searchBuffer_.fill('\0');
     }
 
     SceneOutlinerPanel::SceneOutlinerPanel(const DefaultEngineGuiContext& context)
-        : SceneOutlinerPanel(context.sceneManagerProvider,
-                             context.selectedActorGetter,
-                             context.selectedActorSetter)
+        : SceneOutlinerPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
     {
     }
 
@@ -125,13 +121,13 @@ namespace BixEngine::Gui
                     if (hasName)
                     {
                         ImGui::TreeNodeEx(actor.get(), actorFlags, "%.*s (%.*s)",
-                                          static_cast<int>(actorNameView.size()), actorNameView.data(),
-                                          static_cast<int>(actorTypeView.size()), actorTypeView.data());
+                            static_cast<int>(actorNameView.size()), actorNameView.data(),
+                            static_cast<int>(actorTypeView.size()), actorTypeView.data());
                     }
                     else
                     {
                         ImGui::TreeNodeEx(actor.get(), actorFlags, "<Unnamed> (%.*s)",
-                                          static_cast<int>(actorTypeView.size()), actorTypeView.data());
+                            static_cast<int>(actorTypeView.size()), actorTypeView.data());
                     }
 
                     if (ImGui::IsItemClicked() && selectedActorSetter_)

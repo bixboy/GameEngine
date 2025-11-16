@@ -25,10 +25,13 @@ namespace
 
         for (ImFont* font : io.Fonts->Fonts)
         {
-            if (!font) continue;
+            if (!font)
+                continue;
+            
             ImGui::PushFont(font);
             float size = ImGui::GetFontSize();
             ImGui::PopFont();
+            
             if (size < best)
             {
                 best = size;
@@ -44,8 +47,7 @@ namespace
     // Dessin récursif d'un tree node
     // ─────────────────────────────────────────────
 
-    void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode,
-                               const TreeNodeCallback& onContextMenu)
+    void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode, const TreeNodeCallback& onContextMenu)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
         if (node.isLeaf || node.children.empty())
@@ -231,6 +233,7 @@ namespace BixEngine::Gui::Utils
                 bool selectedNow = (items[i] == selected);
                 if (ImGui::Selectable(items[i].c_str(), selectedNow))
                     outSelection = items[i];
+                
                 if (onItemHover && ImGui::IsItemHovered())
                     onItemHover(items[i]);
             }
@@ -252,14 +255,12 @@ namespace BixEngine::Gui::Utils
         }
     }
 
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const char* emptyMessage)
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const char* emptyMessage)
     {
         DrawScriptHierarchyTree(roots, selectedNode, nullptr, emptyMessage);
     }
 
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const TreeNodeCallback& onContextMenu, const char* emptyMessage)
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu, const char* emptyMessage)
     {
         if (roots.empty())
         {
@@ -284,8 +285,7 @@ namespace BixEngine::Gui::Utils
         return ImGui::CollapsingHeader(label ? label : "", flags);
     }
 
-    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen,
-                                ImGuiTreeNodeFlags additionalFlags)
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen, ImGuiTreeNodeFlags additionalFlags)
     {
         auto& state = GuiStateManager::Get();
         std::string key = contextId.empty() ? label : contextId + "::" + label;

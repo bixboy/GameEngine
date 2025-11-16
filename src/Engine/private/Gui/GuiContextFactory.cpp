@@ -51,7 +51,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // 🧠 Création du contexte GUI principal
+    // Création du contexte GUI principal
     // ────────────────────────────────────────────────
     DefaultEngineGuiContext DefaultEngineGuiContextFactory::CreateContext(const DefaultEngineGuiContextArgs& args) const
     {
@@ -127,16 +127,12 @@ namespace BixEngine::Gui
         // ──────────────────────────────
         // Taille viewport
         // ──────────────────────────────
-        context.sceneRenderTextureSizeProvider = args.sceneViewportSizeProvider
-                                                     ? args.sceneViewportSizeProvider
-                                                     : DefaultSizeProvider();
+        context.sceneRenderTextureSizeProvider = args.sceneViewportSizeProvider ? args.sceneViewportSizeProvider : DefaultSizeProvider();
 
         // ──────────────────────────────
         // Ouvrerture scripts
         // ──────────────────────────────
-        context.openScriptFilesInEditor = args.openScriptFilesInEditor
-                                              ? args.openScriptFilesInEditor
-                                              : DefaultScriptOpener();
+        context.openScriptFilesInEditor = args.openScriptFilesInEditor ? args.openScriptFilesInEditor : DefaultScriptOpener();
         context.openAssetInEditor = args.openAssetInEditor ? args.openAssetInEditor : DefaultAssetOpener();
 
         context.mouseStatsProvider = [manager = &subsystems_]() -> const Input::MouseStatistics*

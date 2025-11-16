@@ -19,7 +19,6 @@
 #include "Gui/GuiContextFactory.h"
 #include "Gui/GuiManager.h"
 #include "Gui/Internal/GuiLayoutManager.h"
-#include "Gui/Internal/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "Gui/Internal/NavBar/GuiNavigationBar.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
@@ -28,6 +27,7 @@
 #include "Actor.h"
 #include "Renderer.h"
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
+#include "Gui/Panels/GuiPanel.h"
 
 namespace BixEngine::Core
 {

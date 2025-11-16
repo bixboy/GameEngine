@@ -9,7 +9,7 @@
 #include "Input.h"
 #include "SceneManager.h"
 #include "Timer.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 
 
 namespace BixEngine::Gui

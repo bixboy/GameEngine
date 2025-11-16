@@ -4,24 +4,13 @@
 #include "Gui/DefaultEngineGui.h"
 #include "Gui/GuiPanelBase.h"
 
-namespace BixEngine
-{
-    namespace Core { class Timer; }
-    namespace Game { class SceneManager; }
-}
-
-namespace Input { struct MouseStatistics; }
-
 
 namespace BixEngine::Gui
 {
     class StatsPanel : public GuiPanelBase
     {
     public:
-        StatsPanel(Core::Timer* timer,
-                   const float* lastDeltaTime,
-                   std::function<Game::SceneManager*()> sceneProvider,
-                   std::function<const Input::MouseStatistics*()> mouseStatsProvider);
+        StatsPanel(Core::Timer* timer, const float* lastDeltaTime, std::function<Game::SceneManager*()> sceneProvider, std::function<const Input::MouseStatistics*()> mouseStatsProvider);
         explicit StatsPanel(const DefaultEngineGuiContext& context);
 
         void Draw() override;

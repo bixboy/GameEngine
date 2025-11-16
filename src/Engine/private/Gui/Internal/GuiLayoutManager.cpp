@@ -11,7 +11,7 @@
 
 #include "imgui.h"
 #include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"

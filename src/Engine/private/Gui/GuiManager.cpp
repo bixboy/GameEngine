@@ -3,7 +3,7 @@
 #include <algorithm>
 #include <stdexcept>
 
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "imgui.h"
 
@@ -84,6 +84,7 @@ namespace BixEngine::Gui
         {
             if (!panel)
                 continue;
+            
             RemovePanel(panel->GetName());
         }
     }
@@ -113,6 +114,7 @@ namespace BixEngine::Gui
         {
             if (!panel)
                 continue;
+            
             panel->Draw();
         }
     }
@@ -140,7 +142,9 @@ namespace BixEngine::Gui
         if (entry->controller)
         {
             childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
-                                       { RemovePanel(childName); });
+            {
+                RemovePanel(childName);
+            });
             entry->controller->DetachFromPanel();
             entry->controller->UnbindManager();
         }
@@ -162,7 +166,9 @@ namespace BixEngine::Gui
             if (entry->controller)
             {
                 childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
-                                            { RemovePanel(childName); });
+                {
+                    RemovePanel(childName);
+                });
                 entry->controller->DetachFromPanel();
                 entry->controller->UnbindManager();
                 entry->controller.reset();
@@ -179,7 +185,9 @@ namespace BixEngine::Gui
             if (entry->controller)
             {
                 childPanels_.RemoveChildren(*entry->controller, [this](const String& childName)
-                                            { RemovePanel(childName); });
+                {
+                    RemovePanel(childName);
+                });
                 entry->controller->DetachFromPanel();
                 entry->controller->UnbindManager();
                 entry->controller.reset();
@@ -193,6 +201,7 @@ namespace BixEngine::Gui
     {
         if (auto* entry = registry_.FindPanelEntry(name))
             return entry->controller.get();
+        
         return nullptr;
     }
 
@@ -218,9 +227,11 @@ namespace BixEngine::Gui
         case GuiPanelController::ChildPanelKind::FloatingWindow:
             panel.ResetDockingPreference();
             break;
+            
         case GuiPanelController::ChildPanelKind::SecondaryDocked:
             panel.SetDockingPreference(config.dockRegion, config.dockCondition);
             break;
+            
         case GuiPanelController::ChildPanelKind::PersistentPopup:
             panel.ResetDockingPreference();
             panel.AddWindowFlags(ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking);
@@ -237,13 +248,16 @@ namespace BixEngine::Gui
     void GuiManager::CloseChildPanels(GuiPanelController& parent)
     {
         childPanels_.RemoveChildren(parent, [this](const String& childName)
-        { RemovePanel(childName); });
+        {
+            RemovePanel(childName);
+        });
     }
 
     bool GuiManager::NavigateBack()
     {
         if (const String* target = history_.NavigateBack())
             return FocusPanel(*target);
+        
         return false;
     }
 
@@ -251,6 +265,7 @@ namespace BixEngine::Gui
     {
         if (const String* target = history_.NavigateForward())
             return FocusPanel(*target);
+        
         return false;
     }
 

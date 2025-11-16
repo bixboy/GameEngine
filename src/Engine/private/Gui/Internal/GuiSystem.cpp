@@ -9,7 +9,7 @@
 #include <SDL3/SDL.h>
 
 #include "Logger.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "imgui_internal.h"
@@ -23,7 +23,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // ⚙️ Initialisation / Shutdown
+    // Initialisation / Shutdown
     // ────────────────────────────────────────────────
 
     bool GuiSystem::Initialize(SDL_Window* window, SDL_Renderer* renderer)
@@ -83,7 +83,6 @@ namespace BixEngine::Gui
         {
             ImGui::SetCurrentContext(context);
 
-            // 🔹 Sauvegarde les settings avant toute destruction
             ImGuiIO& io = ImGui::GetIO();
             if (io.IniFilename && *io.IniFilename)
             {
@@ -91,23 +90,19 @@ namespace BixEngine::Gui
                 ImGui::SaveIniSettingsToDisk(io.IniFilename);
             }
 
-            // 🔹 Détruit toutes les Platform Windows avant de tuer les backends
             LOG_INFO("[GuiSystem] 🪟 Destroying ImGui platform windows...");
             ImGui::DestroyPlatformWindows();
         }
 
-        // 🔹 Ferme les backends ImGui avant le contexte
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
 
-        // 🔹 Supprime le contexte global ImGui
         if (ImGui::GetCurrentContext())
         {
             LOG_INFO("[GuiSystem] 🧠 Destroying ImGui context...");
             ImGui::DestroyContext();
         }
 
-        // 🔹 Réinitialise l'état interne
         initialized_ = false;
         frameBegun_ = false;
         dockingEnabled_ = false;
@@ -184,7 +179,7 @@ namespace BixEngine::Gui
 
 
     // ────────────────────────────────────────────────
-    // 🧠 Cycle de frame ImGui
+    // Cycle de frame ImGui
     // ────────────────────────────────────────────────
 
     void GuiSystem::BeginFrame()
@@ -230,7 +225,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // 🎮 Événements SDL
+    // Événements SDL
     // ────────────────────────────────────────────────
 
     void GuiSystem::ProcessEvent(const SDL_Event& event)
@@ -240,7 +235,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // 🪟 Gestion des panneaux
+    // Gestion des panneaux
     // ────────────────────────────────────────────────
 
     void GuiSystem::RegisterPanel(GuiPanel& panel)
@@ -268,7 +263,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // 🧩 Docking & layout
+    // Docking & layout
     // ────────────────────────────────────────────────
 
     void GuiSystem::BeginDockspaceLayout_()
@@ -277,8 +272,7 @@ namespace BixEngine::Gui
         if (!viewport)
             return;
 
-        constexpr ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode |
-            ImGuiDockNodeFlags_AutoHideTabBar;
+        constexpr ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
         constexpr ImGuiWindowFlags winFlags =
             ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
             ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
@@ -300,9 +294,7 @@ namespace BixEngine::Gui
         ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, 0.f);
         ImGui::PushStyleVar(ImGuiStyleVar_WindowPadding, ImVec2(0.f, 0.f));
 
-        const char* dockspaceWindowName = dockspaceWindowName_.empty()
-                                              ? "EngineDockSpace"
-                                              : dockspaceWindowName_.c_str();
+        const char* dockspaceWindowName = dockspaceWindowName_.empty() ? "EngineDockSpace" : dockspaceWindowName_.c_str();
         ImGui::Begin(dockspaceWindowName, nullptr, winFlags);
         ImGui::PopStyleVar(3);
 
@@ -322,11 +314,7 @@ namespace BixEngine::Gui
         ImGui::End();
     }
 
-    void GuiSystem::BuildDefaultDockLayout_(ImGuiViewport& viewport,
-                                            ImGuiID dockspaceId,
-                                            ImGuiDockNodeFlags flags,
-                                            const ImVec2& dockspacePos,
-                                            const ImVec2& dockspaceSize)
+    void GuiSystem::BuildDefaultDockLayout_(ImGuiViewport& viewport, ImGuiID dockspaceId, ImGuiDockNodeFlags flags, const ImVec2& dockspacePos, const ImVec2& dockspaceSize)
     {
         static_cast<void>(viewport);
         if (dockspaceId == 0)
@@ -355,7 +343,7 @@ namespace BixEngine::Gui
     }
 
     // ────────────────────────────────────────────────
-    // 🧠 Debug / état interne
+    // Debug / état interne
     // ────────────────────────────────────────────────
 
     void GuiSystem::DumpGuiState() const
@@ -367,11 +355,12 @@ namespace BixEngine::Gui
         LOG_INFO("Dockspace ID: " + std::to_string(dockspaceId_));
         for (size_t i = 0; i < dockRegionIds_.size(); ++i)
             LOG_INFO("Region[" + std::to_string(i) + "] ID: " + std::to_string(dockRegionIds_[i]));
+        
         LOG_INFO("───────────────────────────────");
     }
 
     // ────────────────────────────────────────────────
-    // 🧩 Fonctions internes
+    // Fonctions internes
     // ────────────────────────────────────────────────
 
     void GuiSystem::ApplyDockingPreferences_()
@@ -429,9 +418,7 @@ namespace BixEngine::Gui
             if (!panel)
                 continue;
 
-            DockSpaceRegion region = panel->HasDockingPreference()
-                                         ? panel->GetDockingPreference()
-                                         : DockSpaceRegion::Center;
+            DockSpaceRegion region = panel->HasDockingPreference() ? panel->GetDockingPreference() : DockSpaceRegion::Center;
 
             std::size_t index = static_cast<std::size_t>(region);
             if (index >= dockRegionIds_.size())
@@ -449,9 +436,7 @@ namespace BixEngine::Gui
                 continue;
             }
 
-            ImGuiCond fallbackCondition = panel->HasDockingPreference()
-                                              ? panel->GetDockingPreferenceCondition()
-                                              : ImGuiCond_FirstUseEver;
+            ImGuiCond fallbackCondition = panel->HasDockingPreference() ? panel->GetDockingPreferenceCondition() : ImGuiCond_FirstUseEver;
 
             panel->ResetDockId();
             panel->SetDockId(dockId, ImGuiCond_Always, fallbackCondition);

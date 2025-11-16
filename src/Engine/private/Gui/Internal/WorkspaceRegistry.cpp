@@ -25,6 +25,7 @@ namespace BixEngine::Gui
         {
             if (it->second.onActivate)
                 it->second.onActivate(manager);
+            
             return true;
         }
 

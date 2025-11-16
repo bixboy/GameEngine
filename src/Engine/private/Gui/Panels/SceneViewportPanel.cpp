@@ -91,8 +91,7 @@ namespace BixEngine::Gui
         ImGui::Dummy(avail);
 
         ImVec2 overlayPos = { drawPos.x + 12.f, drawPos.y + 12.f };
-        ImGui::GetWindowDrawList()->AddText(overlayPos, ImGui::GetColorU32(ImVec4(1,1,1,0.8f)), "Scene Viewport"
-        );
+        ImGui::GetWindowDrawList()->AddText(overlayPos, ImGui::GetColorU32(ImVec4(1,1,1,0.8f)), "Scene Viewport");
     }
 
 }

@@ -30,23 +30,16 @@ namespace BixEngine::Gui
         }
     }
 
-    StatsPanel::StatsPanel(Core::Timer* timer,
-                           const float* lastDeltaTime,
-                           std::function<Game::SceneManager*()> sceneProvider,
-                           std::function<const Input::MouseStatistics*()> mouseStatsProvider)
+    StatsPanel::StatsPanel(Core::Timer* timer, const float* lastDeltaTime, std::function<Game::SceneManager*()> sceneProvider, std::function<const Input::MouseStatistics*()> mouseStatsProvider)
         : GuiPanelBase("engine_stats"),
-          timer_(timer),
-          lastDeltaTime_(lastDeltaTime),
-          sceneManagerProvider_(std::move(sceneProvider)),
-          mouseStatsProvider_(std::move(mouseStatsProvider))
+        timer_(timer),
+        lastDeltaTime_(lastDeltaTime),
+        sceneManagerProvider_(std::move(sceneProvider)),
+        mouseStatsProvider_(std::move(mouseStatsProvider))
     {
     }
 
-    StatsPanel::StatsPanel(const DefaultEngineGuiContext& context)
-        : StatsPanel(context.timer,
-                     context.lastDeltaTime,
-                     context.sceneManagerProvider,
-                     context.mouseStatsProvider)
+    StatsPanel::StatsPanel(const DefaultEngineGuiContext& context) : StatsPanel(context.timer, context.lastDeltaTime, context.sceneManagerProvider, context.mouseStatsProvider)
     {
     }
 
@@ -80,21 +73,25 @@ namespace BixEngine::Gui
 
         std::vector<Widgets::MetricDisplay> metrics;
         metrics.reserve(4);
+        
         metrics.emplace_back(
             "Average FPS",
             FormatValue(displayedFps_, "%.1f"),
             Widgets::Metrics::ColorForFps(displayedFps_),
             "Smoothed framerate");
+        
         metrics.emplace_back(
             "Average Frame Time",
             FormatValue(displayedDelta_, "%.2f ms"),
             ImVec4{0.8f, 0.8f, 1.0f, 1.0f},
             "Smoothed frame time");
+        
         metrics.emplace_back(
             "Instant FPS",
             FormatValue(fps, "%.1f"),
             Widgets::Metrics::ColorForFps(fps),
             "Current frame");
+        
         metrics.emplace_back(
             "Instant Frame Time",
             FormatValue(deltaMs, "%.2f ms"),

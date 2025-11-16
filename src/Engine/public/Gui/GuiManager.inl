@@ -1,5 +1,5 @@
 #pragma once
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"
 
