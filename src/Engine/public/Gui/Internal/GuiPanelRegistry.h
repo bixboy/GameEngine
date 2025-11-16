@@ -19,9 +19,6 @@ namespace BixEngine::Gui
     class GuiPanelRegistry
     {
     public:
-        /** 
-         * @brief Données associées à un panneau (UI + logique).
-         */
         struct PanelEntry
         {
             std::unique_ptr<GuiPanel> panel;
@@ -34,10 +31,7 @@ namespace BixEngine::Gui
 
         GuiPanelRegistry() = default;
         ~GuiPanelRegistry() = default;
-
-        // ────────────────────────────────────────────────
-        // 🧩 Gestion des panneaux
-        // ────────────────────────────────────────────────
+        
 
         /** Crée un nouveau panneau ou renvoie celui existant. */
         GuiPanel& AddPanel(String name, String title);
@@ -48,36 +42,27 @@ namespace BixEngine::Gui
         /** Supprime le panneau et son contrôleur associé. */
         void RemovePanel(const String& name);
 
-        /** Recherche un panneau par nom (modifiable). */
+        /** Recherche un panneau par nom. */
         [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
 
-        /** Recherche un panneau par nom (lecture seule). */
-        [[nodiscard]] const GuiPanel* FindPanel(const String& name) const noexcept;
 
         /** Retourne l'entrée complète d'un panneau via son nom. */
         [[nodiscard]] PanelEntry* FindPanelEntry(const String& name) noexcept;
 
         /** Retourne l'entrée complète d'un panneau via sa référence. */
         [[nodiscard]] PanelEntry* FindPanelEntry(GuiPanel& panel) noexcept;
+        
 
-        /** Version const de FindPanelEntry(name). */
-        [[nodiscard]] const PanelEntry* FindPanelEntry(const String& name) const noexcept;
-
-        /** Récupère tous les panneaux (modifiable). */
+        /** Récupère tous les panneaux. */
         [[nodiscard]] std::vector<GuiPanel*> GetAllPanels();
-
-        /** Récupère tous les panneaux (lecture seule). */
-        [[nodiscard]] std::vector<const GuiPanel*> GetAllPanels() const;
+        
 
         /** Supprime tous les panneaux et vide les index. */
         void Clear();
+        
 
-        // ────────────────────────────────────────────────
-        // 🔔 Callbacks
-        // ────────────────────────────────────────────────
-
-        Callback OnPanelCreated = nullptr; ///< Appelé après la création d’un panneau
-        Callback OnPanelRemoved = nullptr; ///< Appelé juste avant la suppression d’un panneau
+        Callback OnPanelCreated = nullptr;
+        Callback OnPanelRemoved = nullptr;
 
     private:
         MapType panels_; ///< Conteneur principal (nom → entrée)
@@ -105,19 +90,22 @@ namespace BixEngine::Gui
             {
                 entry.panel = std::make_unique<PanelT>(String{name}, String{title}, std::forward<Args>(args)...);
                 entry.panelType = std::type_index(typeid(PanelT));
+                
                 PanelT& panelRef = static_cast<PanelT&>(*entry.panel);
                 RegisterPanelIndex_(panelRef, it->first);
+                
                 if (OnPanelCreated)
                     OnPanelCreated(panelRef);
+                
                 return panelRef;
             }
 
             if (entry.panelType != std::type_index(typeid(PanelT)))
-                throw std::runtime_error(
-                    "GuiPanelRegistry::AddPanelOfType — panel already exists with a different type.");
+                throw std::runtime_error("GuiPanelRegistry::AddPanelOfType — panel already exists with a different type.");
 
             auto* existing = static_cast<PanelT*>(entry.panel.get());
             existing->SetTitle(std::move(title));
+            
             return *existing;
         }
 

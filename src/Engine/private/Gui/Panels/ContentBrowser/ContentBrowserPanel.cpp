@@ -1,5 +1,4 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Gui/GuiDocking.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
 #include "Logger.h"
@@ -8,8 +7,6 @@
 #include "imgui.h"
 #include <stdexcept>
 
-#include "Gui/GuiTheme.h"
-#include "Gui/Internal/GuiPanel.h"
 #include "Utils/FilesUtils.h"
 
 namespace fs = std::filesystem;
@@ -200,30 +197,4 @@ namespace BixEngine::Gui
     {
     }
 
-    // ─────────────────────────────────────────────
-    // Création unique du panneau dockable
-    // ─────────────────────────────────────────────
-
-    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
-    {
-        GuiManager::RegisterPanel<ContentBrowserPanel>("Content Browser", context);
-
-        GuiPanelBase* controller = guiManager.CreatePanelByName("Content Browser");
-        if (!controller)
-            throw std::runtime_error("Failed to create Content Browser panel from registry.");
-
-        GuiPanel* panel = controller->GetPanel();
-        if (!panel)
-            throw std::runtime_error("Content Browser controller has no associated GuiPanel.");
-
-        guiManager.SetPanelDockingArea(*panel, DockSpaceRegion::Bottom);
-        panel->SetResizable(true);
-        panel->SetMovable(true);
-        panel->SetCollapsable(true);
-        panel->SetClosable(true);
-        panel->SetBackgroundColor(Theme::ContentBackground);
-        panel->AddWindowFlags(ImGuiWindowFlags_NoCollapse);
-
-        return *panel;
-    }
 }

@@ -44,6 +44,12 @@ namespace BixEngine::Gui
 
         void SetDockspaceIdentifiers(std::string windowName, std::string dockspaceLabel);
         void RequestDefaultDockLayout();
+        [[nodiscard]] const std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)>&
+            GetDockRegionIds() const noexcept
+        {
+            return dockRegionIds_;
+        }
+        void SetDockRegionIds(const std::array<ImGuiID, static_cast<std::size_t>(DockSpaceRegion::Count)>& ids) noexcept;
         [[nodiscard]] std::string SaveLayoutToMemory() const;
         void LoadLayoutFromMemory(const std::string& data);
 

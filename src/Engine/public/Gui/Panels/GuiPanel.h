@@ -93,6 +93,14 @@ namespace BixEngine::Gui
         void SetDrawFunction(DrawFunction drawFunction);
         void Draw();
 
+        /**
+         * \brief Demande à ImGui de focaliser la fenêtre lors de la prochaine frame.
+         *
+         * Cette fonction ne force pas l'ouverture du panneau : il est recommandé de
+         * appeler SetVisible(true) avant de demander le focus.
+         */
+        void RequestFocus() noexcept { requestFocus_ = true; }
+
         // ────────────────────────────────────────────────
         // 🎮 Callbacks d’événements
         // ────────────────────────────────────────────────
@@ -165,5 +173,7 @@ namespace BixEngine::Gui
         ImVec2 windowPos_{0.0f, 0.0f};
         ImVec2 windowSize_{0.0f, 0.0f};
         GuiPanelMode mode_{GuiPanelMode::Both};
+
+        bool requestFocus_{false};
     };
 }

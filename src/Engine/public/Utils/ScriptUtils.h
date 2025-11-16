@@ -45,12 +45,10 @@ namespace BixEngine::ScriptUtils
     };
 
     // Parsing helpers
-    std::vector<ScriptNode> BuildScriptTree(const std::filesystem::path& scriptsDir,
-                                            const std::filesystem::path& contentRoot);
+    std::vector<ScriptNode> BuildScriptTree(const std::filesystem::path& scriptsDir, const std::filesystem::path& contentRoot);
 
     // UI helpers
-    std::vector<TreeNodeData> BuildGuiTree(const std::vector<ScriptNode>& nodes,
-                                           std::unordered_map<std::string, ParentScriptInfo>& outInfo);
+    std::vector<TreeNodeData> BuildGuiTree(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo);
 
     // String utils
     bool IsActorType(std::string_view name);

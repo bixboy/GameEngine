@@ -1,5 +1,6 @@
-#include "Gui/Panels/ActorInspector/TransformSectionUI.h"
-#include "Gui/Panels/ActorInspector/ImGuiControls.h"
+#include "Gui/Panels/ActorInspector/InspectorSections/TransformInspectorSection.h"
+
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Actor.h"
@@ -13,8 +14,9 @@ namespace BixEngine::Gui::ActorInspector
 {
     using namespace Theme;
     using namespace Utils;
+    using namespace BixEngine::Gui::Widgets;
 
-    void DrawTransformSection(Game::Actor& actor)
+    void TransformInspectorSection::Draw(Game::Actor& actor)
     {
         const std::string contextId = BuildActorContextId(actor);
         PersistentSectionScope section("Transform", contextId);

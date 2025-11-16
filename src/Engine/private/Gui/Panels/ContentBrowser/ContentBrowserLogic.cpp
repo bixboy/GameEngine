@@ -6,7 +6,7 @@
 #include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
 #include "Gui/Dialogs/RenameEntryDialog.h"
 #include "Gui/Utils/GuiHelpers.h"
-#include "Gui/Widgets/GuiWidgetLibrary.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Utils/EditorUtils.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"

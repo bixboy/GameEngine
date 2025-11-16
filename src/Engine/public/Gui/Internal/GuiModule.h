@@ -54,10 +54,6 @@ namespace BixEngine::Core
         GuiModule();
         ~GuiModule() noexcept;
 
-        // ────────────────────────────────────────────────
-        // ⚙️ Cycle de vie
-        // ────────────────────────────────────────────────
-
         /** Initialise le système ImGui et le gestionnaire de panneaux. */
         bool Initialize(Window& window, Graphics::Renderer& renderer);
 
@@ -66,10 +62,6 @@ namespace BixEngine::Core
 
         /** Vérifie si le système GUI est actuellement actif. */
         bool IsInitialized() const noexcept;
-
-        // ────────────────────────────────────────────────
-        // 🎮 Gestion des événements et du frame
-        // ────────────────────────────────────────────────
 
         /**
          * @brief Transmet un événement SDL à ImGui.
@@ -83,38 +75,24 @@ namespace BixEngine::Core
          * @brief Termine le frame ImGui et effectue le rendu.
          */
         void Render(SubsystemManager& subsystems);
-
-        // ────────────────────────────────────────────────
-        // 🧩 Construction des panneaux par défaut
-        // ────────────────────────────────────────────────
+        
 
         /**
          * @brief Crée et configure tous les panneaux standards du moteur.
-         * 
-         * Exemple : Viewport, Outliner, Inspector, ContentBrowser, Stats.
          */
         void SetupDefaultGuiPanels(SubsystemManager& subsystems, const float* lastDeltaTimePointer);
 
         /** Indique si la souris est actuellement au-dessus du panneau Viewport. */
         bool IsMouseOverViewport() const noexcept;
-
-        // ────────────────────────────────────────────────
-        // 🪟 Gestion de la texture du viewpor
-        // ────────────────────────────────────────────────
+        
 
         /**
          * @brief S’assure que la texture SDL utilisée pour le viewport existe
-         * 
-         * Si la taille change ou la texture est invalide, elle est recréée.
          */
         bool EnsureSceneViewportTexture(Graphics::Renderer& renderer);
 
         /** Détruit la texture du viewport si elle existe. */
         void DestroySceneViewportTexture() noexcept;
-
-        // ────────────────────────────────────────────────
-        // 🔍 Accès aux composants internes
-        // ────────────────────────────────────────────────
 
         /** Retourne la texture SDL utilisée pour afficher la scène. */
         SDL_Texture* GetSceneViewportTexture() const noexcept { return sceneViewportTexture_; }
@@ -126,29 +104,31 @@ namespace BixEngine::Core
         }
 
         /** Retourne un pointeur vers le gestionnaire GUI (GuiManager). */
-        Gui::GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
+        GuiManager* GetGuiManager() noexcept { return guiManager_.get(); }
 
         /** Retourne un pointeur vers le gestionnaire des éditeurs d'assets. */
         GuiAssetEditorManager* GetAssetEditorManager() noexcept { return assetEditorManager_.get(); }
         const GuiAssetEditorManager* GetAssetEditorManager() const noexcept { return assetEditorManager_.get(); }
 
+
+        
         // ────────────────────────────────────────────────
-        // 🧠 Données internes
+        // Données internes
         // ────────────────────────────────────────────────
 
-        std::unique_ptr<Gui::GuiSystem> guiSystem_;
-        std::unique_ptr<Gui::GuiManager> guiManager_;
-        std::unique_ptr<Gui::GuiLayoutManager> layoutManager_;
+        std::unique_ptr<GuiSystem> guiSystem_;
+        std::unique_ptr<GuiManager> guiManager_;
+        std::unique_ptr<GuiLayoutManager> layoutManager_;
         std::unique_ptr<GuiNavigationBar> navigationBar_;
 
         SubsystemManager* subsystems_{nullptr};
 
         // Références directes vers les panneaux standards du moteur
-        Gui::GuiPanel* statsPanel_{nullptr};
-        Gui::GuiPanel* outlinerPanel_{nullptr};
-        Gui::GuiPanel* contentBrowserPanel_{nullptr};
-        Gui::GuiPanel* inspectorPanel_{nullptr};
-        Gui::GuiPanel* viewportPanel_{nullptr};
+        GuiPanel* statsPanel_{nullptr};
+        GuiPanel* outlinerPanel_{nullptr};
+        GuiPanel* contentBrowserPanel_{nullptr};
+        GuiPanel* inspectorPanel_{nullptr};
+        GuiPanel* viewportPanel_{nullptr};
 
         // Pointeurs vers des éléments du jeu liés à l’interface
         Game::Actor* selectedActor_{nullptr};

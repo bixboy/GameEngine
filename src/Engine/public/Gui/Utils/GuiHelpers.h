@@ -1,10 +1,13 @@
 #pragma once
 #include <functional>
+#include <optional>
 #include <string>
 #include <unordered_map>
 #include <vector>
 
 #include "Gui/GuiTheme.h"
+#include "Gui/Widgets/Styling/ScopedColor.h"
+#include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"
 #include "Utils/ScriptUtils.h"
 
@@ -48,46 +51,27 @@ namespace BixEngine::Gui::Utils
         ~ScopedID() { ImGui::PopID(); }
     };
 
-    /// Gère automatiquement PushStyleVar / PopStyleVar.
-    struct ScopedStyle
-    {
-        ScopedStyle(ImGuiStyleVar var, const ImVec2& value) { ImGui::PushStyleVar(var, value); }
-        ScopedStyle(ImGuiStyleVar var, float value) { ImGui::PushStyleVar(var, value); }
-        ~ScopedStyle() { ImGui::PopStyleVar(); }
-    };
+    using ScopedStyle = Widgets::ScopedStyle;
+    using ScopedColor = Widgets::ScopedColor;
 
-    /// Gère automatiquement PushStyleColor / PopStyleColor.
-    struct ScopedColor
+    class ScopedStyleColor
     {
-        ScopedColor(ImGuiCol color, const ImVec4& value) { ImGui::PushStyleColor(color, value); }
-        ~ScopedColor() { ImGui::PopStyleColor(); }
-    };
-
-    struct ScopedStyleColor
-    {
-        ScopedStyleColor(ImGuiCol color, const ImVec4& value) : applied(true)
+    public:
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value)
         {
-            ImGui::PushStyleColor(color, value);
+            colorScope_.emplace(color, value);
         }
 
-        ScopedStyleColor(ImGuiCol color, const ImVec4& value, bool condition) : applied(condition)
+        ScopedStyleColor(ImGuiCol color, const ImVec4& value, bool condition)
         {
-            if (applied)
+            if (condition)
             {
-                ImGui::PushStyleColor(color, value);
-            }
-        }
-
-        ~ScopedStyleColor()
-        {
-            if (applied)
-            {
-                ImGui::PopStyleColor();
+                colorScope_.emplace(color, value);
             }
         }
 
     private:
-        bool applied;
+        std::optional<Widgets::ScopedColor> colorScope_{};
     };
 
     /// Gère automatiquement PushFont / PopFont.
@@ -121,20 +105,16 @@ namespace BixEngine::Gui::Utils
     void DrawErrorMessage(const std::string& message);
 
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel);
-    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm,
-                            const std::function<void()>& onCancel);
+    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm, const std::function<void()>& onCancel);
 
     // ────────────────────────────────────────────────────────────────
     // Champs texte, étiquettes et infos
     // ────────────────────────────────────────────────────────────────
 
-    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize,
-                            ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
+    bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
 
-    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize,
-                                     const std::function<bool(const char*)>& validator,
-                                     ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue,
-                                     bool autoFocus = false, bool* outIsValid = nullptr);
+    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize,const std::function<bool(const char*)>& validator,
+        ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false, bool* outIsValid = nullptr);
 
     void DrawDescriptionText(const char* text);
     void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-");
@@ -144,28 +124,23 @@ namespace BixEngine::Gui::Utils
     // Listes et arbres
     // ────────────────────────────────────────────────────────────────
 
-    void DrawScrollableList(const std::vector<std::string>& items, float height,
-                            const std::string& selected, std::string& outSelection);
-    void DrawScrollableList(const std::vector<std::string>& items, float height,
-                            const std::string& selected, std::string& outSelection,
-                            const ListItemCallback& onItemHover);
+    void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection);
+    void DrawScrollableList(const std::vector<std::string>& items, float height,const std::string& selected, std::string& outSelection,
+        const ListItemCallback& onItemHover);
 
     void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode);
-    void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                           const TreeNodeCallback& onContextMenu);
+    void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu);
 
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const char* emptyMessage = "No entries");
     void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const char* emptyMessage = "No entries");
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
+        const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
 
     // ────────────────────────────────────────────────────────────────
     // Sections repliables
     // ────────────────────────────────────────────────────────────────
 
     bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
-    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true,
-                                ImGuiTreeNodeFlags additionalFlags = 0);
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
     void EndPersistentSection();
 
     // ────────────────────────────────────────────────────────────────
@@ -173,7 +148,7 @@ namespace BixEngine::Gui::Utils
     // ────────────────────────────────────────────────────────────────
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...",
-                     float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None); // Champ recherche
+                     float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
 
     bool IconButton(const char* icon, const char* tooltip = nullptr);
     void DrawHelpMarker(const char* text);
@@ -189,8 +164,7 @@ namespace BixEngine::Gui::Utils
     ImVec4 AdjustColor(const ImVec4& color, float delta) noexcept;
 
     void ShowTooltip(const char* text, ImGuiHoveredFlags flags = Theme::TooltipHoverFlags);
-    bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left,
-                             ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
+    bool IsItemDoubleClicked(ImGuiMouseButton button = ImGuiMouseButton_Left, ImGuiHoveredFlags flags = Theme::DoubleClickHoverFlags) noexcept;
 
     ImTextureRef ToTextureRef(void* nativeHandle);
 }

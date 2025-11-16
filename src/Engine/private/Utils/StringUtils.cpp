@@ -74,4 +74,37 @@ namespace BixEngine::StringUtils
 
         std::system(command.c_str());
     }
+
+    // ─────────────────────────────────────────────
+    // Transforme un path en identifiant string
+    // ─────────────────────────────────────────────
+
+    String MakeSafeIdentifier(const std::string& raw)
+    {
+        String out;
+        out.reserve(raw.size());
+
+        for (char ch : raw)
+        {
+            if (std::isalnum(static_cast<unsigned char>(ch)))
+                out += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
+            else
+                out += '_';
+        }
+
+        if (out.IsEmpty())
+            out = "identifier";
+
+        return out;
+    }
+
+    // ─────────────────────────────────────────────
+    // Suprime les caractères '\r'
+    // ─────────────────────────────────────────────
+    
+    void TrimCarriageReturn(std::string& v)
+    {
+        if (!v.empty() && v.back() == '\r')
+            v.pop_back();
+    }
 }

@@ -15,10 +15,10 @@
 #include "Gui/Controllers/ActorEditorController.h"
 #include "Gui/Controllers/ComponentEditorController.h"
 #include "Gui/Controllers/SpriteAtlasEditorController.h"
-#include "Gui/Internal/GuiModule.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Utils/EditorUtils.h"
 #include "Utils/StringUtils.h"
+
 
 namespace BixEngine::Core
 {

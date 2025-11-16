@@ -1,5 +1,4 @@
 #pragma once
-#include "Gui/GuiManager.h"
 #include "Gui/GuiPanelBase.h"
 #include "Gui/DefaultEngineGui.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
@@ -40,5 +39,4 @@ namespace BixEngine::Gui
         static ContentBrowserPanel* activeInstance_;
     };
 
-    GuiPanel& CreateContentBrowserPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context);
 }

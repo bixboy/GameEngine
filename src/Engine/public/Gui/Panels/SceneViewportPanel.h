@@ -1,8 +1,18 @@
 #pragma once
+#include "Gui/GuiPanelBase.h"
 #include "Gui/DefaultEngineGui.h"
-#include "Gui/Internal/GuiPanel.h"
 
 namespace BixEngine::Gui
 {
-    GuiPanel& CreateSceneViewportPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context);
+    class SceneViewportPanel : public GuiPanelBase
+    {
+    public:
+        explicit SceneViewportPanel(const DefaultEngineGuiContext& context);
+        ~SceneViewportPanel() override = default;
+
+        void Draw() override;
+
+    private:
+        DefaultEngineGuiContext context_;
+    };
 }

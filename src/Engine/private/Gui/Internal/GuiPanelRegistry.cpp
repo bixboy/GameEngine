@@ -1,5 +1,5 @@
 ﻿#include "Gui/Internal/GuiPanelRegistry.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 
 namespace BixEngine::Gui
 {
@@ -53,14 +53,6 @@ namespace BixEngine::Gui
         return nullptr;
     }
 
-    const GuiPanel* GuiPanelRegistry::FindPanel(const String& name) const noexcept
-    {
-        if (auto it = panels_.find(name); it != panels_.end())
-            return it->second.panel.get();
-
-        return nullptr;
-    }
-
     GuiPanelRegistry::PanelEntry* GuiPanelRegistry::FindPanelEntry(const String& name) noexcept
     {
         if (auto it = panels_.find(name); it != panels_.end())
@@ -77,34 +69,12 @@ namespace BixEngine::Gui
         return nullptr;
     }
 
-    const GuiPanelRegistry::PanelEntry* GuiPanelRegistry::FindPanelEntry(const String& name) const noexcept
-    {
-        if (auto it = panels_.find(name); it != panels_.end())
-            return &it->second;
-
-        return nullptr;
-    }
-
     std::vector<GuiPanel*> GuiPanelRegistry::GetAllPanels()
     {
         std::vector<GuiPanel*> result;
         result.reserve(panels_.size());
 
         for (auto& [_, entry] : panels_)
-        {
-            if (entry.panel)
-                result.push_back(entry.panel.get());
-        }
-
-        return result;
-    }
-
-    std::vector<const GuiPanel*> GuiPanelRegistry::GetAllPanels() const
-    {
-        std::vector<const GuiPanel*> result;
-        result.reserve(panels_.size());
-
-        for (const auto& [_, entry] : panels_)
         {
             if (entry.panel)
                 result.push_back(entry.panel.get());

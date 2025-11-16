@@ -1,35 +1,103 @@
 #include "Gui/Internal/GuiLayoutManager.h"
+
 #include <algorithm>
 #include <array>
 #include <filesystem>
 #include <fstream>
+#include <format>
+#include <optional>
 #include <string_view>
 #include <system_error>
-#include <unordered_set>
-#include <imgui.h>
 
+#include "imgui.h"
 #include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
-
+#include "Utils/FilesUtils.h"
+#include "Utils/StringUtils.h"
 
 namespace BixEngine::Gui
 {
     namespace
     {
-        constexpr auto kRootDockspaceWindow = "EditorRootDockspace";
-        constexpr std::string_view kLayoutStorageFileName = "imgui_layouts.dat";
-        constexpr std::string_view kFileVersionLine = "Version:1";
-        constexpr std::string_view kActiveLayoutPrefix = "Active=";
+        // ---------------------- CONSTANTES ----------------------
+        constexpr const char* kRootDockspaceWindow = "EditorRootDockspace";
+        constexpr const char* kLayoutStorageFileName = "imgui_layouts.dat";
+
+        constexpr std::string_view kFileVersionV1 = "Version:1";
+        constexpr std::string_view kFileVersionV2 = "Version:2";
+
+        constexpr std::string_view kPrefixActiveLayout = "Active=";
+        constexpr std::string_view kPrefixRegionIds = "RegionIds=";
+
+        using DockRegionArray = std::array<ImGuiID, static_cast<size_t>(DockSpaceRegion::Count)>;
+
+        // ---------------------- HELPERS ----------------------
+        std::string SerializeRegionIds(const DockRegionArray& ids)
+        {
+            std::string out = "RegionIds=";
+            for (size_t i = 0; i < ids.size(); ++i)
+            {
+                out += std::format("0x{:08X}", ids[i]);
+                if (i + 1 < ids.size())
+                    out += ',';
+            }
+            
+            return out;
+        }
+
+        DockRegionArray ParseRegionIds(const std::string& line)
+        {
+            DockRegionArray ids{};
+            if (line.rfind(kPrefixRegionIds.data(), 0) != 0)
+                return ids;
+
+            std::string_view v(line);
+            v.remove_prefix(kPrefixRegionIds.size());
+
+            size_t index = 0;
+            while (!v.empty() && index < ids.size())
+            {
+                const size_t comma = v.find(',');
+                std::string_view token = (comma == std::string_view::npos ? v : v.substr(0, comma));
+                token = String(token).Trim().View();
+
+                if (!token.empty())
+                {
+                    try
+                    {
+                        unsigned long parsed = std::stoul(std::string(token), nullptr, 0);
+                        ids[index] = (ImGuiID)parsed;
+                    }
+                    catch (...)
+                    {
+                        ids[index] = 0;
+                    }
+                }
+
+                ++index;
+                if (comma == std::string_view::npos)
+                    break;
+                
+                v.remove_prefix(comma + 1);
+            }
+            return ids;
+        }
     }
 
-    GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager) : guiSystem_(&guiSystem), guiManager_(&guiManager)
+    // --------------------------------------------------------------
+    // CONSTRUCTEUR
+    // --------------------------------------------------------------
+    GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager)
+        : guiSystem_(&guiSystem), guiManager_(&guiManager)
     {
+        guiManager.RegisterLayoutManager(*this);
+
         dockspaceNames_[EditorLayoutType::Scene] = "SceneDockspace";
         dockspaceNames_[EditorLayoutType::ActorEditor] = "ActorEditorDockspace";
 
-        layoutPanels_.emplace(EditorLayoutType::Scene, std::vector<GuiPanel*>{});
-        layoutPanels_.emplace(EditorLayoutType::ActorEditor, std::vector<GuiPanel*>{});
+        layoutPanels_.try_emplace(EditorLayoutType::Scene);
+        layoutPanels_.try_emplace(EditorLayoutType::ActorEditor);
 
         LoadPersistedLayouts_();
 
@@ -42,6 +110,9 @@ namespace BixEngine::Gui
         LoadLayout(currentLayout_);
     }
 
+    // --------------------------------------------------------------
+    // SWITCH
+    // --------------------------------------------------------------
     void GuiLayoutManager::Switch(EditorLayoutType newLayout)
     {
         if (!guiSystem_)
@@ -49,11 +120,8 @@ namespace BixEngine::Gui
 
         if (currentLayout_ == newLayout)
         {
-            if (switchRequested_)
-            {
-                switchRequested_ = false;
-                pendingLayout_.reset();
-            }
+            switchRequested_ = false;
+            pendingLayout_.reset();
             return;
         }
 
@@ -61,167 +129,219 @@ namespace BixEngine::Gui
         switchRequested_ = true;
     }
 
+    // --------------------------------------------------------------
+    // RENDER LOOP
+    // --------------------------------------------------------------
     void GuiLayoutManager::Render()
     {
         ProcessPendingSwitch_();
         EnsureDockspaceForCurrentLayout_();
     }
 
+    // --------------------------------------------------------------
+    // SAVE CURRENT
+    // --------------------------------------------------------------
     void GuiLayoutManager::SaveCurrentLayout()
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        const std::string serialized = guiSystem_->SaveLayoutToMemory();
-        layoutData_[currentLayout_] = serialized;
+        StoredLayout record{};
+        record.serialized = guiSystem_->SaveLayoutToMemory();
+        record.dockRegionIds = guiSystem_->GetDockRegionIds();
+
+        layoutData_[currentLayout_] = std::move(record);
     }
 
+    // --------------------------------------------------------------
+    // SAVE ALL (DISK)
+    // --------------------------------------------------------------
     void GuiLayoutManager::SaveAllLayoutsToDisk()
     {
         PersistLayoutsToDisk_();
     }
 
+    // --------------------------------------------------------------
+    // PANEL REGISTRATION
+    // --------------------------------------------------------------
     void GuiLayoutManager::RegisterPanels(EditorLayoutType layout, std::span<GuiPanel*> panels, LayoutRegistrationMode mode)
     {
         SetPanelsForLayout(layout, panels);
 
-        switch (mode)
-        {
-        case LayoutRegistrationMode::RegisterOnly:
-            break;
-        case LayoutRegistrationMode::LoadIfUninitialized:
-            if (!initializedLayouts_.contains(layout))
-                LoadLayout(layout);
-            break;
-        case LayoutRegistrationMode::ForceLoad:
-            LoadLayout(layout);
-            break;
-        }
-    }
-
-    void GuiLayoutManager::DetachPanels(std::span<GuiPanel*> panels)
-    {
-        for (GuiPanel* panel : panels)
-        {
-            if (!panel)
-                continue;
-            RemovePanel(*panel);
-        }
-    }
-
-    void GuiLayoutManager::ResetLayout(EditorLayoutType layout)
-    {
-        auto layoutIt = layoutPanels_.find(layout);
-        if (layoutIt == layoutPanels_.end())
+        if (mode == LayoutRegistrationMode::RegisterOnly)
             return;
 
-        for (GuiPanel* panel : layoutIt->second)
+        const bool ready = initializedLayouts_.contains(layout);
+
+        if (mode == LayoutRegistrationMode::LoadIfUninitialized && !ready)
         {
-            if (!panel)
-                continue;
-            panelLayoutLookup_.erase(panel);
-            panel->SetVisible(false);
+            if (currentLayout_ == layout)
+                LoadLayout(layout);
+            else
+                pendingInitialization_.insert(layout);
+
+            return;
         }
 
-        layoutIt->second.clear();
+        if (mode == LayoutRegistrationMode::ForceLoad)
+        {
+            if (currentLayout_ == layout) LoadLayout(layout);
+            else pendingInitialization_.insert(layout);
+        }
+    }
+
+    // --------------------------------------------------------------
+    // DETACH PANELS
+    // --------------------------------------------------------------
+    void GuiLayoutManager::DetachPanels(std::span<GuiPanel*> panels)
+    {
+        for (GuiPanel* p : panels)
+            if (p) RemovePanel(*p);
+    }
+
+    // --------------------------------------------------------------
+    // RESET
+    // --------------------------------------------------------------
+    void GuiLayoutManager::ResetLayout(EditorLayoutType layout)
+    {
+        auto it = layoutPanels_.find(layout);
+        if (it == layoutPanels_.end())
+            return;
+
+        for (GuiPanel* p : it->second)
+        {
+            panelLayoutLookup_.erase(p);
+            if (p)
+                p->SetVisible(false);
+        }
+
+        it->second.clear();
         initializedLayouts_.erase(layout);
     }
 
+    // --------------------------------------------------------------
+    // LOAD LAYOUT
+    // --------------------------------------------------------------
     void GuiLayoutManager::LoadLayout(EditorLayoutType layout)
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
             return;
 
-        auto it = layoutData_.find(layout);
-        if (it != layoutData_.end() && !it->second.empty())
+        if (layout != currentLayout_)
         {
-            guiSystem_->LoadLayoutFromMemory(it->second);
+            pendingInitialization_.insert(layout);
+            return;
+        }
+
+        pendingInitialization_.erase(layout);
+
+        DockRegionArray regionIds{};
+
+        if (auto it = layoutData_.find(layout); it != layoutData_.end())
+        {
+            auto& rec = it->second;
+
+            if (!rec.serialized.empty())
+                guiSystem_->LoadLayoutFromMemory(rec.serialized);
+            else
+                guiSystem_->RequestDefaultDockLayout();
+
+            regionIds = rec.dockRegionIds;
         }
         else
         {
             guiSystem_->RequestDefaultDockLayout();
         }
 
+        guiSystem_->SetDockRegionIds(regionIds);
+
         initializedLayouts_.insert(layout);
     }
 
+    // --------------------------------------------------------------
+    // SET PANELS FOR LAYOUT
+    // --------------------------------------------------------------
     void GuiLayoutManager::SetPanelsForLayout(EditorLayoutType layout, std::span<GuiPanel*> panels)
     {
-        auto& layoutVector = layoutPanels_[layout];
-        for (GuiPanel* panel : layoutVector)
+        auto& vect = layoutPanels_[layout];
+
+        for (GuiPanel* p : vect)
+            panelLayoutLookup_.erase(p);
+
+        vect.clear();
+        vect.reserve(panels.size());
+
+        for (GuiPanel* p : panels)
         {
-            if (!panel)
+            if (!p)
                 continue;
-
-            auto lookup = panelLayoutLookup_.find(panel);
-            if (lookup != panelLayoutLookup_.end() && lookup->second == layout)
-                panelLayoutLookup_.erase(lookup);
-        }
-
-        layoutVector.clear();
-
-        layoutVector.reserve(panels.size());
-        for (GuiPanel* panel : panels)
-        {
-            if (!panel)
-                continue;
-
-            if (std::find(layoutVector.begin(), layoutVector.end(), panel) != layoutVector.end())
-                continue;
-
-            layoutVector.push_back(panel);
-            panelLayoutLookup_[panel] = layout;
+            
+            vect.push_back(p);
+            panelLayoutLookup_[p] = layout;
         }
 
         ApplyPanelVisibility_();
     }
 
+    // --------------------------------------------------------------
+    // ADD PANEL
+    // --------------------------------------------------------------
     void GuiLayoutManager::AddPanel(EditorLayoutType layout, GuiPanel& panel)
     {
         RemovePanel(panel);
 
-        auto& layoutVector = layoutPanels_[layout];
-        layoutVector.push_back(&panel);
+        auto& vect = layoutPanels_[layout];
+        vect.push_back(&panel);
         panelLayoutLookup_[&panel] = layout;
 
-        if (currentLayout_ == layout)
-            panel.SetVisible(true);
-        else
-            panel.SetVisible(false);
+        panel.SetVisible(currentLayout_ == layout);
     }
 
+    // --------------------------------------------------------------
+    // REMOVE PANEL
+    // --------------------------------------------------------------
     void GuiLayoutManager::RemovePanel(GuiPanel& panel)
     {
-        auto lookup = panelLayoutLookup_.find(&panel);
-        if (lookup == panelLayoutLookup_.end())
+        auto it = panelLayoutLookup_.find(&panel);
+        if (it == panelLayoutLookup_.end())
             return;
 
-        RemovePanelFromLayout_(panel, lookup->second);
-        panelLayoutLookup_.erase(lookup);
+        RemovePanelFromLayout_(panel, it->second);
+        panelLayoutLookup_.erase(it);
+
         panel.SetVisible(false);
     }
 
+    void GuiLayoutManager::RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout)
+    {
+        auto& vect = layoutPanels_[layout];
+        std::erase(vect, &panel);
+    }
+
+    // --------------------------------------------------------------
+    // DOCKSPACE HANDLING
+    // --------------------------------------------------------------
     void GuiLayoutManager::EnsureDockspaceForCurrentLayout_()
     {
-        if (!guiSystem_)
+        if (!guiSystem_ || !dockspaceDirty_)
             return;
 
-        const std::string dockspaceName = dockspaceNames_[currentLayout_];
-        const std::string dockspaceLabel = dockspaceName + "::DockSpace";
+        const std::string label = dockspaceNames_[currentLayout_] + "::DockSpace";
+        guiSystem_->SetDockspaceIdentifiers(kRootDockspaceWindow, label);
 
-        if (!dockspaceDirty_)
-            return;
-
-        guiSystem_->SetDockspaceIdentifiers(kRootDockspaceWindow, dockspaceLabel);
         dockspaceDirty_ = false;
     }
 
+    // --------------------------------------------------------------
+    // PENDING SWITCH
+    // --------------------------------------------------------------
     void GuiLayoutManager::ProcessPendingSwitch_()
     {
         if (!switchRequested_ || !pendingLayout_.has_value() || !guiSystem_)
             return;
 
-        const EditorLayoutType newLayout = pendingLayout_.value();
+        const EditorLayoutType newLayout = *pendingLayout_;
+
         if (currentLayout_ == newLayout)
         {
             switchRequested_ = false;
@@ -233,6 +353,9 @@ namespace BixEngine::Gui
 
         currentLayout_ = newLayout;
         dockspaceDirty_ = true;
+
+        pendingInitialization_.erase(newLayout);
+
         EnsureDockspaceForCurrentLayout_();
         LoadLayout(newLayout);
         ApplyPanelVisibility_();
@@ -243,34 +366,32 @@ namespace BixEngine::Gui
         pendingLayout_.reset();
     }
 
+    // --------------------------------------------------------------
+    // VISIBILITY
+    // --------------------------------------------------------------
     void GuiLayoutManager::ApplyPanelVisibility_()
     {
         if (!guiManager_)
             return;
 
-        std::unordered_set<GuiPanel*> visiblePanels;
-        const auto& panels = layoutPanels_[currentLayout_];
-        visiblePanels.insert(panels.begin(), panels.end());
+        const auto& vect = layoutPanels_[currentLayout_];
+        std::unordered_set visible(vect.begin(), vect.end());
 
-        for (GuiPanel* panel : guiManager_->GetPanels())
+        for (GuiPanel* p : guiManager_->GetPanels())
         {
-            if (!panel)
+            if (!p)
                 continue;
-
-            const bool shouldBeVisible = visiblePanels.contains(panel);
-            panel->SetVisible(shouldBeVisible);
+            
+            p->SetVisible(visible.contains(p));
         }
     }
 
-    void GuiLayoutManager::RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout)
-    {
-        auto& layoutVector = layoutPanels_[layout];
-        std::erase(layoutVector, &panel);
-    }
-
+    // --------------------------------------------------------------
+    // LOAD FROM DISK
+    // --------------------------------------------------------------
     void GuiLayoutManager::LoadPersistedLayouts_()
     {
-        layoutStorageFile_ = ResolveLayoutStoragePath_();
+        layoutStorageFile_ = FileUtils::ResolveUserConfigPath(kLayoutStorageFileName);
         if (layoutStorageFile_.empty())
             return;
 
@@ -279,155 +400,175 @@ namespace BixEngine::Gui
             return;
 
         std::string line;
-        while (std::getline(file, line))
+        std::optional<std::string> next;
+        bool versionParsed = false;
+        bool supportsRegionIds = false;
+
+        while (true)
         {
-            TrimTrailingCarriageReturn_(line);
+            if (next)
+            {
+                line = std::move(*next);
+                next.reset();
+            }
+            else if (!std::getline(file, line))
+                break;
+
+            StringUtils::TrimCarriageReturn(line);
             if (line.empty())
                 continue;
 
-            if (line.rfind(kFileVersionLine.data(), 0) == 0)
-                continue;
-
-            if (line.rfind(kActiveLayoutPrefix.data(), 0) == 0)
+            if (!versionParsed &&
+                (line == kFileVersionV1 || line == kFileVersionV2))
             {
-                const std::string layoutName = line.substr(kActiveLayoutPrefix.size());
-                if (auto parsed = LayoutTypeFromString(layoutName))
+                supportsRegionIds = (line == kFileVersionV2);
+                versionParsed = true;
+                continue;
+            }
+
+            if (line.rfind(kPrefixActiveLayout.data(), 0) == 0)
+            {
+                std::string name = line.substr(kPrefixActiveLayout.size());
+                if (auto parsed = LayoutTypeFromString(name))
                 {
                     currentLayout_ = *parsed;
                     dockspaceDirty_ = true;
                 }
+                
                 continue;
             }
 
-            auto layoutType = LayoutTypeFromString(line);
-            if (!layoutType.has_value())
+            auto parsedLayout = LayoutTypeFromString(line);
+            if (!parsedLayout)
                 continue;
 
             std::string sizeLine;
             if (!std::getline(file, sizeLine))
                 break;
 
-            TrimTrailingCarriageReturn_(sizeLine);
+            StringUtils::TrimCarriageReturn(sizeLine);
 
-            size_t dataSize = 0;
-            if (!sizeLine.empty())
+            size_t size = 0;
+            try
             {
-                try
+                size = std::stoull(sizeLine);
+            }
+            catch (...)
+            {
+                size = 0;
+            }
+
+            StoredLayout data{};
+
+            if (size > 0)
+            {
+                data.serialized.resize(size);
+                file.read(data.serialized.data(), size);
+            }
+
+            if (file.peek() == '\r') file.get();
+            if (file.peek() == '\n') file.get();
+
+            if (supportsRegionIds)
+            {
+                std::string regionLine;
+                if (std::getline(file, regionLine))
                 {
-                    dataSize = std::stoull(sizeLine);
+                    StringUtils::TrimCarriageReturn(regionLine);
+                    if (regionLine.rfind(kPrefixRegionIds.data(), 0) == 0)
+                    {
+                        data.dockRegionIds = ParseRegionIds(regionLine);
+                    }
+                    else
+                    {
+                        next = std::move(regionLine);   
+                    }
                 }
-                catch (...)
-                {
-                    dataSize = 0;
-                }
             }
 
-            std::string data(dataSize, '\0');
-            if (dataSize > 0)
-            {
-                file.read(data.data(), dataSize);
-                if (!file)
-                    break;
-            }
-
-            if (file.peek() == '\r')
-            {
-                file.get();
-                if (file.peek() == '\n')
-                    file.get();
-            }
-            else if (file.peek() == '\n')
-            {
-                file.get();
-            }
-
-            layoutData_[*layoutType] = std::move(data);
+            layoutData_[*parsedLayout] = std::move(data);
         }
     }
 
+    // --------------------------------------------------------------
+    // SAVE TO DISK
+    // --------------------------------------------------------------
     void GuiLayoutManager::PersistLayoutsToDisk_()
     {
         if (layoutStorageFile_.empty())
-            layoutStorageFile_ = ResolveLayoutStoragePath_();
-
+            layoutStorageFile_ = FileUtils::ResolveUserConfigPath(kLayoutStorageFileName);
+        
         if (layoutStorageFile_.empty())
             return;
 
-        std::filesystem::path directory = layoutStorageFile_.parent_path();
-        if (!directory.empty())
+        std::filesystem::path dir = layoutStorageFile_.parent_path();
+        if (!dir.empty())
         {
             std::error_code ec;
-            std::filesystem::create_directories(directory, ec);
+            std::filesystem::create_directories(dir, ec);
         }
 
-        std::ofstream file(layoutStorageFile_, std::ios::binary | std::ios::trunc);
-        if (!file.is_open())
+        std::ofstream f(layoutStorageFile_, std::ios::binary | std::ios::trunc);
+        if (!f.is_open())
             return;
 
-        file << kFileVersionLine << '\n';
-        file << kActiveLayoutPrefix << LayoutTypeToString(currentLayout_) << '\n';
+        f << kFileVersionV2 << '\n';
+        f << kPrefixActiveLayout << LayoutTypeToString(currentLayout_) << '\n';
 
-        constexpr std::array<EditorLayoutType, 2> layoutOrder = {
+        constexpr std::array order = {
             EditorLayoutType::Scene,
             EditorLayoutType::ActorEditor
         };
 
-        for (EditorLayoutType type : layoutOrder)
+        for (EditorLayoutType L : order)
         {
-            const auto it = layoutData_.find(type);
-            const std::string* dataPtr = (it != layoutData_.end()) ? &it->second : nullptr;
+            const auto it = layoutData_.find(L);
+            const StoredLayout* rec = (it != layoutData_.end() ? &it->second : nullptr);
 
-            file << LayoutTypeToString(type) << '\n';
-            const size_t size = dataPtr ? dataPtr->size() : 0;
-            file << size << '\n';
-            if (dataPtr && !dataPtr->empty())
-                file.write(dataPtr->data(), dataPtr->size());
-            file << '\n';
+            f << LayoutTypeToString(L) << '\n';
+
+            const size_t size = (rec ? rec->serialized.size() : 0);
+            f << size << '\n';
+
+            if (rec && size > 0)
+                f.write(rec->serialized.data(), size);
+
+            f << '\n';
+
+            DockRegionArray region{};
+            if (rec)
+                region = rec->dockRegionIds;
+            
+            f << SerializeRegionIds(region) << '\n';
         }
     }
 
-    std::filesystem::path GuiLayoutManager::ResolveLayoutStoragePath_() const
-    {
-        if (!ImGui::GetCurrentContext())
-            return {};
-
-        const ImGuiIO& io = ImGui::GetIO();
-        std::filesystem::path basePath;
-        if (io.IniFilename && io.IniFilename[0] != '\0')
-            basePath = std::filesystem::path(io.IniFilename).parent_path();
-
-        if (basePath.empty())
-            basePath = std::filesystem::current_path();
-
-        return basePath / kLayoutStorageFileName;
-    }
-
-    void GuiLayoutManager::TrimTrailingCarriageReturn_(std::string& value)
-    {
-        if (!value.empty() && value.back() == '\r')
-            value.pop_back();
-    }
+    // --------------------------------------------------------------
+    // MISC HELPERS
+    // --------------------------------------------------------------
 
     std::string GuiLayoutManager::LayoutTypeToString(EditorLayoutType type)
     {
         switch (type)
         {
-        case EditorLayoutType::Scene:
-            return "Scene";
-        case EditorLayoutType::ActorEditor:
-            return "ActorEditor";
+            case EditorLayoutType::Scene:
+                return "Scene";
+            
+            case EditorLayoutType::ActorEditor:
+                return "ActorEditor";
         }
-
+        
         return "Scene";
     }
 
-    std::optional<EditorLayoutType> GuiLayoutManager::LayoutTypeFromString(const std::string& value)
+    std::optional<EditorLayoutType> GuiLayoutManager::LayoutTypeFromString(const std::string& v)
     {
-        if (value == "Scene")
+        if (v == "Scene")
             return EditorLayoutType::Scene;
-        if (value == "ActorEditor")
+        
+        if (v == "ActorEditor")
             return EditorLayoutType::ActorEditor;
-
+        
         return std::nullopt;
     }
 }

@@ -1,13 +1,17 @@
 #pragma once
+
 #include <filesystem>
 #include <functional>
 #include <memory>
+#include <optional>
 #include <string>
+#include <utility>
+#include <vector>
+
 #include "Containers/String.h"
 #include "Gui/Controllers/GuiPanelController.h"
-#include "imgui.h"
 #include "Gui/GuiDocking.h"
-
+#include "imgui.h"
 
 namespace BixEngine::Gui
 {
@@ -33,6 +37,14 @@ namespace BixEngine::Gui
             String stableIdSuffix{};
         };
 
+        struct EditorPage
+        {
+            String label{};
+            std::function<void(GuiPanel&)> drawCallback{};
+        };
+
+        using PageId = std::size_t;
+
         BaseAssetEditorController(std::shared_ptr<SharedState> sharedState, PanelConfig config);
         ~BaseAssetEditorController() override = default;
 
@@ -41,12 +53,26 @@ namespace BixEngine::Gui
     protected:
         void DrawStandardToolbar();
 
-        virtual void DrawPanelContents(GuiPanel& panel) = 0;
+        virtual void DrawPanelContents(GuiPanel& panel);
         virtual void OnPlayRequested();
         virtual void OnSaveRequested();
         virtual void OnCompileRequested();
 
         [[nodiscard]] const PanelConfig& GetPanelConfig() const noexcept { return config_; }
+
+        template <typename Callback>
+        PageId AddPage(String label, Callback&& drawCallback)
+        {
+            pages_.push_back(EditorPage{std::move(label), std::forward<Callback>(drawCallback)});
+            return pages_.size() - 1;
+        }
+
+        void ClearPages();
+        void SetActivePage(PageId id);
+        [[nodiscard]] std::optional<PageId> GetActivePage() const noexcept;
+        [[nodiscard]] bool DrawEditorPages(GuiPanel& panel);
+
+        virtual void OnPageChanged(PageId /*newIndex*/, const EditorPage& /*page*/) {}
 
     private:
         void OnAttach(GuiPanel& panel) override;
@@ -59,5 +85,9 @@ namespace BixEngine::Gui
         std::shared_ptr<SharedState> state_{};
         String cachedDisplayName_{};
         String stablePanelId_{};
+
+        std::vector<EditorPage> pages_{};
+        PageId activePage_{0};
     };
 }
+

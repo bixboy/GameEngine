@@ -67,4 +67,12 @@ namespace BixEngine::FileUtils
      */
     bool TryWriteFile(const std::filesystem::path& path, const std::string& content, String& outError);
 
+
+    String ExtractDisplayName(const std::filesystem::path& path);
+
+
+    std::filesystem::path NormalizePath(const std::filesystem::path& path);
+
+    std::filesystem::path ResolveUserConfigPath(const char* fileName);
+
 }

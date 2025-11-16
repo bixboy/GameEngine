@@ -1,5 +1,5 @@
 #include "Gui/GuiPanelBase.h"
-#include "Gui/Internal/GuiPanel.h"
+#include "Gui/Panels/GuiPanel.h"
 
 #include <utility>
 

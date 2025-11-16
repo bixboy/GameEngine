@@ -25,10 +25,13 @@ namespace
 
         for (ImFont* font : io.Fonts->Fonts)
         {
-            if (!font) continue;
+            if (!font)
+                continue;
+            
             ImGui::PushFont(font);
             float size = ImGui::GetFontSize();
             ImGui::PopFont();
+            
             if (size < best)
             {
                 best = size;
@@ -44,8 +47,7 @@ namespace
     // Dessin récursif d'un tree node
     // ─────────────────────────────────────────────
 
-    void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode,
-                               const TreeNodeCallback& onContextMenu)
+    void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode, const TreeNodeCallback& onContextMenu)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
         if (node.isLeaf || node.children.empty())
@@ -100,7 +102,9 @@ namespace BixEngine::Gui::Utils
 
     void DrawErrorMessage(const std::string& message)
     {
-        if (message.empty()) return;
+        if (message.empty())
+            return;
+        
         ScopedColor color(ImGuiCol_Text, ImVec4(1.f, 0.4f, 0.4f, 1.f));
         ImGui::TextWrapped("%s", message.c_str());
     }
@@ -114,8 +118,7 @@ namespace BixEngine::Gui::Utils
         return DrawConfirmButtons(okLabel, cancelLabel, nullptr, nullptr);
     }
 
-    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm,
-                            const std::function<void()>& onCancel)
+    bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm, const std::function<void()>& onCancel)
     {
         bool confirmed = false;
         ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, ImGui::GetStyle().ItemSpacing.y));
@@ -159,9 +162,8 @@ namespace BixEngine::Gui::Utils
         return ImGui::InputText("##Value", buffer, bufferSize, flags);
     }
 
-    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize,
-                                     const std::function<bool(const char*)>& validator,
-                                     ImGuiInputTextFlags flags, bool autoFocus, bool* outIsValid)
+    bool InputTextWithLabelValidated(const char* label, char* buffer, size_t bufferSize,const std::function<bool(const char*)>& validator,
+        ImGuiInputTextFlags flags, bool autoFocus, bool* outIsValid)
     {
         if (!buffer || bufferSize == 0)
         {
@@ -200,8 +202,7 @@ namespace BixEngine::Gui::Utils
 
     void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback)
     {
-        ImGui::Text("%s: %s", label ? label : "",
-                    !value.empty() ? value.c_str() : (emptyFallback ? emptyFallback : ""));
+        ImGui::Text("%s: %s", label ? label : "", !value.empty() ? value.c_str() : (emptyFallback ? emptyFallback : ""));
     }
 
     void DrawEmptyStateMessage(const char* message)
@@ -213,14 +214,13 @@ namespace BixEngine::Gui::Utils
     // ─────────────────────────────────────────────
     // Listes et arbres
     // ─────────────────────────────────────────────
-    void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected,
-                            std::string& outSelection)
+    void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection)
     {
         DrawScrollableList(items, height, selected, outSelection, nullptr);
     }
 
-    void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected,
-                            std::string& outSelection, const ListItemCallback& onItemHover)
+    void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection,
+        const ListItemCallback& onItemHover)
     {
         outSelection = selected;
         ImVec2 size(0.f, height > 0.f ? height : ImGui::GetTextLineHeightWithSpacing() * 6.f);
@@ -233,6 +233,7 @@ namespace BixEngine::Gui::Utils
                 bool selectedNow = (items[i] == selected);
                 if (ImGui::Selectable(items[i].c_str(), selectedNow))
                     outSelection = items[i];
+                
                 if (onItemHover && ImGui::IsItemHovered())
                     onItemHover(items[i]);
             }
@@ -245,8 +246,7 @@ namespace BixEngine::Gui::Utils
         DrawTreeRecursive(roots, selectedNode, nullptr);
     }
 
-    void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                           const TreeNodeCallback& onContextMenu)
+    void DrawTreeRecursive(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu)
     {
         for (size_t i = 0; i < roots.size(); ++i)
         {
@@ -255,14 +255,12 @@ namespace BixEngine::Gui::Utils
         }
     }
 
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const char* emptyMessage)
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const char* emptyMessage)
     {
         DrawScriptHierarchyTree(roots, selectedNode, nullptr, emptyMessage);
     }
 
-    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
-                                 const TreeNodeCallback& onContextMenu, const char* emptyMessage)
+    void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode, const TreeNodeCallback& onContextMenu, const char* emptyMessage)
     {
         if (roots.empty())
         {
@@ -287,8 +285,7 @@ namespace BixEngine::Gui::Utils
         return ImGui::CollapsingHeader(label ? label : "", flags);
     }
 
-    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen,
-                                ImGuiTreeNodeFlags additionalFlags)
+    bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen, ImGuiTreeNodeFlags additionalFlags)
     {
         auto& state = GuiStateManager::Get();
         std::string key = contextId.empty() ? label : contextId + "::" + label;
@@ -323,8 +320,7 @@ namespace BixEngine::Gui::Utils
     // Recherches / mini widgets
     // ─────────────────────────────────────────────
 
-    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width,
-                     ImGuiInputTextFlags flags)
+    bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width, ImGuiInputTextFlags flags)
     {
         if (!buffer || bufferSize == 0)
             return false;
@@ -437,7 +433,7 @@ namespace BixEngine::Gui::Utils
         }
         else
         {
-            return ImTextureRef(static_cast<ImTextureID>(reinterpret_cast<uintptr_t>(nativeHandle)));
+            return ImTextureRef(reinterpret_cast<uintptr_t>(nativeHandle));
         }
     }
 }
