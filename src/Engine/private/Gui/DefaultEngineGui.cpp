@@ -1,10 +1,14 @@
 #include "Gui/DefaultEngineGui.h"
 
+#include <string>
+#include <utility>
+
 #include "Gui/Panels/ActorInspectorPanel.h"
 #include "Gui/Panels/SceneOutlinerPanel.h"
 #include "Gui/Panels/SceneViewportPanel.h"
 #include "Gui/Panels/StatsPanel.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
+#include "Gui/GuiTheme.h"
 
 #include "Logger.h"
 
@@ -19,26 +23,16 @@ namespace BixEngine::Gui
     {}
 
     // ==========================================================================
-    // TryCreatePanel — gestion sécurisée
+    // TryRegisterPanel — gestion sécurisée
     // ==========================================================================
 
-    template <typename CreateFunc>
-    GuiPanel* DefaultEngineGuiPanelManager::TryCreatePanel(const char* name, CreateFunc&& func)
+    template <typename PanelT, typename... Args>
+    GuiPanel* DefaultEngineGuiPanelManager::TryRegisterPanel(const char* name, GuiManager::PanelDescriptor descriptor, Args&&... args)
     {
         try
         {
-            using ReturnType = decltype(func(guiManager_, context_));
-            GuiPanel* panel;
-
-            if constexpr (std::is_pointer_v<ReturnType>)
-                panel = func(guiManager_, context_);
-            else
-                panel = &func(guiManager_, context_);
-
-            if (!panel)
-                LOG_WARNING("[DefaultEngineGui] Panel '" + std::string(name) + "' returned NULL.");
-
-            return panel;
+            auto registration = guiManager_.RegisterPanel<PanelT>(std::move(descriptor), std::forward<Args>(args)...);
+            return &registration.panel;
         }
         catch (const std::exception& e)
         {
@@ -61,11 +55,75 @@ namespace BixEngine::Gui
             return panels;
         }
 
-        panels.sceneViewportPanel   = TryCreatePanel("SceneViewport",   CreateSceneViewportPanel);
-        panels.statsPanel           = TryCreatePanel("Stats",           CreateStatsPanel);
-        panels.sceneOutlinerPanel   = TryCreatePanel("SceneOutliner",   CreateSceneOutlinerPanel);
-        panels.actorInspectorPanel  = TryCreatePanel("ActorInspector",  CreateActorInspectorPanel);
-        panels.contentBrowserPanel  = TryCreatePanel("ContentBrowser",  CreateContentBrowserPanel);
+        using Descriptor = GuiManager::PanelDescriptor;
+
+        auto viewportDesc = Descriptor{};
+        viewportDesc.identifier = "scene_viewport";
+        viewportDesc.title = "Scene";
+        viewportDesc.dockRegion = DockSpaceRegion::Center;
+        viewportDesc.closable = false;
+        viewportDesc.collapsable = false;
+        viewportDesc.resizable = true;
+        viewportDesc.windowFlags = ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse;
+        viewportDesc.onInitialize = [](GuiPanel& panel)
+        {
+            panel.SetBackgroundColor(Theme::ViewportBackground);
+            panel.SetMovable(true);
+        };
+        panels.sceneViewportPanel = TryRegisterPanel<SceneViewportPanel>("SceneViewport", viewportDesc, context_);
+
+        auto statsDesc = Descriptor{};
+        statsDesc.identifier = "engine_stats";
+        statsDesc.title = "Engine Stats";
+        statsDesc.dockRegion = DockSpaceRegion::Right;
+        statsDesc.closable = true;
+        statsDesc.collapsable = true;
+        statsDesc.resizable = false;
+        statsDesc.windowFlags = ImGuiWindowFlags_NoCollapse;
+        statsDesc.onInitialize = [](GuiPanel& panel)
+        {
+            panel.SetBackgroundColor(Theme::StatsBackground);
+        };
+        panels.statsPanel = TryRegisterPanel<StatsPanel>("Stats", statsDesc, context_);
+
+        auto outlinerDesc = Descriptor{};
+        outlinerDesc.identifier = "scene_outliner";
+        outlinerDesc.title = "Scene Outliner";
+        outlinerDesc.dockRegion = DockSpaceRegion::Left;
+        outlinerDesc.closable = true;
+        outlinerDesc.collapsable = true;
+        outlinerDesc.windowFlags = ImGuiWindowFlags_NoCollapse;
+        outlinerDesc.onInitialize = [](GuiPanel& panel)
+        {
+            panel.SetBackgroundColor(Theme::OutlinerBackground);
+        };
+        panels.sceneOutlinerPanel = TryRegisterPanel<SceneOutlinerPanel>("SceneOutliner", outlinerDesc, context_);
+
+        auto inspectorDesc = Descriptor{};
+        inspectorDesc.identifier = "actor_inspector";
+        inspectorDesc.title = "Actor Details";
+        inspectorDesc.dockRegion = DockSpaceRegion::Right;
+        inspectorDesc.closable = true;
+        inspectorDesc.collapsable = true;
+        inspectorDesc.windowFlags = ImGuiWindowFlags_NoCollapse;
+        inspectorDesc.onInitialize = [](GuiPanel& panel)
+        {
+            panel.SetBackgroundColor(Theme::InspectorBackground);
+        };
+        panels.actorInspectorPanel = TryRegisterPanel<ActorInspectorPanel>("ActorInspector", inspectorDesc, context_);
+
+        auto browserDesc = Descriptor{};
+        browserDesc.identifier = "content_browser";
+        browserDesc.title = "Content Browser";
+        browserDesc.dockRegion = DockSpaceRegion::Bottom;
+        browserDesc.closable = true;
+        browserDesc.collapsable = true;
+        browserDesc.windowFlags = ImGuiWindowFlags_NoCollapse;
+        browserDesc.onInitialize = [](GuiPanel& panel)
+        {
+            panel.SetBackgroundColor(Theme::ContentBackground);
+        };
+        panels.contentBrowserPanel = TryRegisterPanel<ContentBrowserPanel>("ContentBrowser", browserDesc, context_);
 
         panels.allPanels =
         {

@@ -29,33 +29,25 @@ namespace BixEngine::Gui
         return nullptr;
     }
 
-    template <typename ControllerT, typename ... Args>
-    PanelRegistration<ControllerT> GuiManager::RegisterUtilityPanel(String name, String title, Args&&... args)
+    template <typename ControllerT, typename... Args>
+    PanelRegistration<ControllerT> GuiManager::RegisterPanel(PanelDescriptor descriptor, Args&&... args)
     {
-        GuiPanel& panel = CreatePanel(std::move(name), std::move(title));
+        if (descriptor.identifier.IsEmpty())
+            throw std::invalid_argument("GuiManager::RegisterPanel — identifier cannot be empty");
+
+        if (descriptor.title.IsEmpty())
+            descriptor.title = descriptor.identifier;
+
+        GuiPanel& panel = CreatePanel(std::move(descriptor.identifier), std::move(descriptor.title));
+        ApplyPanelDescriptor_(panel, descriptor);
+
         auto controller = std::make_unique<ControllerT>(std::forward<Args>(args)...);
         ControllerT& controllerRef = static_cast<ControllerT&>(AttachController(panel, std::move(controller)));
-        
+
+        if (descriptor.requestFocus)
+            panel.RequestFocus();
+
         return {panel, controllerRef};
-    }
-
-    template <typename PanelT, typename ... Args>
-   void GuiManager::RegisterPanel(const String& displayName, Args&&... args)
-    {
-        auto& registry = StaticPanelRegistry_();
-        RegisteredPanel entry{};
-        entry.displayName = displayName;
-        entry.identifier = SanitizeIdentifier_(displayName);
-
-        using TupleType = std::tuple<std::decay_t<Args>...>;
-        TupleType argsTuple(std::forward<Args>(args)...);
-        entry.factory = [argsTuple]() mutable -> std::unique_ptr<GuiPanelBase>
-        {
-            return std::apply([](auto&... captured)
-            { return std::make_unique<PanelT>(captured...); }, argsTuple);
-        };
-
-        registry[displayName.Std()] = std::move(entry);
     }
 
 template <typename ControllerT, typename... Args>

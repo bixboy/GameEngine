@@ -1,11 +1,8 @@
 #include "Gui/GuiManager.h"
 
 #include <algorithm>
-#include <cctype>
 #include <stdexcept>
 
-#include "Gui/Dialogs/ModalDialog.h"
-#include "Gui/GuiPanelBase.h"
 #include "Gui/Internal/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "imgui.h"
@@ -327,59 +324,22 @@ namespace BixEngine::Gui
         }
     }
 
-    std::unordered_map<std::string, GuiManager::RegisteredPanel>& GuiManager::StaticPanelRegistry_()
+    void GuiManager::ApplyPanelDescriptor_(GuiPanel& panel, const PanelDescriptor& descriptor)
     {
-        static std::unordered_map<std::string, RegisteredPanel> registry;
-        return registry;
-    }
+        panel.SetClosable(descriptor.closable);
+        panel.SetMovable(descriptor.movable);
+        panel.SetResizable(descriptor.resizable);
+        panel.SetCollapsable(descriptor.collapsable);
+        panel.SetWindowFlags(descriptor.windowFlags);
+        panel.SetVisible(descriptor.startVisible);
 
-    String GuiManager::SanitizeIdentifier_(const String& name)
-    {
-        String identifier;
-        identifier.reserve(name.size());
+        if (descriptor.applyDocking)
+            SetPanelDockingArea(panel, descriptor.dockRegion, descriptor.dockCondition);
+        else
+            panel.ResetDockingPreference();
 
-        for (char ch : name.View())
-        {
-            if (std::isalnum(static_cast<unsigned char>(ch)))
-                identifier += static_cast<char>(std::tolower(static_cast<unsigned char>(ch)));
-            else if (ch == ' ' || ch == '-' || ch == ':')
-                identifier += '_';
-        }
-
-        if (identifier.IsEmpty())
-            identifier = "panel";
-
-        return identifier;
-    }
-
-    void GuiManager::UnregisterPanel(const String& displayName)
-    {
-        auto& registry = StaticPanelRegistry_();
-        registry.erase(displayName.Std());
-    }
-
-    GuiPanelBase* GuiManager::CreatePanelByName(const String& displayName)
-    {
-        auto& registry = StaticPanelRegistry_();
-        auto it = registry.find(displayName.Std());
-
-        if (it == registry.end())
-            return nullptr;
-
-        RegisteredPanel& entry = it->second;
-
-        auto instance = entry.factory();
-
-        GuiPanelBase* rawPtr = instance.get();
-
-        GuiPanel& panel = CreatePanel(entry.identifier, entry.displayName);
-
-        auto controller = std::unique_ptr<GuiPanelController>(rawPtr);
-        AttachController(panel, std::move(controller));
-        
-        instance.release();
-
-        return rawPtr;
+        if (descriptor.onInitialize)
+            descriptor.onInitialize(panel);
     }
 
 }

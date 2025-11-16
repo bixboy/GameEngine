@@ -1,9 +1,8 @@
 #include "Gui/Panels/SceneViewportPanel.h"
 #include <SDL3/SDL_render.h>
+#include <utility>
+
 #include "imgui.h"
-#include "Gui/GuiManager.h"
-#include "Gui/Internal/GuiPanel.h"
-#include "Gui/GuiTheme.h"
 #include "Gui/Utils/GuiHelpers.h"
 
 
@@ -43,16 +42,8 @@ namespace BixEngine::Gui
         }
     }
     
-    SceneViewportPanel::SceneViewportPanel(const DefaultEngineGuiContext& context) : GuiPanelBase("scene_viewport") , context_(context)
+    SceneViewportPanel::SceneViewportPanel(const DefaultEngineGuiContext& context) : GuiPanelBase("scene_viewport"), context_(context)
     {
-        if (GuiPanel* p = GuiPanelBase::GetPanel())
-        {
-            p->SetTitle("Scene");
-            p->SetBackgroundColor(Theme::ViewportBackground);
-            p->SetCollapsable(false);
-            p->SetClosable(false);
-            p->AddWindowFlags(ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_NoScrollWithMouse);
-        }
     }
     
     void SceneViewportPanel::Draw()
@@ -104,14 +95,4 @@ namespace BixEngine::Gui
         );
     }
 
-    GuiPanel& CreateSceneViewportPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context)
-    {
-        auto registration = guiManager.RegisterUtilityPanel<SceneViewportPanel>("scene_viewport","Scene Viewport",
-            context.sceneManagerProvider,
-            context.selectedActorGetter,
-            context.selectedActorSetter);
-
-        guiManager.SetPanelDockingArea(registration.panel, DockSpaceRegion::Center);
-        return registration.panel;
-    }
 }

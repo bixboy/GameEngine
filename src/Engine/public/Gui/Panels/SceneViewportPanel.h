@@ -13,8 +13,6 @@ namespace BixEngine::Gui
         void Draw() override;
 
     private:
-        const DefaultEngineGuiContext context_;
+        DefaultEngineGuiContext context_;
     };
-
-    GuiPanel& CreateSceneViewportPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context);
 }

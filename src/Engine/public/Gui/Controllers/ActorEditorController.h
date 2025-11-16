@@ -22,7 +22,7 @@ namespace BixEngine::Gui
         };
 
     private:
-        using SharedState = SharedState;
+        using SharedState = BaseAssetEditorController::SharedState;
 
     public:
         ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section);

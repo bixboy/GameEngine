@@ -10,6 +10,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <stdexcept>
 
 #include "Containers/String.h"
 #include "Gui/Controllers/GuiPanelController.h"
@@ -66,6 +67,26 @@ namespace BixEngine::Gui
         template <typename ControllerT, typename... Args>
         ControllerT& OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args);
 
+        struct PanelDescriptor
+        {
+            String identifier{};
+            String title{};
+            DockSpaceRegion dockRegion{DockSpaceRegion::Center};
+            ImGuiCond dockCondition{ImGuiCond_FirstUseEver};
+            bool applyDocking{true};
+            bool startVisible{true};
+            bool requestFocus{false};
+            bool closable{true};
+            bool movable{true};
+            bool resizable{true};
+            bool collapsable{true};
+            ImGuiWindowFlags windowFlags{ImGuiWindowFlags_None};
+            std::function<void(GuiPanel&)> onInitialize{};
+        };
+
+        template <typename ControllerT, typename... Args>
+        PanelRegistration<ControllerT> RegisterPanel(PanelDescriptor descriptor, Args&&... args);
+
         void RemovePanel(const String& name);
         void RemovePanels(std::span<GuiPanel*> panels);
 
@@ -88,9 +109,6 @@ namespace BixEngine::Gui
         template <typename T>
         T* GetControllerAs(const String& name) noexcept;
 
-        template <typename ControllerT, typename... Args>
-        PanelRegistration<ControllerT> RegisterUtilityPanel(String name, String title, Args&&... args);
-
         GuiPanel& OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config);
         void CloseChildPanels(GuiPanelController& parent);
 
@@ -111,26 +129,10 @@ namespace BixEngine::Gui
         [[nodiscard]] AssetEditorRegistry& GetAssetEditorRegistry() noexcept { return assetEditors_; }
         [[nodiscard]] const AssetEditorRegistry& GetAssetEditorRegistry() const noexcept { return assetEditors_; }
 
-        template <typename PanelT, typename... Args>
-        static void RegisterPanel(const String& displayName, Args&&... args);
-
-        static void UnregisterPanel(const String& displayName);
-        GuiPanelBase* CreatePanelByName(const String& displayName);
-
         std::function<void(GuiPanel&)> OnPanelCreated;
         std::function<void(GuiPanel&)> OnPanelRemoved;
 
     private:
-        struct RegisteredPanel
-        {
-            String displayName;
-            String identifier;
-            std::function<std::unique_ptr<GuiPanelBase>()> factory;
-        };
-
-        static std::unordered_map<std::string, RegisteredPanel>& StaticPanelRegistry_();
-        static String SanitizeIdentifier_(const String& name);
-
         GuiSystem* guiSystem_{nullptr};
         GuiPanelRegistry registry_{};
         PanelHistory history_{};
@@ -142,6 +144,7 @@ namespace BixEngine::Gui
 
         void AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry);
         void OnPanelRemovedInternal_(GuiPanel& panel);
+        void ApplyPanelDescriptor_(GuiPanel& panel, const PanelDescriptor& descriptor);
     };
 }
 

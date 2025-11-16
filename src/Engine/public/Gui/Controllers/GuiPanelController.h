@@ -113,5 +113,3 @@ namespace BixEngine::Gui
     };
 }
 
-#define BIX_REGISTER_GUI_PANEL(manager, PanelType, nameLiteral, titleLiteral, ...) \
-    (manager).RegisterUtilityPanel<PanelType>((nameLiteral), (titleLiteral), ##__VA_ARGS__)

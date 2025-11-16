@@ -1,35 +1,30 @@
 #pragma once
-#include "Gui/GuiManager.h"
-#include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/Utils/GuiHelpers.h"
-#include "SceneManager.h"
-#include "Actor.h"
 #include <functional>
+
+#include "Gui/GuiPanelBase.h"
+#include "Gui/Utils/GuiHelpers.h"
 #include "ActorInspector/InspectorSections/ActorInspectorSection.h"
 #include "Gui/DefaultEngineGui.h"
+
+namespace BixEngine::Game
+{
+    class Actor;
+    class SceneManager;
+    class Scene;
+}
 
 
 namespace BixEngine::Gui
 {
-    using namespace Theme;
-    using namespace Utils;
-    
-    class ActorInspectorPanel final : public GuiPanelController
+    class ActorInspectorPanel final : public GuiPanelBase
     {
     public:
         ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider,
-            std::function<Game::Actor*()> selectionGetter,
-            std::function<void(Game::Actor*)> selectionSetter);
+                            std::function<Game::Actor*()> selectionGetter,
+                            std::function<void(Game::Actor*)> selectionSetter);
+        explicit ActorInspectorPanel(const DefaultEngineGuiContext& context);
 
-    protected:
-
-        // Called once when panel is created
-        // ------------------------------------------------------------------
-        void OnAttach(GuiPanel& panel) override;
-
-        // Called every frame
-        // ------------------------------------------------------------------
-        void OnDraw(GuiPanel&) override;
+        void Draw() override;
 
     private:
         // ----------------------------------------------------------------------
@@ -45,9 +40,4 @@ namespace BixEngine::Gui
         ActorInspector::ActorInspectorSectionList sections_;
         std::size_t registeredFactoryCount_{0};
     };
-
-    /**
-     * @brief Fonction utilitaire utilisée par l’éditeur pour créer le panneau.
-     */
-    GuiPanel& CreateActorInspectorPanel(GuiManager& guiManager, const DefaultEngineGuiContext& context);
 }

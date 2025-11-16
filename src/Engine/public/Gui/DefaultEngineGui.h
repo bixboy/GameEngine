@@ -61,8 +61,8 @@ namespace BixEngine::Gui
         DefaultEngineGuiPanels CreatePanels();
 
     private:
-        template <typename CreateFunc>
-        GuiPanel* TryCreatePanel(const char* name, CreateFunc&& func);
+        template <typename PanelT, typename... Args>
+        GuiPanel* TryRegisterPanel(const char* name, GuiManager::PanelDescriptor descriptor, Args&&... args);
 
         GuiManager& guiManager_;
         const DefaultEngineGuiContext& context_;

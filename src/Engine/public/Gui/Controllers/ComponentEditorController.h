@@ -17,7 +17,7 @@ namespace BixEngine::Gui
             Inspector
         };
 
-        using SharedState = SharedState;
+        using SharedState = BaseAssetEditorController::SharedState;
 
         ComponentEditorController(std::shared_ptr<SharedState> sharedState, Section section);
 
