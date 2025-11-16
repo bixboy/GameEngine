@@ -1,6 +1,6 @@
 #pragma once
-#include "Gui/GuiManager.h"
-
+#include "Utils/FilesUtils.h"
+#include "Utils/StringUtils.h"
 
 namespace BixEngine::Gui
 {
@@ -59,16 +59,11 @@ namespace BixEngine::Gui
     }
 
 template <typename ControllerT, typename... Args>
-    ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath,
-                                             BaseAssetEditorController::PanelConfig config,
-                                             Args&&... args)
+    ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args)
     {
         auto& registry = assetEditors_;
-        const auto normalized = AssetEditorRegistry::NormalizePath(assetPath);
-
-        // ─────────────────────────────
-        // 1. Si déjà ouvert → focus + retour
-        // ─────────────────────────────
+        const auto normalized = FileUtils::NormalizePath(assetPath);
+        
         if (const auto* existing = registry.FindEntry(normalized))
         {
             if (existing->panel)
@@ -80,39 +75,24 @@ template <typename ControllerT, typename... Args>
             if (auto* controller = dynamic_cast<ControllerT*>(existing->controller))
                 return *controller;
 
-            // type différent → on ferme la vieille entrée
             registry.CloseEditor(normalized);
         }
-
-        // ─────────────────────────────
-        // 2. Préparation du SharedState
-        // ─────────────────────────────
+        
         auto sharedState = std::make_shared<BaseAssetEditorController::SharedState>();
-        sharedState->assetPath        = normalized;
-        sharedState->assetDisplayName = AssetEditorRegistry::ExtractDisplayName(normalized);
-        sharedState->stableIdRoot     = AssetEditorRegistry::MakePanelName(normalized);
-        sharedState->assetTypeLabel   =
-            config.titlePrefix.IsEmpty() ? String{"Asset"} : config.titlePrefix;
+        sharedState->assetPath = normalized;
+        sharedState->assetDisplayName = FileUtils::ExtractDisplayName(normalized);
+        sharedState->stableIdRoot = StringUtils::MakeSafeIdentifier(normalized.generic_string());
+        sharedState->assetTypeLabel  = config.titlePrefix.IsEmpty() ? String{"Asset"} : config.titlePrefix;
 
         String panelName = sharedState->stableIdRoot;
-        String title = sharedState->assetDisplayName.IsEmpty()
-                           ? String{"Asset Editor"}
-                           : sharedState->assetDisplayName;
+        String title = sharedState->assetDisplayName.IsEmpty() ? String{"Asset Editor"} : sharedState->assetDisplayName;
 
         sharedState->onCloseRequest = [this, normalized]()
         {
             assetEditors_.CloseEditor(normalized);
         };
-
-        // ─────────────────────────────
-        // 3. Création réelle du panel + controller
-        // ─────────────────────────────
-        ControllerT& controller =
-            OpenPanel<ControllerT>(panelName,
-                                   title,
-                                   sharedState,
-                                   config,
-                                   std::forward<Args>(args)...);
+        
+        ControllerT& controller = OpenPanel<ControllerT>(panelName, title, sharedState, config, std::forward<Args>(args)...);
 
         registry.Register(normalized, controller.GetPanel(), controller, sharedState);
         return controller;

@@ -67,15 +67,16 @@ namespace BixEngine::Gui
     {
         if (auto* entry = GetEntry(assetPath))
             return entry->controller;
+        
         return nullptr;
     }
     
-    const AssetEditorRegistry::EditorEntry* AssetEditorRegistry::FindEntry(const std::filesystem::path& assetPath) const noexcept
+    AssetEditorRegistry::EditorEntry* AssetEditorRegistry::FindEntry(const std::filesystem::path& assetPath) noexcept
     {
         return GetEntry(assetPath);
     }
 
-    bool AssetEditorRegistry::HasOpenEditor(const std::filesystem::path& assetPath) const noexcept
+    bool AssetEditorRegistry::HasOpenEditor(const std::filesystem::path& assetPath) noexcept
     {
         return GetEntry(assetPath) != nullptr;
     }

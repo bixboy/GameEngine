@@ -1,4 +1,5 @@
 #include "Gui/DefaultEngineGui.h"
+
 #include "Gui/Panels/ActorInspectorPanel.h"
 #include "Gui/Panels/SceneOutlinerPanel.h"
 #include "Gui/Panels/SceneViewportPanel.h"
@@ -9,82 +10,75 @@
 
 namespace BixEngine::Gui
 {
-    namespace
+    // ==========================================================================
+    // Construction
+    // ==========================================================================
+
+    DefaultEngineGuiPanelManager::DefaultEngineGuiPanelManager(GuiManager& guiManager, const DefaultEngineGuiContext& context)
+        : guiManager_(guiManager), context_(context)
+    {}
+
+    // ==========================================================================
+    // TryCreatePanel — gestion sécurisée
+    // ==========================================================================
+
+    template <typename CreateFunc>
+    GuiPanel* DefaultEngineGuiPanelManager::TryCreatePanel(const char* name, CreateFunc&& func)
     {
-        template <typename CreateFunc>
-        GuiPanel* TryCreatePanel(const char* name, CreateFunc&& createFunc, GuiManager& gui,
-                                 const DefaultEngineGuiContext& ctx)
+        try
         {
-            try
-            {
-                using ReturnType = decltype(createFunc(gui, ctx));
-                GuiPanel* panel = nullptr;
+            using ReturnType = decltype(func(guiManager_, context_));
+            GuiPanel* panel;
 
-                if constexpr (std::is_pointer_v<ReturnType>)
-                {
-                    panel = createFunc(gui, ctx);
-                }
-                else if constexpr (std::is_lvalue_reference_v<ReturnType>)
-                {
-                    panel = &createFunc(gui, ctx);
-                }
+            if constexpr (std::is_pointer_v<ReturnType>)
+                panel = func(guiManager_, context_);
+            else
+                panel = &func(guiManager_, context_);
 
-                if (!panel)
-                    LOG_WARNING("[DefaultEngineGui] ⚠️ Panel '" + std::string(name) + "' returned null.");
+            if (!panel)
+                LOG_WARNING("[DefaultEngineGui] Panel '" + std::string(name) + "' returned NULL.");
 
-                return panel;
-            }
-            catch (const std::exception& e)
-            {
-                LOG_ERROR(
-                    "[DefaultEngineGui] ❌ Exception while creating panel '" + std::string(name) + "': " + e.what());
-                return nullptr;
-            }
+            return panel;
+        }
+        catch (const std::exception& e)
+        {
+            LOG_ERROR("[DefaultEngineGui] Exception while creating panel '" + std::string(name) + "': " + e.what());
+            return nullptr;
+        }
+    }
+
+    // ==========================================================================
+    // Création de tous les panneaux
+    // ==========================================================================
+
+    DefaultEngineGuiPanels DefaultEngineGuiPanelManager::CreatePanels()
+    {
+        DefaultEngineGuiPanels panels{};
+
+        if (!context_.bEnableGui)
+        {
+            LOG_INFO("[DefaultEngineGui] Headless mode — no GUI panels created.");
+            return panels;
         }
 
-        class DefaultEngineGuiPanelManager
+        panels.sceneViewportPanel   = TryCreatePanel("SceneViewport",   CreateSceneViewportPanel);
+        panels.statsPanel           = TryCreatePanel("Stats",           CreateStatsPanel);
+        panels.sceneOutlinerPanel   = TryCreatePanel("SceneOutliner",   CreateSceneOutlinerPanel);
+        panels.actorInspectorPanel  = TryCreatePanel("ActorInspector",  CreateActorInspectorPanel);
+        panels.contentBrowserPanel  = TryCreatePanel("ContentBrowser",  CreateContentBrowserPanel);
+
+        panels.allPanels =
         {
-        public:
-            DefaultEngineGuiPanelManager(GuiManager& guiManager,
-                                         const DefaultEngineGuiContext& context) : guiManager_(guiManager),
-                context_(context)
-            {
-            }
-
-            DefaultEngineGuiPanels CreatePanels()
-            {
-                DefaultEngineGuiPanels panels{};
-
-                if (!context_.bEnableGui)
-                {
-                    LOG_INFO("[DefaultEngineGui] Mode headless actif — aucun panneau cree.");
-                    return panels;
-                }
-
-                panels.sceneViewportPanel = TryCreatePanel("SceneViewport", CreateSceneViewportPanel, guiManager_, context_);
-                panels.statsPanel = TryCreatePanel("Stats", CreateStatsPanel, guiManager_, context_);
-                panels.sceneOutlinerPanel = TryCreatePanel("SceneOutliner", CreateSceneOutlinerPanel, guiManager_, context_);
-                panels.actorInspectorPanel = TryCreatePanel("ActorInspector", CreateActorInspectorPanel, guiManager_, context_);
-                panels.contentBrowserPanel = TryCreatePanel("ContentBrowser", CreateContentBrowserPanel, guiManager_, context_);
-
-                // Enregistre les panneaux dans la map
-                panels.allPanels =
-                {
-                    {"SceneViewport", panels.sceneViewportPanel},
-                    {"Stats", panels.statsPanel},
-                    {"SceneOutliner", panels.sceneOutlinerPanel},
-                    {"ActorInspector", panels.actorInspectorPanel},
-                    {"ContentBrowser", panels.contentBrowserPanel}
-                };
-
-                return panels;
-            }
-
-        private:
-            GuiManager& guiManager_;
-            const DefaultEngineGuiContext& context_;
+            {"SceneViewport",   panels.sceneViewportPanel},
+            {"Stats",           panels.statsPanel},
+            {"SceneOutliner",   panels.sceneOutlinerPanel},
+            {"ActorInspector",  panels.actorInspectorPanel},
+            {"ContentBrowser",  panels.contentBrowserPanel},
         };
+
+        return panels;
     }
+    
 
     DefaultEngineGuiPanels CreateDefaultEngineGui(GuiManager& guiManager, const DefaultEngineGuiContext& context)
     {

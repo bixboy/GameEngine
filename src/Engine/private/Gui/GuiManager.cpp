@@ -199,13 +199,6 @@ namespace BixEngine::Gui
         return nullptr;
     }
 
-    const GuiPanelController* GuiManager::GetController(const String& name) const noexcept
-    {
-        if (auto* entry = registry_.FindPanelEntry(name))
-            return entry->controller.get();
-        return nullptr;
-    }
-
     GuiPanel& GuiManager::OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config)
     {
         String finalName = config.name;

@@ -40,8 +40,8 @@ namespace BixEngine::Gui
         bool CloseEditor(const std::filesystem::path& assetPath);
 
         [[nodiscard]] GuiPanelController* FindController(const std::filesystem::path& assetPath) noexcept;
-        [[nodiscard]] const EditorEntry* FindEntry(const std::filesystem::path& assetPath) const noexcept;
-        [[nodiscard]] bool HasOpenEditor(const std::filesystem::path& assetPath) const noexcept;
+        [[nodiscard]] EditorEntry* FindEntry(const std::filesystem::path& assetPath) noexcept;
+        [[nodiscard]] bool HasOpenEditor(const std::filesystem::path& assetPath) noexcept;
     
     private:
         [[nodiscard]] EditorEntry* GetEntry(const std::filesystem::path& assetPath) noexcept;

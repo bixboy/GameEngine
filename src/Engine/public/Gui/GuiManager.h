@@ -51,6 +51,7 @@ namespace BixEngine::Gui
 
         GuiManager(const GuiManager&) = delete;
         GuiManager& operator=(const GuiManager&) = delete;
+        
         GuiManager(GuiManager&&) noexcept = delete;
         GuiManager& operator=(GuiManager&&) noexcept = delete;
 
@@ -78,11 +79,11 @@ namespace BixEngine::Gui
 
         GuiPanelController& AttachController(const String& name, std::unique_ptr<GuiPanelController> controller);
         GuiPanelController& AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelController> controller);
+        
         void DetachController(const String& name);
         void DetachController(GuiPanel& panel);
 
         [[nodiscard]] GuiPanelController* GetController(const String& name) noexcept;
-        [[nodiscard]] const GuiPanelController* GetController(const String& name) const noexcept;
 
         template <typename T>
         T* GetControllerAs(const String& name) noexcept;
