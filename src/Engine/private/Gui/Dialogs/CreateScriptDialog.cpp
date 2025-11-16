@@ -7,6 +7,7 @@
 #include <vector>
 #include "FileUtils.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
+#include "Utils/PrefabUtils.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/HeaderGenertorUtils.h"
 #include "Utils/ScriptUtils.h"
@@ -50,11 +51,14 @@ void CreateScriptDialog::ClearParentSelection()
     selectedParentIsComponent_ = false;
 }
 
-void CreateScriptDialog::SetSelectedParent(const std::string& className, const std::string& includePath, bool isActor, bool isComponent, bool isBase)
+void CreateScriptDialog::SetSelectedParent(const std::string& className, const std::string& includePath, bool isActor, bool isComponent, bool isBase, const std::string& displayName)
 {
     selectedParentClass_   = className.c_str();
     selectedParentInclude_ = includePath.c_str();
-    selectedParentDisplay_ = className.c_str();
+    if (!displayName.empty())
+        selectedParentDisplay_ = displayName.c_str();
+    else
+        selectedParentDisplay_ = className.c_str();
     selectedParentIsBase_  = isBase;
     selectedParentIsActor_ = isActor;
     selectedParentIsComponent_ = isComponent;
@@ -142,43 +146,24 @@ void CreateScriptDialog::DrawContent()
         ImGui::TableSetColumnIndex(0);
         if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, listHeight), true))
         {
-            static const ScriptUtils::ParentScriptInfo baseParents[] = {
-                {
-                    "Actor",
-                    "BixEngine::Game::Actor",
-                    "Game/Actor.h",
-                    path{},
-                    true,
-                    false,
-                    true
-                },
-                {"Component",
-                    "BixEngine::Game::Component",
-                    "Game/Components/Component.h",
-                    path{},
-                    false,
-                    true,
-                    true
-                }
-            };
-
+            const auto& baseParents = PrefabUtils::GetBaseClasses();
             for (const auto& base : baseParents)
             {
                 const bool isSelected = selectedParentIsBase_ && !selectedParentClass_.IsEmpty() && selectedParentClass_.View() == base.className;
 
                 if (ImGui::Selectable(base.displayName.c_str(), isSelected))
                 {
-                    SetSelectedParent(base.className, base.includePath, base.isActor, base.isComponent, true);
+                    SetSelectedParent(base.className, base.includePath, base.isActor, base.isComponent, true, base.displayName);
                 }
 
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
                 {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted(base.className.c_str());
-                    
+
                     if (!base.includePath.empty())
                         ImGui::Text("Include: %s", base.includePath.c_str());
-                    
+
                     ImGui::EndTooltip();
                 }
             }
@@ -202,7 +187,7 @@ void CreateScriptDialog::DrawContent()
                 if (auto itInfo = scriptInfoMap.find(currentlySelected); itInfo != scriptInfoMap.end())
                 {
                     const ScriptUtils::ParentScriptInfo& info = itInfo->second;
-                    SetSelectedParent(info.className, info.includePath, info.isActor, info.isComponent, false);
+                    SetSelectedParent(info.className, info.includePath, info.isActor, info.isComponent, false, info.displayName);
                 }
             }
         }

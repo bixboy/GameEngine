@@ -37,6 +37,6 @@ namespace BixEngine::Gui
 
         void ClearParentSelection();
         void SetSelectedParent(const std::string& className, const std::string& includePath, bool isActor,
-                               bool isComponent, bool isBase);
+                               bool isComponent, bool isBase, const std::string& displayName = {});
     };
 }

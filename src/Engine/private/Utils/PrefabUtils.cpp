@@ -32,6 +32,33 @@ namespace BixEngine::PrefabUtils
                 false,
                 true,
                 true
+            },
+            {
+                "Player (Engine)",
+                "BixEngine::Game::Player",
+                "Test/Player.h",
+                path{},
+                true,
+                false,
+                true
+            },
+            {
+                "Sprite Component (Engine)",
+                "BixEngine::Game::SpriteComponent",
+                "Components/SpriteComponent.h",
+                path{},
+                false,
+                true,
+                true
+            },
+            {
+                "Sprite Animator Component (Engine)",
+                "BixEngine::Game::SpriteAnimatorComponent",
+                "Components/SpriteAnimatorComponent.h",
+                path{},
+                false,
+                true,
+                true
             }
         };
 
