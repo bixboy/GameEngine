@@ -154,29 +154,29 @@ namespace BixEngine::PrefabUtils
                                                    const std::string& includePath,
                                                    const std::filesystem::path& scriptsDir)
     {
-        if (!headerPath.empty())
+        auto tryResolve = [&](const std::filesystem::path& relativePath) -> std::filesystem::path
         {
-            if (std::filesystem::exists(headerPath))
-                return headerPath;
+            if (relativePath.empty())
+                return {};
 
-            // Allow relative engine paths by resolving them from the project root (parent of Scripts/)
-            const auto projectRoot = scriptsDir.parent_path();
-            if (!projectRoot.empty())
+            if (relativePath.is_absolute() && std::filesystem::exists(relativePath))
+                return relativePath;
+
+            for (auto search = scriptsDir; !search.empty(); search = search.parent_path())
             {
-                const auto candidate = projectRoot / headerPath;
+                const auto candidate = search / relativePath;
                 if (std::filesystem::exists(candidate))
                     return candidate;
             }
-        }
 
-        if (!includePath.empty())
-        {
-            const auto candidate = scriptsDir / includePath;
-            if (std::filesystem::exists(candidate))
-                return candidate;
-        }
+            return {};
+        };
 
-        return {};
+        const auto resolvedHeader = tryResolve(headerPath);
+        if (!resolvedHeader.empty())
+            return resolvedHeader;
+
+        return tryResolve(includePath);
     }
 
     std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath,
