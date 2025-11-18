@@ -154,8 +154,20 @@ namespace BixEngine::PrefabUtils
                                                    const std::string& includePath,
                                                    const std::filesystem::path& scriptsDir)
     {
-        if (!headerPath.empty() && std::filesystem::exists(headerPath))
-            return headerPath;
+        if (!headerPath.empty())
+        {
+            if (std::filesystem::exists(headerPath))
+                return headerPath;
+
+            // Allow relative engine paths by resolving them from the project root (parent of Scripts/)
+            const auto projectRoot = scriptsDir.parent_path();
+            if (!projectRoot.empty())
+            {
+                const auto candidate = projectRoot / headerPath;
+                if (std::filesystem::exists(candidate))
+                    return candidate;
+            }
+        }
 
         if (!includePath.empty())
         {
