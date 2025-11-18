@@ -50,9 +50,7 @@ namespace BixEngine::PrefabUtils
 
     std::string EscapeJson(const std::string& value);
 
-    std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath,
-                                                                 const std::string& includePath,
-                                                                 const std::filesystem::path& scriptsDir);
+    std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath, const std::string& includePath, const std::filesystem::path& scriptsDir);
 
     std::vector<PrefabScriptCandidate> GatherPrefabCandidates(const std::vector<ScriptNode>& roots, const std::vector<ParentScriptInfo>& baseClasses);
 }

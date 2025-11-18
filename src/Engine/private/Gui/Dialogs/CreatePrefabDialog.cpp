@@ -45,9 +45,7 @@ void CreatePrefabDialog::ClearSelection()
     selectedIsComponent_ = false;
 }
 
-void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath,
-                                           const std::string& assetBaseName, bool isActor, bool isComponent,
-                                           const std::filesystem::path& headerPath)
+void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath)
 {
     selectedClass_ = className.c_str();
     selectedInclude_ = includePath.c_str();
@@ -56,6 +54,7 @@ void CreatePrefabDialog::SetSelectedScript(const std::string& className, const s
     std::string sanitized = PrefabUtils::SanitizeAssetName(assetBaseName);
     if (sanitized.empty())
         sanitized = PrefabUtils::SanitizeAssetName(className);
+    
     std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", sanitized.c_str());
     selectedIsActor_ = isActor || (!isComponent);
     selectedIsComponent_ = isComponent;
@@ -95,8 +94,7 @@ void CreatePrefabDialog::DrawSearchBar()
     ImGui::InputTextWithHint("##PrefabSearch", "Search scripts...", searchBuffer_, IM_ARRAYSIZE(searchBuffer_));
 }
 
-void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::PrefabScriptCandidate>& candidates,
-                                             const std::string& filter)
+void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::PrefabScriptCandidate>& candidates, const std::string& filter)
 {
     float listHeight = ImGui::GetTextLineHeightWithSpacing() * 12.0f;
     if (!ImGui::BeginChild("PrefabCandidateList", ImVec2(420, listHeight), true))

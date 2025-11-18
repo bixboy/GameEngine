@@ -150,9 +150,7 @@ namespace BixEngine::PrefabUtils
         return std::string{input.substr(first, last - first + 1)};
     }
 
-    static std::filesystem::path ResolveHeaderPath(const std::filesystem::path& headerPath,
-                                                   const std::string& includePath,
-                                                   const std::filesystem::path& scriptsDir)
+    static std::filesystem::path ResolveHeaderPath(const std::filesystem::path& headerPath, const std::string& includePath, const std::filesystem::path& scriptsDir)
     {
         auto tryResolve = [&](const std::filesystem::path& relativePath) -> std::filesystem::path
         {
@@ -179,9 +177,7 @@ namespace BixEngine::PrefabUtils
         return tryResolve(includePath);
     }
 
-    std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath,
-                                                                 const std::string& includePath,
-                                                                 const std::filesystem::path& scriptsDir)
+    std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath, const std::string& includePath, const std::filesystem::path& scriptsDir)
     {
         std::vector<ExposedVariableMetadata> variables;
 
@@ -245,8 +241,7 @@ namespace BixEngine::PrefabUtils
     //  Prefab candidate construction
     // ============================================================================
 
-    std::vector<PrefabScriptCandidate> GatherPrefabCandidates(const std::vector<ScriptNode>& roots,
-                                                              const std::vector<ParentScriptInfo>& baseClasses)
+    std::vector<PrefabScriptCandidate> GatherPrefabCandidates(const std::vector<ScriptNode>& roots, const std::vector<ParentScriptInfo>& baseClasses)
     {
         std::vector<PrefabScriptCandidate> candidates;
         candidates.reserve(roots.size() + baseClasses.size());
@@ -266,7 +261,6 @@ namespace BixEngine::PrefabUtils
             });
         }
 
-        // --- Recursive traversal of user scripts
         std::function<void(const ScriptNode&)> collect = [&](const ScriptNode& node)
         {
             if (node.inheritsActor || node.inheritsComponent || node.hasBlueprintMacro)
@@ -296,16 +290,15 @@ namespace BixEngine::PrefabUtils
 
         // --- Sort alphabetically
         std::sort(candidates.begin(), candidates.end(),
-                  [](const auto& a, const auto& b)
-                  {
-                      std::string al = a.displayName;
-                      std::string bl = b.displayName;
+            [](const auto& a, const auto& b)
+            {
+                std::string al = a.displayName;
+                std::string bl = b.displayName;
 
-                      std::transform(al.begin(), al.end(), al.begin(), tolower);
-                      std::transform(bl.begin(), bl.end(), bl.begin(), tolower);
-
-                      return al < bl;
-                  });
+                std::transform(al.begin(), al.end(), al.begin(), tolower);
+                std::transform(bl.begin(), bl.end(), bl.begin(), tolower);
+                return al < bl;
+            });
 
         return candidates;
     }

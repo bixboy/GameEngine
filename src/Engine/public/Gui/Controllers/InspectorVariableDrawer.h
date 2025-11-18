@@ -11,10 +11,7 @@
 
 namespace BixEngine::Gui::Inspector
 {
-    inline void DrawExposedVariablesSection(BaseAssetEditorController::SharedState& state,
-                                            std::string_view sectionLabel,
-                                            const char* tableId,
-                                            const char* emptyMessage = "No exposed variables.")
+    inline void DrawExposedVariablesSection(const BaseAssetEditorController::SharedState& state, std::string_view sectionLabel, const char* tableId, const char* emptyMessage = "No exposed variables.")
     {
         std::string headerLabel = sectionLabel.empty() ? std::string{"Variables"} : std::string{sectionLabel};
         Utils::DrawSectionHeader(headerLabel.c_str());

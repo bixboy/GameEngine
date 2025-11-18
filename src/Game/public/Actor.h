@@ -59,8 +59,11 @@ namespace BixEngine::Game
 
     private:
         std::vector<std::unique_ptr<Component>> components_;
+        
         bool has_begun_play_{false};
+        
         bool active_{true};
+        
         Scene* owningScene_{nullptr};
 
     public:
