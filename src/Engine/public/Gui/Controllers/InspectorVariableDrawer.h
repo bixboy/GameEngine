@@ -32,7 +32,7 @@ namespace BixEngine::Gui::Inspector
 
             for (std::size_t index = 0; index < state.exposedVariables.size(); ++index)
             {
-                auto& variable = state.exposedVariables[index];
+                auto variable = state.exposedVariables[index];
 
                 ImGui::TableNextRow();
 
@@ -46,8 +46,10 @@ namespace BixEngine::Gui::Inspector
 
                 ImGui::TableSetColumnIndex(2);
                 std::array<char, 256> buffer{};
+                
                 const std::string_view currentValue = variable.value.View();
                 const std::size_t copyLength = std::min(buffer.size() - 1, currentValue.size());
+                
                 std::memcpy(buffer.data(), currentValue.data(), copyLength);
                 buffer[copyLength] = '\0';
 
