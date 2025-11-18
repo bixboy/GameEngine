@@ -3,6 +3,7 @@
 #include <filesystem>
 #include <algorithm>
 #include <cctype>
+#include <fstream>
 #include <sstream>
 #include "Utils/FilesUtils.h"
 
