@@ -154,17 +154,29 @@ namespace BixEngine::PrefabUtils
                                                    const std::string& includePath,
                                                    const std::filesystem::path& scriptsDir)
     {
-        if (!headerPath.empty() && std::filesystem::exists(headerPath))
-            return headerPath;
-
-        if (!includePath.empty())
+        auto tryResolve = [&](const std::filesystem::path& relativePath) -> std::filesystem::path
         {
-            const auto candidate = scriptsDir / includePath;
-            if (std::filesystem::exists(candidate))
-                return candidate;
-        }
+            if (relativePath.empty())
+                return {};
 
-        return {};
+            if (relativePath.is_absolute() && std::filesystem::exists(relativePath))
+                return relativePath;
+
+            for (auto search = scriptsDir; !search.empty(); search = search.parent_path())
+            {
+                const auto candidate = search / relativePath;
+                if (std::filesystem::exists(candidate))
+                    return candidate;
+            }
+
+            return {};
+        };
+
+        const auto resolvedHeader = tryResolve(headerPath);
+        if (!resolvedHeader.empty())
+            return resolvedHeader;
+
+        return tryResolve(includePath);
     }
 
     std::vector<ExposedVariableMetadata> ExtractExposedVariables(const std::filesystem::path& headerPath,
