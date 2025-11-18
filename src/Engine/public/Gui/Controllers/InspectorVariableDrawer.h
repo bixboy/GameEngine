@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+#include <cstring>
 #include <string>
 #include <string_view>
 
@@ -31,9 +33,13 @@ namespace BixEngine::Gui::Inspector
             ImGui::TableSetupColumn("Default", ImGuiTableColumnFlags_WidthStretch, 0.35f);
             ImGui::TableHeadersRow();
 
-            for (const auto& variable : state.exposedVariables)
+            for (std::size_t index = 0; index < state.exposedVariables.size(); ++index)
             {
+                auto& variable = state.exposedVariables[index];
+
                 ImGui::TableNextRow();
+
+                ImGui::PushID(static_cast<int>(index));
 
                 ImGui::TableSetColumnIndex(0);
                 ImGui::TextUnformatted(variable.name.IsEmpty() ? "<Unnamed>" : variable.name.View().data());
@@ -42,7 +48,16 @@ namespace BixEngine::Gui::Inspector
                 ImGui::TextUnformatted(variable.type.IsEmpty() ? "Unknown" : variable.type.View().data());
 
                 ImGui::TableSetColumnIndex(2);
-                ImGui::TextUnformatted(variable.defaultValue.IsEmpty() ? "—" : variable.defaultValue.View().data());
+                std::array<char, 256> buffer{};
+                const std::string_view currentValue = variable.value.View();
+                const std::size_t copyLength = std::min(buffer.size() - 1, currentValue.size());
+                std::memcpy(buffer.data(), currentValue.data(), copyLength);
+                buffer[copyLength] = '\0';
+
+                if (ImGui::InputText("##ExposedValue", buffer.data(), buffer.size()))
+                    variable.value = buffer.data();
+
+                ImGui::PopID();
             }
 
             ImGui::EndTable();

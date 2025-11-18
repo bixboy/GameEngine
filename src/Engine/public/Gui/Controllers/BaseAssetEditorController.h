@@ -24,7 +24,7 @@ namespace BixEngine::Gui
             {
                 String name{};
                 String type{};
-                String defaultValue{};
+                String value{};
             };
 
             std::filesystem::path assetPath{};

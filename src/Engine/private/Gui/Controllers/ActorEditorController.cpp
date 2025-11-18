@@ -1,6 +1,9 @@
 #include "Gui/Controllers/ActorEditorController.h"
 #include <algorithm>
+#include <fstream>
+#include <string_view>
 #include <utility>
+#include <nlohmann/json.hpp>
 #include "Logger.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
@@ -60,6 +63,57 @@ namespace BixEngine::Gui
 
             return config;
         }
+
+        bool SavePrefabVariables(const BaseAssetEditorController::SharedState& state, std::string_view logPrefix)
+        {
+            if (state.assetPath.empty())
+                return false;
+
+            std::ifstream input(state.assetPath);
+            if (!input.is_open())
+            {
+                LOG_WARNING(String{logPrefix} + " Failed to open prefab for saving: " + state.assetDisplayName);
+                return false;
+            }
+
+            nlohmann::json document = nlohmann::json::parse(input, nullptr, false);
+            if (document.is_discarded() || !document.is_object())
+            {
+                LOG_WARNING(String{logPrefix} + " Invalid prefab format: " + state.assetDisplayName);
+                return false;
+            }
+
+            nlohmann::json variables = nlohmann::json::array();
+            for (const auto& variable : state.exposedVariables)
+            {
+                nlohmann::json entry = nlohmann::json::object();
+
+                if (!variable.name.IsEmpty())
+                    entry["name"] = variable.name.Std();
+
+                if (!variable.type.IsEmpty())
+                    entry["type"] = variable.type.Std();
+
+                if (!variable.value.IsEmpty())
+                    entry["default"] = variable.value.Std();
+
+                variables.push_back(std::move(entry));
+            }
+
+            document["variables"] = std::move(variables);
+
+            std::ofstream output(state.assetPath);
+            if (!output.is_open())
+            {
+                LOG_WARNING(String{logPrefix} + " Failed to write prefab: " + state.assetDisplayName);
+                return false;
+            }
+
+            output << document.dump(4);
+
+            LOG_INFO(String{logPrefix} + " 💾 Saved variables for asset: " + state.assetDisplayName);
+            return true;
+        }
     }
 
     ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section)
@@ -109,7 +163,7 @@ namespace BixEngine::Gui
     void ActorEditorController::OnSaveRequested()
     {
         if (const auto state = GetSharedState())
-            LOG_INFO(String{"[ActorPrefabEditor] 💾 Save requested for asset: "} + state->assetDisplayName);
+            SavePrefabVariables(*state, "[ActorPrefabEditor]");
     }
 
     void ActorEditorController::OnCompileRequested()

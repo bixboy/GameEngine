@@ -81,7 +81,7 @@ namespace BixEngine::Core
                     defaultCandidate = &(*initialIt);
 
                 if (defaultCandidate)
-                    metadata.defaultValue = JsonValueToString(*defaultCandidate);
+                    metadata.value = JsonValueToString(*defaultCandidate);
 
                 state.exposedVariables.push_back(std::move(metadata));
             }
