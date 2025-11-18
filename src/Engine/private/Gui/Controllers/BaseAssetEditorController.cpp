@@ -10,8 +10,7 @@ namespace BixEngine::Gui
 {
     namespace
     {
-        String BuildStablePanelId(const BaseAssetEditorController::SharedState& state,
-                                  const BaseAssetEditorController::PanelConfig& config)
+        String BuildStablePanelId(const BaseAssetEditorController::SharedState& state, const BaseAssetEditorController::PanelConfig& config)
         {
             String identifier = state.stableIdRoot;
             if (identifier.IsEmpty())
@@ -27,8 +26,7 @@ namespace BixEngine::Gui
         }
     }
 
-    BaseAssetEditorController::BaseAssetEditorController(std::shared_ptr<SharedState> sharedState, PanelConfig config)
-        : config_(std::move(config)), state_(std::move(sharedState))
+    BaseAssetEditorController::BaseAssetEditorController(std::shared_ptr<SharedState> sharedState, PanelConfig config) : config_(std::move(config)), state_(std::move(sharedState))
     {
         if (state_)
         {
