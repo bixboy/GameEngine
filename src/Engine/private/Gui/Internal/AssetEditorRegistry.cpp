@@ -12,7 +12,7 @@ namespace BixEngine::Gui
     // --------------------------------------------------------------
     void AssetEditorRegistry::Register(const std::filesystem::path& assetPath, GuiPanel& panel, GuiPanelController& controller, std::weak_ptr<BaseAssetEditorController::SharedState> sharedState)
     {
-        const auto normalized = FileUtils::NormalizePath(assetPath);
+        const auto normalized = BixEngine::FilesUtils::Utilities::NormalizePath(assetPath);
 
         editors_[normalized] = EditorEntry{
             .assetPath = normalized,
@@ -44,7 +44,7 @@ namespace BixEngine::Gui
             return false;
 
         EditorEntry localCopy = *entry;
-        editors_.erase(FileUtils::NormalizePath(assetPath));
+        editors_.erase(BixEngine::FilesUtils::Utilities::NormalizePath(assetPath));
 
         if (auto state = localCopy.sharedState.lock())
             state->onCloseRequest = nullptr;
@@ -86,7 +86,7 @@ namespace BixEngine::Gui
     // --------------------------------------------------------------
     AssetEditorRegistry::EditorEntry* AssetEditorRegistry::GetEntry(const std::filesystem::path& assetPath) noexcept
     {
-        if (auto it = editors_.find(FileUtils::NormalizePath(assetPath)); it != editors_.end())
+        if (auto it = editors_.find(BixEngine::FilesUtils::Utilities::NormalizePath(assetPath)); it != editors_.end())
             return &it->second;
         
         return nullptr;

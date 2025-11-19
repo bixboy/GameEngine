@@ -7,7 +7,7 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
-#include "Gui/Controllers/InspectorVariableDrawer.h"
+#include "Gui/Panels/ActorInspector/PropertyInspector.h"
 
 namespace BixEngine::Gui
 {
@@ -178,8 +178,6 @@ namespace BixEngine::Gui
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
 
-        Inspector::DrawExposedVariablesSection(*state, "Variables du composant",
-                                               "ComponentInspectorVariables",
-                                               "Aucune variable exposée pour ce composant.");
+        ActorInspector::DrawExposedVariablesSection(*state, "Variables du composant", "Aucune variable exposée pour ce composant.");
     }
 }

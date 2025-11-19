@@ -1,15 +1,13 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/GeneralInspectorSection.h"
-
 #include "Gui/Panels/ActorInspector/ActorInspectorState.h"
 #include "Gui/Widgets/Widgets.h"
-#include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
-
 #include "Gui/Utils/GuiHelpers.h"
 #include "Actor.h"
-
 #include <imgui.h>
 #include <string>
+
+#include "Gui/Panels/ActorInspector/PropertyInspector.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -37,12 +35,7 @@ namespace BixEngine::Gui::ActorInspector
             {
                 ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.0f, 6.0f));
 
-                if (ImGui::BeginTable(
-                        "ActorOverviewTable",
-                        2,
-                        ImGuiTableFlags_SizingStretchProp |
-                            ImGuiTableFlags_PadOuterX |
-                            ImGuiTableFlags_NoSavedSettings))
+                if (ImGui::BeginTable("ActorOverviewTable", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_PadOuterX | ImGuiTableFlags_NoSavedSettings))
                 {
                     ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 100.0f);
                     ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
@@ -63,16 +56,18 @@ namespace BixEngine::Gui::ActorInspector
                     ImGui::TextDisabled("Status");
                     ImGui::TableSetColumnIndex(1);
                     ImGui::BeginGroup();
+                    
                     if (ImGui::Checkbox("##ActorActive", &isActive))
                     {
                         actor.SetActive(isActive);
                     }
+                    
                     ImGui::SameLine(0.0f, 6.0f);
-                    const ImVec4 statusColor = isActive
-                                                   ? ImVec4(0.27f, 0.58f, 0.32f, 1.0f)
-                                                   : ImVec4(0.45f, 0.45f, 0.45f, 1.0f);
+                    
+                    const ImVec4 statusColor = isActive ? ImVec4(0.27f, 0.58f, 0.32f, 1.0f) : ImVec4(0.45f, 0.45f, 0.45f, 1.0f);
                     constexpr auto statusTextColor = ImVec4(0.95f, 0.98f, 0.96f, 1.0f);
                     DrawBadge(isActive ? "Active" : "Inactive", statusColor, statusTextColor);
+                    
                     ImGui::EndGroup();
 
                     const std::string typeName = ToStdString(actor.GetTypeName());

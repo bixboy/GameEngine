@@ -266,7 +266,7 @@ void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
 bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 {
     if (atlasName_[0]=='\0')
-        return FileUtils::LogAndStoreError(atlasError_,"Atlas name cannot be empty.",false), false;
+        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Atlas name cannot be empty.",false), false;
 
     std::string base(atlasName_);
     if (base.ends_with(".atlas"))
@@ -280,11 +280,11 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 
     path outDir = usingTexture ? tex.parent_path() : framesDir_;
     if (outDir.empty())
-        return FileUtils::LogAndStoreError(atlasError_,"Invalid output directory.",false), false;
+        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Invalid output directory.",false), false;
 
     path out = outDir / (base+".atlas");
     if (fs::exists(out))
-        return FileUtils::LogAndStoreError(atlasError_,"Atlas already exists.",false), false;
+        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Atlas already exists.",false), false;
 
     if (usingTexture)
     {
@@ -301,10 +301,10 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
     else
     {
         if (framesDir_.empty() || !fs::exists(framesDir_))
-            return FileUtils::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
+            return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
 
         if (!AtlasGenerator::GenerateAtlas(framesDir_,columns_,rows_,padding_,margin_,frameRate_,loop_))
-            return FileUtils::LogAndStoreError(atlasError_,"Failed to generate atlas.",false), false;
+            return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Failed to generate atlas.",false), false;
 
         path autoOut = framesDir_ / (base+".atlas");
         if (fs::exists(autoOut))
@@ -337,7 +337,7 @@ void CreateSpriteAtlasDialog::RefreshTextureCandidates()
     }
 
     std::sort(textureCandidates_.begin(),textureCandidates_.end(),
-        [](auto&a,auto&b){ return FileUtils::CaseInsensitiveLess(a.filename().string(),b.filename().string()); });
+        [](auto&a,auto&b){ return FilesUtils::Utilities::CaseInsensitiveLess(a.filename().string(),b.filename().string()); });
 
     if (texturePath_.empty() && !textureCandidates_.empty())
         SetTexturePath(textureCandidates_.front());

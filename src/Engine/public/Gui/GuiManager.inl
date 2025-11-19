@@ -55,7 +55,7 @@ template <typename ControllerT, typename... Args>
     ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args)
     {
         auto& registry = assetEditors_;
-        const auto normalized = FileUtils::NormalizePath(assetPath);
+        const auto normalized = FilesUtils::Utilities::NormalizePath(assetPath);
         
         if (const auto* existing = registry.FindEntry(normalized))
         {
@@ -73,8 +73,8 @@ template <typename ControllerT, typename... Args>
         
         auto sharedState = std::make_shared<BaseAssetEditorController::SharedState>();
         sharedState->assetPath = normalized;
-        sharedState->assetDisplayName = FileUtils::ExtractDisplayName(normalized);
-        sharedState->stableIdRoot = StringUtils::MakeSafeIdentifier(normalized.generic_string());
+        sharedState->assetDisplayName = FilesUtils::Utilities::ExtractDisplayName(normalized);
+        sharedState->stableIdRoot = StringUtils::Utilities::MakeSafeIdentifier(normalized.generic_string());
         sharedState->assetTypeLabel  = config.titlePrefix.IsEmpty() ? String{"Asset"} : config.titlePrefix;
 
         String panelName = sharedState->stableIdRoot;

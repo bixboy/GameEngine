@@ -98,18 +98,18 @@ bool CreateFolderDialog::TryCreate()
 {
     String nameStr = String(folderName_).Trim();
     if (nameStr.IsEmpty())
-        return FileUtils::LogAndStoreError(folderError_, "Folder name cannot be empty.", false);
+        return FilesUtils::Utilities::LogAndStoreError(folderError_, "Folder name cannot be empty.", false);
 
     if (nameStr.Contains("/") || nameStr.Contains("\\"))
-        return FileUtils::LogAndStoreError(folderError_, "Folder name cannot contain path separators.", false);
+        return FilesUtils::Utilities::LogAndStoreError(folderError_, "Folder name cannot contain path separators.", false);
 
     const path baseDir = targetDir_.empty() ? state_.current : targetDir_;
     const path newFolderPath = baseDir / path(nameStr.View());
 
     if (fs::exists(newFolderPath))
-        return FileUtils::LogAndStoreError(folderError_, "A folder with this name already exists.", false);
+        return FilesUtils::Utilities::LogAndStoreError(folderError_, "A folder with this name already exists.", false);
 
-    if (!FileUtils::TryCreateDir(newFolderPath, folderError_))
+    if (!FilesUtils::Utilities::TryCreateDir(newFolderPath, folderError_))
         return false;
 
     // Success

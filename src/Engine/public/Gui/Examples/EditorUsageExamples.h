@@ -91,22 +91,30 @@ namespace BixEngine::Gui::Examples
         void DrawDebugPage(GuiPanel& panel)
         {
             (void)panel;
+            
             ImGui::TextUnformatted("Outils de debug");
             ImGui::Separator();
+            
             if (ImGui::Button("Forcer la recompilation"))
                 OnCompileRequested();
+            
             ImGui::SameLine();
+            
             if (ImGui::Button("Recharger l'asset"))
                 ImGui::OpenPopup("ReloadDialog");
 
             if (ImGui::BeginPopup("ReloadDialog"))
             {
                 ImGui::TextUnformatted("Recharger l'asset depuis le disque ?");
+                
                 if (ImGui::Button("Oui"))
                     ImGui::CloseCurrentPopup();
+                
                 ImGui::SameLine();
+                
                 if (ImGui::Button("Annuler"))
                     ImGui::CloseCurrentPopup();
+                
                 ImGui::EndPopup();
             }
         }

@@ -5,12 +5,12 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 #include "Logger.h"
-#include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include "Gui/GuiDocking.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
-#include "Gui/Controllers/InspectorVariableDrawer.h"
+#include "Gui/Panels/ActorInspector/PropertyInspector.h"
+
 
 namespace BixEngine::Gui
 {
@@ -44,16 +44,19 @@ namespace BixEngine::Gui
                 config.dockRegion = DockSpaceRegion::Top;
                 config.stableIdSuffix = "Toolbar";
                 break;
+                
             case Section::Viewport:
                 config.titlePrefix = "Actor Viewport";
                 config.dockRegion = DockSpaceRegion::Center;
                 config.stableIdSuffix = "Viewport";
                 break;
+                
             case Section::Outline:
                 config.titlePrefix = "Actor Outline";
                 config.dockRegion = DockSpaceRegion::Left;
                 config.stableIdSuffix = "Outline";
                 break;
+                
             case Section::Inspector:
                 config.titlePrefix = "Actor Inspector";
                 config.dockRegion = DockSpaceRegion::Right;
@@ -116,13 +119,11 @@ namespace BixEngine::Gui
         }
     }
 
-    ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section)
-        : BaseAssetEditorController(std::move(sharedState), MakePanelConfig(section)), section_(section)
+    ActorEditorController::ActorEditorController(std::shared_ptr<SharedState> sharedState, Section section) : BaseAssetEditorController(std::move(sharedState), MakePanelConfig(section)), section_(section)
     {
     }
 
-    std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(
-        std::filesystem::path assetPath, String stableIdRoot, std::function<void()> onCloseRequest)
+    std::shared_ptr<ActorEditorController::SharedState> ActorEditorController::CreateSharedState(std::filesystem::path assetPath, String stableIdRoot, std::function<void()> onCloseRequest)
     {
         auto state = std::make_shared<SharedState>();
         state->assetPath = std::move(assetPath);
@@ -130,6 +131,7 @@ namespace BixEngine::Gui
         state->onCloseRequest = std::move(onCloseRequest);
         state->assetDisplayName = BuildDisplayName(state->assetPath);
         state->assetTypeLabel = "Actor Prefab";
+        
         return state;
     }
 
@@ -142,12 +144,15 @@ namespace BixEngine::Gui
         case Section::Toolbar:
             DrawToolbar();
             break;
+            
         case Section::Viewport:
             DrawViewport();
             break;
+            
         case Section::Outline:
             DrawOutline();
             break;
+            
         case Section::Inspector:
             DrawInspector();
             break;
@@ -195,11 +200,14 @@ namespace BixEngine::Gui
         ImGui::BeginGroup();
         ImGui::TextUnformatted("Prefab Preview");
         ImGui::Separator();
+        
         if (state)
         {
             ImGui::Text("Asset: %s", state->assetDisplayName.View().data());
+            
             if (!state->primaryClassName.empty())
                 ImGui::Text("Script: %s", state->primaryClassName.c_str());
+            
             if (!state->includePath.empty())
                 ImGui::Text("Include: %s", state->includePath.c_str());
         }
@@ -207,6 +215,7 @@ namespace BixEngine::Gui
         {
             ImGui::TextUnformatted("No asset loaded.");
         }
+        
         ImGui::EndGroup();
     }
 
@@ -221,9 +230,8 @@ namespace BixEngine::Gui
 
         ImGui::TextUnformatted("Overview");
         ImGui::Separator();
-        ImGui::BulletText("Type: %s", state->assetTypeLabel.IsEmpty()
-                                          ? "Actor Prefab"
-                                          : state->assetTypeLabel.View().data());
+        ImGui::BulletText("Type: %s", state->assetTypeLabel.IsEmpty() ? "Actor Prefab" : state->assetTypeLabel.View().data());
+        
         if (!state->primaryClassName.empty())
             ImGui::BulletText("Script class: %s", state->primaryClassName.c_str());
         else
@@ -252,8 +260,7 @@ namespace BixEngine::Gui
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
 
-        Inspector::DrawExposedVariablesSection(*state, "Variables exposées",
-                                               "ActorInspectorVariables", "Aucune variable exposée pour cet acteur.");
+        ActorInspector::DrawExposedVariablesSection(*state, "Variables exposées", "Aucune variable exposée pour cet acteur.");
     }
 
     void ActorEditorController::DrawViewportGrid_(const ImVec2& size)

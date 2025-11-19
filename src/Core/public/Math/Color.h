@@ -14,16 +14,15 @@ namespace BixEngine::Math
 
         constexpr Color() = default;
 
-        constexpr Color(float red, float green, float blue, float alpha = 1.0f)
-            : r(red), g(green), b(blue), a(alpha)
+        constexpr Color(float red, float green, float blue, float alpha = 1.0f) : r(red), g(green), b(blue), a(alpha)
         {
         }
 
-        explicit Color(const SDL_Color& sdlColor)
-            : r(static_cast<float>(sdlColor.r) / 255.0f),
-              g(static_cast<float>(sdlColor.g) / 255.0f),
-              b(static_cast<float>(sdlColor.b) / 255.0f),
-              a(static_cast<float>(sdlColor.a) / 255.0f)
+        explicit Color(const SDL_Color& sdlColor) :
+            r(static_cast<float>(sdlColor.r) / 255.0f),
+            g(static_cast<float>(sdlColor.g) / 255.0f),
+            b(static_cast<float>(sdlColor.b) / 255.0f),
+            a(static_cast<float>(sdlColor.a) / 255.0f)
         {
         }
 

@@ -391,7 +391,7 @@ namespace BixEngine::Gui
     // --------------------------------------------------------------
     void GuiLayoutManager::LoadPersistedLayouts_()
     {
-        layoutStorageFile_ = FileUtils::ResolveUserConfigPath(kLayoutStorageFileName);
+        layoutStorageFile_ = FilesUtils::Utilities::ResolveUserConfigPath(kLayoutStorageFileName);
         if (layoutStorageFile_.empty())
             return;
 
@@ -414,7 +414,7 @@ namespace BixEngine::Gui
             else if (!std::getline(file, line))
                 break;
 
-            StringUtils::TrimCarriageReturn(line);
+            StringUtils::Utilities::TrimCarriageReturn(line);
             if (line.empty())
                 continue;
 
@@ -446,7 +446,7 @@ namespace BixEngine::Gui
             if (!std::getline(file, sizeLine))
                 break;
 
-            StringUtils::TrimCarriageReturn(sizeLine);
+            StringUtils::Utilities::TrimCarriageReturn(sizeLine);
 
             size_t size = 0;
             try
@@ -474,7 +474,7 @@ namespace BixEngine::Gui
                 std::string regionLine;
                 if (std::getline(file, regionLine))
                 {
-                    StringUtils::TrimCarriageReturn(regionLine);
+                    StringUtils::Utilities::TrimCarriageReturn(regionLine);
                     if (regionLine.rfind(kPrefixRegionIds.data(), 0) == 0)
                     {
                         data.dockRegionIds = ParseRegionIds(regionLine);
@@ -496,7 +496,7 @@ namespace BixEngine::Gui
     void GuiLayoutManager::PersistLayoutsToDisk_()
     {
         if (layoutStorageFile_.empty())
-            layoutStorageFile_ = FileUtils::ResolveUserConfigPath(kLayoutStorageFileName);
+            layoutStorageFile_ = FilesUtils::Utilities::ResolveUserConfigPath(kLayoutStorageFileName);
         
         if (layoutStorageFile_.empty())
             return;

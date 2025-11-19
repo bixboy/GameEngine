@@ -1,12 +1,8 @@
 #pragma once
 #include "ReflectionMacros.h"
 #include "Containers/String.h"
+#include "Renderer.h"
 #include "Component.generated.h"
-
-namespace BixEngine::Graphics
-{
-    class Renderer;
-}
 
 namespace BixEngine::Game
 {
@@ -21,29 +17,17 @@ namespace BixEngine::Game
     public:
         using Super = Component;
 
-        explicit Component(Actor* owner) : owner_(owner)
-        {
-        }
+        explicit Component(Actor* owner) : owner_(owner) {}
 
         virtual ~Component() = default;
 
-        virtual void BeginPlay()
-        {
-        }
-
-        virtual void Update(float /*deltaTime*/)
-        {
-        }
-
-        virtual void Render(Graphics::Renderer& /*renderer*/) const
-        {
-        }
+        virtual void BeginPlay();
+        virtual void Update(float /*deltaTime*/);
+        virtual void Render(Graphics::Renderer& /*renderer*/) const;
 
         [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
 
-        virtual void DrawInspectorUI()
-        {
-        }
+        virtual void DrawInspectorUI();
 
     protected:
         Actor* owner_{nullptr};

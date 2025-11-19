@@ -129,7 +129,7 @@ namespace BixEngine::Gui
 
                 for (auto& f : files)
                 {
-                    EditorUtils::OpenFileInCodeEditor(f);
+                    EditorUtils::Utilities::OpenFileInCodeEditor(f);
                 }
             }
             else if (entry.IsPrefab() || entry.IsSpriteAtlas())

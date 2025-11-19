@@ -45,17 +45,15 @@ void CreatePrefabDialog::ClearSelection()
     selectedIsComponent_ = false;
 }
 
-void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath,
-                                           const std::string& assetBaseName, bool isActor, bool isComponent,
-                                           const std::filesystem::path& headerPath)
+void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath)
 {
     selectedClass_ = className.c_str();
     selectedInclude_ = includePath.c_str();
     selectedAssetBaseName_ = assetBaseName.c_str();
     selectedHeaderPath_ = headerPath;
-    std::string sanitized = PrefabUtils::SanitizeAssetName(assetBaseName);
+    std::string sanitized = PrefabUtils::Utilities::SanitizeAssetName(assetBaseName);
     if (sanitized.empty())
-        sanitized = PrefabUtils::SanitizeAssetName(className);
+        sanitized = PrefabUtils::Utilities::SanitizeAssetName(className);
     std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", sanitized.c_str());
     selectedIsActor_ = isActor || (!isComponent);
     selectedIsComponent_ = isComponent;
@@ -69,10 +67,10 @@ void CreatePrefabDialog::DrawContent()
     ContentBrowserUtils::EnsureScriptsDirectoryExists(state_);
 
     const path scriptsDir = state_.root / "Scripts";
-    auto scripts = ScriptUtils::BuildScriptTree(scriptsDir, state_.root);
-    auto bases = PrefabUtils::GetBaseClasses();
+    auto scripts = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, state_.root);
+    auto bases = PrefabUtils::Utilities::GetBaseClasses();
 
-    std::vector<PrefabUtils::PrefabScriptCandidate> candidates = PrefabUtils::GatherPrefabCandidates(scripts, bases);
+    std::vector<PrefabUtils::Utilities::PrefabScriptCandidate> candidates = PrefabUtils::Utilities::GatherPrefabCandidates(scripts, bases);
 
     DrawDescriptionText("Create a prefab asset linked to an existing gameplay script.");
     ImGui::Spacing();
@@ -95,8 +93,7 @@ void CreatePrefabDialog::DrawSearchBar()
     ImGui::InputTextWithHint("##PrefabSearch", "Search scripts...", searchBuffer_, IM_ARRAYSIZE(searchBuffer_));
 }
 
-void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::PrefabScriptCandidate>& candidates,
-                                             const std::string& filter)
+void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter)
 {
     float listHeight = ImGui::GetTextLineHeightWithSpacing() * 12.0f;
     if (!ImGui::BeginChild("PrefabCandidateList", ImVec2(420, listHeight), true))
@@ -172,12 +169,12 @@ void CreatePrefabDialog::DrawDetailsSectionUI()
     InputTextWithLabel("Prefab name", assetNameBuffer_, IM_ARRAYSIZE(assetNameBuffer_),
         ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
 
-    std::string baseName = PrefabUtils::SanitizeAssetName(assetNameBuffer_);
+    std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
     if (baseName.empty())
     {
         baseName = selectedAssetBaseName_.IsEmpty() ? (selectedClass_.IsEmpty() ? "Prefab"
-            : PrefabUtils::SanitizeAssetName(selectedClass_.View().data()))
-            : PrefabUtils::SanitizeAssetName(selectedAssetBaseName_.ToStdString());
+            : PrefabUtils::Utilities::SanitizeAssetName(selectedClass_.View().data()))
+            : PrefabUtils::Utilities::SanitizeAssetName(selectedAssetBaseName_.ToStdString());
     }
 
     path relDir = state_.current.lexically_relative(state_.root);
@@ -202,49 +199,53 @@ bool CreatePrefabDialog::DrawActionButtons()
         return false;
 
     if (selectedClass_.IsEmpty())
-        return FileUtils::LogAndStoreError(prefabError_, "Please select a script to instantiate.", false);
+        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "Please select a script to instantiate.", false);
 
     bool makeComponent = selectedIsComponent_ && !selectedIsActor_;
     const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
     const char* type = makeComponent ? "Component" : "Actor";
 
-    std::string baseName = PrefabUtils::SanitizeAssetName(assetNameBuffer_);
+    std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
     if (baseName.empty())
     {
         baseName = selectedAssetBaseName_.IsEmpty() ? selectedClass_.View().data() : selectedAssetBaseName_.View().data();
-        baseName = PrefabUtils::SanitizeAssetName(baseName);
+        baseName = PrefabUtils::Utilities::SanitizeAssetName(baseName);
     }
 
     path target = state_.current / (baseName + ext);
     if (fs::exists(target))
-        return FileUtils::LogAndStoreError(prefabError_, "An asset with this name already exists.", false);
+        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "An asset with this name already exists.", false);
 
-    if (!PrefabUtils::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
+    if (!PrefabUtils::Utilities::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
         return false;
 
     std::ostringstream json;
     json << "{\n"
         << "  \"type\": \"" << type << "\",\n"
-        << "  \"class\": \"" << PrefabUtils::EscapeJson(selectedClass_.ToStdString()) << "\"";
+        << "  \"class\": \"" << PrefabUtils::Utilities::EscapeJson(selectedClass_.ToStdString()) << "\"";
 
     if (!selectedInclude_.IsEmpty())
-        json << ",\n  \"include\": \"" << PrefabUtils::EscapeJson(selectedInclude_.ToStdString()) << "\"";
+        json << ",\n  \"include\": \"" << PrefabUtils::Utilities::EscapeJson(selectedInclude_.ToStdString()) << "\"";
 
-    auto exposedVars = PrefabUtils::ExtractExposedVariables(selectedHeaderPath_, selectedInclude_.ToStdString(), state_.root / "Scripts");
+    auto exposedVars = PrefabUtils::Utilities::ExtractExposedVariables(selectedHeaderPath_, selectedInclude_.ToStdString(), state_.root / "Scripts");
     if (!exposedVars.empty())
     {
         json << ",\n  \"variables\": [\n";
         for (std::size_t i = 0; i < exposedVars.size(); ++i)
         {
             const auto& var = exposedVars[i];
-            json << "    { \"name\": \"" << PrefabUtils::EscapeJson(var.name) << "\"";
+            json << "    { \"name\": \"" << PrefabUtils::Utilities::EscapeJson(var.name) << "\"";
+            
             if (!var.type.empty())
-                json << ", \"type\": \"" << PrefabUtils::EscapeJson(var.type) << "\"";
+                json << ", \"type\": \"" << PrefabUtils::Utilities::EscapeJson(var.type) << "\"";
+            
             if (!var.defaultValue.empty())
-                json << ", \"default\": \"" << PrefabUtils::EscapeJson(var.defaultValue) << "\"";
+                json << ", \"default\": \"" << PrefabUtils::Utilities::EscapeJson(var.defaultValue) << "\"";
+            
             json << " }";
             if (i + 1 < exposedVars.size())
                 json << ",";
+            
             json << "\n";
         }
         json << "  ]\n";
@@ -256,7 +257,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     json << "}\n";
 
-    if (FileUtils::TryWriteFile(target, json.str(), prefabError_))
+    if (FilesUtils::Utilities::TryWriteFile(target, json.str(), prefabError_))
     {
         Close();
         ClearSelection();

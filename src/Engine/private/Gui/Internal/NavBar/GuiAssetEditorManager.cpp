@@ -317,7 +317,7 @@ namespace BixEngine::Core
 
     bool GuiAssetEditorManager::CreateAssetEditorEntry(const std::filesystem::path& path, AssetEditorEntry& outEntry)
     {
-        const std::string extensionLower = StringUtils::ToLowerCopy(path.extension().generic_string());
+        const std::string extensionLower = StringUtils::Utilities::ToLowerCopy(path.extension().generic_string());
         std::string typeTag;
         std::string assetType;
 
@@ -491,7 +491,7 @@ namespace BixEngine::Core
 
     std::string GuiAssetEditorManager::MakeNavigationId(const std::filesystem::path& path, std::string_view typeTag) const
     {
-        const std::string hash = std::format("{:x}", EditorUtils::HashFNV1a(path.generic_string()));
+        const std::string hash = std::format("{:x}", EditorUtils::Utilities::HashFNV1a(path.generic_string()));
         return std::format("asset_{}_{}", typeTag, hash);
     }
 }

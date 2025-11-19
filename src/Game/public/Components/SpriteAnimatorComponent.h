@@ -1,5 +1,4 @@
 #pragma once
-
 #include "Components/SpriteComponent.h"
 #include "ReflectionMacros.h"
 #include "Render/SpriteAnimator.h"

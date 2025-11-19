@@ -17,9 +17,8 @@ namespace BixEngine::Gui
     class SceneOutlinerPanel : public GuiPanelBase
     {
     public:
-        SceneOutlinerPanel(std::function<Game::SceneManager*()> sceneProvider,
-                           std::function<Game::Actor*()> selectionGetter,
-                           std::function<void(Game::Actor*)> selectionSetter);
+        SceneOutlinerPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter);
+        
         explicit SceneOutlinerPanel(const DefaultEngineGuiContext& context);
 
         void Draw() override;
