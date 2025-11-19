@@ -9,9 +9,6 @@
 
 namespace BixEngine::Gui::ActorInspector
 {
-    // ==========================================================================
-    // Stockage interne des factories (plugins)
-    // ==========================================================================
     namespace
     {
         std::vector<ActorInspectorSectionFactory>& GetRegisteredFactories()
@@ -22,7 +19,6 @@ namespace BixEngine::Gui::ActorInspector
     }
 
     
-    // Construction des sections de base + plugins
     ActorInspectorSectionList BuildActorInspectorSections()
     {
         ActorInspectorSectionList sections;
@@ -30,12 +26,10 @@ namespace BixEngine::Gui::ActorInspector
         auto& factories = GetRegisteredFactories();
         sections.reserve(3 + factories.size());
 
-        // --- Sections de base internes au moteur
         sections.emplace_back(std::make_unique<GeneralInspectorSection>());
         sections.emplace_back(std::make_unique<TransformInspectorSection>());
         sections.emplace_back(std::make_unique<ComponentInspectorSection>());
 
-        // --- Sections ajoutées par plugins
         for (auto& factory : factories)
         {
             if (!factory)
@@ -49,14 +43,12 @@ namespace BixEngine::Gui::ActorInspector
         return sections;
     }
 
-    // Enregistrement d’une factory plugin
     void RegisterActorInspectorSectionFactory(ActorInspectorSectionFactory factory)
     {
         if (factory)
             GetRegisteredFactories().emplace_back(std::move(factory));
     }
 
-    // Nombre de factories enregistrées
     std::size_t GetRegisteredActorInspectorFactoryCount()
     {
         return GetRegisteredFactories().size();

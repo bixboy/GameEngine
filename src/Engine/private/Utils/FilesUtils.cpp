@@ -1,22 +1,19 @@
 ﻿#include "Utils/FilesUtils.h"
 #include "Logger.h"
-#include <filesystem>
 #include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <imgui.h>
 
 
-namespace BixEngine::FileUtils
+namespace BixEngine::FilesUtils
 {
-    using namespace std;
     namespace fs = std::filesystem;
 
     // ─────────────────────────────────────────────
     // Gestion des dossiers
     // ─────────────────────────────────────────────
-
-    bool TryCreateDir(const fs::path& dir, String& outError)
+    bool Utilities::TryCreateDir(const fs::path& dir, String& outError)
     {
         std::error_code ec;
         if (dir.empty())
@@ -36,7 +33,7 @@ namespace BixEngine::FileUtils
         return true;
     }
 
-    bool TryRemove(const fs::path& path, bool recursive, String& outError)
+    bool Utilities::TryRemove(const fs::path& path, bool recursive, String& outError)
     {
         std::error_code ec;
         if (recursive)
@@ -54,7 +51,10 @@ namespace BixEngine::FileUtils
         return true;
     }
 
-    bool TryCopyFile(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
+    // ─────────────────────────────────────────────
+    // Gestion de fichiers
+    // ─────────────────────────────────────────────
+    bool Utilities::TryCopyFile(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
     {
         std::error_code ec;
 
@@ -70,8 +70,7 @@ namespace BixEngine::FileUtils
             fs::create_directories(destination.parent_path(), ec);
             if (ec)
             {
-                outError = String("Failed to create destination directory: ") + destination.parent_path().string() +
-                    " (" + ec.message() + ")";
+                outError = String("Failed to create destination directory: ") + destination.parent_path().string() + " (" + ec.message() + ")";
                 LOG_ERROR(outError);
                 return false;
             }
@@ -84,13 +83,11 @@ namespace BixEngine::FileUtils
             return false;
         }
 
-        fs::copy_file(source, destination, overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none,
-                      ec);
+        fs::copy_file(source, destination, overwrite ? fs::copy_options::overwrite_existing : fs::copy_options::none, ec);
 
         if (ec)
         {
-            outError = String("Failed to copy file: ") + source.string() + " → " + destination.string() + " (" + ec.
-                message() + ")";
+            outError = String("Failed to copy file: ") + source.string() + " → " + destination.string() + " (" + ec.message() + ")";
             LOG_ERROR(outError);
             return false;
         }
@@ -98,11 +95,7 @@ namespace BixEngine::FileUtils
         return true;
     }
 
-    // ─────────────────────────────────────────────
-    // Renommage sécurisé
-    // ─────────────────────────────────────────────
-
-    bool TryRename(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
+    bool Utilities::TryRename(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
     {
         std::error_code ec;
 
@@ -159,41 +152,8 @@ namespace BixEngine::FileUtils
         return true;
     }
 
-    // ─────────────────────────────────────────────
-    // Gestion d’erreurs
-    // ─────────────────────────────────────────────
-
-    bool LogAndStoreError(String& outError, const String& message, bool alsoLog)
+    bool Utilities::TryWriteFile(const fs::path& path, const std::string& content, String& outError)
     {
-        outError = message;
-        if (alsoLog)
-            LOG_ERROR(message);
-
-        return false;
-    }
-
-    // ─────────────────────────────────────────────
-    // Comparaison de chaînes
-    // ─────────────────────────────────────────────
-
-    bool CaseInsensitiveLess(const std::string& a, const std::string& b)
-    {
-        return std::lexicographical_compare(
-            a.begin(), a.end(),
-            b.begin(), b.end(),
-            [](unsigned char x, unsigned char y)
-            {
-                return std::tolower(x) < std::tolower(y);
-            });
-    }
-
-    // ─────────────────────────────────────────────
-    // Écriture sécurisée d’un fichier texte
-    // ─────────────────────────────────────────────
-
-    bool TryWriteFile(const std::filesystem::path& path, const std::string& content, String& outError)
-    {
-        namespace fs = std::filesystem;
         std::error_code ec;
 
         if (path.empty())
@@ -202,20 +162,17 @@ namespace BixEngine::FileUtils
             return false;
         }
 
-        // Crée le dossier cible si nécessaire
         if (path.has_parent_path())
         {
             fs::create_directories(path.parent_path(), ec);
             if (ec)
             {
-                outError = String("Failed to create target directory: ") + path.parent_path().string() +
-                           " (" + ec.message() + ")";
+                outError = String("Failed to create target directory: ") + path.parent_path().string() + " (" + ec.message() + ")";
                 LOG_ERROR(outError);
                 return false;
             }
         }
 
-        // Écrit le fichier
         std::ofstream file(path, std::ios::out | std::ios::trunc);
         if (!file.is_open())
         {
@@ -240,10 +197,29 @@ namespace BixEngine::FileUtils
     }
 
     // ─────────────────────────────────────────────
-    // Extrait le display name
+    // Gestion d’erreurs et comparaison
     // ─────────────────────────────────────────────
+    bool Utilities::LogAndStoreError(String& outError, const String& message, bool alsoLog)
+    {
+        outError = message;
+        if (alsoLog)
+            LOG_ERROR(message);
 
-    String ExtractDisplayName(const std::filesystem::path& path)
+        return false;
+    }
+
+    bool Utilities::CaseInsensitiveLess(const std::string& a, const std::string& b)
+    {
+        return std::lexicographical_compare(
+            a.begin(), a.end(),
+            b.begin(), b.end(),
+            [](unsigned char x, unsigned char y) { return std::tolower(x) < std::tolower(y); });
+    }
+
+    // ─────────────────────────────────────────────
+    // Utilitaires
+    // ─────────────────────────────────────────────
+    String Utilities::ExtractDisplayName(const fs::path& path)
     {
         if (path.empty())
             return "Asset";
@@ -259,36 +235,26 @@ namespace BixEngine::FileUtils
         return String{path.generic_string()};
     }
 
-    // ─────────────────────────────────────────────
-    // Nomalise le path
-    // ─────────────────────────────────────────────
-    
-    std::filesystem::path NormalizePath(const std::filesystem::path& path)
+    fs::path Utilities::NormalizePath(const fs::path& path)
     {
         if (path.empty())
             return {};
 
-        auto p = path;
+        fs::path p = path;
         p = p.make_preferred();
-        
         return p.lexically_normal();
     }
 
-
-    // ─────────────────────────────────────────────
-    // Trouve le chemin ini
-    // ─────────────────────────────────────────────
-    
-    std::filesystem::path ResolveUserConfigPath(const char* fileName)
+    fs::path Utilities::ResolveUserConfigPath(const char* fileName)
     {
         const ImGuiIO& io = ImGui::GetIO();
-        std::filesystem::path base;
+        fs::path base;
 
-        if (io.IniFilename && ImGui::GetIO().IniFilename[0] != '\0')
-            base = std::filesystem::path(io.IniFilename).parent_path();
+        if (io.IniFilename && io.IniFilename[0] != '\0')
+            base = fs::path(io.IniFilename).parent_path();
 
         if (base.empty())
-            base = std::filesystem::current_path();
+            base = fs::current_path();
 
         return base / fileName;
     }

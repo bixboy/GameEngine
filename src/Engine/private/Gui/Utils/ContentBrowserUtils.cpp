@@ -15,7 +15,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
     {
         if (path.empty()) return ContentType::File;
 
-        const String ext = StringUtils::ToLowerCopy(path.extension().generic_string());
+        const String ext = StringUtils::Utilities::ToLowerCopy(path.extension().generic_string());
 
         if (ext == ".bixactor")
             return ContentType::ActorPrefab;
@@ -49,7 +49,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
         if (err)
         {
             String message = String("Failed to enumerate content: ") + err.message();
-            FileUtils::LogAndStoreError(state.error, message);
+            FilesUtils::Utilities::LogAndStoreError(state.error, message);
             return false;
         }
 
@@ -75,7 +75,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
             const bool isSource = entryPath.extension() == ".cpp";
             if (isHeader || isSource)
             {
-                String key = StringUtils::ToLowerCopy(entryPath.stem().generic_string());
+                String key = StringUtils::Utilities::ToLowerCopy(entryPath.stem().generic_string());
 
                 auto& group = scriptGroups[key];
                 group.type = ContentType::Script;
@@ -114,7 +114,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
         std::ranges::sort(state.cache.entries, [](const ContentEntry& a, const ContentEntry& b)
         {
             int pa = GetSortPriority(a.type), pb = GetSortPriority(b.type);
-            return pa == pb ? FileUtils::CaseInsensitiveLess(a.name, b.name) : pa < pb;
+            return pa == pb ? FilesUtils::Utilities::CaseInsensitiveLess(a.name, b.name) : pa < pb;
         });
 
         return true;
@@ -148,7 +148,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
         const path dir = state.root / "Scripts";
         String err;
 
-        if (!FileUtils::TryCreateDir(dir, err))
+        if (!FilesUtils::Utilities::TryCreateDir(dir, err))
             LOG_ERROR(String("Failed to create scripts directory: ") + dir.string() + " (" + err + ")");
     }
 
@@ -189,16 +189,16 @@ namespace BixEngine::Gui::ContentBrowserUtils
         state.root = GetContentRoot();
         if (state.root.empty())
         {
-            FileUtils::LogAndStoreError(state.error, "Unable to determine the Content directory root.");
+            FilesUtils::Utilities::LogAndStoreError(state.error, "Unable to determine the Content directory root.");
         }
-        else if (!FileUtils::TryCreateDir(state.root, state.error))
+        else if (!FilesUtils::Utilities::TryCreateDir(state.root, state.error))
         {
             // Error already stored.
         }
         else if (!exists(state.root))
         {
             String message = String("Content directory is not available: ") + state.root.string();
-            FileUtils::LogAndStoreError(state.error, std::move(message));
+            FilesUtils::Utilities::LogAndStoreError(state.error, std::move(message));
         }
         else
         {

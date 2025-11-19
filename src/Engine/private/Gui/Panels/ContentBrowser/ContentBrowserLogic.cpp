@@ -27,9 +27,9 @@ namespace BixEngine::Gui
 
     static bool DeleteScriptFiles(const ContentEntry& entry, String& error)
     {
-        auto tryRemove = [&](const fs::path& p)
+        auto tryRemove = [&](const path& p)
         {
-            return p.empty() || FileUtils::TryRemove(p, false, error);
+            return p.empty() || FilesUtils::Utilities::TryRemove(p, false, error);
         };
 
         return tryRemove(entry.headerPath) && tryRemove(entry.sourcePath);
@@ -53,7 +53,7 @@ namespace BixEngine::Gui
 
         for (auto& entry : fs::directory_iterator(state.current, error))
         {
-            const fs::path p = entry.path();
+            const path p = entry.path();
 
             // ──────────────── Dossier ────────────────
             if (entry.is_directory())
@@ -70,12 +70,12 @@ namespace BixEngine::Gui
             }
 
             // ──────────────── Extension ────────────────
-            const String ext = StringUtils::ToLowerCopy(p.extension().generic_string());
+            const String ext = StringUtils::Utilities::ToLowerCopy(p.extension().generic_string());
 
             // ──────────────── Scripts (.h/.cpp) ────────────────
             if (ext == ".h" || ext == ".cpp")
             {
-                auto key = StringUtils::ToLowerCopy(p.stem().generic_string());
+                auto key = StringUtils::Utilities::ToLowerCopy(p.stem().generic_string());
                 auto& group = scriptGroups[key];
 
                 group.name = p.stem().generic_string();
@@ -91,11 +91,15 @@ namespace BixEngine::Gui
             // ──────────────── Type de fichier ────────────────
             ContentType type = ContentType::File;
 
-            if (ext == ".bixactor")      type = ContentType::ActorPrefab;
-            else if (ext == ".bixcomponent") type = ContentType::ComponentPrefab;
-            else if (ext == ".atlas")    type = ContentType::SpriteAtlas;
+            if (ext == ".bixactor")
+                type = ContentType::ActorPrefab;
+            
+            else if (ext == ".bixcomponent")
+                type = ContentType::ComponentPrefab;
+            
+            else if (ext == ".atlas")
+                type = ContentType::SpriteAtlas;
 
-            // ❗ FIX : avant c’était `.type = Directory` → FAUX
             state.cache.entries.push_back(ContentEntry{
                 .name = p.filename().generic_string(),
                 .path = p,
@@ -117,7 +121,7 @@ namespace BixEngine::Gui
             int pb = GetSortPriority(b.type);
 
             if (pa != pb) return pa < pb;
-            return FileUtils::CaseInsensitiveLess(a.name, b.name);
+            return FilesUtils::Utilities::CaseInsensitiveLess(a.name, b.name);
         });
 
         return !error;
@@ -145,11 +149,20 @@ namespace BixEngine::Gui
             req.renameEntry = false;
         }
 
-        if (prefab.IsOpen()) prefab.Render();
-        if (script.IsOpen()) script.Render();
-        if (folder.IsOpen()) folder.Render();
-        if (atlas.IsOpen()) atlas.Render();
-        if (rename.IsOpen()) rename.Render();
+        if (prefab.IsOpen())
+            prefab.Render();
+        
+        if (script.IsOpen())
+            script.Render();
+        
+        if (folder.IsOpen())
+            folder.Render();
+        
+        if (atlas.IsOpen())
+            atlas.Render();
+        
+        if (rename.IsOpen())
+            rename.Render();
     }
 
     // ─────────────────────────────────────────────
@@ -304,7 +317,7 @@ namespace BixEngine::Gui
 
                         std::ranges::sort(children, [](auto& a, auto& b)
                         {
-                            return FileUtils::CaseInsensitiveLess(a.filename().string(), b.filename().string());
+                            return FilesUtils::Utilities::CaseInsensitiveLess(a.filename().string(), b.filename().string());
                         });
                     }
 
@@ -362,7 +375,7 @@ namespace BixEngine::Gui
         {
             for (auto& entry : state.cache.entries)
             {
-                if (!StringUtils::MatchesSearch(entry.name, query))
+                if (!StringUtils::Utilities::MatchesSearch(entry.name, query))
                     continue;
 
                 ImGui::TableNextColumn();
@@ -397,12 +410,12 @@ namespace BixEngine::Gui
                     }
                     else if (entry.IsScript())
                     {
-                        std::vector<fs::path> files;
+                        std::vector<path> files;
                         if (entry.HasHeader()) files.push_back(entry.headerPath);
                         if (entry.HasSource()) files.push_back(entry.sourcePath);
 
                         for (auto& f : files)
-                            EditorUtils::OpenFileInCodeEditor(f);
+                            EditorUtils::Utilities::OpenFileInCodeEditor(f);
                     }
                     else if (entry.IsPrefab() || entry.IsSpriteAtlas())
                     {
@@ -439,7 +452,7 @@ namespace BixEngine::Gui
                         String err;
                         const bool removed = isScript
                             ? DeleteScriptFiles(entry, err)
-                            : FileUtils::TryRemove(entry.path, entry.IsDirectory(), err);
+                            : FilesUtils::Utilities::TryRemove(entry.path, entry.IsDirectory(), err);
 
                         if (!removed)
                         {
@@ -467,7 +480,7 @@ namespace BixEngine::Gui
                                 targetPath = entry.path;
                         }
 
-                        EditorUtils::ShowPathInExplorer(targetPath, targetIsDirectory);
+                        EditorUtils::Utilities::ShowPathInExplorer(targetPath, targetIsDirectory);
                     }
 
                     ImGui::EndPopup();

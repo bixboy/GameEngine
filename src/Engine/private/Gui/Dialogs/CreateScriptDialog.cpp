@@ -7,6 +7,7 @@
 #include <vector>
 #include "FileUtils.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
+#include "Utils/PrefabUtils.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/HeaderGenertorUtils.h"
 #include "Utils/ScriptUtils.h"
@@ -50,20 +51,23 @@ void CreateScriptDialog::ClearParentSelection()
     selectedParentIsComponent_ = false;
 }
 
-void CreateScriptDialog::SetSelectedParent(const std::string& className, const std::string& includePath, bool isActor, bool isComponent, bool isBase)
+void CreateScriptDialog::SetSelectedParent(const BixEngine::ScriptUtils::ParentScriptInfo& info, bool isBase)
 {
-    selectedParentClass_   = className.c_str();
-    selectedParentInclude_ = includePath.c_str();
-    selectedParentDisplay_ = className.c_str();
+    selectedParentClass_   = info.className.c_str();
+    selectedParentInclude_ = info.includePath.c_str();
+    if (!info.displayName.empty())
+        selectedParentDisplay_ = info.displayName.c_str();
+    else
+        selectedParentDisplay_ = info.className.c_str();
     selectedParentIsBase_  = isBase;
-    selectedParentIsActor_ = isActor;
-    selectedParentIsComponent_ = isComponent;
+    selectedParentIsActor_ = info.isActor;
+    selectedParentIsComponent_ = info.isComponent;
 
-    if (isComponent)
+    if (info.isComponent)
     {
         scriptType_ = ScriptTemplateType::Component;
     }
-    else if (isActor)
+    else if (info.isActor)
     {
         scriptType_ = ScriptTemplateType::Actor;   
     }
@@ -74,10 +78,10 @@ void CreateScriptDialog::DrawContent()
     ContentBrowserUtils::EnsureScriptsDirectoryExists(state_);
 
     const path scriptsDirectory = state_.root / "Scripts";
-    auto scriptRoots = ScriptUtils::BuildScriptTree(scriptsDirectory, state_.root);
+    auto scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDirectory, state_.root);
     
-    std::unordered_map<std::string, ScriptUtils::ParentScriptInfo> scriptInfoMap;
-    std::vector<ScriptUtils::TreeNodeData> scriptTree = ScriptUtils::BuildGuiTree(scriptRoots, scriptInfoMap);
+    std::unordered_map<std::string, BixEngine::ScriptUtils::ParentScriptInfo> scriptInfoMap;
+    std::vector<TreeNodeData> scriptTree = ScriptUtils::Utilities::BuildGuiTree(scriptRoots, scriptInfoMap);
 
     DrawDescriptionText("Create a new C++ script in the current directory.");
     ImGui::Spacing();
@@ -142,43 +146,24 @@ void CreateScriptDialog::DrawContent()
         ImGui::TableSetColumnIndex(0);
         if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, listHeight), true))
         {
-            static const ScriptUtils::ParentScriptInfo baseParents[] = {
-                {
-                    "Actor",
-                    "BixEngine::Game::Actor",
-                    "Game/Actor.h",
-                    path{},
-                    true,
-                    false,
-                    true
-                },
-                {"Component",
-                    "BixEngine::Game::Component",
-                    "Game/Components/Component.h",
-                    path{},
-                    false,
-                    true,
-                    true
-                }
-            };
-
+            const auto& baseParents = BixEngine::PrefabUtils::Utilities::GetBaseClasses();
             for (const auto& base : baseParents)
             {
                 const bool isSelected = selectedParentIsBase_ && !selectedParentClass_.IsEmpty() && selectedParentClass_.View() == base.className;
 
                 if (ImGui::Selectable(base.displayName.c_str(), isSelected))
                 {
-                    SetSelectedParent(base.className, base.includePath, base.isActor, base.isComponent, true);
+                    SetSelectedParent(base, true);
                 }
 
                 if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayNormal))
                 {
                     ImGui::BeginTooltip();
                     ImGui::TextUnformatted(base.className.c_str());
-                    
+
                     if (!base.includePath.empty())
                         ImGui::Text("Include: %s", base.includePath.c_str());
-                    
+
                     ImGui::EndTooltip();
                 }
             }
@@ -201,8 +186,8 @@ void CreateScriptDialog::DrawContent()
             {
                 if (auto itInfo = scriptInfoMap.find(currentlySelected); itInfo != scriptInfoMap.end())
                 {
-                    const ScriptUtils::ParentScriptInfo& info = itInfo->second;
-                    SetSelectedParent(info.className, info.includePath, info.isActor, info.isComponent, false);
+                    const BixEngine::ScriptUtils::ParentScriptInfo& info = itInfo->second;
+                    SetSelectedParent(info, false);
                 }
             }
         }
@@ -284,13 +269,13 @@ void CreateScriptDialog::DrawContent()
     String rawName = String(scriptName_);
     if (rawName.IsEmpty())
     {
-        FileUtils::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
         return;
     }
     
     if (rawName.Contains("/") || rawName.Contains("\\"))
     {
-        FileUtils::LogAndStoreError(scriptError_, "Script name cannot contain path separators.", false);
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot contain path separators.", false);
         return;
     }
 
@@ -308,7 +293,7 @@ void CreateScriptDialog::DrawContent()
 
     if (baseNameStr.empty())
     {
-        FileUtils::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
         return;
     }
 
@@ -318,7 +303,7 @@ void CreateScriptDialog::DrawContent()
 
     if (fs::exists(headerPath) || fs::exists(sourcePath))
     {
-        FileUtils::LogAndStoreError(scriptError_, "A file with this name already exists.", false);
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "A file with this name already exists.", false);
         return;
     }
 
@@ -329,7 +314,7 @@ void CreateScriptDialog::DrawContent()
     {
         String msg = "Unable to create directory: ";
         msg += dirErr.message();
-        FileUtils::LogAndStoreError(scriptError_, std::move(msg));
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, std::move(msg));
         return;
     }
 
@@ -337,7 +322,7 @@ void CreateScriptDialog::DrawContent()
     std::ofstream headerFile(headerPath);
     if (!headerFile.is_open())
     {
-        FileUtils::LogAndStoreError(scriptError_, "Failed to create the header file.");
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to create the header file.");
         return;
     }
 
@@ -347,7 +332,7 @@ void CreateScriptDialog::DrawContent()
         headerFile.close();
         std::error_code remErr;
         fs::remove(headerPath, remErr);
-        FileUtils::LogAndStoreError(scriptError_, "Failed to create the source file.");
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to create the source file.");
         
         return;
     }
@@ -363,13 +348,9 @@ void CreateScriptDialog::DrawContent()
     if (!inheritsActor && !inheritsComponent && scriptType_ != ScriptTemplateType::Utility)
         inheritsActor = true;
 
-    const std::string baseType = hasParent
-        ? selectedParentClass_.ToStdString()
-        : (inheritsComponent ? "BixEngine::Game::Component" : "BixEngine::Game::Actor");
+    const std::string baseType = hasParent ? selectedParentClass_.ToStdString() : (inheritsComponent ? "BixEngine::Game::Component" : "BixEngine::Game::Actor");
 
-    const std::string baseInclude = inheritsComponent
-        ? "Game/Components/Component.h"
-        : "Game/Actor.h";
+    const std::string baseInclude = inheritsComponent ? "Game/Components/Component.h" : "Game/Actor.h";
 
     // Écrit le header
     headerFile << "#pragma once\n\n";
@@ -403,7 +384,6 @@ void CreateScriptDialog::DrawContent()
     headerFile << "    };\n";
     headerFile << "}\n\n";
 
-    // Écrit le source
     sourceFile << "#include \"" << baseNameStr << ".h\"\n\n";
     sourceFile << "namespace BixEngine::Game {\n\n";
     if (inheritsComponent)
@@ -425,7 +405,6 @@ void CreateScriptDialog::DrawContent()
     sourceFile << "    }\n";
     sourceFile << "}\n\n";
 
-    // Flush & close + vérif
     headerFile.flush();
     sourceFile.flush();
     
@@ -441,12 +420,11 @@ void CreateScriptDialog::DrawContent()
         fs::remove(headerPath, remErr1);
         fs::remove(sourcePath, remErr2);
         
-        FileUtils::LogAndStoreError(scriptError_, "Failed to write the script files to disk.");
+        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to write the script files to disk.");
         
         return;
     }
 
-    // Succès : maj état, sélection, fermeture
     const path selectionKey = headerPath.parent_path() / baseNameStr;
     selectedEntry_ = selectionKey.generic_string().c_str();
     scriptError_.Clear();

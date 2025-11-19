@@ -17,12 +17,11 @@ namespace BixEngine::Gui
             Inspector
         };
 
-        using SharedState = BaseAssetEditorController::SharedState;
+        using SharedState = SharedState;
 
         ComponentEditorController(std::shared_ptr<SharedState> sharedState, Section section);
 
-        static std::shared_ptr<SharedState> CreateSharedState(std::filesystem::path assetPath, String stableIdRoot,
-                                                              std::function<void()> onCloseRequest);
+        static std::shared_ptr<SharedState> CreateSharedState(std::filesystem::path assetPath, String stableIdRoot, std::function<void()> onCloseRequest);
 
     protected:
         void DrawPanelContents(GuiPanel& panel) override;

@@ -5,14 +5,7 @@
 #include <functional>
 #include <memory>
 #include <span>
-#include <string>
-#include <tuple>
-#include <type_traits>
-#include <unordered_map>
-#include <utility>
 #include <vector>
-#include <stdexcept>
-
 #include "Containers/String.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Controllers/GuiPanelController.h"

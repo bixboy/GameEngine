@@ -1,21 +1,19 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/ComponentInspectorSection.h"
-
 #include "Gui/Widgets/Widgets.h"
-#include "Gui/Panels/ActorInspector/ReflectionDrawer.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
-
 #include "Gui/Utils/GuiHelpers.h"
 #include "Actor.h"
 #include "Components/Component.h"
 #include "ClassInfo.h"
-
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
 #include <utility>
-
 #include <imgui.h>
+#include "ReflectionHelpers.h"
+#include "Gui/Panels/ActorInspector/PropertyInspector.h"
+#include "Utils/ScriptUtils.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -46,7 +44,7 @@ namespace BixEngine::Gui::ActorInspector
                     continue;
                 }
 
-                if (!IsSubclassOf(*classInfo, componentClass))
+                if (!ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
                 {
                     continue;
                 }
@@ -226,8 +224,7 @@ namespace BixEngine::Gui::ActorInspector
             if (open)
             {
                 const float cursorBefore = ImGui::GetCursorPosY();
-                const bool drewReflected = DrawClassProperties(component->GetClass(), component.get(), false, nullptr,
-                                                               false);
+                const bool drewReflected = DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
                 const float cursorAfterReflected = ImGui::GetCursorPosY();
 
                 component->DrawInspectorUI();

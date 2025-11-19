@@ -4,35 +4,29 @@
 #include <filesystem>
 #include "Containers/String.h"
 
-
 namespace BixEngine::StringUtils
 {
-    /**
-     * @brief Retourne une copie d'une chaîne convertie en minuscules (ASCII-safe).
-     */
-    [[nodiscard]] std::string ToLowerCopy(std::string value);
+    class Utilities
+    {
+    public:
 
-    /**
-     * @brief Extrait une valeur texte d’un contenu JSON brut sans parsing complet.
-     */
-    [[nodiscard]] std::string ExtractJsonString(const std::string& source, std::string_view key);
+        /** Retourne une copie d'une chaîne convertie en minuscules (ASCII-safe). */
+        static std::string ToLowerCopy(std::string value);
 
-    /**
-     * @brief Compare deux chaînes en ignorant la casse.
-     * Retourne true si `query` est vide ou présent dans `value`.
-     */
-    [[nodiscard]] bool MatchesSearch(const String& value, const String& query);
+        /** Extrait une valeur texte d’un contenu JSON brut sans parsing complet. */
+        static std::string ExtractJsonString(const std::string& source, std::string_view key);
 
-    /**
-     * @brief Ouvre un dossier ou sélectionne un fichier dans l’explorateur système.
-     * @param path Chemin absolu à ouvrir.
-     * @param isDirectory  True pour ouvrir le dossier, false pour sélectionner un fichier.
-     */
-    void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory);
+        /** Compare deux chaînes en ignorant la casse. Retourne true si `query` est vide ou présent dans `value`. */
+        static bool MatchesSearch(const String& value, const String& query);
+        
 
+        /** Ouvre un dossier ou sélectionne un fichier dans l’explorateur système. */
+        static void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory);
 
-    String MakeSafeIdentifier(const std::string& raw);
+        // Transforme un path en identifiant string
+        static String MakeSafeIdentifier(const std::string& raw);
 
-    void TrimCarriageReturn(std::string& v);
-
+        // Supprime les caractères '\r'
+        static void TrimCarriageReturn(std::string& v);
+    };
 }

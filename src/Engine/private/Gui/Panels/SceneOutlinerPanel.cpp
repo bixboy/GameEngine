@@ -23,8 +23,7 @@ namespace BixEngine::Gui
         searchBuffer_.fill('\0');
     }
 
-    SceneOutlinerPanel::SceneOutlinerPanel(const DefaultEngineGuiContext& context)
-        : SceneOutlinerPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
+    SceneOutlinerPanel::SceneOutlinerPanel(const DefaultEngineGuiContext& context) : SceneOutlinerPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
     {
     }
 

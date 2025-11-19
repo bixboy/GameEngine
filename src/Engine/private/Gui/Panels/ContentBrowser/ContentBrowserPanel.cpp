@@ -90,7 +90,7 @@ namespace BixEngine::Gui
             }
 
             String copyError;
-            if (!FileUtils::TryCopyFile(source, finalDestination, true, copyError))
+            if (!FilesUtils::Utilities::TryCopyFile(source, finalDestination, true, copyError))
             {
                 state_.error = copyError;
 

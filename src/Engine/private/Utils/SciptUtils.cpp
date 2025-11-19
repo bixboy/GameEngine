@@ -1,108 +1,118 @@
 ﻿#include "Utils/ScriptUtils.h"
 #include <fstream>
 #include <sstream>
-#include <unordered_map>
 #include <algorithm>
-#include <filesystem>
-#include "Gui/Utils/ContentBrowserUtils.h"
-#include "Gui/Panels/ContentBrowser/ContentEntry.h"
-#include "Utils/FilesUtils.h"
 
 
 namespace BixEngine::ScriptUtils
 {
-    using namespace std::string_literals;
-    namespace fs = std::filesystem;
-
-    bool IsActorType(std::string_view n)
+    // -----------------------
+    // Type checks
+    // -----------------------
+    bool Utilities::IsActorType(std::string_view n)
     {
         return n == "Actor" || n == "BixEngine::Game::Actor" || n == "::BixEngine::Game::Actor";
     }
 
-    bool IsComponentType(std::string_view n)
+    bool Utilities::IsComponentType(std::string_view n)
     {
         return n == "Component" || n == "BixEngine::Game::Component" || n == "::BixEngine::Game::Component";
     }
 
-    static bool CaseInsensitiveLess(const std::string& a, const std::string& b)
+    // -----------------------
+    // Reflection helpers
+    // -----------------------
+    bool Utilities::AreEquivalent(const Bix::Reflection::ClassInfo& lhs, const Bix::Reflection::ClassInfo& rhs)
     {
-        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
-            [](unsigned char x, unsigned char y)
-            {
-                return std::tolower(x) < std::tolower(y);
-            });
+        if (&lhs == &rhs)
+            return true;
+        
+        if (!lhs.QualifiedName.empty() && !rhs.QualifiedName.empty())
+            return lhs.QualifiedName == rhs.QualifiedName;
+        
+        if (!lhs.Name.empty() && !rhs.Name.empty())
+            return lhs.Name == rhs.Name;
+        
+        return false;
     }
 
-    static bool DeleteScriptFiles(const Gui::ContentEntry& entry, String& error)
+    bool Utilities::IsSubclassOf(const Bix::Reflection::ClassInfo& type, const Bix::Reflection::ClassInfo& base)
     {
-        const auto removeFile = [&](const std::filesystem::path& path)
+        const Bix::Reflection::ClassInfo* current = &type;
+        while (current)
         {
-            if (path.empty())
+            if (AreEquivalent(*current, base))
                 return true;
+            
+            current = current->SuperClass;
+        }
+        
+        return false;
+    }
 
-            return FileUtils::TryRemove(path, false, error);
+    // -----------------------
+    // Parsing / tree helpers
+    // -----------------------
+    std::vector<ScriptNode> Utilities::BuildScriptTree(const std::filesystem::path& scriptsDir, const std::filesystem::path& contentRoot)
+    {
+        namespace fs = std::filesystem;
+        std::unordered_map<std::string, ScriptNode> map;
+        auto CaseInsensitiveLess = [](const std::string& a, const std::string& b)
+        {
+            return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+                [](unsigned char x, unsigned char y)
+                {
+                    return std::tolower(x) < std::tolower(y);
+                });
         };
 
-        const bool headerResult = removeFile(entry.headerPath);
-        const bool sourceResult = removeFile(entry.sourcePath);
-        if (!headerResult || !sourceResult)
+        auto ParseHeader = [](const fs::path& file, ScriptNode& out)
         {
-            return false;
-        }
+            std::ifstream stream(file);
+            if (!stream.is_open()) return;
 
-        return true;
-    }
-
-    static void ParseHeader(const fs::path& file, ScriptNode& out)
-    {
-        std::ifstream stream(file);
-        if (!stream.is_open()) return;
-
-        std::string line;
-        while (std::getline(stream, line))
-        {
-            if (auto pos = line.find("//"); pos != std::string::npos)
-                line = line.substr(0, pos);
-
-            if (line.find("class ") == std::string::npos)
-                continue;
-
-            std::istringstream iss(line);
-            std::string token;
-            bool foundClass = false;
-
-            while (iss >> token)
+            std::string line;
+            while (std::getline(stream, line))
             {
-                if (token == "class")
+                if (auto pos = line.find("//"); pos != std::string::npos)
+                    line = line.substr(0, pos);
+
+                if (line.find("class ") == std::string::npos)
+                    continue;
+
+                std::istringstream iss(line);
+                std::string token;
+                
+                bool foundClass = false;
+                while (iss >> token)
                 {
-                    iss >> out.name;
-                    foundClass = true;
+                    if (token == "class")
+                    {
+                        iss >> out.name;
+                        foundClass = true;
+                    }
+                    else if (foundClass && token == ":")
+                    {
+                        iss >> token >> out.parentName;
+                        break;
+                    }
                 }
-                else if (foundClass && token == ":")
+                
+                break;
+            }
+
+            std::ifstream macroStream(file);
+            std::string content;
+            while (std::getline(macroStream, content))
+            {
+                if (content.find("BCLASS") != std::string::npos)
                 {
-                    iss >> token >> out.parentName;
+                    out.hasBlueprintMacro = true;
                     break;
                 }
             }
-            break;
-        }
+        };
 
-        std::ifstream macroStream(file);
-        std::string content;
-
-        while (std::getline(macroStream, content))
-        {
-            if (content.find("BCLASS") != std::string::npos)
-            {
-                out.hasBlueprintMacro = true;
-                break;
-            }
-        }
-    }
-
-    std::vector<ScriptNode> BuildScriptTree(const fs::path& scriptsDir, const fs::path& contentRoot)
-    {
-        std::unordered_map<std::string, ScriptNode> map;
         for (auto& entry : fs::recursive_directory_iterator(scriptsDir))
         {
             if (!entry.is_regular_file() || entry.path().extension() != ".h")
@@ -112,17 +122,11 @@ namespace BixEngine::ScriptUtils
             node.headerPath = entry.path();
             ParseHeader(entry.path(), node);
 
-            fs::path rel;
             std::error_code ec;
-            rel = fs::relative(entry.path(), scriptsDir, ec);
-            if (!ec)
-            {
-                node.includePath = rel.generic_string();
-            }
-            else
-            {
+            node.includePath = fs::relative(entry.path(), scriptsDir, ec).generic_string();
+            
+            if (ec)
                 node.includePath = entry.path().filename().generic_string();
-            }
 
             map[node.name] = std::move(node);
         }
@@ -140,21 +144,20 @@ namespace BixEngine::ScriptUtils
             }
         }
 
-        std::sort(roots.begin(), roots.end(), [](auto& a, auto& b)
+        std::sort(roots.begin(), roots.end(), [&](const auto& a, const auto& b)
         {
             return CaseInsensitiveLess(a.name, b.name);
         });
-
+        
         return roots;
     }
 
-    std::vector<TreeNodeData> BuildGuiTree(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo)
+    std::vector<TreeNodeData> Utilities::BuildGuiTree(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo)
     {
         std::vector<TreeNodeData> guiNodes;
         for (const auto& n : nodes)
         {
-            ParentScriptInfo info
-            {
+            ParentScriptInfo info {
                 n.name,
                 n.name,
                 n.includePath,
@@ -173,7 +176,6 @@ namespace BixEngine::ScriptUtils
 
             guiNodes.push_back(std::move(tree));
         }
-        
         return guiNodes;
     }
 }

@@ -20,6 +20,13 @@ namespace BixEngine::Gui
     public:
         struct SharedState
         {
+            struct VariableMetadata
+            {
+                String name{};
+                String type{};
+                String value{};
+            };
+
             std::filesystem::path assetPath{};
             String assetDisplayName{};
             String stableIdRoot{};
@@ -27,6 +34,7 @@ namespace BixEngine::Gui
             std::function<void()> onCloseRequest{};
             std::string primaryClassName{};
             std::string includePath{};
+            std::vector<VariableMetadata> exposedVariables{};
         };
 
         struct PanelConfig

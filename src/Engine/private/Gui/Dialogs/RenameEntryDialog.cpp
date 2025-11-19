@@ -88,19 +88,19 @@ void RenameEntryDialog::DrawContent()
     String newNameStr = renameBuffer_;
     if (newNameStr.IsEmpty())
     {
-        FileUtils::LogAndStoreError(renameError_, "Name cannot be empty.", false);
+        FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot be empty.", false);
         return;
     }
 
     if (newNameStr.Contains("/") || newNameStr.Contains("\\"))
     {
-        FileUtils::LogAndStoreError(renameError_, "Name cannot contain path separators.", false);
+        FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot contain path separators.", false);
         return;
     }
 
     if (!isScriptGroup_ && targetPath_.empty())
     {
-        FileUtils::LogAndStoreError(renameError_, "No entry selected for rename.", false);
+        FilesUtils::Utilities::LogAndStoreError(renameError_, "No entry selected for rename.", false);
         return;
     }
 
@@ -123,7 +123,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     path sourceOld = secondaryPath_;
 
     if (headerOld.empty() && sourceOld.empty())
-        return FileUtils::LogAndStoreError(renameError_, "No entry selected for rename.", false), false;
+        return FilesUtils::Utilities::LogAndStoreError(renameError_, "No entry selected for rename.", false), false;
 
     std::string newBaseName = newNameStr.ToStdString();
 
@@ -142,7 +142,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     StripExt(sourceOld);
 
     if (newBaseName.empty())
-        return FileUtils::LogAndStoreError(renameError_, "Name cannot be empty.", false), false;
+        return FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot be empty.", false), false;
 
     std::string currentBaseName = !headerOld.empty() ? headerOld.stem().string() : sourceOld.stem().string();
     if (newBaseName == currentBaseName)
@@ -157,7 +157,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     path newSource = sourceOld.empty() ? path{} : (parentDir / (newBaseName + sourceOld.extension().string()));
 
     if ((!newHeader.empty() && fs::exists(newHeader)) || (!newSource.empty() && fs::exists(newSource)))
-        return FileUtils::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
+        return FilesUtils::Utilities::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
 
     // Rename with rollback on failure
     std::vector<std::pair<path, path>> toRename;
@@ -176,7 +176,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
         if (ec)
         {
             String msg = "Unable to rename entry: " + String(ec.message().c_str());
-            FileUtils::LogAndStoreError(renameError_, msg);
+            FilesUtils::Utilities::LogAndStoreError(renameError_, msg);
 
             for (auto it = renamed.rbegin(); it != renamed.rend(); ++it)
             {
@@ -208,7 +208,7 @@ bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
 {
     path oldPath = targetPath_;
     if (oldPath.empty())
-        return FileUtils::LogAndStoreError(renameError_, "Invalid target path.", false), false;
+        return FilesUtils::Utilities::LogAndStoreError(renameError_, "Invalid target path.", false), false;
 
     std::string oldName = oldPath.filename().string();
     std::string newName = newNameStr.ToStdString();
@@ -218,9 +218,9 @@ bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
 
     path newPath = oldPath.parent_path() / newName;
     if (fs::exists(newPath))
-        return FileUtils::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
+        return FilesUtils::Utilities::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
 
-    if (!FileUtils::TryRename(oldPath, newPath, false, renameError_))
+    if (!FilesUtils::Utilities::TryRename(oldPath, newPath, false, renameError_))
         return false;
 
     // Success

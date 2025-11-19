@@ -20,21 +20,21 @@ namespace BixEngine::Gui
     private:
         // UI helpers
         void DrawSearchBar();
-        void DrawCandidateListUI(const std::vector<PrefabUtils::PrefabScriptCandidate>& candidates,
-                                 const std::string& filter);
+        void DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter);
         void DrawDetailsSectionUI();
         bool DrawActionButtons();
 
         // Logic helpers
         void ClearSelection();
-        void SetSelectedScript(const std::string& className, const std::string& includePath,
-                               const std::string& assetBaseName, bool isActor, bool isComponent);
+        void SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath);
 
         char searchBuffer_[128]{};
+        char assetNameBuffer_[128]{};
 
         String selectedClass_;
         String selectedInclude_;
         String selectedAssetBaseName_;
+        path selectedHeaderPath_{};
 
         bool selectedIsActor_ = false;
         bool selectedIsComponent_ = false;

@@ -1,7 +1,8 @@
 ﻿#include "Utils/StringUtils.h"
 #include <algorithm>
 #include <windows.h>
-
+#include <cctype>
+#include <cstdlib>
 
 namespace BixEngine::StringUtils
 {
@@ -9,18 +10,18 @@ namespace BixEngine::StringUtils
     // Chaînes de caractères
     // ─────────────────────────────────────────────
 
-    std::string ToLowerCopy(std::string value)
+    std::string Utilities::ToLowerCopy(std::string value)
     {
         std::transform(value.begin(), value.end(), value.begin(),
-           [](unsigned char ch)
-           {
-               return static_cast<char>(std::tolower(ch));
-           });
-
+            [](unsigned char ch)
+            {
+                return static_cast<char>(std::tolower(ch));
+            });
+        
         return value;
     }
 
-    std::string ExtractJsonString(const std::string& source, std::string_view key)
+    std::string Utilities::ExtractJsonString(const std::string& source, std::string_view key)
     {
         const std::string pattern = "\"" + std::string(key) + "\"";
         size_t pos = source.find(pattern);
@@ -35,20 +36,20 @@ namespace BixEngine::StringUtils
         if (pos == std::string::npos)
             return {};
 
-        const size_t end = source.find('"', pos + 1);
+        size_t end = source.find('"', pos + 1);
         if (end == std::string::npos)
             return {};
 
         return source.substr(pos + 1, end - (pos + 1));
     }
 
-    bool MatchesSearch(const String& value, const String& query)
+    bool Utilities::MatchesSearch(const String& value, const String& query)
     {
         if (query.IsEmpty())
             return true;
 
-        const String valueLower = ToLowerCopy(value);
-        const String queryLower = ToLowerCopy(query);
+        String valueLower = ToLowerCopy(value);
+        String queryLower = ToLowerCopy(query);
 
         return valueLower.find(queryLower.View()) != std::string::npos;
     }
@@ -57,20 +58,16 @@ namespace BixEngine::StringUtils
     // Fichiers et dossiers
     // ─────────────────────────────────────────────
 
-    void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory)
+    void Utilities::ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory)
     {
         if (path.empty())
             return;
 
         std::string command = "explorer ";
         if (isDirectory)
-        {
             command += "\"" + path.string() + "\"";
-        }
         else
-        {
             command += "/select,\"" + path.string() + "\"";
-        }
 
         std::system(command.c_str());
     }
@@ -79,7 +76,7 @@ namespace BixEngine::StringUtils
     // Transforme un path en identifiant string
     // ─────────────────────────────────────────────
 
-    String MakeSafeIdentifier(const std::string& raw)
+    String Utilities::MakeSafeIdentifier(const std::string& raw)
     {
         String out;
         out.reserve(raw.size());
@@ -92,17 +89,15 @@ namespace BixEngine::StringUtils
                 out += '_';
         }
 
-        if (out.IsEmpty())
-            out = "identifier";
-
+        if (out.IsEmpty()) out = "identifier";
         return out;
     }
 
     // ─────────────────────────────────────────────
-    // Suprime les caractères '\r'
+    // Supprime les caractères '\r'
     // ─────────────────────────────────────────────
-    
-    void TrimCarriageReturn(std::string& v)
+
+    void Utilities::TrimCarriageReturn(std::string& v)
     {
         if (!v.empty() && v.back() == '\r')
             v.pop_back();

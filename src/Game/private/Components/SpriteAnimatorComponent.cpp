@@ -1,5 +1,4 @@
 #include "Components/SpriteAnimatorComponent.h"
-
 #include "Logger.h"
 #include "Ressources/ResourceManager.h"
 #include "Ressources/SpriteAtlas.h"
@@ -8,8 +7,8 @@
 #include <filesystem>
 #include <string>
 #include <vector>
-
 #include <imgui.h>
+
 
 namespace BixEngine::Game
 {

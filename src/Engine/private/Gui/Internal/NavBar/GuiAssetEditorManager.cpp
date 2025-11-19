@@ -9,6 +9,7 @@
 #include <ranges>
 #include <string_view>
 #include <Gui/Internal/GuiLayoutManager.h>
+#include <nlohmann/json.hpp>
 
 #include "Logger.h"
 #include "Gui/GuiManager.h"
@@ -25,6 +26,66 @@ namespace BixEngine::Core
     namespace
     {
         constexpr std::string_view kSceneNavigationId{"scene"};
+
+        String JsonValueToString(const nlohmann::json& value)
+        {
+            if (value.is_string())
+                return String(value.get<std::string>());
+
+            if (value.is_boolean())
+                return value.get<bool>() ? String{"true"} : String{"false"};
+
+            if (value.is_number_integer() || value.is_number_unsigned())
+                return String(std::to_string(value.get<long long>()));
+
+            if (value.is_number_float())
+                return String(std::format("{}", value.get<double>()));
+
+            if (value.is_null())
+                return String{"null"};
+
+            return String(value.dump());
+        }
+
+        void PopulateVariablesMetadata(const nlohmann::json& document,
+                                       Gui::BaseAssetEditorController::SharedState& state)
+        {
+            state.exposedVariables.clear();
+
+            const auto it = document.find("variables");
+            if (it == document.end() || !it->is_array())
+                return;
+
+            for (const auto& entry : *it)
+            {
+                if (!entry.is_object())
+                    continue;
+
+                Gui::BaseAssetEditorController::SharedState::VariableMetadata metadata;
+
+                if (const auto nameIt = entry.find("name"); nameIt != entry.end() && nameIt->is_string())
+                    metadata.name = nameIt->get<std::string>();
+
+                if (const auto typeIt = entry.find("type"); typeIt != entry.end() && typeIt->is_string())
+                    metadata.type = typeIt->get<std::string>();
+                else if (const auto valueTypeIt = entry.find("valueType");
+                         valueTypeIt != entry.end() && valueTypeIt->is_string())
+                    metadata.type = valueTypeIt->get<std::string>();
+
+                const nlohmann::json* defaultCandidate = nullptr;
+                if (const auto defaultIt = entry.find("default"); defaultIt != entry.end())
+                    defaultCandidate = &(*defaultIt);
+                else if (const auto valueIt = entry.find("value"); valueIt != entry.end())
+                    defaultCandidate = &(*valueIt);
+                else if (const auto initialIt = entry.find("initial"); initialIt != entry.end())
+                    defaultCandidate = &(*initialIt);
+
+                if (defaultCandidate)
+                    metadata.value = JsonValueToString(*defaultCandidate);
+
+                state.exposedVariables.push_back(std::move(metadata));
+            }
+        }
     }
 
     std::span<GuiPanel*> GuiAssetEditorManager::PanelSet::CopyTo(std::span<GuiPanel*> buffer) const noexcept
@@ -256,7 +317,7 @@ namespace BixEngine::Core
 
     bool GuiAssetEditorManager::CreateAssetEditorEntry(const std::filesystem::path& path, AssetEditorEntry& outEntry)
     {
-        const std::string extensionLower = StringUtils::ToLowerCopy(path.extension().generic_string());
+        const std::string extensionLower = StringUtils::Utilities::ToLowerCopy(path.extension().generic_string());
         std::string typeTag;
         std::string assetType;
 
@@ -407,19 +468,30 @@ namespace BixEngine::Core
         }
 
         std::string contents((std::istreambuf_iterator(file)), std::istreambuf_iterator<char>());
-        std::string className = StringUtils::ExtractJsonString(contents, "class");
-        
-        if (!className.empty())
-            state.primaryClassName = className;
 
-        std::string includePath = StringUtils::ExtractJsonString(contents, "include");
-        if (!includePath.empty())
-            state.includePath = includePath;
+        nlohmann::json document = nlohmann::json::parse(contents, nullptr, false);
+        if (document.is_discarded() || !document.is_object())
+        {
+            LOG_WARNING("[GuiAssetEditorManager] Invalid prefab metadata for: " + path.generic_string());
+            return;
+        }
+
+        if (const auto classIt = document.find("class"); classIt != document.end() && classIt->is_string())
+            state.primaryClassName = classIt->get<std::string>();
+        else
+            state.primaryClassName.clear();
+
+        if (const auto includeIt = document.find("include"); includeIt != document.end() && includeIt->is_string())
+            state.includePath = includeIt->get<std::string>();
+        else
+            state.includePath.clear();
+
+        PopulateVariablesMetadata(document, state);
     }
 
     std::string GuiAssetEditorManager::MakeNavigationId(const std::filesystem::path& path, std::string_view typeTag) const
     {
-        const std::string hash = std::format("{:x}", EditorUtils::HashFNV1a(path.generic_string()));
+        const std::string hash = std::format("{:x}", EditorUtils::Utilities::HashFNV1a(path.generic_string()));
         return std::format("asset_{}_{}", typeTag, hash);
     }
 }

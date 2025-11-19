@@ -82,8 +82,11 @@ namespace BixEngine::Game
         {
             static_assert(std::is_base_of_v<Actor, T>, "T must derive from Actor");
             for (auto& a : actors_)
+            {
                 if (auto* ptr = dynamic_cast<T*>(a.get()))
-                    return ptr;
+                    return ptr;   
+            }
+            
             return nullptr;
         }
 
@@ -93,14 +96,20 @@ namespace BixEngine::Game
             static_assert(std::is_base_of_v<Actor, T>, "T must derive from Actor");
             std::vector<T*> result;
             for (auto& a : actors_)
+            {
                 if (auto* ptr = dynamic_cast<T*>(a.get()))
                     result.push_back(ptr);
+            }
+            
             return result;
         }
 
         // Name
         void Rename(String name);
-        [[nodiscard]] const String& GetName() const noexcept { return name_; }
+        [[nodiscard]] const String& GetName() const noexcept
+        {
+            return name_;
+        }
 
     protected:
         void SetName(String name);
