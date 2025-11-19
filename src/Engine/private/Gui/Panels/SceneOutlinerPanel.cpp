@@ -1,14 +1,12 @@
 #include "Gui/Panels/SceneOutlinerPanel.h"
-
 #include <utility>
-
 #include "Actor.h"
 #include "Scene.h"
 #include "SceneManager.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Widgets.h"
-
 #include "imgui.h"
+
 
 namespace BixEngine::Gui
 {
