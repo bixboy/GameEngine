@@ -92,7 +92,7 @@ namespace BixTool
         }
 
         const std::string normalizedScoped = NormalizeQualifiedName(scoped);
-        const auto rootIndexForClass       = FindRootIndex(normalizedScoped);
+        const auto rootIndexForClass = FindRootIndex(normalizedScoped);
         const bool hasRegisteredRoot       = rootIndexForClass.has_value();
         const bool isExplicitRoot          = baseScoped.empty() || hasRegisteredRoot;
         const bool isActorType             = normalizedScoped == kActorTypeName;

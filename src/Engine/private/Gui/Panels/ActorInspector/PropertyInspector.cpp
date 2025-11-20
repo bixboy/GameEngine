@@ -16,6 +16,7 @@
 #include "ClassInfo.h"
 #include "PropertyInfo.h"
 #include "Gui/Utils/ExposedVariableUtils.h"
+#include "Ressources/ResourceManager.h"
 #include "Ressources/Texture.h"
 
 
@@ -168,94 +169,123 @@ namespace BixEngine::Gui::ActorInspector
             return true;
         }
 
+// N'oublie pas d'inclure ton manager en haut du fichier
+#include "Ressources/ResourceManager.h" 
+// Si tu veux scanner le dossier assets plus tard :
+#include <filesystem> 
+
+// ... (Le début de ta fonction DrawSupportedProperty) ...
+
         // ---------------------------------------------------------------------
-        // Texture* (BixEngine::resources::Texture*)
-        // ---------------------------------------------------------------------
+        // Texture* // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "BixEngine::resources::Texture") ||
-            ExposedVariableUtils::MatchesType(property.TypeName, "resources::Texture") || // Ajout pour être sûr
+            ExposedVariableUtils::MatchesType(property.TypeName, "resources::Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "Texture*"))
         {
-            // On récupère la référence vers le pointeur de texture
             resources::Texture*& tex = property.Get<resources::Texture*>(instance);
 
-            // Style pour la preview
+            ImGui::PushID(property.Name.c_str());
+            ImGui::BeginGroup();
+
+            // --- PREVIEW ---
             float previewSize = 64.0f;
             ImVec2 sizeVec(previewSize, previewSize);
-
-            ImGui::PushID("TextureProperty");
-
-            // Colonnes pour aligner l'image et le texte/boutons
-            ImGui::BeginGroup();
+            bool openSelector = false;
 
             if (tex == nullptr)
             {
-                // Case vide : Bouton pour dire "Pas de texture"
-                ImGui::Button("Null (Drag Here)", sizeVec);
+                if (ImGui::Button("Empty\n(Click)", sizeVec)) openSelector = true;
             }
             else
             {
-                // Case remplie : Affichage de l'image
-                // NOTE: Avec le backend SDL_Renderer d'ImGui, on cast SDL_Texture* en ImTextureID
                 ImTextureID imgID = (ImTextureID)tex->GetNativeHandle();
-                
-                // On dessine l'image. On peut ajouter une bordure (dernier param = border_col)
-                ImGui::Image(imgID, sizeVec, ImVec2(0,0), ImVec2(1,1), ImVec4(1,1,1,1), ImVec4(1,1,1,0.5f));
-                
-                // Tooltip au survol de l'image (Zoom)
+                if (ImGui::ImageButton("##TextureBtn", imgID, sizeVec, ImVec2(0,0), ImVec2(1,1), ImVec4(0,0,0,1)))
+                    openSelector = true;
+
                 if (ImGui::IsItemHovered())
                 {
                     ImGui::BeginTooltip();
-                    ImGui::Text("Dimensions: %dx%d", tex->GetWidth(), tex->GetHeight());
-                    ImGui::Text("Format: %d", (int)tex->GetFormat());
-                    float zoomSize = 256.0f;
-                    ImGui::Image(imgID, ImVec2(zoomSize, zoomSize));
+                    ImGui::Text("Size: %dx%d", tex->GetWidth(), tex->GetHeight());
+                    ImGui::Image(imgID, ImVec2(256, 256));
                     ImGui::EndTooltip();
                 }
             }
 
-            // -------------------------------------------------------------
-            // DRAG & DROP TARGET (Pour assigner depuis l'Asset Browser)
-            // -------------------------------------------------------------
-            if (ImGui::BeginDragDropTarget())
-            {
-                // "ASSET_TEXTURE" est l'ID que tu devras utiliser dans ton Asset Browser quand tu fais le Drag
-                if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("ASSET_TEXTURE"))
-                {
-                    const wchar_t* path = (const wchar_t*)payload->Data;
-                    
-                    // TODO: Appeler ton ResourceManager ici !
-                    // Exemple : tex = BixEngine::ResourceManager::Get().LoadTexture(path);
-                    // Pour l'instant on log juste
-                    printf("Texture dropped path (TODO implement load): %ls\n", path);
-                }
-                ImGui::EndDragDropTarget();
-            }
+            if (openSelector) ImGui::OpenPopup("TextureSelectorPopup");
 
             ImGui::SameLine();
 
-            // Infos textuelles et boutons à droite de l'image
+            // --- BOUTONS D'ACTION ---
             ImGui::BeginGroup();
-            if (tex != nullptr)
+            if (tex)
             {
-                // Nom de la texture (Si IResource a un nom, sinon on met "Texture")
-                // ImGui::Text("%s", tex->GetName().c_str()); 
                 ImGui::Text("Res: %dx%d", tex->GetWidth(), tex->GetHeight());
-                
-                if (ImGui::Button("Remove"))
-                {
-                    tex = nullptr;
-                }
+                if (ImGui::Button("Clear")) tex = nullptr;
             }
             else
             {
-                ImGui::TextColored(ImVec4(0.6f, 0.6f, 0.6f, 1.0f), "No Texture Assigned");
+                ImGui::TextDisabled("No Texture");
             }
             ImGui::EndGroup();
 
+            // --- POPUP LISTE DES TEXTURES ---
+            ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+            if (ImGui::BeginPopup("TextureSelectorPopup"))
+            {
+                ImGui::TextDisabled("Select Texture");
+                ImGui::Separator();
+
+                // 1. Option "None"
+                if (ImGui::Selectable("None"))
+                {
+                    tex = nullptr;
+                    ImGui::CloseCurrentPopup();
+                }
+
+                // 2. Récupérer les textures chargées via le ResourceManager
+                auto loadedKeys = resources::ResourceManager::Get().GetLoadedResourceKeys<resources::Texture>();
+
+                if (loadedKeys.empty())
+                {
+                    ImGui::TextColored(ImVec4(1,0.5f,0,1), "No textures loaded in cache.");
+                }
+
+                for (const auto& path : loadedKeys)
+                {
+                    bool isSelected = (tex != nullptr && path == "TODO_COMPARE_PATH_IF_POSSIBLE"); 
+                    if (ImGui::Selectable(path.c_str(), isSelected))
+                    {
+                        auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(path);
+                        tex = sharedTex.get();
+                        
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+                
+                // --- OPTIONNEL : SCAN DU DISQUE ---
+                // Si tu veux voir les fichiers qui ne sont PAS encore chargés :
+                /*
+                ImGui::SeparatorText("Assets on Disk");
+                namespace fs = std::filesystem;
+                if (fs::exists("assets/")) {
+                    for (const auto& entry : fs::recursive_directory_iterator("assets/")) {
+                        if (entry.path().extension() == ".png" || entry.path().extension() == ".jpg") {
+                            std::string p = entry.path().string();
+                            if (ImGui::Selectable(p.c_str())) {
+                                auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(p.c_str());
+                                tex = sharedTex.get();
+                            }
+                        }
+                    }
+                }
+                */
+
+                ImGui::EndPopup();
+            }
+
             ImGui::EndGroup();
             ImGui::PopID();
-
             return true;
         }
         

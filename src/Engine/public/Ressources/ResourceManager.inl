@@ -98,6 +98,32 @@ namespace BixEngine::resources
         return std::static_pointer_cast<T>(resource);
     }
 
+
+    // ────────────────────────────────────────────────
+    // 🔍 Get Loaded Resource Keys
+    // ────────────────────────────────────────────────
+    template <typename T>
+    std::vector<String> ResourceManager::GetLoadedResourceKeys()
+    {
+        std::vector<String> keys;
+        const std::type_index typeIndex(typeid(T));
+    
+        std::scoped_lock lock(mutex_);
+    
+        auto cacheIt = caches_.find(typeIndex);
+        if (cacheIt != caches_.end())
+        {
+            for (const auto& [path, weakPtr] : cacheIt->second)
+            {
+                if (!weakPtr.expired())
+                {
+                    keys.push_back(path);
+                }
+            }
+        }
+        return keys;
+    }
+
     // ────────────────────────────────────────────────
     // ⚠️ Default resource handling
     // ────────────────────────────────────────────────

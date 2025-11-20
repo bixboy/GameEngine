@@ -25,6 +25,9 @@ namespace BixEngine::resources
         void UnregisterLoader();
 
         template <typename T>
+        std::vector<String> GetLoadedResourceKeys();
+
+        template <typename T>
         void SetDefault(std::shared_ptr<T> defaultResource);
 
         void Purge();

@@ -110,9 +110,10 @@ namespace BixEngine::Gui
             });
         }
 
-        // Ajouter les scripts regroupés
-        for (auto& [_, script] : scriptGroups)
-            state.cache.entries.push_back(std::move(script));
+        for (auto& script : scriptGroups | std::views::values)
+        {
+            state.cache.entries.push_back(std::move(script));   
+        }
 
         // Tri
         std::ranges::sort(state.cache.entries, [](const ContentEntry& a, const ContentEntry& b)
@@ -213,8 +214,8 @@ namespace BixEngine::Gui
         // Fil d'Ariane
         bar.AddLeft([&]
         {
-            fs::path cur = state.root;
-            std::vector<fs::path> segs;
+            path cur = state.root;
+            std::vector<path> segs;
 
             for (auto& seg : state.current.lexically_relative(state.root))
                 segs.push_back(seg);
@@ -269,18 +270,27 @@ namespace BixEngine::Gui
             return;
         }
 
-        if (ImGui::Button("+")) { expand = true; collapse = false; }
+        if (ImGui::Button("+"))
+        {
+            expand = true; collapse = false;
+        }
         ImGui::SameLine();
-        if (ImGui::Button("-")) { collapse = true; expand = false; }
+        
+        if (ImGui::Button("-"))
+        {
+            collapse = true; expand = false;
+        }
         ImGui::SameLine();
-        if (ImGui::Button("Reload")) cache.clear();
+        
+        if (ImGui::Button("Reload"))
+            cache.clear();
 
         ImGui::Separator();
 
         if (ImGui::BeginChild("TreeInner"))
         {
-            std::function<void(const fs::path&)> draw;
-            draw = [&](const fs::path& dir)
+            std::function<void(const path&)> draw;
+            draw = [&](const path& dir)
             {
                 std::error_code ec;
                 bool isSel = fs::equivalent(dir, state.current, ec);
@@ -289,10 +299,7 @@ namespace BixEngine::Gui
                 if (expand || collapse)
                     ImGui::SetNextItemOpen(expand, ImGuiCond_Always);
 
-                bool open = ImGui::TreeNodeEx(
-                    id.c_str(),
-                    ImGuiTreeNodeFlags_OpenOnArrow |
-                    ImGuiTreeNodeFlags_SpanFullWidth |
+                bool open = ImGui::TreeNodeEx(id.c_str(), ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_SpanFullWidth |
                     (isSel ? ImGuiTreeNodeFlags_Selected : 0),
                     "%s  %s",
                     GetIcon(ContentType::Directory),
@@ -361,10 +368,18 @@ namespace BixEngine::Gui
         // Menu clic droit
         if (ImGui::BeginPopupContextWindow("GridCtx"))
         {
-            if (ImGui::MenuItem("New Script")) req.createScript = true;
-            if (ImGui::MenuItem("New Prefab")) req.createPrefab = true;
-            if (ImGui::MenuItem("New Folder")) req.createFolder = true;
-            if (ImGui::MenuItem("New Sprite Atlas")) req.createSpriteAtlas = true;
+            if (ImGui::MenuItem("New Script"))
+                req.createScript = true;
+            
+            if (ImGui::MenuItem("New Prefab"))
+                req.createPrefab = true;
+            
+            if (ImGui::MenuItem("New Folder"))
+                req.createFolder = true;
+            
+            if (ImGui::MenuItem("New Sprite Atlas"))
+                req.createSpriteAtlas = true;
+            
             ImGui::EndPopup();
         }
 
@@ -411,8 +426,12 @@ namespace BixEngine::Gui
                     else if (entry.IsScript())
                     {
                         std::vector<path> files;
-                        if (entry.HasHeader()) files.push_back(entry.headerPath);
-                        if (entry.HasSource()) files.push_back(entry.sourcePath);
+                        
+                        if (entry.HasHeader())
+                            files.push_back(entry.headerPath);
+                        
+                        if (entry.HasSource())
+                            files.push_back(entry.sourcePath);
 
                         for (auto& f : files)
                             EditorUtils::Utilities::OpenFileInCodeEditor(f);
@@ -450,8 +469,7 @@ namespace BixEngine::Gui
                     if (ImGui::MenuItem("Delete"))
                     {
                         String err;
-                        const bool removed = isScript
-                            ? DeleteScriptFiles(entry, err)
+                        const bool removed = isScript ? DeleteScriptFiles(entry, err)
                             : FilesUtils::Utilities::TryRemove(entry.path, entry.IsDirectory(), err);
 
                         if (!removed)
@@ -468,7 +486,7 @@ namespace BixEngine::Gui
 
                     if (ImGui::MenuItem("Show in Explorer"))
                     {
-                        fs::path targetPath = entry.path;
+                        path targetPath = entry.path;
                         bool targetIsDirectory = entry.IsDirectory();
 
                         if (isScript)
@@ -486,7 +504,6 @@ namespace BixEngine::Gui
                     ImGui::EndPopup();
                 }
 
-                // Label
                 if (ImGui::IsItemHovered())
                     ImGui::SetTooltip("%s", entry.name.c_str());
 

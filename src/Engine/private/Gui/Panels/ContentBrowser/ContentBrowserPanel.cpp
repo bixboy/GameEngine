@@ -51,10 +51,10 @@ namespace BixEngine::Gui
 
         EnsureValidDirectory();
 
-        const fs::path targetDirectory = (!state_.current.empty() && fs::exists(state_.current) &&
-                                             fs::is_directory(state_.current))
-                                             ? state_.current
-                                             : state_.root;
+        const fs::path targetDirectory =
+            (!state_.current.empty() &&
+            fs::exists(state_.current) &&
+            fs::is_directory(state_.current)) ? state_.current : state_.root;
 
         if (targetDirectory.empty() || !fs::exists(targetDirectory))
             return;
