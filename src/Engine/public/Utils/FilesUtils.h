@@ -26,6 +26,8 @@ namespace BixEngine::FilesUtils
 
         static bool TryWriteFile(const std::filesystem::path& path, const std::string& content, String& outError);
 
+        static std::vector<std::filesystem::path> ScanDirectory(const std::filesystem::path& directory,  const std::vector<std::string>& extensions, bool recursive = true);
+
         // ─────────────────────────────────────────────
         // Gestion d’erreurs et comparaison
         // ─────────────────────────────────────────────

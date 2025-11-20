@@ -196,6 +196,75 @@ namespace BixEngine::FilesUtils
         return true;
     }
 
+    std::vector<std::filesystem::path> Utilities::ScanDirectory(const std::filesystem::path& directory, const std::vector<std::string>& extensions, bool recursive)
+    {
+        std::vector<std::filesystem::path> results;
+        std::filesystem::path finalPath = directory;
+
+        if (!std::filesystem::exists(finalPath))
+        {
+            std::filesystem::path contentPath = "Content" / finalPath;
+            if (std::filesystem::exists(contentPath))
+            {
+                finalPath = contentPath;
+            }
+            else
+            {
+                return results; 
+            }
+        }
+
+        std::vector<std::string> lowerExts;
+        lowerExts.reserve(extensions.size());
+        for (const auto& ext : extensions)
+        {
+            lowerExts.push_back(String(ext).ToLower().Std());   
+        }
+
+        auto ProcessEntry = [&](const std::filesystem::directory_entry& entry)
+        {
+            if (!entry.is_regular_file())
+                return;
+
+            if (lowerExts.empty())
+            {
+                results.push_back(entry.path());
+                return;
+            }
+
+            std::string fileExt = String(entry.path().extension().string()).ToLower();
+            
+            for (const auto& allowedExt : lowerExts)
+            {
+                if (fileExt == allowedExt)
+                {
+                    results.push_back(entry.path());
+                    break;
+                }
+            }
+        };
+        
+        try
+        {
+            if (recursive)
+            {
+                for (const auto& entry : std::filesystem::recursive_directory_iterator(finalPath))
+                    ProcessEntry(entry);
+            }
+            else
+            {
+                for (const auto& entry : std::filesystem::directory_iterator(finalPath))
+                    ProcessEntry(entry);
+            }
+        }
+        catch (const std::filesystem::filesystem_error& e)
+        {
+            LOG_ERROR("Error scanning directory");
+        }
+
+        return results;
+    }
+
     // ─────────────────────────────────────────────
     // Gestion d’erreurs et comparaison
     // ─────────────────────────────────────────────

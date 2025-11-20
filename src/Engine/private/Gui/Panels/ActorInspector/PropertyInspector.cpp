@@ -18,6 +18,7 @@
 #include "Gui/Utils/ExposedVariableUtils.h"
 #include "Ressources/ResourceManager.h"
 #include "Ressources/Texture.h"
+#include "Utils/FilesUtils.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -169,15 +170,9 @@ namespace BixEngine::Gui::ActorInspector
             return true;
         }
 
-// N'oublie pas d'inclure ton manager en haut du fichier
-#include "Ressources/ResourceManager.h" 
-// Si tu veux scanner le dossier assets plus tard :
-#include <filesystem> 
-
-// ... (Le début de ta fonction DrawSupportedProperty) ...
-
         // ---------------------------------------------------------------------
-        // Texture* // ---------------------------------------------------------------------
+        // Texture*
+        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "BixEngine::resources::Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "resources::Texture") ||
@@ -199,7 +194,7 @@ namespace BixEngine::Gui::ActorInspector
             }
             else
             {
-                ImTextureID imgID = (ImTextureID)tex->GetNativeHandle();
+                ImTextureID imgID = reinterpret_cast<ImTextureID>(tex->GetNativeHandle());
                 if (ImGui::ImageButton("##TextureBtn", imgID, sizeVec, ImVec2(0,0), ImVec2(1,1), ImVec4(0,0,0,1)))
                     openSelector = true;
 
@@ -233,53 +228,55 @@ namespace BixEngine::Gui::ActorInspector
             ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
             if (ImGui::BeginPopup("TextureSelectorPopup"))
             {
+                static char searchBuffer[128] = "";
                 ImGui::TextDisabled("Select Texture");
                 ImGui::Separator();
 
-                // 1. Option "None"
                 if (ImGui::Selectable("None"))
                 {
                     tex = nullptr;
                     ImGui::CloseCurrentPopup();
                 }
 
-                // 2. Récupérer les textures chargées via le ResourceManager
-                auto loadedKeys = resources::ResourceManager::Get().GetLoadedResourceKeys<resources::Texture>();
+                auto foundFiles = FilesUtils::Utilities::ScanDirectory("",
+                    {
+                        ".png",
+                        ".jpg",
+                        ".jpeg",
+                        ".tga",
+                        ".bmp"
+                    });
 
-                if (loadedKeys.empty())
+                if (foundFiles.empty())
                 {
-                    ImGui::TextColored(ImVec4(1,0.5f,0,1), "No textures loaded in cache.");
+                    ImGui::TextDisabled("No textures found.");
                 }
 
-                for (const auto& path : loadedKeys)
+                for (const auto& path : foundFiles)
                 {
-                    bool isSelected = (tex != nullptr && path == "TODO_COMPARE_PATH_IF_POSSIBLE"); 
-                    if (ImGui::Selectable(path.c_str(), isSelected))
+                    std::string pathStr = path.string();
+                    std::replace(pathStr.begin(), pathStr.end(), '\\', '/'); 
+
+                    if (searchBuffer[0] != '\0')
                     {
-                        auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(path);
-                        tex = sharedTex.get();
-                        
+                        if (pathStr.find(searchBuffer) == std::string::npos)
+                            continue;
+                    }
+
+                    std::string displayName = path.filename().string();
+
+                    if (ImGui::Selectable(displayName.c_str()))
+                    {
+                        auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(pathStr);
+                        if (sharedTex)
+                            tex = sharedTex.get();
+            
                         ImGui::CloseCurrentPopup();
                     }
+
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s", pathStr.c_str());
                 }
-                
-                // --- OPTIONNEL : SCAN DU DISQUE ---
-                // Si tu veux voir les fichiers qui ne sont PAS encore chargés :
-                /*
-                ImGui::SeparatorText("Assets on Disk");
-                namespace fs = std::filesystem;
-                if (fs::exists("assets/")) {
-                    for (const auto& entry : fs::recursive_directory_iterator("assets/")) {
-                        if (entry.path().extension() == ".png" || entry.path().extension() == ".jpg") {
-                            std::string p = entry.path().string();
-                            if (ImGui::Selectable(p.c_str())) {
-                                auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(p.c_str());
-                                tex = sharedTex.get();
-                            }
-                        }
-                    }
-                }
-                */
 
                 ImGui::EndPopup();
             }
