@@ -77,9 +77,7 @@ namespace BixEngine::Gui::ActorInspector
     void ComponentInspectorSection::DrawAddComponentPopup(Game::Actor& actor)
     {
         if (!ImGui::BeginPopup("AddComponentPopup"))
-        {
             return;
-        }
 
         ImGui::TextUnformatted("Add Component");
         ImGui::Separator();
@@ -192,11 +190,7 @@ namespace BixEngine::Gui::ActorInspector
             const float startX = ImGui::GetCursorPosX();
             const float startY = ImGui::GetCursorPosY();
 
-            bool open = ImGui::TreeNodeEx(
-                component.get(),
-                ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding,
-                "%s", treeLabel.c_str()
-            );
+            bool open = ImGui::TreeNodeEx(component.get(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding, "%s", treeLabel.c_str());
 
             const float labelWidth = ImGui::CalcTextSize(treeLabel.c_str()).x;
             const float iconSpacing = ImGui::GetTreeNodeToLabelSpacing();
@@ -224,14 +218,13 @@ namespace BixEngine::Gui::ActorInspector
             if (open)
             {
                 const float cursorBefore = ImGui::GetCursorPosY();
-                const bool drewReflected = DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
+                const bool drewReflected = PropertyInspector::DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
                 const float cursorAfterReflected = ImGui::GetCursorPosY();
 
                 component->DrawInspectorUI();
                 const float cursorAfterCustom = ImGui::GetCursorPosY();
 
-                if (!drewReflected && cursorAfterCustom <= cursorBefore + 0.5f && cursorAfterReflected <= cursorBefore +
-                    0.5f)
+                if (!drewReflected && cursorAfterCustom <= cursorBefore + 0.5f && cursorAfterReflected <= cursorBefore + 0.5f)
                 {
                     DrawEmptyStateMessage("No editable properties.");
                 }

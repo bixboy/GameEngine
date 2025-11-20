@@ -11,9 +11,7 @@ namespace BixEngine::Gui
 {
     using namespace Utils;
 
-    ActorInspectorPanel::ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider,
-                                             std::function<Game::Actor*()> selectionGetter,
-                                             std::function<void(Game::Actor*)> selectionSetter)
+    ActorInspectorPanel::ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
         : GuiPanelBase("actor_inspector"),
           sceneManagerProvider_(std::move(sceneProvider)),
           selectedActorGetter_(std::move(selectionGetter)),
@@ -24,9 +22,7 @@ namespace BixEngine::Gui
     }
 
     ActorInspectorPanel::ActorInspectorPanel(const DefaultEngineGuiContext& context)
-        : ActorInspectorPanel(context.sceneManagerProvider,
-                              context.selectedActorGetter,
-                              context.selectedActorSetter)
+        : ActorInspectorPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
     {
     }
 

@@ -62,10 +62,10 @@ namespace BixEngine::Game
             }
 
             std::sort(outAtlases.begin(), outAtlases.end(),
-                      [](const std::filesystem::path& a, const std::filesystem::path& b)
-                      {
-                          return a.generic_string() < b.generic_string();
-                      });
+              [](const std::filesystem::path& a, const std::filesystem::path& b)
+              {
+                  return a.generic_string() < b.generic_string();
+              });
         }
 
         std::string MakeDisplayName(const std::filesystem::path& path, const std::filesystem::path& root)
@@ -237,9 +237,7 @@ namespace BixEngine::Game
                 }
             }
 
-            const char* currentAnimationLabel = currentAnimationIndex >= 0
-                                                    ? animations[currentAnimationIndex].name.View().data()
-                                                    : "<None>";
+            const char* currentAnimationLabel = currentAnimationIndex >= 0 ? animations[currentAnimationIndex].name.View().data() : "<None>";
             if (ImGui::BeginCombo("Default Animation", currentAnimationLabel))
             {
                 const bool noneSelected = (currentAnimationIndex < 0);

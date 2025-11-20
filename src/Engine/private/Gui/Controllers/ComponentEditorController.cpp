@@ -178,6 +178,6 @@ namespace BixEngine::Gui
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
 
-        ActorInspector::DrawExposedVariablesSection(*state, "Variables du composant", "Aucune variable exposée pour ce composant.");
+        ActorInspector::PropertyInspector::DrawExposedVariablesSection(*state, "Variables du composant", "Aucune variable exposée pour ce composant.");
     }
 }

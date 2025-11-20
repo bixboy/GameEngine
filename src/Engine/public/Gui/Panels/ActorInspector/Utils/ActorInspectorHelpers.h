@@ -29,9 +29,7 @@ namespace BixEngine::Gui::ActorInspector
     [[nodiscard]] inline bool ActorBelongsToScene(const Game::Scene& scene, const Game::Actor* actor)
     {
         if (!actor)
-        {
             return false;
-        }
 
         const auto& actors = scene.GetActors();
         return std::any_of(actors.begin(), actors.end(), [actor](const auto& candidate)

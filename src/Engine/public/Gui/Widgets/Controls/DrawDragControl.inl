@@ -5,8 +5,7 @@
 namespace BixEngine::Gui::Widgets
 {
     template <typename T>
-    bool DrawDragControl(const char* label, T& value, float speed, const void* minValue, const void* maxValue,
-                         const char* format)
+    bool DrawDragControl(const char* label, T& value, float speed, const void* minValue, const void* maxValue, const char* format)
     {
         ImGuiDataType dataType{};
 

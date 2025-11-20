@@ -36,7 +36,6 @@ namespace BixEngine::Game
         BPROPERTY()
         std::shared_ptr<resources::SpriteAtlas> atlas_{};
 
-        BPROPERTY()
         String defaultAnimation_{};
 
         resources::SpriteAnimator animator_{};

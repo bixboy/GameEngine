@@ -47,8 +47,15 @@ namespace BixEngine::Game
         }
     }
 
+
+    
     SpriteComponent::SpriteComponent(Actor* owner) : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight), uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
     {
+    }
+
+    void SpriteComponent::BeginPlay()
+    {
+        Component::BeginPlay();
     }
 
     void SpriteComponent::Render(Graphics::Renderer& renderer) const
@@ -68,8 +75,7 @@ namespace BixEngine::Game
 
             SDL_FRect srcRect{uvRect_.X, uvRect_.Y, uvRect_.Width, uvRect_.Height};
             SDL_FPoint center{pivot_.x * width_, pivot_.y * height_};
-            SDL_RenderTextureRotated(renderer.GetSDLRenderer(), sdlTexture, &srcRect, &destRect, 0.0, &center,
-                                     BuildFlipMode(bFlipX_, bFlipY_));
+            SDL_RenderTextureRotated(renderer.GetSDLRenderer(), sdlTexture, &srcRect, &destRect, 0.0, &center, BuildFlipMode(bFlipX_, bFlipY_));
         }
         else
         {

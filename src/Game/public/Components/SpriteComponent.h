@@ -16,18 +16,16 @@ namespace BixEngine::Game
     class SpriteComponent : public Component
     {
         GENERATED_BODY()
+        
         friend class SpriteAnimatorComponent;
 
     public:
-        /**
-         * @brief Creates a sprite component using default dimensions and color.
-         */
+
         explicit SpriteComponent(Actor* owner);
 
-        SpriteComponent(Actor* owner, SDL_Color color, float w, float h) : Component(owner), color_(color), width_(w),
-                                                                           height_(h)
-        {
-        }
+        SpriteComponent(Actor* owner, SDL_Color color, float w, float h) : Component(owner), color_(color), width_(w), height_(h) {}
+
+        void BeginPlay() override;
 
         void Render(Graphics::Renderer& renderer) const override;
 
@@ -96,6 +94,7 @@ namespace BixEngine::Game
         BPROPERTY()
         float height_ = 32.f;
 
+        BPROPERTY()
         resources::Texture* texture_{nullptr};
 
         Math::Rect uvRect_{};

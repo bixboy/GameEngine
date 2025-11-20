@@ -19,9 +19,7 @@ namespace BixEngine::Gui
     class ActorInspectorPanel final : public GuiPanelBase
     {
     public:
-        ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider,
-                            std::function<Game::Actor*()> selectionGetter,
-                            std::function<void(Game::Actor*)> selectionSetter);
+        ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter);
         explicit ActorInspectorPanel(const DefaultEngineGuiContext& context);
 
         void Draw() override;

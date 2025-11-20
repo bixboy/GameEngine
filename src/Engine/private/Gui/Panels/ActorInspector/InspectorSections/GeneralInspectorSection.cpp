@@ -25,11 +25,8 @@ namespace BixEngine::Gui::ActorInspector
             ScopedStyle rounding(ImGuiStyleVar_ChildRounding, 10.0f);
             ScopedStyle padding(ImGuiStyleVar_WindowPadding, ImVec2(12.0f, 8.0f));
 
-            const bool visible = ImGui::BeginChild(
-                "OverviewCard",
-                ImVec2(-FLT_MIN, 0.0f),
-                ImGuiChildFlags_AutoResizeY,
-                ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding);
+            const bool visible = ImGui::BeginChild("OverviewCard", ImVec2(-FLT_MIN, 0.0f),
+                ImGuiChildFlags_AutoResizeY, ImGuiWindowFlags_NoScrollbar | ImGuiWindowFlags_AlwaysUseWindowPadding);
 
             if (visible)
             {
@@ -117,6 +114,6 @@ namespace BixEngine::Gui::ActorInspector
 
         ActorInspectorState& state = GetActorState(actor);
         DrawActorOverview(actor, state);
-        DrawClassProperties(actor.GetClass(), &actor, true, "Properties", false);
+        PropertyInspector::DrawClassProperties(actor.GetClass(), &actor, true, "Properties", false);
     }
 }

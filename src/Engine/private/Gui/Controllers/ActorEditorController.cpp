@@ -260,7 +260,7 @@ namespace BixEngine::Gui
         if (!state->includePath.empty())
             Utils::DrawLabelValue("Include", state->includePath.c_str(), "");
 
-        ActorInspector::DrawExposedVariablesSection(*state, "Variables exposées", "Aucune variable exposée pour cet acteur.");
+        ActorInspector::PropertyInspector::DrawExposedVariablesSection(*state, "Variables exposées", "Aucune variable exposée pour cet acteur.");
     }
 
     void ActorEditorController::DrawViewportGrid_(const ImVec2& size)
