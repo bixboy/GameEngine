@@ -45,7 +45,7 @@ namespace BixEngine::resources
         template <typename T>
         std::shared_ptr<T> GetDefault();
 
-        std::unordered_map<std::type_index, std::unordered_map<String, std::weak_ptr<IResource>>> caches_;
+        std::unordered_map<std::type_index, std::unordered_map<String, std::shared_ptr<IResource>>> caches_;
         std::unordered_map<std::type_index, std::shared_ptr<IResource>> defaults_;
         std::unordered_map<std::type_index, std::function<std::shared_ptr<IResource>(const String&)>> loaders_;
 

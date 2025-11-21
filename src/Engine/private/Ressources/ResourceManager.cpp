@@ -11,7 +11,8 @@ namespace BixEngine::resources
         {
             for (auto it = cache.begin(); it != cache.end();)
             {
-                if (it->second.expired())
+                // If the resource is only held by the cache (use_count == 1), we can remove it.
+                if (it->second.use_count() == 1)
                     it = cache.erase(it);
                 else
                     ++it;

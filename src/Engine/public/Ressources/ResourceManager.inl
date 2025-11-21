@@ -25,10 +25,7 @@ namespace BixEngine::resources
                 auto& cache = cacheIt->second;
                 if (auto it = cache.find(path); it != cache.end())
                 {
-                    if (auto resource = it->second.lock())
-                        return std::static_pointer_cast<T>(resource);
-
-                    cache.erase(it);
+                    return std::static_pointer_cast<T>(it->second);
                 }
             }
         }
@@ -113,9 +110,9 @@ namespace BixEngine::resources
         auto cacheIt = caches_.find(typeIndex);
         if (cacheIt != caches_.end())
         {
-            for (const auto& [path, weakPtr] : cacheIt->second)
+            for (const auto& [path, resource] : cacheIt->second)
             {
-                if (!weakPtr.expired())
+                if (resource)
                 {
                     keys.push_back(path);
                 }
