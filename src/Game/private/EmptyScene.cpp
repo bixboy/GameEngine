@@ -50,11 +50,12 @@ namespace BixEngine::Game
         if (!HasRenderer() || !HasInputManager())
             LOG_WARNING("EmptyScene started without full context (renderer or input missing)");
 
-        player_ = BGameplayStatics::SpawnActor<Player>(this,
-                                                       kPlayerStart,
-                                                       kPlayerSize,
-                                                       Math::Color::Red().ToSDL());
+        player_ = FindActorByType<Player>();
 
+        if (!player_)
+        {
+            player_ = BGameplayStatics::SpawnActor<Player>(this, kPlayerStart, kPlayerSize, Math::Color::Red().ToSDL());
+        }
 
         if (player_ && HasInputManager())
             player_->SetupInput(GetInputManager());

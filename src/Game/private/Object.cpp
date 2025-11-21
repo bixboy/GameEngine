@@ -68,7 +68,7 @@ namespace BixEngine::Game
 
     void Object::WriteString(std::ostream& stream, const String& value)
     {
-        const auto length = value.size();
+        const auto length = static_cast<std::uint32_t>(value.size());
 
         WritePrimitive(stream, length);
         stream.write(value.data(), length);

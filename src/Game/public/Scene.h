@@ -39,6 +39,8 @@ namespace BixEngine::Game
         explicit Scene(String name = "Unnamed Scene");
         virtual ~Scene() = default;
 
+        void SetName(String name);
+        
         // Lifecycle
         virtual void OnInitialize() {}
         virtual void OnEnter() {}
@@ -112,7 +114,6 @@ namespace BixEngine::Game
         }
 
     protected:
-        void SetName(String name);
 
         // Safe subsystem access
         [[nodiscard]] Input::InputManager& GetInputManager() const;

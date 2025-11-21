@@ -41,6 +41,7 @@ namespace BixEngine::Gui
     public:
         GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager);
 
+        void Update();
         void Render();
 
         void Switch(EditorLayoutType newLayout);
@@ -72,17 +73,26 @@ namespace BixEngine::Gui
         void ProcessPendingSwitch_();
         void EnsureDockspaceForCurrentLayout_();
         void ApplyPanelVisibility_();
+        void DrawMainMenuBar_();
+        void DrawSaveAsDialog_();
+        void DrawOpenSceneDialog_();
+        void DrawDeleteSceneDialog_();
+        void DrawRenameSceneDialog_();
+        void DrawCloseSceneConfirmation_();
+        
+        void AddToRecentScenes_(const std::filesystem::path& path);
+        void LoadRecentScenes_();
+        void SaveRecentScenes_();
 
-        // ---- Panel logic ----
         void RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout);
 
-        // ---- Persistence ----
+
+
         void LoadPersistedLayouts_();
         void PersistLayoutsToDisk_();
 
-        // ---- Utility ----
         static std::string LayoutTypeToString(EditorLayoutType type);
-        static std::optional<EditorLayoutType> LayoutTypeFromString(const std::string& value);
+        static std::optional<EditorLayoutType> LayoutTypeFromString(const std::string& v);
 
         struct StoredLayout
         {
@@ -90,23 +100,38 @@ namespace BixEngine::Gui
             std::array<ImGuiID, static_cast<size_t>(DockSpaceRegion::Count)> dockRegionIds{};
         };
 
-        GuiSystem* guiSystem_ = nullptr;
-        GuiManager* guiManager_ = nullptr;
+        GuiSystem* guiSystem_{nullptr};
+        GuiManager* guiManager_{nullptr};
 
-        EditorLayoutType currentLayout_ = EditorLayoutType::Scene;
+        EditorLayoutType currentLayout_{EditorLayoutType::Scene};
         std::optional<EditorLayoutType> pendingLayout_;
-
-        std::unordered_map<EditorLayoutType, StoredLayout, EditorLayoutTypeHash> layoutData_;
-        std::unordered_map<EditorLayoutType, std::string, EditorLayoutTypeHash> dockspaceNames_;
-        std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>, EditorLayoutTypeHash> layoutPanels_;
-        std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_;
-
-        std::unordered_set<EditorLayoutType, EditorLayoutTypeHash> initializedLayouts_;
-        std::unordered_set<EditorLayoutType, EditorLayoutTypeHash> pendingInitialization_;
-
-        bool dockspaceDirty_ = true;
-        bool switchRequested_ = false;
+        bool switchRequested_{false};
+        bool dockspaceDirty_{true};
 
         std::filesystem::path layoutStorageFile_;
+        std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>> layoutPanels_;
+        std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_;
+        std::unordered_map<EditorLayoutType, std::string> dockspaceNames_;
+        std::unordered_map<EditorLayoutType, StoredLayout> layoutData_;
+        std::unordered_set<EditorLayoutType> initializedLayouts_;
+        std::unordered_set<EditorLayoutType> pendingInitialization_;
+
+        // Scene Management State
+        std::filesystem::path currentScenePath_;
+        bool showSaveAsDialog_{false};
+        bool showOpenSceneDialog_{false};
+        bool showDeleteSceneDialog_{false};
+        bool showRenameSceneDialog_{false};
+        bool showCloseSceneConfirmation_{false};
+        char saveAsFilenameBuffer_[256]{};
+        char renameFilenameBuffer_[256]{};
+        
+        // Recent Scenes
+        std::vector<std::filesystem::path> recentScenes_;
+        std::filesystem::path recentScenesFile_;
+        std::filesystem::path sceneToDelete_;
+        
+        // Scene State Tracking
+        bool isSceneDirty_{false};
     };
 }

@@ -34,7 +34,7 @@ namespace BixEngine
             Player();
             Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
 
-            void SetupInput(Input::InputManager& inputManager);
+            void SetupInput(Input::InputManager& inputManager) override;
 
             void Update(float deltaTime) override;
 

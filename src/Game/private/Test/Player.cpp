@@ -76,6 +76,9 @@ namespace BixEngine::Game
         WritePrimitive(stream, size_.x);
         WritePrimitive(stream, size_.y);
         WritePrimitive(stream, size_.z);
+
+        WriteString(stream, animatorComponent_ ? animatorComponent_->GetAtlasPath() : String{});
+        WriteString(stream, animatorComponent_ ? animatorComponent_->GetCurrentAnimation() : String{});
     }
 
     void Player::DeserializeBinaryImpl(std::istream& stream)
@@ -92,6 +95,18 @@ namespace BixEngine::Game
 
         RefreshSpriteComponent();
         SetScale(size_);
+
+        String atlasPath = ReadString(stream);
+        String currentAnim = ReadString(stream);
+
+        if (animatorComponent_ && !atlasPath.IsEmpty())
+        {
+            animatorComponent_->LoadSpriteAtlas(atlasPath, currentAnim);
+            if (!currentAnim.IsEmpty())
+            {
+                animatorComponent_->Play(currentAnim);
+            }
+        }
     }
 
     void Player::OnComponentRemoved(const Component& component)
@@ -108,6 +123,7 @@ namespace BixEngine::Game
     {
         auto animator = std::make_unique<SpriteAnimatorComponent>(this);
         animatorComponent_ = animator.get();
+        spriteComponent_ = animatorComponent_;
 
         // Setup
         animatorComponent_->SetColor(color_);

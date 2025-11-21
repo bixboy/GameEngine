@@ -27,6 +27,7 @@ namespace BixEngine::Game
         virtual void BeginPlay();
         virtual void Update(float deltaTime);
         virtual void Render(Graphics::Renderer& renderer) const;
+        virtual void SetupInput(Input::InputManager& inputManager) {}
 
         void AddComponent(std::unique_ptr<Component> component);
 

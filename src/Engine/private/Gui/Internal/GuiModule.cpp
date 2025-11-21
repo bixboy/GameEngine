@@ -222,9 +222,12 @@ namespace BixEngine::Core
             guiSystem_->SetDockspaceTopPadding(kNavigationBarHeight);
 
         if (layoutManager_)
-            layoutManager_->Render();
+            layoutManager_->Update();
 
         guiSystem_->BeginFrame();
+
+        if (layoutManager_)
+            layoutManager_->Render();
     }
 
     void GuiModule::Render(SubsystemManager& subsystems)

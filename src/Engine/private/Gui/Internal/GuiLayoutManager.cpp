@@ -1,4 +1,5 @@
 #include "Gui/Internal/GuiLayoutManager.h"
+#include "EmptyScene.h"
 
 #include <algorithm>
 #include <array>
@@ -15,6 +16,9 @@
 #include "Gui/Internal/GuiSystem.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"
+#include "SceneManager.h"
+#include "SceneSerializer.h"
+#include "SceneRegistry.h"
 
 namespace BixEngine::Gui
 {
@@ -100,6 +104,7 @@ namespace BixEngine::Gui
         layoutPanels_.try_emplace(EditorLayoutType::ActorEditor);
 
         LoadPersistedLayouts_();
+        LoadRecentScenes_();
 
         currentLayout_ = EditorLayoutType::Scene;
         pendingLayout_.reset();
@@ -130,12 +135,20 @@ namespace BixEngine::Gui
     }
 
     // --------------------------------------------------------------
-    // RENDER LOOP
+    // UPDATE LOOP (Before NewFrame)
     // --------------------------------------------------------------
-    void GuiLayoutManager::Render()
+    void GuiLayoutManager::Update()
     {
         ProcessPendingSwitch_();
         EnsureDockspaceForCurrentLayout_();
+    }
+
+    // --------------------------------------------------------------
+    // RENDER LOOP (After NewFrame)
+    // --------------------------------------------------------------
+    void GuiLayoutManager::Render()
+    {
+        DrawMainMenuBar_();
     }
 
     // --------------------------------------------------------------
@@ -387,6 +400,299 @@ namespace BixEngine::Gui
     }
 
     // --------------------------------------------------------------
+    // MAIN MENU BAR
+    // --------------------------------------------------------------
+    // --------------------------------------------------------------
+    // MAIN MENU BAR
+    // --------------------------------------------------------------
+    void GuiLayoutManager::DrawMainMenuBar_()
+    {
+        if (ImGui::BeginMainMenuBar())
+        {
+            if (ImGui::BeginMenu("Scene"))
+            {
+                // New Scene
+                if (ImGui::MenuItem("New Scene"))
+                {
+                     if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                     {
+                        sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
+                        currentScenePath_.clear();
+                        isSceneDirty_ = false;
+                     }
+                }
+
+                // Open Scene
+                if (ImGui::MenuItem("Open Scene..."))
+                {
+                    showOpenSceneDialog_ = true;
+                }
+
+                // Recent Scenes submenu
+                if (ImGui::BeginMenu("Recent Scenes", !recentScenes_.empty()))
+                {
+                    for (size_t i = 0; i < recentScenes_.size(); ++i)
+                    {
+                        const auto& path = recentScenes_[i];
+                        std::string label = path.filename().string();
+                        if (label.empty()) label = "Unknown";
+                        std::string menuId = label + "##recent_" + std::to_string(i);
+                        if (ImGui::MenuItem(menuId.c_str()))
+                        {
+                            if (std::filesystem::exists(path))
+                            {
+                                if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                                {
+                                    auto newScene = std::make_unique<Game::EmptyScene>();
+                                    newScene->SetName(path.stem().string().c_str());
+                                    if (Game::SceneSerializer::LoadBinary(*newScene, path))
+                                    {
+                                        sceneManager->SetScene(std::move(newScene));
+                                        currentScenePath_ = path;
+                                        isSceneDirty_ = false;
+                                        AddToRecentScenes_(path);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    ImGui::EndMenu();
+                }
+
+                ImGui::Separator();
+
+                // Close Scene
+                bool hasScene = !currentScenePath_.empty();
+                if (ImGui::MenuItem("Close Scene", nullptr, false, hasScene))
+                {
+                    if (isSceneDirty_)
+                    {
+                        showCloseSceneConfirmation_ = true;
+                    }
+                    else
+                    {
+                        if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                        {
+                            sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
+                            currentScenePath_.clear();
+                            isSceneDirty_ = false;
+                        }
+                    }
+                }
+
+                // Save Scene
+                if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
+                {
+                    if (currentScenePath_.empty())
+                    {
+                        showSaveAsDialog_ = true;
+                        saveAsFilenameBuffer_[0] = '\0';
+                    }
+                    else
+                    {
+                        if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                        {
+                            if (auto* scene = sceneManager->GetScene())
+                            {
+                                Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                                isSceneDirty_ = false;
+                                AddToRecentScenes_(currentScenePath_);
+                            }
+                        }
+                    }
+                }
+
+                // Save Scene As
+                if (ImGui::MenuItem("Save Scene As..."))
+                {
+                    showSaveAsDialog_ = true;
+                    saveAsFilenameBuffer_[0] = '\0';
+                }
+
+                ImGui::Separator();
+
+                // Rename Scene
+                if (ImGui::MenuItem("Rename Scene...", nullptr, false, hasScene))
+                {
+                    showRenameSceneDialog_ = true;
+                    // Pre-fill with current name
+                    std::string currentName = currentScenePath_.stem().string();
+                    strncpy_s(renameFilenameBuffer_, currentName.c_str(), sizeof(renameFilenameBuffer_) - 1);
+                }
+
+                // Delete Scene
+                if (ImGui::MenuItem("Delete Scene..."))
+                {
+                    showDeleteSceneDialog_ = true;
+                }
+
+                ImGui::Separator();
+
+                // Scene Info
+                if (hasScene)
+                {
+                    ImGui::TextDisabled("Current: %s", currentScenePath_.stem().string().c_str());
+                    if (ImGui::IsItemHovered())
+                    {
+                        ImGui::SetTooltip("%s", currentScenePath_.string().c_str());
+                    }
+                }
+                else
+                {
+                    ImGui::TextDisabled("No scene loaded");
+                }
+
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Windows"))
+            {
+                if (guiManager_)
+                {
+                    for (GuiPanel* panel : guiManager_->GetPanels())
+                    {
+                        if (!panel) continue;
+                        
+                        bool visible = panel->IsVisible();
+                        if (ImGui::MenuItem(panel->GetTitle().c_str(), nullptr, &visible))
+                        {
+                            panel->SetVisible(visible);
+                            if (visible)
+                            {
+                                AddPanel(currentLayout_, *panel);
+                            }
+                            else
+                            {
+                                RemovePanelFromLayout_(*panel, currentLayout_);
+                            }
+                        }
+                    }
+                }
+                ImGui::EndMenu();
+            }
+
+            ImGui::EndMainMenuBar();
+        }
+
+        DrawSaveAsDialog_();
+        DrawOpenSceneDialog_();
+        DrawDeleteSceneDialog_();
+        DrawRenameSceneDialog_();
+        DrawCloseSceneConfirmation_();
+    }
+
+    void GuiLayoutManager::DrawSaveAsDialog_()
+    {
+        if (showSaveAsDialog_)
+        {
+            ImGui::OpenPopup("Save Scene As");
+            showSaveAsDialog_ = false;
+        }
+
+        if (ImGui::BeginPopupModal("Save Scene As", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::InputText("Filename", saveAsFilenameBuffer_, sizeof(saveAsFilenameBuffer_));
+            
+            if (ImGui::Button("Save", ImVec2(120, 0)))
+            {
+                std::string filename = saveAsFilenameBuffer_;
+                if (!filename.empty())
+                {
+                    if (!filename.ends_with(".bix"))
+                        filename += ".bix";
+                    
+                    std::filesystem::create_directories("assets/scenes");
+                    currentScenePath_ = std::filesystem::path("assets/scenes") / filename;
+
+                    if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                    {
+                        if (auto* scene = sceneManager->GetScene())
+                        {
+                            scene->SetName(std::filesystem::path(filename).stem().string().c_str());
+                            Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                            isSceneDirty_ = false;
+                            AddToRecentScenes_(currentScenePath_);
+                        }
+                    }
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    void GuiLayoutManager::DrawOpenSceneDialog_()
+    {
+        if (showOpenSceneDialog_)
+        {
+            ImGui::OpenPopup("Open Scene");
+            showOpenSceneDialog_ = false;
+        }
+
+        if (ImGui::BeginPopupModal("Open Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            static std::vector<std::filesystem::path> sceneFiles;
+            if (ImGui::IsWindowAppearing())
+            {
+                sceneFiles.clear();
+                if (std::filesystem::exists("assets/scenes"))
+                {
+                    for (const auto& entry : std::filesystem::directory_iterator("assets/scenes"))
+                    {
+                        if (entry.path().extension() == ".bix")
+                        {
+                            sceneFiles.push_back(entry.path());
+                        }
+                    }
+                }
+            }
+
+            if (sceneFiles.empty())
+            {
+                ImGui::Text("No scenes found in assets/scenes/");
+            }
+            else
+            {
+                for (size_t i = 0; i < sceneFiles.size(); ++i)
+                {
+                    const auto& path = sceneFiles[i];
+                    std::string label = path.filename().string();
+                    if (label.empty()) label = "Unknown";
+                    std::string selectId = label + "##open_" + std::to_string(i);
+                    if (ImGui::Selectable(selectId.c_str()))
+                    {
+                        if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                        {
+                            auto newScene = std::make_unique<Game::EmptyScene>();
+                            newScene->SetName(path.stem().string().c_str());
+                            if (Game::SceneSerializer::LoadBinary(*newScene, path))
+                            {
+                                sceneManager->SetScene(std::move(newScene));
+                                currentScenePath_ = path;
+                                isSceneDirty_ = false;
+                                AddToRecentScenes_(path);
+                            }
+                        }
+                        ImGui::CloseCurrentPopup();
+                    }
+                }
+            }
+
+            ImGui::Separator();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            ImGui::EndPopup();
+        }
+    }
+
+    // --------------------------------------------------------------
     // LOAD FROM DISK
     // --------------------------------------------------------------
     void GuiLayoutManager::LoadPersistedLayouts_()
@@ -570,5 +876,354 @@ namespace BixEngine::Gui
             return EditorLayoutType::ActorEditor;
         
         return std::nullopt;
+    }
+
+    // --------------------------------------------------------------
+    // DELETE SCENE DIALOG
+    // --------------------------------------------------------------
+    void GuiLayoutManager::DrawDeleteSceneDialog_()
+    {
+        if (showDeleteSceneDialog_)
+        {
+            ImGui::OpenPopup("Delete Scene");
+            showDeleteSceneDialog_ = false;
+        }
+
+        if (ImGui::BeginPopupModal("Delete Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            static std::vector<std::filesystem::path> sceneFiles;
+            static std::filesystem::path selectedScene;
+            
+            if (ImGui::IsWindowAppearing())
+            {
+                sceneFiles.clear();
+                selectedScene.clear();
+                if (std::filesystem::exists("assets/scenes"))
+                {
+                    for (const auto& entry : std::filesystem::directory_iterator("assets/scenes"))
+                    {
+                        if (entry.path().extension() == ".bix")
+                        {
+                            sceneFiles.push_back(entry.path());
+                        }
+                    }
+                }
+            }
+
+            if (sceneFiles.empty())
+            {
+                ImGui::Text("No scenes found in assets/scenes/");
+            }
+            else
+            {
+                ImGui::Text("Select a scene to delete:");
+                ImGui::Separator();
+                
+                // Use a child window to contain the list
+                if (ImGui::BeginChild("SceneList", ImVec2(300, 200), true))
+                {
+                    for (size_t i = 0; i < sceneFiles.size(); ++i)
+                    {
+                        const auto& path = sceneFiles[i];
+                        std::string label = path.filename().string();
+                        if (label.empty()) label = "Unknown";
+                        std::string selectId = label + "##delete_" + std::to_string(i);
+                        bool isSelected = (selectedScene == path);
+                        if (ImGui::Selectable(selectId.c_str(), isSelected))
+                        {
+                            selectedScene = path;
+                        }
+                    }
+                }
+                ImGui::EndChild();
+            }
+
+            ImGui::Separator();
+            
+            bool canDelete = !selectedScene.empty();
+            if (ImGui::Button("Delete", ImVec2(120, 0)) && canDelete)
+            {
+                // Confirmation popup
+                sceneToDelete_ = selectedScene;
+                ImGui::OpenPopup("Confirm Delete");
+            }
+            
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+
+            // Nested confirmation dialog
+            if (ImGui::BeginPopupModal("Confirm Delete", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+            {
+                ImGui::Text("Are you sure you want to delete:");
+                std::string deleteLabel = sceneToDelete_.filename().string();
+                if (deleteLabel.empty()) deleteLabel = "Unknown";
+                ImGui::TextColored(ImVec4(1.0f, 0.5f, 0.5f, 1.0f), "%s", deleteLabel.c_str());
+                ImGui::Text("This action cannot be undone!");
+                ImGui::Separator();
+
+                if (ImGui::Button("Yes, Delete", ImVec2(120, 0)))
+                {
+                    std::error_code ec;
+                    std::filesystem::remove(sceneToDelete_, ec);
+                    
+                    // Remove from recent scenes
+                    auto it = std::find(recentScenes_.begin(), recentScenes_.end(), sceneToDelete_);
+                    if (it != recentScenes_.end())
+                    {
+                        recentScenes_.erase(it);
+                        SaveRecentScenes_();
+                    }
+                    
+                    // If we deleted the current scene, clear it
+                    if (currentScenePath_ == sceneToDelete_)
+                    {
+                        if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                        {
+                            sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
+                            currentScenePath_.clear();
+                            isSceneDirty_ = false;
+                        }
+                    }
+                    
+                    // Remove from the list and clear selection
+                    auto fileIt = std::find(sceneFiles.begin(), sceneFiles.end(), sceneToDelete_);
+                    if (fileIt != sceneFiles.end())
+                    {
+                        sceneFiles.erase(fileIt);
+                    }
+                    selectedScene.clear();
+                    sceneToDelete_.clear();
+                    
+                    ImGui::CloseCurrentPopup(); // Close confirm dialog
+                    ImGui::CloseCurrentPopup(); // Close parent dialog
+                }
+                
+                ImGui::SameLine();
+                if (ImGui::Button("No, Cancel", ImVec2(120, 0)))
+                {
+                    sceneToDelete_.clear();
+                    ImGui::CloseCurrentPopup();
+                }
+                
+                ImGui::EndPopup();
+            }
+
+            ImGui::EndPopup();
+        }
+    }
+
+    // --------------------------------------------------------------
+    // RENAME SCENE DIALOG
+    // --------------------------------------------------------------
+    void GuiLayoutManager::DrawRenameSceneDialog_()
+    {
+        if (showRenameSceneDialog_)
+        {
+            ImGui::OpenPopup("Rename Scene");
+            showRenameSceneDialog_ = false;
+        }
+
+        if (ImGui::BeginPopupModal("Rename Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            std::string currentName = currentScenePath_.filename().string();
+            if (currentName.empty()) currentName = "Unknown";
+            ImGui::Text("Current: %s", currentName.c_str());
+            ImGui::Separator();
+            ImGui::InputText("New Name", renameFilenameBuffer_, sizeof(renameFilenameBuffer_));
+            
+            if (ImGui::Button("Rename", ImVec2(120, 0)))
+            {
+                std::string newName = renameFilenameBuffer_;
+                if (!newName.empty())
+                {
+                    if (!newName.ends_with(".bix"))
+                        newName += ".bix";
+                    
+                    std::filesystem::path newPath = currentScenePath_.parent_path() / newName;
+                    
+                    if (newPath != currentScenePath_)
+                    {
+                        std::error_code ec;
+                        std::filesystem::rename(currentScenePath_, newPath, ec);
+                        
+                        if (!ec)
+                        {
+                            // Update recent scenes
+                            auto it = std::find(recentScenes_.begin(), recentScenes_.end(), currentScenePath_);
+                            if (it != recentScenes_.end())
+                            {
+                                *it = newPath;
+                                SaveRecentScenes_();
+                            }
+                            
+                            // Update current path and scene name
+                            currentScenePath_ = newPath;
+                            if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                            {
+                                if (auto* scene = sceneManager->GetScene())
+                                {
+                                    scene->SetName(std::filesystem::path(newName).stem().string().c_str());
+                                    isSceneDirty_ = true;
+                                }
+                            }
+                        }
+                    }
+                    
+                    ImGui::CloseCurrentPopup();
+                }
+            }
+            
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+
+    // --------------------------------------------------------------
+    // CLOSE SCENE CONFIRMATION
+    // --------------------------------------------------------------
+    void GuiLayoutManager::DrawCloseSceneConfirmation_()
+    {
+        if (showCloseSceneConfirmation_)
+        {
+            ImGui::OpenPopup("Close Scene");
+            showCloseSceneConfirmation_ = false;
+        }
+
+        if (ImGui::BeginPopupModal("Close Scene", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
+        {
+            ImGui::Text("Scene has unsaved changes.");
+            ImGui::Text("Do you want to save before closing?");
+            ImGui::Separator();
+
+            if (ImGui::Button("Save and Close", ImVec2(140, 0)))
+            {
+                // Save the scene first
+                if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                {
+                    if (auto* scene = sceneManager->GetScene())
+                    {
+                        Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                    }
+                    
+                    // Then close
+                    sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
+                    currentScenePath_.clear();
+                    isSceneDirty_ = false;
+                }
+                
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::SameLine();
+            if (ImGui::Button("Don't Save", ImVec2(140, 0)))
+            {
+                // Close without saving
+                if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                {
+                    sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
+                    currentScenePath_.clear();
+                    isSceneDirty_ = false;
+                }
+                
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::SameLine();
+            if (ImGui::Button("Cancel", ImVec2(140, 0)))
+            {
+                ImGui::CloseCurrentPopup();
+            }
+            
+            ImGui::EndPopup();
+        }
+    }
+
+    // --------------------------------------------------------------
+    // RECENT SCENES MANAGEMENT
+    // --------------------------------------------------------------
+    void GuiLayoutManager::AddToRecentScenes_(const std::filesystem::path& path)
+    {
+        if (path.empty())
+            return;
+        
+        // Remove if already exists
+        auto it = std::find(recentScenes_.begin(), recentScenes_.end(), path);
+        if (it != recentScenes_.end())
+        {
+            recentScenes_.erase(it);
+        }
+        
+        // Add to front
+        recentScenes_.insert(recentScenes_.begin(), path);
+        
+        // Keep only 5 most recent
+        if (recentScenes_.size() > 5)
+        {
+            recentScenes_.resize(5);
+        }
+        
+        SaveRecentScenes_();
+    }
+
+    void GuiLayoutManager::LoadRecentScenes_()
+    {
+        recentScenesFile_ = FilesUtils::Utilities::ResolveUserConfigPath("recent_scenes.txt");
+        if (recentScenesFile_.empty())
+            return;
+        
+        std::ifstream file(recentScenesFile_);
+        if (!file.is_open())
+            return;
+        
+        recentScenes_.clear();
+        std::string line;
+        while (std::getline(file, line))
+        {
+            StringUtils::Utilities::TrimCarriageReturn(line);
+            if (!line.empty())
+            {
+                std::filesystem::path path(line);
+                if (std::filesystem::exists(path))
+                {
+                    recentScenes_.push_back(path);
+                }
+            }
+            
+            if (recentScenes_.size() >= 5)
+                break;
+        }
+    }
+
+    void GuiLayoutManager::SaveRecentScenes_()
+    {
+        if (recentScenesFile_.empty())
+            recentScenesFile_ = FilesUtils::Utilities::ResolveUserConfigPath("recent_scenes.txt");
+        
+        if (recentScenesFile_.empty())
+            return;
+        
+        std::filesystem::path dir = recentScenesFile_.parent_path();
+        if (!dir.empty())
+        {
+            std::error_code ec;
+            std::filesystem::create_directories(dir, ec);
+        }
+        
+        std::ofstream file(recentScenesFile_, std::ios::trunc);
+        if (!file.is_open())
+            return;
+        
+        for (const auto& path : recentScenes_)
+        {
+            file << path.string() << '\n';
+        }
     }
 }

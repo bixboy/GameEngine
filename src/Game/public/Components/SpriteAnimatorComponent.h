@@ -29,6 +29,8 @@ namespace BixEngine::Game
         void Stop();
 
         [[nodiscard]] bool IsPlaying() const noexcept { return animator_.IsPlaying(); }
+        [[nodiscard]] const String& GetAtlasPath() const noexcept { return atlasPath_; }
+        [[nodiscard]] const String& GetCurrentAnimation() const noexcept { return currentAnimation_; }
 
     private:
         void ApplyCurrentFrame(bool allowFallbackToDefault);
