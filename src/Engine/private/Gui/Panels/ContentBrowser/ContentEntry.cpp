@@ -1,6 +1,6 @@
 #include "Gui/Panels/ContentBrowser/ContentEntry.h"
 #include <array>
-#include "Gui/GuiTheme.h"
+#include "Gui/GuiCommon.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Utils/EditorUtils.h"

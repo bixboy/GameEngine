@@ -5,7 +5,7 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Gui/GuiTheme.h"
+#include "Gui/GuiCommon.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"
 #include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"

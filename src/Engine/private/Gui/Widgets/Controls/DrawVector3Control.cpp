@@ -2,7 +2,7 @@
 
 #include <imgui_internal.h>
 
-#include "Gui/GuiTheme.h"
+#include "Gui/GuiCommon.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Controls/ColorHelpers.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"

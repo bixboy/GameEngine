@@ -36,257 +36,240 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::TextUnformatted((label + " : " + typeName).c_str());
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
 
-
-        // ---------------------------------------------------------------------
-        // bool
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "bool"))
-        {
-            bool& value = property.Get<bool>(instance);
-            ImGui::Checkbox("##value", &value);
-            return true;
-        }
+            return DrawBool(property, instance);
 
-        // ---------------------------------------------------------------------
-        // int
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "int") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "int32_t") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "std::int32_t"))
-        {
-            int& v = property.Get<int>(instance);
-            Widgets::DrawDragControl("##value", v, 1.0f, nullptr, nullptr, "%d");
-            return true;
-        }
+            return DrawInt(property, instance);
 
-        // ---------------------------------------------------------------------
-        // float
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "float"))
-        {
-            float& v = property.Get<float>(instance);
-            Widgets::DrawDragControl("##value", v, 0.1f, nullptr, nullptr, "%.3f");
-            return true;
-        }
+            return DrawFloat(property, instance);
 
-        // ---------------------------------------------------------------------
-        // double
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "double"))
-        {
-            double& v = property.Get<double>(instance);
-            Widgets::DrawDragControl("##value", v, 0.1f, nullptr, nullptr, "%.3f");
-            return true;
-        }
+            return DrawDouble(property, instance);
 
-        // ---------------------------------------------------------------------
-        // Vector2
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Math::Vector2") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "Vector2"))
-        {
-            auto& vec = property.Get<Math::Vector2<float>>(instance);
+            return DrawVector2(property, instance);
 
-            float vals[2] = { vec.x, vec.y };
-
-            if (ImGui::DragFloat2("##value", vals, 0.1f))
-            {
-                vec.x = vals[0];
-                vec.y = vals[1];
-            }
-            return true;
-        }
-
-        // ---------------------------------------------------------------------
-        // Vector3
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Math::Vector3") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "Vector3"))
-        {
-            auto& vec = property.Get<Math::Vector3>(instance);
+            return DrawVector3(property, instance);
 
-            float vals[3] = { vec.x, vec.y, vec.z };
-
-            if (Widgets::DrawVector3Control("##value", vals, 0.0f, 0.1f, "%.3f"))
-            {
-                vec.x = vals[0];
-                vec.y = vals[1];
-                vec.z = vals[2];
-            }
-            return true;
-        }
-
-        // ---------------------------------------------------------------------
-        // SDL_Color
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "SDL_Color"))
-        {
-            SDL_Color& c = property.Get<SDL_Color>(instance);
+            return DrawColor(property, instance);
 
-            float vals[4] =
-            {
-                c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f
-            };
-
-            if (!ImGui::ColorEdit4("##value", vals))
-                return false;
-    
-            c.r = static_cast<Uint8>(std::lround(vals[0] * 255.f));
-            c.g = static_cast<Uint8>(std::lround(vals[1] * 255.f));
-            c.b = static_cast<Uint8>(std::lround(vals[2] * 255.f));
-            c.a = static_cast<Uint8>(std::lround(vals[3] * 255.f));
-
-            return true;
-        }
-
-        // ---------------------------------------------------------------------
-        // string
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "String") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "std::string"))
-        {
-            thread_local std::array<char, 512> buffer;
+            return DrawString(property, instance);
 
-            if (ExposedVariableUtils::MatchesType(property.TypeName, "String"))
-            {
-                auto& s = property.Get<String>(instance);
-
-                strncpy_s(buffer.data(), buffer.size(), s.c_str(), buffer.size() - 1);
-                buffer.back() = '\0';
-
-                if (ImGui::InputText("##value", buffer.data(), buffer.size()))
-                    s = buffer.data();
-            }
-            else
-            {
-                auto& s = property.Get<std::string>(instance);
-
-                strncpy_s(buffer.data(), buffer.size(), s.c_str(), buffer.size() - 1);
-                buffer.back() = '\0';
-
-                if (ImGui::InputText("##value", buffer.data(), buffer.size()))
-                    s.assign(buffer.data());
-            }
-            return true;
-        }
-
-        // ---------------------------------------------------------------------
-        // Texture*
-        // ---------------------------------------------------------------------
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "BixEngine::resources::Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "resources::Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "Texture*"))
+            return DrawTexture(property, instance);
+
+        return false;
+    }
+
+    bool PropertyInspector::DrawBool(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        bool& value = property.Get<bool>(instance);
+        ImGui::Checkbox("##value", &value);
+        return true;
+    }
+
+    bool PropertyInspector::DrawInt(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        int& v = property.Get<int>(instance);
+        Widgets::DrawDragControl("##value", v, 1.0f, nullptr, nullptr, "%d");
+        return true;
+    }
+
+    bool PropertyInspector::DrawFloat(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        float& v = property.Get<float>(instance);
+        Widgets::DrawDragControl("##value", v, 0.1f, nullptr, nullptr, "%.3f");
+        return true;
+    }
+
+    bool PropertyInspector::DrawDouble(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        double& v = property.Get<double>(instance);
+        Widgets::DrawDragControl("##value", v, 0.1f, nullptr, nullptr, "%.3f");
+        return true;
+    }
+
+    bool PropertyInspector::DrawVector2(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        auto& vec = property.Get<Math::Vector2<float>>(instance);
+        float vals[2] = { vec.x, vec.y };
+
+        if (ImGui::DragFloat2("##value", vals, 0.1f))
         {
-            resources::Texture*& tex = property.Get<resources::Texture*>(instance);
+            vec.x = vals[0];
+            vec.y = vals[1];
+        }
+        return true;
+    }
 
-            ImGui::PushID(property.Name.c_str());
-            ImGui::BeginGroup();
+    bool PropertyInspector::DrawVector3(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        auto& vec = property.Get<Math::Vector3>(instance);
+        float vals[3] = { vec.x, vec.y, vec.z };
 
-            // --- PREVIEW ---
-            float previewSize = 64.0f;
-            ImVec2 sizeVec(previewSize, previewSize);
-            bool openSelector = false;
+        if (Widgets::DrawVector3Control("##value", vals, 0.0f, 0.1f, "%.3f"))
+        {
+            vec.x = vals[0];
+            vec.y = vals[1];
+            vec.z = vals[2];
+        }
+        return true;
+    }
 
-            if (tex == nullptr)
+    bool PropertyInspector::DrawColor(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        SDL_Color& c = property.Get<SDL_Color>(instance);
+        float vals[4] = { c.r / 255.f, c.g / 255.f, c.b / 255.f, c.a / 255.f };
+
+        if (!ImGui::ColorEdit4("##value", vals))
+            return false;
+
+        c.r = static_cast<Uint8>(std::lround(vals[0] * 255.f));
+        c.g = static_cast<Uint8>(std::lround(vals[1] * 255.f));
+        c.b = static_cast<Uint8>(std::lround(vals[2] * 255.f));
+        c.a = static_cast<Uint8>(std::lround(vals[3] * 255.f));
+        return true;
+    }
+
+    bool PropertyInspector::DrawString(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        thread_local std::array<char, 512> buffer;
+
+        if (ExposedVariableUtils::MatchesType(property.TypeName, "String"))
+        {
+            auto& s = property.Get<String>(instance);
+            strncpy_s(buffer.data(), buffer.size(), s.c_str(), buffer.size() - 1);
+            buffer.back() = '\0';
+
+            if (ImGui::InputText("##value", buffer.data(), buffer.size()))
+                s = buffer.data();
+        }
+        else
+        {
+            auto& s = property.Get<std::string>(instance);
+            strncpy_s(buffer.data(), buffer.size(), s.c_str(), buffer.size() - 1);
+            buffer.back() = '\0';
+
+            if (ImGui::InputText("##value", buffer.data(), buffer.size()))
+                s.assign(buffer.data());
+        }
+        return true;
+    }
+
+    bool PropertyInspector::DrawTexture(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        resources::Texture*& tex = property.Get<resources::Texture*>(instance);
+
+        ImGui::PushID(property.Name.c_str());
+        ImGui::BeginGroup();
+
+        // --- PREVIEW ---
+        float previewSize = 64.0f;
+        ImVec2 sizeVec(previewSize, previewSize);
+        bool openSelector = false;
+
+        if (tex == nullptr)
+        {
+            if (ImGui::Button("Empty\n(Click)", sizeVec)) openSelector = true;
+        }
+        else
+        {
+            ImTextureID imgID = reinterpret_cast<ImTextureID>(tex->GetNativeHandle());
+            if (ImGui::ImageButton("##TextureBtn", imgID, sizeVec, ImVec2(0,0), ImVec2(1,1), ImVec4(0,0,0,1)))
+                openSelector = true;
+
+            if (ImGui::IsItemHovered())
             {
-                if (ImGui::Button("Empty\n(Click)", sizeVec)) openSelector = true;
+                ImGui::BeginTooltip();
+                ImGui::Text("Size: %dx%d", tex->GetWidth(), tex->GetHeight());
+                ImGui::Image(imgID, ImVec2(256, 256));
+                ImGui::EndTooltip();
             }
-            else
-            {
-                ImTextureID imgID = reinterpret_cast<ImTextureID>(tex->GetNativeHandle());
-                if (ImGui::ImageButton("##TextureBtn", imgID, sizeVec, ImVec2(0,0), ImVec2(1,1), ImVec4(0,0,0,1)))
-                    openSelector = true;
+        }
 
-                if (ImGui::IsItemHovered())
+        if (openSelector) ImGui::OpenPopup("TextureSelectorPopup");
+
+        ImGui::SameLine();
+
+        // --- ACTION BUTTONS ---
+        ImGui::BeginGroup();
+        if (tex)
+        {
+            ImGui::Text("Res: %dx%d", tex->GetWidth(), tex->GetHeight());
+            if (ImGui::Button("Clear")) tex = nullptr;
+        }
+        else
+        {
+            ImGui::TextDisabled("No Texture");
+        }
+        ImGui::EndGroup();
+
+        // --- TEXTURE SELECTOR POPUP ---
+        ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
+        if (ImGui::BeginPopup("TextureSelectorPopup"))
+        {
+            static char searchBuffer[128] = "";
+            ImGui::TextDisabled("Select Texture");
+            ImGui::Separator();
+
+            if (ImGui::Selectable("None"))
+            {
+                tex = nullptr;
+                ImGui::CloseCurrentPopup();
+            }
+
+            auto foundFiles = FilesUtils::Utilities::ScanDirectory("", { ".png", ".jpg", ".jpeg", ".tga", ".bmp" });
+
+            if (foundFiles.empty())
+            {
+                ImGui::TextDisabled("No textures found.");
+            }
+
+            for (const auto& path : foundFiles)
+            {
+                std::string pathStr = path.string();
+                std::replace(pathStr.begin(), pathStr.end(), '\\', '/'); 
+
+                if (searchBuffer[0] != '\0')
                 {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Size: %dx%d", tex->GetWidth(), tex->GetHeight());
-                    ImGui::Image(imgID, ImVec2(256, 256));
-                    ImGui::EndTooltip();
+                    if (pathStr.find(searchBuffer) == std::string::npos)
+                        continue;
                 }
-            }
 
-            if (openSelector) ImGui::OpenPopup("TextureSelectorPopup");
+                std::string displayName = path.filename().string();
 
-            ImGui::SameLine();
-
-            // --- BOUTONS D'ACTION ---
-            ImGui::BeginGroup();
-            if (tex)
-            {
-                ImGui::Text("Res: %dx%d", tex->GetWidth(), tex->GetHeight());
-                if (ImGui::Button("Clear")) tex = nullptr;
-            }
-            else
-            {
-                ImGui::TextDisabled("No Texture");
-            }
-            ImGui::EndGroup();
-
-            // --- POPUP LISTE DES TEXTURES ---
-            ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
-            if (ImGui::BeginPopup("TextureSelectorPopup"))
-            {
-                static char searchBuffer[128] = "";
-                ImGui::TextDisabled("Select Texture");
-                ImGui::Separator();
-
-                if (ImGui::Selectable("None"))
+                if (ImGui::Selectable(displayName.c_str()))
                 {
-                    tex = nullptr;
+                    auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(pathStr);
+                    if (sharedTex)
+                        tex = sharedTex.get();
+        
                     ImGui::CloseCurrentPopup();
                 }
 
-                auto foundFiles = FilesUtils::Utilities::ScanDirectory("",
-                    {
-                        ".png",
-                        ".jpg",
-                        ".jpeg",
-                        ".tga",
-                        ".bmp"
-                    });
-
-                if (foundFiles.empty())
-                {
-                    ImGui::TextDisabled("No textures found.");
-                }
-
-                for (const auto& path : foundFiles)
-                {
-                    std::string pathStr = path.string();
-                    std::replace(pathStr.begin(), pathStr.end(), '\\', '/'); 
-
-                    if (searchBuffer[0] != '\0')
-                    {
-                        if (pathStr.find(searchBuffer) == std::string::npos)
-                            continue;
-                    }
-
-                    std::string displayName = path.filename().string();
-
-                    if (ImGui::Selectable(displayName.c_str()))
-                    {
-                        auto sharedTex = resources::ResourceManager::Get().Get<resources::Texture>(pathStr);
-                        if (sharedTex)
-                            tex = sharedTex.get();
-            
-                        ImGui::CloseCurrentPopup();
-                    }
-
-                    if (ImGui::IsItemHovered())
-                        ImGui::SetTooltip("%s", pathStr.c_str());
-                }
-
-                ImGui::EndPopup();
+                if (ImGui::IsItemHovered())
+                    ImGui::SetTooltip("%s", pathStr.c_str());
             }
 
-            ImGui::EndGroup();
-            ImGui::PopID();
-            return true;
+            ImGui::EndPopup();
         }
-        
-        return false;
+
+        ImGui::EndGroup();
+        ImGui::PopID();
+        return true;
     }
 
 

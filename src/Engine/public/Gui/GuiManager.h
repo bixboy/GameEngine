@@ -9,7 +9,7 @@
 #include "Containers/String.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/GuiDocking.h"
+#include "Gui/GuiCommon.h"
 #include "Gui/Internal/AssetEditorRegistry.h"
 #include "Gui/Internal/ChildPanelManager.h"
 #include "Gui/Internal/GuiPanelRegistry.h"

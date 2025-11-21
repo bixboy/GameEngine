@@ -88,43 +88,7 @@ namespace BixEngine::Gui
         if (!visible_)
             return;
 
-        ImGui::PushID(name_.c_str());
-
-        if (requestFocus_)
-        {
-            ImGui::SetNextWindowFocus();
-            requestFocus_ = false;
-        }
-
-        if (usePosition_)
-            ImGui::SetNextWindowPos(position_, positionCondition_);
-
-        if (useSize_)
-            ImGui::SetNextWindowSize(size_, sizeCondition_);
-
-        if (useDockId_ && dockId_ != 0)
-        {
-            ImGui::SetNextWindowDockID(dockId_, dockCondition_);
-            if (applyDockFallback_)
-            {
-                dockCondition_ = dockFallbackCondition_;
-                applyDockFallback_ = false;
-
-                if (dockFallbackCondition_ == ImGuiCond_None)
-                    useDockId_ = false;
-            }
-        }
-
-        if (style_.override)
-        {
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style_.rounding);
-            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style_.border);
-            ImGui::PushStyleColor(ImGuiCol_WindowBg, style_.bgColor);
-        }
-        else if (useBackgroundColor_)
-        {
-            ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
-        }
+        SetupWindow();
 
         ImGuiWindowFlags finalFlags = windowFlags_;
 
@@ -184,6 +148,52 @@ namespace BixEngine::Gui
 
         ImGui::End();
 
+        TeardownWindow();
+    }
+
+    void GuiPanel::SetupWindow()
+    {
+        ImGui::PushID(name_.c_str());
+
+        if (requestFocus_)
+        {
+            ImGui::SetNextWindowFocus();
+            requestFocus_ = false;
+        }
+
+        if (usePosition_)
+            ImGui::SetNextWindowPos(position_, positionCondition_);
+
+        if (useSize_)
+            ImGui::SetNextWindowSize(size_, sizeCondition_);
+
+        if (useDockId_ && dockId_ != 0)
+        {
+            ImGui::SetNextWindowDockID(dockId_, dockCondition_);
+            if (applyDockFallback_)
+            {
+                dockCondition_ = dockFallbackCondition_;
+                applyDockFallback_ = false;
+
+                if (dockFallbackCondition_ == ImGuiCond_None)
+                    useDockId_ = false;
+            }
+        }
+
+        if (style_.override)
+        {
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style_.rounding);
+            ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style_.border);
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, style_.bgColor);
+        }
+        else if (useBackgroundColor_)
+        {
+            ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
+        }
+    }
+
+    void GuiPanel::TeardownWindow()
+    {
         if (style_.override)
         {
             ImGui::PopStyleColor();

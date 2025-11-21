@@ -1,6 +1,6 @@
 #include "Gui/Widgets/Layout/SectionContainer.h"
 
-#include "Gui/GuiTheme.h"
+#include "Gui/GuiCommon.h"
 #include "imgui.h"
 
 #include <cfloat>

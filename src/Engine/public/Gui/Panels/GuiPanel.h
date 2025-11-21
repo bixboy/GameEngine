@@ -2,7 +2,7 @@
 
 #include <functional>
 #include "Containers/String.h"
-#include "Gui/GuiDocking.h"
+#include "Gui/GuiCommon.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui
@@ -175,5 +175,8 @@ namespace BixEngine::Gui
         GuiPanelMode mode_{GuiPanelMode::Both};
 
         bool requestFocus_{false};
+
+        void SetupWindow();
+        void TeardownWindow();
     };
 }

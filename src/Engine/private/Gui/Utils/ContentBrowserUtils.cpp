@@ -54,11 +54,13 @@ namespace BixEngine::Gui::ContentBrowserUtils
         }
 
         state.error.Clear();
+        state.cache.entries.reserve(entries.size());
+
         unordered_map<String, ContentEntry> scriptGroups;
 
         for (const auto& entry : entries)
         {
-            const path entryPath = entry.path();
+            const path& entryPath = entry.path();
 
             if (entry.is_directory())
             {
@@ -67,31 +69,29 @@ namespace BixEngine::Gui::ContentBrowserUtils
                 d.path = entryPath;
                 d.name = entryPath.filename().generic_string();
                 state.cache.entries.push_back(std::move(d));
-
                 continue;
             }
 
-            const bool isHeader = entryPath.extension() == ".h";
-            const bool isSource = entryPath.extension() == ".cpp";
+            const auto ext = entryPath.extension();
+            const bool isHeader = ext == ".h";
+            const bool isSource = ext == ".cpp";
+
             if (isHeader || isSource)
             {
                 String key = StringUtils::Utilities::ToLowerCopy(entryPath.stem().generic_string());
 
                 auto& group = scriptGroups[key];
-                group.type = ContentType::Script;
-                group.path = entryPath.parent_path();
-
-                if (group.name.IsEmpty())
+                if (group.type != ContentType::Script)
+                {
+                    group.type = ContentType::Script;
+                    group.path = entryPath.parent_path();
                     group.name = entryPath.stem().generic_string();
+                }
 
                 if (isHeader)
-                {
                     group.headerPath = entryPath;
-                }
                 else
-                {
                     group.sourcePath = entryPath;
-                }
 
                 continue;
             }

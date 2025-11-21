@@ -24,6 +24,16 @@ namespace BixEngine::Gui::ActorInspector
 
         static bool DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& label);
 
+        static bool DrawBool(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawInt(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawFloat(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawDouble(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawVector2(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawVector3(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawColor(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawString(const Bix::Reflection::PropertyInfo& property, void* instance);
+        static bool DrawTexture(const Bix::Reflection::PropertyInfo& property, void* instance);
+
         static void GatherClassProperties(const Bix::Reflection::ClassInfo& cls, std::vector<const Bix::Reflection::PropertyInfo*>& out);
     };
 }

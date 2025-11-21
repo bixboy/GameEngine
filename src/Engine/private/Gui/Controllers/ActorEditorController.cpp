@@ -7,7 +7,7 @@
 #include "Logger.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
-#include "Gui/GuiDocking.h"
+#include "Gui/GuiCommon.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
 

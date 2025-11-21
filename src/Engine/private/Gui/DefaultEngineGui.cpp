@@ -8,7 +8,7 @@
 #include "Gui/Panels/SceneViewportPanel.h"
 #include "Gui/Panels/StatsPanel.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Gui/GuiTheme.h"
+#include "Gui/GuiCommon.h"
 
 #include "Logger.h"
 

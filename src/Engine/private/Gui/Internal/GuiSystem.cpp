@@ -13,7 +13,7 @@
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "imgui_internal.h"
-#include "Gui/GuiDocking.h"
+#include "Gui/GuiCommon.h"
 
 namespace BixEngine::Gui
 {

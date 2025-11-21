@@ -10,7 +10,7 @@
 
 #include "Containers/String.h"
 #include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/GuiDocking.h"
+#include "Gui/GuiCommon.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui
