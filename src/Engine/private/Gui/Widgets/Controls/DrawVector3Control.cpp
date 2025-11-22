@@ -4,6 +4,7 @@
 
 #include "Gui/GuiCommon.h"
 #include "Gui/Utils/GuiHelpers.h"
+#include "Gui/Utils/MouseWrapping.h"
 #include "Gui/Widgets/Controls/ColorHelpers.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"
 #include "Gui/Widgets/Styling/ScopedStyle.h"
@@ -61,6 +62,7 @@ namespace BixEngine::Gui::Widgets
             if (ImGui::DragFloat("##Value", &values[index], speed, 0.0f, 0.0f, format ? format : "%.3f"))
                 changed = true;
 
+            Utils::ApplyMouseWrapping();
             ImGui::PopItemWidth();
         }
 

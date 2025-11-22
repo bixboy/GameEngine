@@ -1,6 +1,7 @@
 #pragma once
 
 #include <type_traits>
+#include "Gui/Utils/MouseWrapping.h"
 
 namespace BixEngine::Gui::Widgets
 {
@@ -39,6 +40,9 @@ namespace BixEngine::Gui::Widgets
             return false;
         }
 
-        return ImGui::DragScalar(label, dataType, &value, speed, minValue, maxValue, format);
+        bool result = ImGui::DragScalar(label, dataType, &value, speed, minValue, maxValue, format);
+        Utils::ApplyMouseWrapping();
+        return result;
     }
 }
+

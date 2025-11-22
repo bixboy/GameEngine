@@ -1,5 +1,4 @@
 #include "SceneSerializer.h"
-#include <cstdint>
 #include <filesystem>
 #include <exception>
 #include <fstream>
