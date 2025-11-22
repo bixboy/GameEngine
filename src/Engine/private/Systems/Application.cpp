@@ -1,4 +1,6 @@
 #include "Systems/Application.h"
+#include "Systems/Application.h"
+#include "Logger.h"
 #include <utility>
 
 
@@ -24,7 +26,11 @@ namespace BixEngine::Core
             return;
 
         while (bootstrap_->IsRunning())
+        {
+            // LOG_INFO("Application: Tick start"); // Commented out to avoid spam, uncomment if needed
             bootstrap_->Tick();
+            // LOG_INFO("Application: Tick end");
+        }
 
         bootstrap_->ShutdownAll();
     }

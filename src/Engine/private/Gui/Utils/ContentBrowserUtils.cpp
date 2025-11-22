@@ -26,6 +26,12 @@ namespace BixEngine::Gui::ContentBrowserUtils
         if (ext == ".atlas")
             return ContentType::SpriteAtlas;
 
+        if (ext == ".atlas")
+            return ContentType::SpriteAtlas;
+
+        if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
+            return ContentType::Audio;
+
         return ContentType::File;
     }
 
@@ -40,6 +46,8 @@ namespace BixEngine::Gui::ContentBrowserUtils
         state.cache.directory = state.current;
         state.cache.entries.clear();
         state.cache.dirty = false;
+
+        LOG_INFO("RefreshDirectoryCache: Enumerating " + state.current.generic_string());
 
         vector<directory_entry> entries;
         std::error_code err;
@@ -117,7 +125,22 @@ namespace BixEngine::Gui::ContentBrowserUtils
             return pa == pb ? FilesUtils::Utilities::CaseInsensitiveLess(a.name, b.name) : pa < pb;
         });
 
+        LOG_INFO("RefreshDirectoryCache: Done. Found " + std::to_string(state.cache.entries.size()) + " entries.");
         return true;
+    }
+
+    int GetSortPriority(ContentType type)
+    {
+        switch (type)
+        {
+        case ContentType::Directory: return 0;
+        case ContentType::Script: return 1;
+        case ContentType::ActorPrefab: return 2;
+        case ContentType::ComponentPrefab: return 3;
+        case ContentType::SpriteAtlas: return 4;
+        case ContentType::Audio: return 5;
+        default: return 10;
+        }
     }
 
     void ClearSelectedParent(PopupRequestState& r)

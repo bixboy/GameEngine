@@ -28,5 +28,11 @@ namespace BixEngine::Gui
         std::function<Game::Actor*()> selectedActorGetter_{};
         std::function<void(Game::Actor*)> selectedActorSetter_{};
         std::array<char, 128> searchBuffer_{};
+        
+        // Rename state
+        std::array<char, 128> renameBuffer_{};
+        Game::Actor* actorToRename_{nullptr};
+        bool openRenamePopup_{false};
+        Game::Actor* actorWithContextMenu_{nullptr};
     };
 }

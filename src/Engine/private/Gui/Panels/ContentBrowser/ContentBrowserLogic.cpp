@@ -100,6 +100,9 @@ namespace BixEngine::Gui
             else if (ext == ".atlas")
                 type = ContentType::SpriteAtlas;
 
+            else if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
+                type = ContentType::Audio;
+
             state.cache.entries.push_back(ContentEntry{
                 .name = p.filename().generic_string(),
                 .path = p,
@@ -410,6 +413,17 @@ namespace BixEngine::Gui
                         selected.Clear();
                     }
                     else selected = entry.SelectionKey();
+                }
+
+                if (entry.IsAudio())
+                {
+                    if (ImGui::BeginDragDropSource())
+                    {
+                        const std::string pathStr = entry.path.string();
+                        ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM_AUDIO", pathStr.c_str(), pathStr.size() + 1);
+                        ImGui::Text("%s", entry.name.c_str());
+                        ImGui::EndDragDropSource();
+                    }
                 }
 
                 // Double click

@@ -1,5 +1,5 @@
 #include "Ressources/Loaders/TextureLoader.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "Logger.h"
 
 namespace BixEngine::resources

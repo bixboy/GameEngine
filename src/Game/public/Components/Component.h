@@ -7,6 +7,15 @@
 namespace BixEngine::Game
 {
     class Actor;
+}
+
+namespace BixEngine::resources
+{
+    class ComponentPrefab;
+}
+
+namespace BixEngine::Game
+{
 
     BCLASS()
 
@@ -28,6 +37,8 @@ namespace BixEngine::Game
         [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
 
         virtual void DrawInspectorUI(){}
+        
+        virtual void LoadFromPrefab(const resources::ComponentPrefab* /*prefab*/) {}
 
     protected:
         Actor* owner_{nullptr};

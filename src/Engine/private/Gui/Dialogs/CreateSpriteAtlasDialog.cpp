@@ -4,7 +4,7 @@
 #include "Ressources/SpriteAtlasFactory.h"
 #include "Ressources/SpriteAtlasUtils.h"
 #include "Ressources/ResourceManager.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "Utils/FilesUtils.h"
 #include <algorithm>
 

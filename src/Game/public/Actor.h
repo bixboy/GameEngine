@@ -2,6 +2,7 @@
 #include <memory>
 #include <type_traits>
 #include <vector>
+#include <tuple>
 #include "Object.h"
 #include "Components/Component.h"
 #include "Scene.h"
@@ -27,7 +28,7 @@ namespace BixEngine::Game
         virtual void BeginPlay();
         virtual void Update(float deltaTime);
         virtual void Render(Graphics::Renderer& renderer) const;
-        virtual void SetupInput(Input::InputManager& inputManager) {}
+        virtual void SetupInput(Input::InputManager& inputManager) { (void)inputManager; }
 
         void AddComponent(std::unique_ptr<Component> component);
 
@@ -65,6 +66,7 @@ namespace BixEngine::Game
         Scene* owningScene_{nullptr};
 
     public:
+        
         template <typename TComponent>
         TComponent* GetComponent() noexcept
         {
@@ -80,13 +82,34 @@ namespace BixEngine::Game
         }
 
         template <typename TComponent, typename... TArgs>
-        TComponent& AddComponent(TArgs&&... args)
+        TComponent* AddComponent(TArgs&&... args)
         {
             static_assert(std::is_base_of_v<Component, TComponent>, "Component must derive from Game::Component");
+
+            if constexpr (sizeof...(TArgs) == 1)
+            {
+                using ArgType = std::tuple_element_t<0, std::tuple<TArgs...>>;
+                if constexpr (std::is_convertible_v<ArgType, const resources::ComponentPrefab*>)
+                {
+                    auto component = std::make_unique<TComponent>(this);
+                    
+                    const resources::ComponentPrefab* prefab = { args... };
+                    if (prefab)
+                    {
+                        component->LoadFromPrefab(prefab);
+                    }
+                    
+                    TComponent* componentRef = component.get();
+                    AddComponent(std::move(component));
+                    return componentRef;
+                }
+            }
+
             auto component = std::make_unique<TComponent>(this, std::forward<TArgs>(args)...);
-            TComponent& componentRef = *component;
+            TComponent* rawPtr = component.get();
             AddComponent(std::move(component));
-            return componentRef;
+
+            return rawPtr;
         }
     };
 }

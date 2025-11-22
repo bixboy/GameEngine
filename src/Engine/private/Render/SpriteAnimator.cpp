@@ -1,6 +1,6 @@
 #include "Render/SpriteAnimator.h"
 #include <algorithm>
-#include "Ressources/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
 
 
 namespace BixEngine::resources

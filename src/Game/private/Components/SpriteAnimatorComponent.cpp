@@ -1,7 +1,7 @@
 #include "Components/SpriteAnimatorComponent.h"
 #include "Logger.h"
 #include "Ressources/ResourceManager.h"
-#include "Ressources/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include "Actor.h"
 #include <algorithm>
 #include <filesystem>

@@ -43,6 +43,7 @@ namespace BixEngine::Gui
 
     void ContentBrowserPanel::ImportExternalFiles(const std::vector<std::filesystem::path>& paths)
     {
+        LOG_INFO("ImportExternalFiles called with " + std::to_string(paths.size()) + " paths");
         if (paths.empty())
             return;
 
@@ -63,6 +64,7 @@ namespace BixEngine::Gui
 
         for (const auto& source : paths)
         {
+            LOG_INFO("Processing import for: " + source.generic_string());
             if (source.empty())
                 continue;
 
@@ -90,6 +92,7 @@ namespace BixEngine::Gui
             }
 
             String copyError;
+            LOG_INFO("Attempting to copy to: " + finalDestination.generic_string());
             if (!FilesUtils::Utilities::TryCopyFile(source, finalDestination, true, copyError))
             {
                 state_.error = copyError;
@@ -115,6 +118,7 @@ namespace BixEngine::Gui
 
         if (copiedAny)
         {
+            LOG_INFO("Files copied, setting pending refresh flag.");
             g_PendingRefreshAfterImport = true;
         }
     }
@@ -166,6 +170,7 @@ namespace BixEngine::Gui
 
         if (g_PendingRefreshAfterImport)
         {
+            LOG_INFO("Processing pending refresh in Draw loop.");
             g_PendingRefreshAfterImport = false;
             state_.cache.dirty = true;
             state_.cache.ClearMeta();

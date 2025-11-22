@@ -5,7 +5,7 @@
 #include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Ressources/SpriteAtlasFactory.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "imgui.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 

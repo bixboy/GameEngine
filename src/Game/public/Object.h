@@ -23,23 +23,23 @@ namespace BixEngine::Game
 
         [[nodiscard]] virtual String GetTypeName() const noexcept;
 
-        [[nodiscard]] const String& GetUUID() const noexcept { return uuid_; }
+        [[nodiscard]] String GetUUID() const noexcept { return uuid_; }
         void SetUUID(String uuid);
 
-        [[nodiscard]] const String& GetName() const noexcept { return name_; }
+        [[nodiscard]] String GetName() const noexcept { return name_; }
         void SetName(String name);
 
-        [[nodiscard]] const Math::Transform& GetTransform() const noexcept { return transform_; }
+        [[nodiscard]] Math::Transform GetTransform() const noexcept { return transform_; }
         void SetTransform(const Math::Transform& transform) noexcept { transform_ = transform; }
 
-        [[nodiscard]] const Math::Vector3& GetPosition() const noexcept { return transform_.position; }
+        [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.position; }
         void SetPosition(const Math::Vector3& position) noexcept { transform_.position = position; }
         void SetPosition(float x, float y, float z = 0.0f) noexcept { transform_.position = {x, y, z}; }
 
-        [[nodiscard]] const Math::Rotator& GetRotation() const noexcept { return transform_.rotation; }
+        [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.rotation; }
         void SetRotation(const Math::Rotator& rotation) noexcept { transform_.rotation = rotation; }
 
-        [[nodiscard]] const Math::Vector3& GetScale() const noexcept { return transform_.scale; }
+        [[nodiscard]] Math::Vector3 GetScale() const noexcept { return transform_.scale; }
         void SetScale(const Math::Vector3& scale) noexcept { transform_.scale = scale; }
 
         virtual void SerializeBinary(std::ostream& stream) const;

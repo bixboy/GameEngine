@@ -5,6 +5,7 @@
 #include "Actor.h"
 #include "Math/Vector2.h"
 #include "Player.generated.h"
+#include "Components/AudioSourceComponent.h"
 
 
 namespace BixEngine
@@ -66,6 +67,8 @@ namespace BixEngine
 
             SpriteComponent* spriteComponent_{nullptr};
             SpriteAnimatorComponent* animatorComponent_{nullptr};
+
+            AudioSourceComponent* audioSrc_{nullptr};
         };
     }
 }

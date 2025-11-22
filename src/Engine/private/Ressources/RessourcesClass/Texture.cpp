@@ -1,4 +1,4 @@
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "SDL_image.h"
 #include "Logger.h"
 #include "Renderer.h"

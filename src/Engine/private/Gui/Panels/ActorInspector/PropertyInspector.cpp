@@ -17,7 +17,7 @@
 #include "PropertyInfo.h"
 #include "Gui/Utils/ExposedVariableUtils.h"
 #include "Ressources/ResourceManager.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "Utils/FilesUtils.h"
 
 

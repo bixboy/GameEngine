@@ -24,9 +24,10 @@ namespace BixEngine::Game
         static void EnsureActorFactory(const Actor& actor);
         [[nodiscard]] static bool HasActorFactory(const String& typeName);
         static void ClearActorFactories();
+        
+        static std::unique_ptr<Actor> CreateActor(const String& typeName);
 
     private:
-        static std::unique_ptr<Actor> CreateActor(const String& typeName);
         static std::unordered_map<String, ActorFactory>& GetFactories();
         static void EnsureDefaultFactories();
     };

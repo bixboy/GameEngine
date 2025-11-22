@@ -1,7 +1,7 @@
 #include "Components/SpriteComponent.h"
 #include "Actor.h"
 #include "Renderer.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "SDL3/SDL_render.h"
 #include <algorithm>
 

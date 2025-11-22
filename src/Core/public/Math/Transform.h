@@ -28,6 +28,8 @@ namespace BixEngine::Math
         // ────────────────────────────────────────────────
         void Translate(const Vector3& delta) { position += delta; }
 
+        Vector3 GetPosition() { return position; }
+
         void Rotate(const Rotator& delta)
         {
             rotation.pitch += delta.pitch;

@@ -5,6 +5,7 @@
 #include <stdexcept>
 #include "Components/SpriteComponent.h"
 #include "InputManager.h"
+#include "Components/AudioSourceComponent.h"
 #include "Components/SpriteAnimatorComponent.h"
 
 
@@ -42,7 +43,7 @@ namespace BixEngine::Game
 
     void Player::Update(float deltaTime)
     {
-        Super::Update(deltaTime);
+        Actor::Update(deltaTime);
 
         ApplyMovement(deltaTime);
     }
@@ -121,18 +122,17 @@ namespace BixEngine::Game
 
     void Player::InitializeSpriteComponent()
     {
-        auto animator = std::make_unique<SpriteAnimatorComponent>(this);
-        animatorComponent_ = animator.get();
+        animatorComponent_ = AddComponent<SpriteAnimatorComponent>();
         spriteComponent_ = animatorComponent_;
 
         // Setup
         animatorComponent_->SetColor(color_);
         animatorComponent_->SetDimensions(size_.x, size_.y);
 
-        AddComponent(std::move(animator));
         SetScale(size_);
-    }
 
+        audioSrc_ = AddComponent<AudioSourceComponent>();
+    }
 
     void Player::RefreshSpriteComponent()
     {

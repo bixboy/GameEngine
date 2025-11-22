@@ -87,6 +87,15 @@ namespace BixEngine::Core
             return false;
         }
 
+        // --- Audio ---
+        LOG_INFO("Initializing AudioSystem...");
+        if (!audioSystem_.Initialize())
+        {
+            LOG_ERROR("AudioSystem initialization failed.");
+            ShutdownAll();
+            return false;
+        }
+
         // --- Event dispatcher + render loop ---
         LOG_INFO("Configuring event dispatcher and render loop...");
         eventDispatcher_.Configure(&guiModule_, &subsystems_);
@@ -147,6 +156,7 @@ namespace BixEngine::Core
 
         renderLoop_.Reset();
         eventDispatcher_.Reset();
+        audioSystem_.Shutdown();
         subsystems_.Shutdown();
         guiModule_.Shutdown();
 

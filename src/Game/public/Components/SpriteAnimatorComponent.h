@@ -3,7 +3,7 @@
 #include "ReflectionMacros.h"
 #include "Render/SpriteAnimator.h"
 #include <memory>
-#include "Ressources/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include "SpriteAnimatorComponent.generated.h"
 
 

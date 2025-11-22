@@ -8,6 +8,7 @@
 #include "Editor/EditorSettings.h"
 #include "EventDispatcher.h"
 #include "Render/RenderLoop.h"
+#include "Systems/AudioSystem.h"
 
 
 namespace BixEngine
@@ -94,5 +95,7 @@ namespace BixEngine::Core
         EventDispatcher eventDispatcher_{};
 
         RenderLoop renderLoop_{};
+
+        Systems::AudioSystem& audioSystem_ = Systems::AudioSystem::Get();
     };
 }

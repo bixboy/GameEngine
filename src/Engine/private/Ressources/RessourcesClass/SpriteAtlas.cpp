@@ -1,9 +1,9 @@
-#include "Ressources/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include <filesystem>
 #include "Logger.h"
 #include "Ressources/ResourceManager.h"
 #include "Ressources/SpriteAtlasUtils.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 
 
 namespace BixEngine::resources

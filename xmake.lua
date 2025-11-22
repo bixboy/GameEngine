@@ -74,11 +74,11 @@ local sdlimg_inc, sdlimg_lib = configure_sdk(
 -- =====================================================================
 
 local engine_public_includes = {
-    "Runtime/Include",
     "ThirdParty",
     "ThirdParty/ImGui",
     "ThirdParty/ImGui/backends",
     "ThirdParty/stb",
+    "ThirdParty/miniaudio",
     generated_dir
 }
 
@@ -161,11 +161,13 @@ local function define_module_target(m, group)
                 -- ❌ rootdir ENLEVÉ
             })
 
-            add_files(path.join(m.public, "**.cpp"), {
-                group     = "Public",
-                prefixdir = path.join(m.name, "Public")
-                -- ❌ rootdir ENLEVÉ
-            })
+            if #os.files(path.join(m.public, "**.cpp")) > 0 then
+                add_files(path.join(m.public, "**.cpp"), {
+                    group     = "Public",
+                    prefixdir = path.join(m.name, "Public")
+                    -- ❌ rootdir ENLEVÉ
+                })
+            end
         end
 
         --------------------------------------------------------
@@ -216,6 +218,7 @@ target("BixHeaderTool")
     before_build(function(t)
         t:set("targetdir", get_path(build_root))
         log("HeaderTool", "Mode = " .. mode)
+        print("DEBUG: BixHeaderTool before_build triggered")
     end)
 
     add_files("Tools/BixHeaderTool/**.cpp")
@@ -231,6 +234,7 @@ target("GenerateHeaders")
     add_deps("BixHeaderTool")
 
     before_build(function()
+        print("DEBUG: GenerateHeaders before_build triggered")
         import("Tools.xmake.reflection")
 
         if not os.isdir(generated_dir) then os.mkdir(generated_dir) end
@@ -283,6 +287,9 @@ target("BixEngine")
     add_files("ThirdParty/ImGui/backends/imgui_impl_sdl3.cpp")
     add_files("ThirdParty/ImGui/backends/imgui_impl_sdlrenderer3.cpp")
 
+    -- miniaudio (implementation)
+    -- Moved to src/Engine/private/ThirdParty/miniaudio.cpp
+
     add_linkdirs(sdl3_lib, sdlimg_lib)
     add_links("SDL3", "SDL3_image")
 target_end()
@@ -304,9 +311,12 @@ target("BixRun")
 
     local content_dir = get_path(build_root, "Content")
     if os.isdir(content_dir) then
-        add_files(get_path(content_dir, "**.cpp"))
-        add_includedirs(content_dir)
-        log("Run", "Scripts loaded from Content/")
+        local cpp_files = os.files(get_path(content_dir, "**.cpp"))
+        if #cpp_files > 0 then
+            add_files(get_path(content_dir, "**.cpp"))
+            add_includedirs(content_dir)
+            log("Run", "Scripts loaded from Content/")
+        end
     end
 
     after_build(function(t)

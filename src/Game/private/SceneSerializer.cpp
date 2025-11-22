@@ -6,8 +6,12 @@
 #include <utility>
 #include "Logger.h"
 #include "Actor.h"
+#include "Test/Player.h"
 #include "Object.h"
 #include "Scene.h"
+#include "Reflection/public/Registry.h"
+#include "Reflection/public/ClassInfo.h"
+#include "Utils/BinaryUtils.h"
 
 
 namespace BixEngine::Game
@@ -260,10 +264,25 @@ namespace BixEngine::Game
         auto& factories = GetFactories();
         const auto it = factories.find(typeName);
 
-        if (it == factories.end())
-            return nullptr;
+        if (it != factories.end())
+            return it->second();
 
-        return it->second();
+        // Fallback: Try to find class by name using Reflection
+        auto* classInfo = Bix::Reflection::Registry::Get().Find(typeName.c_str());
+        if (!classInfo)
+            classInfo = Bix::Reflection::Registry::Get().FindByQualifiedName(typeName.c_str());
+
+        if (classInfo && classInfo->CanConstruct())
+        {
+            // Construct actor via reflection
+            auto* instance = classInfo->ConstructTyped<Actor>();
+            if (instance)
+            {
+                return std::unique_ptr<Actor>(instance);
+            }
+        }
+
+        return nullptr;
     }
 
     std::unordered_map<String, SceneSerializer::ActorFactory>& SceneSerializer::GetFactories()
@@ -274,6 +293,8 @@ namespace BixEngine::Game
         if (!defaultsRegistered)
         {
             factories["Actor"] = []() { return std::make_unique<Actor>(); };
+            factories["BixEngine::Game::Actor"] = []() { return std::make_unique<Actor>(); };
+            factories["BixEngine::Game::Player"] = []() { return std::make_unique<Player>(); };
             defaultsRegistered = true;
         }
 
@@ -286,6 +307,14 @@ namespace BixEngine::Game
         if (!factories.contains(String("Actor")))
         {
             factories["Actor"] = []() { return std::make_unique<Actor>(); };
+        }
+        if (!factories.contains(String("BixEngine::Game::Actor")))
+        {
+            factories["BixEngine::Game::Actor"] = []() { return std::make_unique<Actor>(); };
+        }
+        if (!factories.contains(String("BixEngine::Game::Player")))
+        {
+            factories["BixEngine::Game::Player"] = []() { return std::make_unique<Player>(); };
         }
     }
 }

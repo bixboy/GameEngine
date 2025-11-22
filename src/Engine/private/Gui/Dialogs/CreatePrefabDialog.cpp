@@ -96,62 +96,60 @@ void CreatePrefabDialog::DrawSearchBar()
 void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter)
 {
     float listHeight = ImGui::GetTextLineHeightWithSpacing() * 12.0f;
-    if (!ImGui::BeginChild("PrefabCandidateList", ImVec2(420, listHeight), true))
-        return;
-
-    if (candidates.empty())
+    if (ImGui::BeginChild("PrefabCandidateList", ImVec2(420, listHeight), true))
     {
-        ImGui::TextDisabled("No eligible scripts were found.");
-        ImGui::EndChild();
-
-        return;
-    }
-
-    for (const auto& candidate : candidates)
-    {
-        std::string nameLower = candidate.displayName;
-        std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), tolower);
-
-        if (!filter.empty() && nameLower.find(filter) == std::string::npos)
-            continue;
-
-        std::string label = candidate.displayName;
-
-        if (candidate.isActor && candidate.isComponent)
-            label += " [Actor/Component]";
-
-        else if (candidate.isActor)
-            label += " [Actor]";
-
-        else if (candidate.isComponent)
-            label += " [Component]";
-
-        else if (candidate.hasBlueprintMacro)
-            label += " [Blueprint]";
-
-        bool isSelected = (!selectedClass_.IsEmpty() && selectedClass_.View() == candidate.className);
-        if (ImGui::Selectable(label.c_str(), isSelected))
+        if (candidates.empty())
         {
-            SetSelectedScript(candidate.className, candidate.includePath, candidate.assetBaseName, candidate.isActor,
-                              candidate.isComponent, candidate.headerPath);
-            prefabError_.Clear();
+            ImGui::TextDisabled("No eligible scripts were found.");
         }
-
-        if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+        else
         {
-            ImGui::BeginTooltip();
-            ImGui::Text("Class: %s", candidate.className.c_str());
+            for (const auto& candidate : candidates)
+            {
+                std::string nameLower = candidate.displayName;
+                std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), tolower);
 
-            if (!candidate.includePath.empty())
-                ImGui::Text("Include: %s", candidate.includePath.c_str());
+                if (!filter.empty() && nameLower.find(filter) == std::string::npos)
+                    continue;
 
-            if (!candidate.headerPath.empty())
-                ImGui::Text("Header: %s", candidate.headerPath.generic_string().c_str());
+                std::string label = candidate.displayName;
 
-            ImGui::EndTooltip();
+                if (candidate.isActor && candidate.isComponent)
+                    label += " [Actor/Component]";
+
+                else if (candidate.isActor)
+                    label += " [Actor]";
+
+                else if (candidate.isComponent)
+                    label += " [Component]";
+
+                else if (candidate.hasBlueprintMacro)
+                    label += " [Blueprint]";
+
+                bool isSelected = (!selectedClass_.IsEmpty() && selectedClass_.View() == candidate.className);
+                if (ImGui::Selectable(label.c_str(), isSelected))
+                {
+                    SetSelectedScript(candidate.className, candidate.includePath, candidate.assetBaseName, candidate.isActor,
+                                      candidate.isComponent, candidate.headerPath);
+                    prefabError_.Clear();
+                }
+
+                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
+                {
+                    ImGui::BeginTooltip();
+                    ImGui::Text("Class: %s", candidate.className.c_str());
+
+                    if (!candidate.includePath.empty())
+                        ImGui::Text("Include: %s", candidate.includePath.c_str());
+
+                    if (!candidate.headerPath.empty())
+                        ImGui::Text("Header: %s", candidate.headerPath.generic_string().c_str());
+
+                    ImGui::EndTooltip();
+                }
+            }
         }
     }
-
     ImGui::EndChild();
 }
 

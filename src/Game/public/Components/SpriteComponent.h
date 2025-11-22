@@ -4,7 +4,7 @@
 #include "SDL3/SDL.h"
 #include "Math/Rect.h"
 #include "Math/Vector2.h"
-#include "Ressources/Texture.h"
+#include "Ressources/RessourcesClass/Texture.h"
 #include "Render/SpriteFrame.h"
 #include "SpriteComponent.generated.h"
 

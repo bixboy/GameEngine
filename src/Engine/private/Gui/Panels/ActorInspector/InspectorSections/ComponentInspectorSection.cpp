@@ -2,6 +2,8 @@
 #include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
+#include "Gui/Utils/ContentBrowserUtils.h"
+#include "Utils/ScriptUtils.h"
 #include "Actor.h"
 #include "Components/Component.h"
 #include "ClassInfo.h"
@@ -34,19 +36,99 @@ namespace BixEngine::Gui::ActorInspector
         {
             const auto& componentClass = Game::Component::StaticClass();
 
-            std::vector<ComponentClassEntry> entries;
-            entries.reserve(32);
+            // 1. Get all classes via reflection (current method)
+            std::vector<Bix::Reflection::ClassInfo*> allClasses = Bix::Reflection::GetAllClasses();
 
-            for (auto* classInfo : Bix::Reflection::GetAllClasses())
+            // 2. Also retrieve via script parsing to ensure nothing is missed
+            // (Sometimes reflection doesn't have the correct SuperClass link yet if loading order is specific)
+            const std::filesystem::path contentRoot = ContentBrowserUtils::GetContentRoot();
+            const std::filesystem::path scriptsDir = contentRoot / "Scripts";
+            
+            if (std::filesystem::exists(scriptsDir))
+            {
+                auto scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, contentRoot);
+                
+                // Recursive function to traverse the tree
+                std::function<void(const std::vector<ScriptUtils::ScriptNode>&)> processNodes;
+                processNodes = [&](const std::vector<ScriptUtils::ScriptNode>& nodes)
+                {
+                    for (const auto& node : nodes)
+                    {
+                        // If the script says it inherits from Component
+                        if (node.inheritsComponent)
+                        {
+                            // Try to find the class in the registry
+                            if (auto* info = Bix::Reflection::FindClass(node.name))
+                            {
+                                allClasses.push_back(info);
+                            }
+                            else if (auto* infoQ = Bix::Reflection::FindClassByQualifiedName(node.name))
+                            {
+                                allClasses.push_back(infoQ);
+                            }
+                            // If class not found (not compiled/loaded yet?), we can't do more here.
+                        }
+                        
+                        processNodes(node.children);
+                    }
+                };
+                
+                processNodes(scriptRoots);
+            }
+
+            // 3. Build final list with deduplication
+            std::vector<ComponentClassEntry> entries;
+            entries.reserve(allClasses.size());
+
+            // For deduplication
+            std::vector<Bix::Reflection::ClassInfo*> processed;
+            processed.reserve(allClasses.size());
+
+            for (auto* classInfo : allClasses)
             {
                 if (!classInfo || classInfo == &componentClass)
                 {
                     continue;
                 }
 
-                if (!ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
+                // Check if already processed
+                if (std::find(processed.begin(), processed.end(), classInfo) != processed.end())
                 {
                     continue;
+                }
+
+                // Check inheritance:
+                // Either via IsSubclassOf (pure reflection)
+                // Or we added it manually because the script said inheritsComponent (so we trust it)
+                // But to be safe, we keep IsSubclassOf as main filter, 
+                // UNLESS we really want to force everything that looks like a component.
+                // The user's problem is that "just a selection" is proposed.
+                // If IsSubclassOf fails (missing link), we risk filtering it out.
+                // BUT, if we found it via script parsing, we should accept it.
+                
+                bool isComponent = false;
+                if (ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
+                {
+                    isComponent = true;
+                }
+                else
+                {
+                    // Fallback: check if name matches a known component script?
+                    // This is implicitly done because we added to 'allClasses' those that are components according to script.
+                    // So if we are here, it is either a valid component by reflection, or one added by our scan.
+                }
+                
+                if (ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
+                {
+                    isComponent = true;
+                }
+                
+                if (!isComponent)
+                {
+                     // Check if explicitly found in scripts as component
+                     // (This requires keeping track of script names found)
+                     // Let's assume IsSubclassOf is correct for now.
+                     continue;
                 }
 
                 if (classInfo->IsAbstract || !classInfo->CanConstruct())
@@ -63,6 +145,45 @@ namespace BixEngine::Gui::ActorInspector
                 }
 
                 entries.push_back(std::move(entry));
+                processed.push_back(classInfo);
+            }
+            
+            // Now add those found by script scan that would have been missed by IsSubclassOf
+            // (Rare case of incomplete reflection)
+            if (std::filesystem::exists(scriptsDir))
+            {
+                 auto scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, contentRoot);
+                 std::function<void(const std::vector<ScriptUtils::ScriptNode>&)> processNodes;
+                 processNodes = [&](const std::vector<ScriptUtils::ScriptNode>& nodes)
+                 {
+                     for (const auto& node : nodes)
+                     {
+                         if (node.inheritsComponent)
+                         {
+                             Bix::Reflection::ClassInfo* info = Bix::Reflection::FindClass(node.name);
+                             if (!info) info = Bix::Reflection::FindClassByQualifiedName(node.name);
+                             
+                             if (info && info != &componentClass)
+                             {
+                                 // If not already processed
+                                 if (std::find(processed.begin(), processed.end(), info) == processed.end())
+                                 {
+                                     // Add it even if IsSubclassOf said no (because script says yes)
+                                     if (!info->IsAbstract && info->CanConstruct())
+                                     {
+                                         ComponentClassEntry entry{};
+                                         entry.info = info;
+                                         entry.label = !info->Name.empty() ? info->Name : info->QualifiedName;
+                                         entries.push_back(std::move(entry));
+                                         processed.push_back(info);
+                                     }
+                                 }
+                             }
+                         }
+                         processNodes(node.children);
+                     }
+                 };
+                 processNodes(scriptRoots);
             }
 
             std::sort(entries.begin(), entries.end(), [](const ComponentClassEntry& lhs, const ComponentClassEntry& rhs)
