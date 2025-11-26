@@ -32,9 +32,14 @@ namespace BixEngine::Core
         void DrawSceneButton(float buttonHeight);
         void DrawAssetEditorTabs(float buttonHeight);
         void DrawPlayControls(float buttonHeight);
+        void DrawAudioPlayer(float buttonHeight);
 
         Gui::GuiSystem* guiSystem_{nullptr};
         Gui::GuiLayoutManager* layoutManager_{nullptr};
         GuiModule* owner_{nullptr};
+
+        float m_MasterVolume = 1.0f;
+        bool m_IsPlaying = false;
+        std::string m_CurrentSongName = "No Audio";
     };
 }

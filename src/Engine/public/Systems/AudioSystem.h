@@ -18,6 +18,12 @@ namespace BixEngine::Systems {
         void Shutdown();
         void UpdateListener(const Math::Vector3& pos, const Math::Vector3& fwd, const Math::Vector3& up);
         void PlaySound(const String& filePath);
+        void PlayMusic(const String& filePath);
+        void Pause();
+        void Stop();
+        void SetGlobalVolume(float volume);
+        float GetMusicDuration() const;
+        float GetMusicCursor() const;
         void* GetEngineHandle() const;
         // Expose the miniaudio engine pointer safely
         ma_engine* GetEngine() const;

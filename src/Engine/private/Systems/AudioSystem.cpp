@@ -14,6 +14,7 @@ namespace BixEngine::Systems
     struct AudioSystem::Impl
     {
         ma_engine engine;
+        ma_sound musicSound;
         bool initialized = false;
     };
 
@@ -37,19 +38,12 @@ namespace BixEngine::Systems
         if (impl_->initialized)
             return true;
 
-        ma_result result = ma_engine_init(NULL, &impl_->engine);
+        ma_result result = ma_engine_init(nullptr, &impl_->engine);
         if (result != MA_SUCCESS)
-        {
-            LOG_ERROR("Failed to initialize audio engine.");
             return false;
-        }
 
         impl_->initialized = true;
-        LOG_INFO("AudioSystem initialized successfully. Engine ptr: " + std::to_string((uintptr_t)&impl_->engine));
-        
-        // Set master volume to 1.0 just in case
         ma_engine_set_volume(&impl_->engine, 1.0f);
-        
         return true;
     }
 
@@ -78,6 +72,91 @@ namespace BixEngine::Systems
             return;
 
         ma_engine_play_sound(&impl_->engine, filePath.c_str(), NULL);
+    }
+
+    void AudioSystem::PlayMusic(const String& filePath)
+    {
+        if (!impl_->initialized)
+            return;
+
+        // Stop existing music if any
+        if (ma_sound_is_playing(&impl_->musicSound))
+        {
+            ma_sound_stop(&impl_->musicSound);
+            ma_sound_uninit(&impl_->musicSound);
+        }
+
+        // Initialize and play new sound as music (streamed)
+        ma_result result = ma_sound_init_from_file(&impl_->engine, filePath.c_str(), MA_SOUND_FLAG_STREAM, NULL, NULL, &impl_->musicSound);
+        if (result == MA_SUCCESS)
+        {
+            ma_sound_start(&impl_->musicSound);
+        }
+        else
+        {
+            LOG_ERROR("Failed to load music: %s", filePath.c_str());
+        }
+    }
+
+    void AudioSystem::Pause()
+    {
+        if (!impl_->initialized)
+            return;
+
+        if (ma_sound_is_playing(&impl_->musicSound))
+        {
+            ma_sound_stop(&impl_->musicSound);
+        }
+        else
+        {
+            ma_sound_start(&impl_->musicSound);
+        }
+    }
+
+    void AudioSystem::Stop()
+    {
+        if (!impl_->initialized)
+            return;
+
+        if (ma_sound_is_playing(&impl_->musicSound))
+        {
+            ma_sound_stop(&impl_->musicSound);
+            ma_sound_seek_to_pcm_frame(&impl_->musicSound, 0);
+        }
+    }
+
+    void AudioSystem::SetGlobalVolume(float volume)
+    {
+        if (!impl_->initialized)
+            return;
+
+        ma_engine_set_volume(&impl_->engine, volume);
+    }
+
+    float AudioSystem::GetMusicDuration() const
+    {
+        if (!impl_->initialized)
+            return 0.0f;
+
+        float length;
+        if (ma_sound_get_length_in_seconds(&impl_->musicSound, &length) == MA_SUCCESS)
+        {
+            return length;
+        }
+        return 0.0f;
+    }
+
+    float AudioSystem::GetMusicCursor() const
+    {
+        if (!impl_->initialized)
+            return 0.0f;
+
+        float cursor;
+        if (ma_sound_get_cursor_in_seconds(&impl_->musicSound, &cursor) == MA_SUCCESS)
+        {
+            return cursor;
+        }
+        return 0.0f;
     }
 
     void* AudioSystem::GetEngineHandle() const

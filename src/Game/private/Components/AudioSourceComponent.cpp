@@ -36,69 +36,52 @@ namespace BixEngine::Game
     void AudioSourceComponent::BeginPlay()
     {
         if (!AudioClip)
-        {
-            LOG_WARNING("AudioSourceComponent::BeginPlay: No AudioClip assigned.");
             return;
-        }
 
-        ma_engine* engine = Systems::AudioSystem::Get().GetEngine();
-        if (!engine)
-        {
-            LOG_ERROR("AudioSystem engine is null.");
-            return;
-        }
+        auto* audioSystem = &Systems::AudioSystem::Get();
+        ma_engine* engine = audioSystem->GetEngine();
+        
+        if (!engine) return;
 
-        ma_uint32 flags = 0;
-        if (IsMusic)
+        if (impl_->initialized)
         {
-            flags |= MA_SOUND_FLAG_STREAM;
-        }
-        else
-        {
-            flags |= MA_SOUND_FLAG_DECODE;
+            ma_sound_uninit(&impl_->sound);
+            impl_->initialized = false;
         }
         
+        ma_uint32 flags = IsMusic ? MA_SOUND_FLAG_STREAM : MA_SOUND_FLAG_DECODE;
+
         if (!Is3D)
-            flags |= MA_SOUND_FLAG_NO_SPATIALIZATION;
-
-        // Init decoder
-        ma_decoder_config decoderConfig = ma_decoder_config_init_default();
-        ma_result result = ma_decoder_init_memory(AudioClip->GetData().data(), AudioClip->GetData().size(), &decoderConfig, &impl_->decoder);
-
-        if (result != MA_SUCCESS)
-        {
-            LOG_ERROR("Failed to init decoder from memory for AudioClip");
-            return;
-        }
-
-        // Init sound from data source
-        result = ma_sound_init_from_data_source(
+            flags |= MA_SOUND_FLAG_NO_SPATIALIZATION; 
+        
+        String path = AudioClip->GetPath();
+        
+        ma_result result = ma_sound_init_from_file(
             engine, 
-            &impl_->decoder, 
+            path.c_str(), 
             flags, 
+            NULL, 
             NULL, 
             &impl_->sound
         );
 
         if (result != MA_SUCCESS)
         {
-            LOG_ERROR("Failed to init sound from data source");
-            ma_decoder_uninit(&impl_->decoder);
+            LOG_ERROR("Miniaudio Error: Failed to load " + path);
             return;
         }
 
         impl_->initialized = true;
+
         ma_sound_set_volume(&impl_->sound, Volume);
         ma_sound_set_looping(&impl_->sound, Loop);
-        
-        // Initial position
-        if (Is3D && owner_)
-        {
+
+        if (Is3D && owner_) {
             auto pos = owner_->GetTransform().GetPosition();
             ma_sound_set_position(&impl_->sound, pos.x, pos.y, pos.z);
         }
 
-        LOG_INFO("AudioSourceComponent initialized successfully for clip: " + AudioClip->GetPath());
+        LOG_INFO("Audio Ready: " + path);
     }
 
     void AudioSourceComponent::Update(float dt)
@@ -117,6 +100,7 @@ namespace BixEngine::Game
     {
         if (impl_->initialized)
         {
+            ma_sound_seek_to_pcm_frame(&impl_->sound, 0);
             if (ma_sound_start(&impl_->sound) != MA_SUCCESS)
             {
                 LOG_ERROR("Failed to start sound");

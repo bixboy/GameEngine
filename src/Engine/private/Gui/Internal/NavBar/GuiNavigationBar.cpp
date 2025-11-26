@@ -1,4 +1,5 @@
 ﻿#include "Gui/Internal/NavBar/GuiNavigationBar.h"
+#include "Systems/AudioSystem.h"
 
 #include <string_view>
 
@@ -8,6 +9,10 @@
 #include "Gui/Internal/GuiLayoutManager.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "imgui.h"
+#include <filesystem>
+#include <vector>
+#include <string>
+#include <algorithm>
 
 namespace BixEngine::Core
 {
@@ -15,6 +20,55 @@ namespace BixEngine::Core
     {
         constexpr float kNavigationBarHeight = 38.0f;
         constexpr std::string_view kSceneNavigationId{"scene"};
+
+        std::filesystem::path DetermineAudioRoot()
+        {
+            std::error_code ec;
+            const std::filesystem::path base = std::filesystem::current_path(ec);
+            if (ec) return {};
+
+            const std::filesystem::path content = base / "Content";
+            if (std::filesystem::exists(content)) return content;
+
+            const std::filesystem::path resources = base / "Resources";
+            if (std::filesystem::exists(resources)) return resources;
+
+            return {};
+        }
+
+        void CollectAudioFiles(std::vector<std::filesystem::path>& outFiles)
+        {
+            const std::filesystem::path root = DetermineAudioRoot();
+            if (root.empty()) return;
+
+            std::error_code ec;
+            for (std::filesystem::recursive_directory_iterator it(root, ec), end; it != end; it.increment(ec))
+            {
+                if (ec) break;
+                if (!it->is_regular_file()) continue;
+
+                std::string extension = it->path().extension().generic_string();
+                std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){ return std::tolower(c); });
+                
+                if (extension == ".mp3" || extension == ".wav" || extension == ".ogg")
+                    outFiles.push_back(it->path());
+            }
+
+            std::sort(outFiles.begin(), outFiles.end(),
+              [](const std::filesystem::path& a, const std::filesystem::path& b)
+              {
+                  return a.generic_string() < b.generic_string();
+              });
+        }
+
+        std::string MakeDisplayName(const std::filesystem::path& path, const std::filesystem::path& root)
+        {
+            if (root.empty()) return path.generic_string();
+            std::error_code ec;
+            const std::filesystem::path relative = std::filesystem::relative(path, root, ec);
+            if (!ec && !relative.empty()) return relative.generic_string();
+            return path.generic_string();
+        }
     }
 
     GuiNavigationBar::GuiNavigationBar(GuiSystem& guiSystem, GuiLayoutManager& layoutManager, GuiModule& owner)
@@ -60,6 +114,7 @@ namespace BixEngine::Core
             DrawSceneButton(buttonHeight);
             DrawPlayControls(buttonHeight);
             DrawAssetEditorTabs(buttonHeight);
+            DrawAudioPlayer(buttonHeight);
         }
 
         ImGui::End();
@@ -211,6 +266,116 @@ namespace BixEngine::Core
         {
             if (ImGui::Button(isPause ? "Resume" : "Pause", ImVec2(60, buttonHeight)))
                 owner_->OnPause();
+        }
+    }
+
+    void GuiNavigationBar::DrawAudioPlayer(float buttonHeight)
+    {
+        // Estimated width: Combo(150) + Play(30) + Stop(30) + Progress(100) + Slider(80) + Spacing
+        constexpr float estimatedWidth = 450.0f; 
+        constexpr float padding = 20.0f;
+
+        ImGui::SameLine();
+        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - estimatedWidth - padding);
+
+        // Collect Audio Files (Note: In a real engine, this should be cached)
+        std::vector<std::filesystem::path> audioFiles;
+        CollectAudioFiles(audioFiles);
+        const std::filesystem::path root = DetermineAudioRoot();
+
+        std::vector<std::string> audioPaths;
+        std::vector<std::string> audioLabels;
+        audioPaths.reserve(audioFiles.size());
+        audioLabels.reserve(audioFiles.size());
+
+        int currentAudioIndex = -1;
+        
+        for (size_t index = 0; index < audioFiles.size(); ++index)
+        {
+            const std::string pathString = audioFiles[index].generic_string();
+            audioPaths.push_back(pathString);
+            audioLabels.push_back(MakeDisplayName(audioFiles[index], root));
+
+            // Check if this is the current song
+            // We compare full paths or just check if current song name matches
+            if (m_CurrentSongName == pathString)
+            {
+                currentAudioIndex = static_cast<int>(index);
+            }
+        }
+
+        // Combo Box
+        ImGui::SetNextItemWidth(150.0f);
+        const char* previewValue = currentAudioIndex >= 0 ? audioLabels[currentAudioIndex].c_str() : (m_CurrentSongName == "No Audio" ? "Select Audio..." : m_CurrentSongName.c_str());
+        if (ImGui::BeginCombo("##AudioSelect", previewValue))
+        {
+            for (int i = 0; i < static_cast<int>(audioPaths.size()); ++i)
+            {
+                const bool isSelected = (currentAudioIndex == i);
+                if (ImGui::Selectable(audioLabels[i].c_str(), isSelected))
+                {
+                    m_CurrentSongName = audioPaths[i];
+                    Systems::AudioSystem::Get().PlayMusic(m_CurrentSongName);
+                    m_IsPlaying = true;
+                }
+
+                if (isSelected)
+                    ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Select Music");
+
+        ImGui::SameLine();
+
+        // Play/Pause Button
+        if (!m_IsPlaying)
+        {
+            if (ImGui::ArrowButton("##PlayMusic", ImGuiDir_Right))
+            {
+                Systems::AudioSystem::Get().PlayMusic(m_CurrentSongName);
+                m_IsPlaying = true;
+            }
+        }
+        else
+        {
+            if (ImGui::Button("||", ImVec2(20, 0))) 
+            {
+                Systems::AudioSystem::Get().Pause();
+                m_IsPlaying = false;
+            }
+        }
+
+        ImGui::SameLine();
+
+        // Stop Button
+        if (ImGui::Button("[]", ImVec2(20, 0)))
+        {
+            Systems::AudioSystem::Get().Stop();
+            m_IsPlaying = false;
+        }
+
+        ImGui::SameLine();
+
+        // Progress Bar
+        float duration = Systems::AudioSystem::Get().GetMusicDuration();
+        float cursor = Systems::AudioSystem::Get().GetMusicCursor();
+        float progress = (duration > 0.0f) ? (cursor / duration) : 0.0f;
+        
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
+        ImGui::ProgressBar(progress, ImVec2(100, 0), "");
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("%.1f / %.1f s", cursor, duration);
+
+        ImGui::SameLine();
+
+        // Volume Slider
+        ImGui::SetNextItemWidth(80.0f);
+        if (ImGui::SliderFloat("##Vol", &m_MasterVolume, 0.0f, 1.0f, ""))
+        {
+            Systems::AudioSystem::Get().SetGlobalVolume(m_MasterVolume);
         }
     }
 }
