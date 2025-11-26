@@ -96,5 +96,8 @@ namespace BixEngine::Input
     {
         if (input_)
             input_->ResetState();
+
+        actionBindings_.clear();
+        axisBindings_.clear();
     }
 }

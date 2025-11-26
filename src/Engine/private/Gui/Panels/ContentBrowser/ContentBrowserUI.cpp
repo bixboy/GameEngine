@@ -1,173 +1,27 @@
-﻿#include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
+#include "Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
+#include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Gui/Panels/ContentBrowser/ContentEntry.h"
+#include "Gui/Utils/GuiHelpers.h"
+#include "Gui/Widgets/Widgets.h"
 #include "Gui/Dialogs/CreateFolderDialog.h"
 #include "Gui/Dialogs/CreatePrefabDialog.h"
 #include "Gui/Dialogs/CreateScriptDialog.h"
 #include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
 #include "Gui/Dialogs/RenameEntryDialog.h"
-#include "Gui/Utils/GuiHelpers.h"
-#include "Gui/Widgets/Widgets.h"
 #include "Utils/EditorUtils.h"
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"
-
+#include <imgui.h>
 #include <filesystem>
 #include <unordered_map>
+#include <functional>
 #include <ranges>
-#include <imgui.h>
+#include <algorithm>
 
 namespace BixEngine::Gui
 {
     using namespace Utils;
     namespace fs = std::filesystem;
-
-    // ─────────────────────────────────────────────
-    // 🔧 Helpers
-    // ─────────────────────────────────────────────
-
-    static bool DeleteScriptFiles(const ContentEntry& entry, String& error)
-    {
-        auto tryRemove = [&](const path& p)
-        {
-            return p.empty() || FilesUtils::Utilities::TryRemove(p, false, error);
-        };
-
-        return tryRemove(entry.headerPath) && tryRemove(entry.sourcePath);
-    }
-
-    // ─────────────────────────────────────────────
-    // 📂 Cache du répertoire
-    // ─────────────────────────────────────────────
-
-    static bool RefreshDirectoryCache(ContentBrowserState& state)
-    {
-        if (!state.cache.dirty && state.cache.directory == state.current)
-            return true;
-
-        state.cache.entries.clear();
-        state.cache.dirty = false;
-        state.cache.directory = state.current;
-
-        std::unordered_map<String, ContentEntry> scriptGroups;
-        std::error_code error;
-
-        for (auto& entry : fs::directory_iterator(state.current, error))
-        {
-            const path p = entry.path();
-
-            // ──────────────── Dossier ────────────────
-            if (entry.is_directory())
-            {
-                state.cache.entries.push_back(ContentEntry{
-                    .name = p.filename().generic_string(),
-                    .path = p,
-                    .type = ContentType::Directory,
-                    .extension = "",
-                    .headerPath = {},
-                    .sourcePath = {}
-                });
-                continue;
-            }
-
-            // ──────────────── Extension ────────────────
-            const String ext = StringUtils::Utilities::ToLowerCopy(p.extension().generic_string());
-
-            // ──────────────── Scripts (.h/.cpp) ────────────────
-            if (ext == ".h" || ext == ".cpp")
-            {
-                auto key = StringUtils::Utilities::ToLowerCopy(p.stem().generic_string());
-                auto& group = scriptGroups[key];
-
-                group.name = p.stem().generic_string();
-                group.path = p.parent_path();
-                group.type = ContentType::Script;
-
-                if (ext == ".h") group.headerPath = p;
-                else group.sourcePath = p;
-
-                continue;
-            }
-
-            // ──────────────── Type de fichier ────────────────
-            ContentType type = ContentType::File;
-
-            if (ext == ".bixactor")
-                type = ContentType::ActorPrefab;
-            
-            else if (ext == ".bixcomponent")
-                type = ContentType::ComponentPrefab;
-            
-            else if (ext == ".atlas")
-                type = ContentType::SpriteAtlas;
-
-            else if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
-                type = ContentType::Audio;
-
-            state.cache.entries.push_back(ContentEntry{
-                .name = p.filename().generic_string(),
-                .path = p,
-                .type = type,
-                .extension = ext,
-                .headerPath = {},
-                .sourcePath = {}
-            });
-        }
-
-        for (auto& script : scriptGroups | std::views::values)
-        {
-            state.cache.entries.push_back(std::move(script));   
-        }
-
-        // Tri
-        std::ranges::sort(state.cache.entries, [](const ContentEntry& a, const ContentEntry& b)
-        {
-            int pa = GetSortPriority(a.type);
-            int pb = GetSortPriority(b.type);
-
-            if (pa != pb) return pa < pb;
-            return FilesUtils::Utilities::CaseInsensitiveLess(a.name, b.name);
-        });
-
-        return !error;
-    }
-
-    // ─────────────────────────────────────────────
-    // 📦 Popups
-    // ─────────────────────────────────────────────
-
-    void RenderPopups(ContentBrowserState& state, String& selected, PopupRequestState& req)
-    {
-        static CreatePrefabDialog prefab(state, selected);
-        static CreateScriptDialog script(state, selected);
-        static CreateFolderDialog folder(state, selected);
-        static CreateSpriteAtlasDialog atlas(state, selected);
-        static RenameEntryDialog rename(state, selected);
-
-        if (req.createPrefab) { prefab.Open(); req.createPrefab = false; }
-        if (req.createScript) { script.Open(); req.createScript = false; }
-        if (req.createFolder) { folder.Open(state.current); req.createFolder = false; }
-        if (req.createSpriteAtlas) { atlas.Open(state.current); req.createSpriteAtlas = false; }
-        if (req.renameEntry)
-        {
-            rename.Open(req.renameTarget, req.renameSecondaryTarget, req.renameTargetIsScriptGroup);
-            req.renameEntry = false;
-        }
-
-        if (prefab.IsOpen())
-            prefab.Render();
-        
-        if (script.IsOpen())
-            script.Render();
-        
-        if (folder.IsOpen())
-            folder.Render();
-        
-        if (atlas.IsOpen())
-            atlas.Render();
-        
-        if (rename.IsOpen())
-            rename.Render();
-    }
 
     // ─────────────────────────────────────────────
     // 🧭 Header
@@ -533,5 +387,43 @@ namespace BixEngine::Gui
         }
 
         ImGui::EndChild();
+    }
+
+    // ─────────────────────────────────────────────
+    // 📦 Popups
+    // ─────────────────────────────────────────────
+
+    void RenderPopups(ContentBrowserState& state, String& selected, PopupRequestState& req)
+    {
+        static CreatePrefabDialog prefab(state, selected);
+        static CreateScriptDialog script(state, selected);
+        static CreateFolderDialog folder(state, selected);
+        static CreateSpriteAtlasDialog atlas(state, selected);
+        static RenameEntryDialog rename(state, selected);
+
+        if (req.createPrefab) { prefab.Open(); req.createPrefab = false; }
+        if (req.createScript) { script.Open(); req.createScript = false; }
+        if (req.createFolder) { folder.Open(state.current); req.createFolder = false; }
+        if (req.createSpriteAtlas) { atlas.Open(state.current); req.createSpriteAtlas = false; }
+        if (req.renameEntry)
+        {
+            rename.Open(req.renameTarget, req.renameSecondaryTarget, req.renameTargetIsScriptGroup);
+            req.renameEntry = false;
+        }
+
+        if (prefab.IsOpen())
+            prefab.Render();
+        
+        if (script.IsOpen())
+            script.Render();
+        
+        if (folder.IsOpen())
+            folder.Render();
+        
+        if (atlas.IsOpen())
+            atlas.Render();
+        
+        if (rename.IsOpen())
+            rename.Render();
     }
 }

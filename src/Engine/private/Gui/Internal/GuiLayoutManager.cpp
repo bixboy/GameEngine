@@ -17,7 +17,7 @@
 #include "Utils/FilesUtils.h"
 #include "Utils/StringUtils.h"
 #include "SceneManager.h"
-#include "SceneSerializer.h"
+#include "Serializer/SceneSerializer.h"
 #include "SceneRegistry.h"
 
 namespace BixEngine::Gui
@@ -445,7 +445,7 @@ namespace BixEngine::Gui
                                 {
                                     auto newScene = std::make_unique<Game::EmptyScene>();
                                     newScene->SetName(path.stem().string().c_str());
-                                    if (Game::SceneSerializer::LoadBinary(*newScene, path))
+                                    if (BixEngine::Serialization::SceneSerializer::LoadBinary(*newScene, path))
                                     {
                                         sceneManager->SetScene(std::move(newScene));
                                         currentScenePath_ = path;
@@ -494,7 +494,7 @@ namespace BixEngine::Gui
                         {
                             if (auto* scene = sceneManager->GetScene())
                             {
-                                Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                                BixEngine::Serialization::SceneSerializer::SaveBinary(*scene, currentScenePath_);
                                 isSceneDirty_ = false;
                                 AddToRecentScenes_(currentScenePath_);
                             }
@@ -609,7 +609,7 @@ namespace BixEngine::Gui
                         if (auto* scene = sceneManager->GetScene())
                         {
                             scene->SetName(std::filesystem::path(filename).stem().string().c_str());
-                            Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                            BixEngine::Serialization::SceneSerializer::SaveBinary(*scene, currentScenePath_);
                             isSceneDirty_ = false;
                             AddToRecentScenes_(currentScenePath_);
                         }
@@ -670,7 +670,7 @@ namespace BixEngine::Gui
                         {
                             auto newScene = std::make_unique<Game::EmptyScene>();
                             newScene->SetName(path.stem().string().c_str());
-                            if (Game::SceneSerializer::LoadBinary(*newScene, path))
+                            if (BixEngine::Serialization::SceneSerializer::LoadBinary(*newScene, path))
                             {
                                 sceneManager->SetScene(std::move(newScene));
                                 currentScenePath_ = path;
@@ -1110,7 +1110,7 @@ namespace BixEngine::Gui
                 {
                     if (auto* scene = sceneManager->GetScene())
                     {
-                        Game::SceneSerializer::SaveBinary(*scene, currentScenePath_);
+                        BixEngine::Serialization::SceneSerializer::SaveBinary(*scene, currentScenePath_);
                     }
                     
                     // Then close

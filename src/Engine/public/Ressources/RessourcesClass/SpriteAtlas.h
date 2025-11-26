@@ -43,6 +43,8 @@ namespace BixEngine::resources
         [[nodiscard]] std::shared_ptr<Texture> GetTexture() const noexcept { return texture_; }
         [[nodiscard]] const String& GetTexturePath() const noexcept { return texturePath_; }
 
+        [[nodiscard]] String GetPath() const { return texturePath_; }
+
     private:
         void BuildAnimationLookup();
 

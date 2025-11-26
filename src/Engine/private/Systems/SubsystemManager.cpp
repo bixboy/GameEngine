@@ -115,6 +115,11 @@ namespace BixEngine::Core
 
     void SubsystemManager::UpdateAll(float deltaTime)
     {
+        UpdateRuntime(deltaTime);
+    }
+
+    void SubsystemManager::UpdateRuntime(float deltaTime)
+    {
         if (input_)
             input_->UpdateStatistics(deltaTime);
 
@@ -124,8 +129,38 @@ namespace BixEngine::Core
         if (sceneManager_)
         {
             if (Game::Scene* scene = sceneManager_->GetScene())
-                scene->Update(deltaTime);
+                scene->OnRuntimeUpdate(deltaTime);
         }
+
+        if (input_)
+            input_->PostUpdate();
+    }
+
+    void SubsystemManager::UpdateEditor(float deltaTime)
+    {
+        if (input_)
+            input_->UpdateStatistics(deltaTime);
+
+        if (inputManager_)
+            inputManager_->Update();
+
+        if (sceneManager_)
+        {
+            if (Game::Scene* scene = sceneManager_->GetScene())
+                scene->OnEditorUpdate(deltaTime);
+        }
+
+        if (input_)
+            input_->PostUpdate();
+    }
+
+    void SubsystemManager::UpdatePaused(float deltaTime)
+    {
+        if (input_)
+            input_->UpdateStatistics(deltaTime);
+
+        if (inputManager_)
+            inputManager_->Update();
 
         if (input_)
             input_->PostUpdate();

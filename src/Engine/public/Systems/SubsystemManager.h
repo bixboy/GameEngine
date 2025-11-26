@@ -71,6 +71,10 @@ namespace BixEngine::Core
         // Met à jour les entrées et la scène active.
         void UpdateAll(float deltaTime);
 
+        void UpdateRuntime(float deltaTime);
+        void UpdateEditor(float deltaTime);
+        void UpdatePaused(float deltaTime);
+
         void NotifyMouseEventDropped() noexcept;
 
 

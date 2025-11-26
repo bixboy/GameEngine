@@ -25,6 +25,47 @@ namespace BixEngine::Gui::ActorInspector
 {
 
     // ============================================================================
+    //  Helper: SimplifyTypeName
+    // ============================================================================
+    static std::string SimplifyTypeName(std::string typeName)
+    {
+        // Remove common namespaces
+        const std::array<std::string, 6> namespaces = { 
+            "BixEngine::", "Game::", "Math::", "resources::", "std::", "Graphics::" 
+        };
+
+        for (const auto& ns : namespaces)
+        {
+            size_t pos;
+            while ((pos = typeName.find(ns)) != std::string::npos)
+            {
+                typeName.erase(pos, ns.length());
+            }
+        }
+
+        // Handle templates like shared_ptr<T> -> T
+        if (typeName.find("shared_ptr<") != std::string::npos)
+        {
+            size_t start = typeName.find('<') + 1;
+            size_t end = typeName.find_last_of('>');
+            if (end > start)
+                typeName = typeName.substr(start, end - start);
+        }
+        
+        // Handle Vector2<float> -> Vector2
+        if (typeName.find("Vector2<") != std::string::npos)
+        {
+             typeName = "Vector2";
+        }
+
+        // Remove pointers/refs
+        typeName.erase(std::remove(typeName.begin(), typeName.end(), '*'), typeName.end());
+        typeName.erase(std::remove(typeName.begin(), typeName.end(), '&'), typeName.end());
+
+        return typeName;
+    }
+
+    // ============================================================================
     //  DrawSupportedProperty
     // ============================================================================
     bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& label)
@@ -32,7 +73,7 @@ namespace BixEngine::Gui::ActorInspector
         if (!property.IsValid())
             return false;
 
-        std::string typeName = ExposedVariableUtils::CleanTypeName(property.TypeName);
+        std::string typeName = SimplifyTypeName(property.TypeName);
         ImGui::TextUnformatted((label + " : " + typeName).c_str());
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
 
@@ -51,7 +92,9 @@ namespace BixEngine::Gui::ActorInspector
             return DrawDouble(property, instance);
 
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Math::Vector2") ||
-            ExposedVariableUtils::MatchesType(property.TypeName, "Vector2"))
+            ExposedVariableUtils::MatchesType(property.TypeName, "Vector2") ||
+            ExposedVariableUtils::MatchesType(property.TypeName, "Math::Vector2<float>") ||
+            ExposedVariableUtils::MatchesType(property.TypeName, "BixEngine::Math::Vector2<float>"))
             return DrawVector2(property, instance);
 
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Math::Vector3") ||
@@ -281,7 +324,16 @@ namespace BixEngine::Gui::ActorInspector
         const std::string label = ExposedVariableUtils::MakeDisplayName(property.Name);
 
         ImGui::PushID(property.Name.c_str());
-        bool handled = DrawSupportedProperty(property, instance, label);
+        
+        bool handled = false;
+        // Hide internal properties
+        if (property.Name != "lastTexture_" && 
+            property.Name != "hasCustomUV_" && 
+            property.Name != "uvRect_")
+        {
+            handled = DrawSupportedProperty(property, instance, label);
+        }
+        
         ImGui::PopID();
 
         if (!handled)
@@ -289,7 +341,9 @@ namespace BixEngine::Gui::ActorInspector
             const std::string typeName = ExposedVariableUtils::CleanTypeName(property.TypeName);
         }
 
-        ImGui::Dummy(ImVec2(0.f, 8.f));
+        if (handled)
+            ImGui::Dummy(ImVec2(0.f, 8.f));
+            
         return handled;
     }
 

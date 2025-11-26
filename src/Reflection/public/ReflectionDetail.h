@@ -17,8 +17,7 @@ namespace Bix::Reflection::detail
     };
 
     template <typename Base, typename Derived>
-    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base)
-                        )>> : std::bool_constant<std::is_base_of_v<Base, Derived>>
+    struct SafeIsBaseOf<Base, Derived, std::void_t<decltype(sizeof(Base))>> : std::bool_constant<std::is_base_of_v<Base, Derived>>
     {
     };
 

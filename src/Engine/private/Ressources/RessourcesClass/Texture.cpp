@@ -50,6 +50,7 @@ namespace BixEngine::resources
 
         SDL_DestroySurface(surface);
         format_ = TextureFormat::RGBA8;
+        path_ = path;
         return true;
     }
 

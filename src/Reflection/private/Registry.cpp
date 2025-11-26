@@ -21,7 +21,7 @@ namespace Bix::Reflection
         std::cout << "[REGISTER] " << classInfo->QualifiedName << std::endl;
 
 
-        std::lock_guard<std::mutex> lock(mutex_);
+        std::lock_guard lock(mutex_);
 
         if (!classInfo->QualifiedName.empty())
         {

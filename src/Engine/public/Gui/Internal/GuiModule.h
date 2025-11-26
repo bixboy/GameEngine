@@ -5,6 +5,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <sstream>
 #include <SDL3/SDL_events.h>
 
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
@@ -50,6 +51,9 @@ namespace BixEngine::Core
      */
     class GuiModule
     {
+    public:
+        enum class EngineState { Edit, Play, Pause, Step };
+
     public:
         GuiModule();
         ~GuiModule() noexcept;
@@ -109,6 +113,13 @@ namespace BixEngine::Core
         /** Retourne un pointeur vers le gestionnaire des éditeurs d'assets. */
         GuiAssetEditorManager* GetAssetEditorManager() noexcept { return assetEditorManager_.get(); }
         const GuiAssetEditorManager* GetAssetEditorManager() const noexcept { return assetEditorManager_.get(); }
+        
+        // State Management
+        void OnPlay();
+        void OnStop();
+        void OnPause();
+        
+        [[nodiscard]] EngineState GetEngineState() const noexcept { return m_EngineState; }
 
 
         
@@ -153,6 +164,11 @@ namespace BixEngine::Core
     private:
         void DispatchPendingFileDrops();
 
+
+
         std::vector<std::filesystem::path> pendingDroppedFiles_{};
+
+        EngineState m_EngineState{EngineState::Edit};
+        std::stringstream m_SceneBackup;
     };
 }

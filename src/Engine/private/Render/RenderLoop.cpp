@@ -48,8 +48,31 @@ namespace BixEngine::Core
 
     void RenderLoop::Update(float deltaTime)
     {
-        if (subsystems_)
-            subsystems_->UpdateAll(deltaTime);
+        if (!subsystems_)
+            return;
+
+        if (guiModule_)
+        {
+            switch (guiModule_->GetEngineState())
+            {
+            case GuiModule::EngineState::Edit:
+                subsystems_->UpdateEditor(deltaTime);
+                break;
+            case GuiModule::EngineState::Play:
+                subsystems_->UpdateRuntime(deltaTime);
+                break;
+            case GuiModule::EngineState::Pause:
+                subsystems_->UpdatePaused(deltaTime);
+                break;
+            case GuiModule::EngineState::Step:
+                subsystems_->UpdateRuntime(deltaTime);
+                break;
+            }
+        }
+        else
+        {
+            subsystems_->UpdateRuntime(deltaTime);
+        }
     }
 
     void RenderLoop::Render()

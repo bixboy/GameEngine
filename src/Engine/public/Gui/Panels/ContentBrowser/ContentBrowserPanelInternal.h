@@ -13,4 +13,8 @@ namespace BixEngine::Gui
     void RenderEntries(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups, const String& searchQuery);
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups);
+
+    // Core Logic
+    bool RefreshDirectoryCache(ContentBrowserState& state);
+    bool DeleteScriptFiles(const ContentEntry& entry, String& error);
 }

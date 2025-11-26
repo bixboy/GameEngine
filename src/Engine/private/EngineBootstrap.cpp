@@ -1,5 +1,6 @@
 #include "EngineBootstrap.h"
 #include "Logger.h"
+#include "Player.h"
 #include "Containers/String.h"
 #include "Systems/Window.h"
 #include "Components/ComponentRegistry.h"
@@ -26,6 +27,12 @@ namespace BixEngine::Core
             ShutdownAll();
     }
 
+    void ForceLinkPlayer() {
+        // On force le linker à voir la classe
+        const auto& info = Game::Player::StaticClass(); 
+        LOG_INFO("ForceLinkPlayer: Linked class " + info.Name);
+    }
+
     bool EngineBootstrap::InitializeAll()
     {
         if (initialized_)
@@ -37,6 +44,8 @@ namespace BixEngine::Core
         LOG_INFO("=== Initializing EngineBootstrap ===");
 
         Game::RegisterBuiltinComponents();
+
+        ForceLinkPlayer();
 
         // --- SDL ---
         LOG_INFO("Initializing SDL system...");

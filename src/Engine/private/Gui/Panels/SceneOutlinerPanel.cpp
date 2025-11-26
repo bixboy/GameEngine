@@ -6,7 +6,7 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Widgets.h"
 #include "imgui.h"
-#include "SceneSerializer.h"
+#include "Serializer/SceneSerializer.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Utils/PrefabUtils.h"
 #include "Utils/ScriptUtils.h"
@@ -152,7 +152,7 @@ namespace BixEngine::Gui
                                             {
                                                 std::string className = content.substr(startQuote + 1, endQuote - startQuote - 1);
                                                 
-                                                auto newActor = Game::SceneSerializer::CreateActor(className.c_str());
+                                                auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(className.c_str());
                                                 if (newActor)
                                                 {
                                                     newActor->SetName(candidate.displayName.c_str());
@@ -178,7 +178,7 @@ namespace BixEngine::Gui
                             else
                             {
                                 // Spawn C++ Class
-                                auto newActor = Game::SceneSerializer::CreateActor(candidate.className.c_str());
+                                auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(candidate.className.c_str());
                                 if (newActor)
                                 {
                                     newActor->SetName(candidate.displayName.c_str());

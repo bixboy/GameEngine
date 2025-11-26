@@ -1,28 +1,19 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
+#include "Utils/FilesUtils.h" // Restauré
 #include "Logger.h"
-#include <filesystem>
-#include <system_error>
-#include "imgui.h"
-#include <stdexcept>
 
-#include "Utils/FilesUtils.h"
+#include <filesystem>
+#include <imgui.h>
+#include <chrono>
 
 namespace fs = std::filesystem;
 
 namespace BixEngine::Gui
 {
-    static bool g_PendingRefreshAfterImport = false;
-
     ContentBrowserPanel* ContentBrowserPanel::activeInstance_ = nullptr;
-
-    using namespace Utils;
-
-    // ─────────────────────────────────────────────
-    // Implémentation du Content Browser unique
-    // ─────────────────────────────────────────────
-
+    
     ContentBrowserPanel::ContentBrowserPanel(const DefaultEngineGuiContext& context) : GuiPanelBase("Content Browser")
     {
         state_.openScriptFilesCallback = context.openScriptFilesInEditor;
@@ -43,89 +34,65 @@ namespace BixEngine::Gui
 
     void ContentBrowserPanel::ImportExternalFiles(const std::vector<std::filesystem::path>& paths)
     {
-        LOG_INFO("ImportExternalFiles called with " + std::to_string(paths.size()) + " paths");
+        static std::chrono::steady_clock::time_point lastImportTime;
+        auto now = std::chrono::steady_clock::now();
+        
+        if (std::chrono::duration_cast<std::chrono::milliseconds>(now - lastImportTime).count() < 500)
+            return;
+        
+        lastImportTime = now;
+
         if (paths.empty())
             return;
 
         if (!ContentBrowserUtils::EnsureContentBrowserInitialized(state_))
             return;
-
+        
         EnsureValidDirectory();
 
-        const fs::path targetDirectory =
-            (!state_.current.empty() &&
-            fs::exists(state_.current) &&
-            fs::is_directory(state_.current)) ? state_.current : state_.root;
-
-        if (targetDirectory.empty() || !fs::exists(targetDirectory))
-            return;
-
+        const fs::path targetDirectory = (!state_.current.empty() && fs::exists(state_.current)) ? state_.current : state_.root;
         bool copiedAny = false;
 
+        // 2. Logique d'import propre via FilesUtils
         for (const auto& source : paths)
         {
-            LOG_INFO("Processing import for: " + source.generic_string());
-            if (source.empty())
-                continue;
-
-            std::error_code statusError;
-            if (!fs::exists(source, statusError) || statusError)
-                continue;
-
-            if (!fs::is_regular_file(source, statusError) || statusError)
-                continue;
+            if (source.empty()) continue;
 
             fs::path destination = targetDirectory / source.filename();
-
-            std::error_code equivalentError;
-            if (fs::exists(destination) && fs::equivalent(source, destination, equivalentError) && !equivalentError)
-                continue;
-
             fs::path finalDestination = destination;
+            
             int suffix = 1;
-
             while (fs::exists(finalDestination))
             {
-                const std::string baseName = destination.stem().string();
-                const std::string extension = destination.extension().string();
-                finalDestination = destination.parent_path() / (baseName + "_" + std::to_string(suffix++) + extension);
+                finalDestination = destination.parent_path() / (destination.stem().string() + "_" + std::to_string(suffix++) + destination.extension().string());
             }
 
             String copyError;
-            LOG_INFO("Attempting to copy to: " + finalDestination.generic_string());
-            if (!FilesUtils::Utilities::TryCopyFile(source, finalDestination, true, copyError))
+            if (FilesUtils::Utilities::TryCopyFile(source, finalDestination, true, copyError))
             {
-                state_.error = copyError;
-
-                String message = "Failed to import file: ";
-                message += String(source.generic_string().c_str());
-                message += " -> ";
-                message += copyError;
-
-                LOG_ERROR(message);
-                continue;
+                copiedAny = true;
+                LOG_INFO("Import success: " + finalDestination.generic_string());
             }
-
-            copiedAny = true;
-            state_.error.Clear();
-
-            selectedEntry_ = String(finalDestination.generic_string().c_str());
-
-            String successMessage = "Imported file into Content Browser: ";
-            successMessage += String(finalDestination.generic_string().c_str());
-            LOG_INFO(successMessage);
+            else
+            {
+                LOG_ERROR("Import failed for " + source.generic_string() + ": " + copyError);
+            }
         }
 
         if (copiedAny)
         {
-            LOG_INFO("Files copied, setting pending refresh flag.");
-            g_PendingRefreshAfterImport = true;
+            LOG_INFO("Files copied. Scheduling refresh...");
+            
+            m_PendingRefresh = true;
+            m_RefreshCountdown = 10; 
+            selectedEntry_.Clear(); 
         }
     }
 
     void ContentBrowserPanel::EnsureValidDirectory()
     {
-        if (state_.current.empty() || !fs::exists(state_.current))
+        std::error_code ec;
+        if (state_.current.empty() || !fs::exists(state_.current, ec))
             state_.current = state_.root;
     }
 
@@ -136,27 +103,35 @@ namespace BixEngine::Gui
 
         if (ImGui::IsKeyPressed(ImGuiKey_F5))
         {
-            LOG_INFO("Content Browser refreshed");
-            state_.error.Clear();
-            ContentBrowserUtils::EnsureContentBrowserInitialized(state_);
             state_.cache.dirty = true;
             state_.cache.ClearMeta();
-        }
-
-        if (ImGui::IsKeyPressed(ImGuiKey_Delete))
-        {
-            if (!selectedEntry_.IsEmpty())
-                LOG_WARNING("Delete requested for: " + selectedEntry_);
         }
     }
 
     void ContentBrowserPanel::Draw()
     {
+        // ─────────────────────────────────────────────────────────
+        // REFRESH DÉCALÉ (Safe Refresh)
+        // ─────────────────────────────────────────────────────────
+        if (m_PendingRefresh)
+        {
+            if (m_RefreshCountdown > 0)
+            {
+                m_RefreshCountdown--;
+            }
+            else
+            {
+                state_.cache.dirty = true;
+                state_.cache.ClearMeta();
+                selectedEntry_.Clear(); 
+                
+                m_PendingRefresh = false;
+            }
+        }
+
         if (!ContentBrowserUtils::EnsureContentBrowserInitialized(state_))
         {
-            DrawErrorMessage(state_.error);
-            ImGui::Spacing();
-            DrawEmptyStateMessage("The Content Browser requires access to the Content directory.");
+            Utils::DrawEmptyStateMessage("Content folder invalid.");
             return;
         }
 
@@ -167,15 +142,6 @@ namespace BixEngine::Gui
         DrawBody();
 
         RenderPopups(state_, selectedEntry_, popupRequests_);
-
-        if (g_PendingRefreshAfterImport)
-        {
-            LOG_INFO("Processing pending refresh in Draw loop.");
-            g_PendingRefreshAfterImport = false;
-            state_.cache.dirty = true;
-            state_.cache.ClearMeta();
-            LOG_INFO("Content Browser cache refreshed after import");
-        }
     }
 
     void ContentBrowserPanel::DrawHeader()
@@ -185,7 +151,7 @@ namespace BixEngine::Gui
 
     void ContentBrowserPanel::DrawBody()
     {
-        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
+        Utils::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(8.f, 6.f));
         RenderDirectoryTree(state_, selectedEntry_);
         ImGui::SameLine();
 
@@ -201,5 +167,4 @@ namespace BixEngine::Gui
     void ContentBrowserPanel::OnClose()
     {
     }
-
 }

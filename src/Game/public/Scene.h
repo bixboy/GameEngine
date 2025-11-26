@@ -48,6 +48,11 @@ namespace BixEngine::Game
         virtual void OnPause() {}
         virtual void OnResume() {}
 
+        void OnRuntimeStart();
+        void OnRuntimeStop();
+        void OnEditorUpdate(float deltaTime);
+        void OnRuntimeUpdate(float deltaTime);
+
         // Loop
         virtual void HandleEvent(const SDL_Event& event) { (void)event; }
         virtual void Update(float deltaTime) { (void)deltaTime; }

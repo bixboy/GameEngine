@@ -28,6 +28,8 @@
 #include "Renderer.h"
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
 #include "Gui/Panels/GuiPanel.h"
+#include "Serializer/SceneSerializer.h"
+#include "Scene.h"
 
 namespace BixEngine::Core
 {
@@ -158,36 +160,28 @@ namespace BixEngine::Core
         {
             
         case SDL_EVENT_DROP_FILE:
-        {
-            std::filesystem::path droppedFile{};
-            if (event.drop.data && *event.drop.data)
             {
-                const std::string dropString(event.drop.data);
-                
-                std::u8string dropUtf8;
-                dropUtf8.reserve(dropString.size());
-                
-                for (const unsigned char ch : dropString)
+                std::filesystem::path droppedFile{};
+                if (event.drop.data && *event.drop.data)
                 {
-                    dropUtf8.push_back(static_cast<char8_t>(ch));    
-                }
+                    const std::string dropString(event.drop.data);
                 
-                droppedFile = std::filesystem::path(dropUtf8);
+                    // Conversion UTF-8 vers Path
+                    std::u8string dropUtf8;
+                    dropUtf8.reserve(dropString.size());
+                    for (const unsigned char ch : dropString) {
+                        dropUtf8.push_back(static_cast<char8_t>(ch));    
+                    }
+                    droppedFile = std::filesystem::path(dropUtf8);
+                }
+
+                if (!droppedFile.empty())
+                    pendingDroppedFiles_.push_back(std::move(droppedFile));
+
+                return true;
             }
-
-            if (event.drop.data)
-                SDL_free(const_cast<char*>(event.drop.data));
-
-            if (!droppedFile.empty())
-                pendingDroppedFiles_.push_back(std::move(droppedFile));
-
-            return true;
-        }
             
         case SDL_EVENT_DROP_POSITION:
-            if (event.drop.data)
-                SDL_free(const_cast<char*>(event.drop.data));
-            
             return false;
 
         case SDL_EVENT_MOUSE_WHEEL:
@@ -503,5 +497,70 @@ namespace BixEngine::Core
         sceneViewportWidth_ = 0;
         sceneViewportHeight_ = 0;
         sceneViewportTextureErrorLogged_ = false;
+    }
+
+    void GuiModule::OnPlay()
+    {
+        if (m_EngineState != EngineState::Edit)
+            return;
+
+        if (!subsystems_)
+            return;
+
+        Game::Scene* activeScene = subsystems_->GetActiveScene();
+        if (!activeScene)
+            return;
+
+        // Backup
+        m_SceneBackup.str(""); // Clear
+        m_SceneBackup.clear();
+        BixEngine::Serialization::SceneSerializer::SerializeBinary(*activeScene, m_SceneBackup);
+
+        m_EngineState = EngineState::Play;
+        activeScene->OnRuntimeStart();
+    }
+
+    void GuiModule::OnStop()
+    {
+        if (m_EngineState == EngineState::Edit)
+            return;
+
+        if (!subsystems_)
+            return;
+
+        Game::Scene* activeScene = subsystems_->GetActiveScene();
+        if (!activeScene)
+            return;
+
+        // CRITICAL: Reset dangling references BEFORE destroying actors
+        // 1. Clear selected actor to avoid dangling pointer
+        selectedActor_ = nullptr;
+        
+        // 2. Reset input to clear all bindings (which have actor pointers as callbacks)
+        subsystems_->ResetInput();
+        
+        // 3. Now it's safe to call OnRuntimeStop which may trigger cleanup
+        activeScene->OnRuntimeStop();
+
+        // 4. Restore the scene from backup
+        m_SceneBackup.clear(); // Clear error flags
+        m_SceneBackup.seekg(0, std::ios::beg);
+        
+        if (!BixEngine::Serialization::SceneSerializer::DeserializeBinary(*activeScene, m_SceneBackup))
+        {
+            LOG_ERROR("Failed to restore scene from backup during OnStop()");
+            // Even if restoration fails, we still transition to Edit mode
+        }
+        
+        // 5. Only change state after scene is restored
+        m_EngineState = EngineState::Edit;
+    }
+
+    void GuiModule::OnPause()
+    {
+        if (m_EngineState == EngineState::Edit)
+            return;
+
+        m_EngineState = (m_EngineState == EngineState::Play) ? EngineState::Pause : EngineState::Play;
     }
 }

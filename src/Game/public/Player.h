@@ -4,71 +4,72 @@
 #include <memory>
 #include "Actor.h"
 #include "Math/Vector2.h"
-#include "Player.generated.h"
 #include "Components/AudioSourceComponent.h"
+#include "Ressources/RessourcesClass/AudioClip.h"
+#include "Player.generated.h"
 
 
-namespace BixEngine
+namespace BixEngine::Graphics
 {
-    namespace Graphics
+    class Renderer;
+}
+
+namespace BixEngine::Input
+{
+    class InputManager;
+}
+
+namespace BixEngine::Game
+{
+    class SpriteAnimatorComponent;
+    class SpriteComponent;
+
+    BCLASS()
+    class Player : public Actor
     {
-        class Renderer;
-    }
-
-    namespace Input
-    {
-        class InputManager;
-    }
-
-    namespace Game
-    {
-        class SpriteAnimatorComponent;
-        class SpriteComponent;
-
-        BCLASS()
-
-        class Player : public Actor
-        {
-            GENERATED_BODY()
+        GENERATED_BODY()
 
         public:
             Player();
-            Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color);
+            Player(Math::Transform transform = Math::Transform());
 
             void SetupInput(Input::InputManager& inputManager) override;
 
+            void BeginPlay() override;
             void Update(float deltaTime) override;
 
             void MoveForward(float value);
             void MoveRight(float value);
 
             [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
-            [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(); }
+            [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(Math::Transform()); }
 
         private:
-            void SerializeBinaryImpl(std::ostream& stream) const override;
-            void DeserializeBinaryImpl(std::istream& stream) override;
-
             void OnComponentRemoved(const Component& component) override;
 
             void ApplyMovement(float deltaTime);
             void InitializeSpriteComponent();
             void RefreshSpriteComponent();
 
+            void StarTestMusic();
+
             Math::Vector2<float> pendingInput_{};
 
             BPROPERTY()
             float moveSpeed_{200.0f};
+        
+            BPROPERTY()
+            std::shared_ptr<resources::AudioClip> audioClip_;
 
             BPROPERTY()
-            Math::Vector3 size_{Math::Vector3(150.f, 150.f, 150.f)};
+            String texturePath_;
 
-            SDL_Color color_{255, 255, 255, 255};
+            BPROPERTY()
+            String animationName_;
 
             SpriteComponent* spriteComponent_{nullptr};
             SpriteAnimatorComponent* animatorComponent_{nullptr};
 
             AudioSourceComponent* audioSrc_{nullptr};
         };
-    }
 }

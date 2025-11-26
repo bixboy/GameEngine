@@ -82,6 +82,8 @@ namespace BixEngine::Game
         }
     }
 
+
+    
     SpriteAnimatorComponent::SpriteAnimatorComponent(Actor* owner) : SpriteComponent(owner)
     {
     }
@@ -337,8 +339,10 @@ namespace BixEngine::Game
             SetTexture(frame->GetTexture());
             SetUVRect(frame->GetUVRect());
         }
-        else
+        else if (atlas_)
         {
+            // Only clear texture if we are supposed to be controlled by an atlas/animator
+            // If no atlas is set, we might be using a manual texture (SpriteComponent behavior), so don't clear it.
             SetTexture(nullptr);
         }
     }

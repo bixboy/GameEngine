@@ -2,15 +2,13 @@
 #include <stdexcept>
 #include <string_view>
 #include <utility>
-
 #include "Actor.h"
 #include "Timer.h"
 #include "Systems/Window.h"
-#include "SceneSerializer.h"
 #include "Renderer.h"
-#include "Input.h"
 #include "Gui/GuiManager.h"
 #include "Logger.h"
+#include "Serializer/SceneSerializer.h"
 
 
 namespace BixEngine::Game
@@ -30,7 +28,7 @@ namespace BixEngine::Game
         if (!actor)
             return;
 
-        SceneSerializer::EnsureActorFactory(*actor);
+        Serialization::SceneSerializer::EnsureActorFactory(*actor);
         actor->SetOwningScene(this);
 
         actors_.push_back(std::move(actor));
@@ -141,5 +139,40 @@ namespace BixEngine::Game
             throw std::runtime_error("Scene context does not provide a GUI manager.");
 
         return *context_.guiManager;
+    }
+    void Scene::OnRuntimeStart()
+    {
+        bool hasInput = HasInputManager();
+        Input::InputManager* inputManager = hasInput ? &GetInputManager() : nullptr;
+
+        for (auto& actor : actors_)
+        {
+            if (actor && actor->IsActive())
+            {
+                actor->BeginPlay();
+                if (inputManager)
+                    actor->SetupInput(*inputManager);
+            }
+        }
+    }
+
+    void Scene::OnRuntimeStop()
+    {
+        // Reset logic if needed
+    }
+
+    void Scene::OnEditorUpdate(float deltaTime)
+    {
+        (void)deltaTime;
+        // Editor specific updates (e.g. editor camera if managed here)
+    }
+
+    void Scene::OnRuntimeUpdate(float deltaTime)
+    {
+        for (auto& actor : actors_)
+        {
+            if (actor && actor->IsActive())
+                actor->Update(deltaTime);
+        }
     }
 }

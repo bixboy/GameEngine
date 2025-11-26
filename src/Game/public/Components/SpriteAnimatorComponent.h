@@ -41,6 +41,7 @@ namespace BixEngine::Game
         String defaultAnimation_{};
 
         resources::SpriteAnimator animator_{};
+        
         String atlasPath_{};
         String currentAnimation_{};
     };

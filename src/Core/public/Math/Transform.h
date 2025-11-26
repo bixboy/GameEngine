@@ -30,6 +30,8 @@ namespace BixEngine::Math
 
         Vector3 GetPosition() { return position; }
 
+        void SetPosition(const Vector3 NewPosition) { position = NewPosition; } 
+
         void Rotate(const Rotator& delta)
         {
             rotation.pitch += delta.pitch;

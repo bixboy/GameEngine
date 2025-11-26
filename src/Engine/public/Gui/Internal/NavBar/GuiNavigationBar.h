@@ -31,6 +31,7 @@ namespace BixEngine::Core
 
         void DrawSceneButton(float buttonHeight);
         void DrawAssetEditorTabs(float buttonHeight);
+        void DrawPlayControls(float buttonHeight);
 
         Gui::GuiSystem* guiSystem_{nullptr};
         Gui::GuiLayoutManager* layoutManager_{nullptr};

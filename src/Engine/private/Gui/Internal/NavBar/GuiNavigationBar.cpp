@@ -56,7 +56,9 @@ namespace BixEngine::Core
             }
 
             constexpr float buttonHeight = kNavigationBarHeight - 16.0f;
+
             DrawSceneButton(buttonHeight);
+            DrawPlayControls(buttonHeight);
             DrawAssetEditorTabs(buttonHeight);
         }
 
@@ -169,5 +171,46 @@ namespace BixEngine::Core
 
         for (const std::string& navigationId : closeRequests)
             manager->CloseAssetEditor(navigationId);
+    }
+
+    void GuiNavigationBar::DrawPlayControls(float buttonHeight)
+    {
+        ImGui::SameLine();
+        
+        // Center the controls
+        const float width = ImGui::GetWindowWidth();
+        const float controlsWidth = 150.0f; // Approximate
+        ImGui::SetCursorPosX((width - controlsWidth) * 0.5f);
+
+        auto state = owner_->GetEngineState();
+        bool isPlay = state == GuiModule::EngineState::Play;
+        bool isPause = state == GuiModule::EngineState::Pause;
+        bool isEdit = state == GuiModule::EngineState::Edit;
+
+        // Play Button
+        if (isEdit)
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
+            if (ImGui::Button("Play", ImVec2(50, buttonHeight)))
+                owner_->OnPlay();
+            ImGui::PopStyleColor();
+        }
+        else
+        {
+            // Stop Button
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
+            if (ImGui::Button("Stop", ImVec2(50, buttonHeight)))
+                owner_->OnStop();
+            ImGui::PopStyleColor();
+        }
+
+        ImGui::SameLine();
+
+        // Pause Button
+        if (!isEdit)
+        {
+            if (ImGui::Button(isPause ? "Resume" : "Pause", ImVec2(60, buttonHeight)))
+                owner_->OnPause();
+        }
     }
 }

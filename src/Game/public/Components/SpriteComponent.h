@@ -23,11 +23,16 @@ namespace BixEngine::Game
 
         explicit SpriteComponent(Actor* owner);
 
-        SpriteComponent(Actor* owner, SDL_Color color, float w, float h) : Component(owner), color_(color), width_(w), height_(h) {}
+        SpriteComponent(Actor* owner, SDL_Color color, Math::Vector2<float> textureScale)
+            : Component(owner), color_(color),  size_(textureScale)
+        {}
 
-        void BeginPlay() override;
+        void BeginPlay() override;  
 
         void Render(Graphics::Renderer& renderer) const override;
+
+        void Update(float deltaTime) override;
+        void DrawInspectorUI() override;
 
         void ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 
@@ -38,11 +43,7 @@ namespace BixEngine::Game
         void SetAdditiveTint(SDL_Color tint) noexcept { additiveTint_ = tint; }
 
 
-        void SetDimensions(float w, float h) noexcept
-        {
-            width_ = w;
-            height_ = h;
-        }
+        void SetDimensions(float w, float h) noexcept { size_ = Math::Vector2(w, h); }
 
         void SetTexture(resources::Texture* texture) noexcept;
 
@@ -62,8 +63,8 @@ namespace BixEngine::Game
         [[nodiscard]] SDL_Color GetTint() const noexcept { return tint_; }
         [[nodiscard]] SDL_Color GetAdditiveTint() const noexcept { return additiveTint_; }
 
-        [[nodiscard]] float GetWidth() const noexcept { return width_; }
-        [[nodiscard]] float GetHeight() const noexcept { return height_; }
+        [[nodiscard]] float GetWidth() const noexcept { return size_.x; }
+        [[nodiscard]] float GetHeight() const noexcept { return size_.y; }
 
         [[nodiscard]] resources::Texture* GetTexture() const noexcept { return texture_; }
         [[nodiscard]] const Math::Rect& GetUVRect() const noexcept { return uvRect_; }
@@ -85,20 +86,18 @@ namespace BixEngine::Game
         BPROPERTY()
         SDL_Color tint_{255, 255, 255, 255};
 
-        BPROPERTY()
         SDL_Color additiveTint_{0, 0, 0, 0};
 
         BPROPERTY()
-        float width_ = 32.f;
-
-        BPROPERTY()
-        float height_ = 32.f;
+        Math::Vector2<float> size_ = Math::Vector2(150.f, 150.f);
 
         BPROPERTY()
         resources::Texture* texture_{nullptr};
 
+        BPROPERTY()
         Math::Rect uvRect_{};
 
+        BPROPERTY()
         bool hasCustomUV_{false};
 
         bool bFlipX_{false};
@@ -110,5 +109,8 @@ namespace BixEngine::Game
         SDL_BlendMode blendMode_{SDL_BLENDMODE_BLEND};
 
         String materialId_{};
+
+        BPROPERTY()
+        resources::Texture* lastTexture_{nullptr};
     };
 }

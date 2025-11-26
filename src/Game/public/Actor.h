@@ -30,16 +30,16 @@ namespace BixEngine::Game
         virtual void Render(Graphics::Renderer& renderer) const;
         virtual void SetupInput(Input::InputManager& inputManager) { (void)inputManager; }
 
+        void SerializeBinary(std::ostream& stream) const override;
+        void DeserializeBinary(std::istream& stream) override;
+
         void AddComponent(std::unique_ptr<Component> component);
 
         [[nodiscard]] String GetTypeName() const noexcept override { return "Actor"; }
 
         [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
 
-        [[nodiscard]] const std::vector<std::unique_ptr<Component>>& GetComponents() const noexcept
-        {
-            return components_;
-        }
+        [[nodiscard]] const std::vector<std::unique_ptr<Component>>& GetComponents() const noexcept { return components_; }
 
         [[nodiscard]] std::vector<std::unique_ptr<Component>>& GetComponents() noexcept { return components_; }
 
@@ -55,9 +55,7 @@ namespace BixEngine::Game
         [[nodiscard]] bool HasBegunPlay() const noexcept { return has_begun_play_; }
 
     protected:
-        virtual void OnComponentRemoved(const Component& /*component*/)
-        {
-        }
+        virtual void OnComponentRemoved(const Component& /*component*/) {}
 
     private:
         std::vector<std::unique_ptr<Component>> components_;

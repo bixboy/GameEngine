@@ -3,6 +3,11 @@
 #include "Containers/String.h"
 
 
+namespace Bix::Reflection
+{
+    struct ClassInfo;
+}
+
 namespace BixEngine::Utils
 {
     class BinaryWriter
@@ -12,6 +17,13 @@ namespace BixEngine::Utils
 
         bool WriteUint32(std::uint32_t value);
         bool WriteString(const String& value);
+
+        template <typename T>
+        bool WritePrimitive(const T& value)
+        {
+            stream_.write(reinterpret_cast<const char*>(&value), sizeof(T));
+            return static_cast<bool>(stream_);
+        }
 
         [[nodiscard]] bool Good() const noexcept;
 
@@ -26,8 +38,16 @@ namespace BixEngine::Utils
     public:
         explicit BinaryReader(std::istream& stream);
 
+        bool ReadBytes(char* data, std::size_t length);
         bool ReadUint32(std::uint32_t& value);
         bool ReadString(String& value);
+
+        template <typename T>
+        bool ReadPrimitive(T& value)
+        {
+            stream_.read(reinterpret_cast<char*>(&value), sizeof(T));
+            return static_cast<bool>(stream_);
+        }
 
         [[nodiscard]] bool Good() const noexcept;
 

@@ -5,14 +5,11 @@
 #include "SDL3/SDL_render.h"
 #include <algorithm>
 
+
 namespace BixEngine::Game
 {
     namespace
     {
-        constexpr SDL_Color kDefaultSpriteColor{255, 255, 255, 255};
-        constexpr float kDefaultSpriteWidth = 32.0f;
-        constexpr float kDefaultSpriteHeight = 32.0f;
-
         [[nodiscard]] SDL_Color CombineColor(SDL_Color base, SDL_Color tint, SDL_Color additive) noexcept
         {
             auto mult = [](uint8_t a, uint8_t b) -> uint8_t
@@ -46,10 +43,9 @@ namespace BixEngine::Game
             return mode;
         }
     }
-
-
     
-    SpriteComponent::SpriteComponent(Actor* owner) : Component(owner), color_(kDefaultSpriteColor), width_(kDefaultSpriteWidth), height_(kDefaultSpriteHeight), uvRect_(0.0f, 0.0f, kDefaultSpriteWidth, kDefaultSpriteHeight)
+    
+    SpriteComponent::SpriteComponent(Actor* owner) : Component(owner), uvRect_(0.0f, 0.0f, size_.x, size_.y)
     {
     }
 
@@ -62,7 +58,7 @@ namespace BixEngine::Game
     {
         auto pos = owner_->GetPosition();
 
-        SDL_FRect destRect{pos.x - pivot_.x * width_, pos.y - pivot_.y * height_, width_, height_};
+        SDL_FRect destRect{pos.x - pivot_.x * size_.x, pos.y - pivot_.y * size_.y, size_.x, size_.y};
 
         if (texture_ && texture_->GetNativeHandle())
         {
@@ -74,7 +70,7 @@ namespace BixEngine::Game
             SDL_SetTextureAlphaMod(sdlTexture, combined.a);
 
             SDL_FRect srcRect{uvRect_.X, uvRect_.Y, uvRect_.Width, uvRect_.Height};
-            SDL_FPoint center{pivot_.x * width_, pivot_.y * height_};
+            SDL_FPoint center{pivot_.x * size_.x, pivot_.y * size_.y};
             SDL_RenderTextureRotated(renderer.GetSDLRenderer(), sdlTexture, &srcRect, &destRect, 0.0, &center, BuildFlipMode(bFlipX_, bFlipY_));
         }
         else
@@ -102,18 +98,61 @@ namespace BixEngine::Game
         SetTint(tint);
     }
 
+    void SpriteComponent::Update(float deltaTime)
+    {
+        Component::Update(deltaTime);
+        
+        if (texture_ != lastTexture_)
+        {
+            if (texture_)
+            {
+                uvRect_ = {0.0f, 0.0f, texture_->GetWidth(), texture_->GetHeight()};
+                hasCustomUV_ = false;
+            }
+            else
+            {
+                hasCustomUV_ = false;
+                uvRect_ = {0.0f, 0.0f, size_.x, size_.y};
+            }
+            
+            lastTexture_ = texture_;
+        }
+    }
+
+    void SpriteComponent::DrawInspectorUI()
+    {
+        Component::DrawInspectorUI();
+
+        if (texture_ != lastTexture_)
+        {
+            if (texture_)
+            {
+                uvRect_ = {0.0f, 0.0f, texture_->GetWidth(), texture_->GetHeight()};
+                hasCustomUV_ = false;
+            }
+            else
+            {
+                hasCustomUV_ = false;
+                uvRect_ = {0.0f, 0.0f, size_.x, size_.y};
+            }
+            
+            lastTexture_ = texture_;
+        }
+    }
+
     void SpriteComponent::SetTexture(resources::Texture* texture) noexcept
     {
         texture_ = texture;
+        lastTexture_ = texture;
 
         if (texture_ && !hasCustomUV_)
         {
-            uvRect_ = {0.0f, 0.0f, static_cast<float>(texture_->GetWidth()), static_cast<float>(texture_->GetHeight())};
+            uvRect_ = {0.0f, 0.0f, texture_->GetWidth(), texture_->GetHeight()};
         }
         else if (!texture_)
         {
             hasCustomUV_ = false;
-            uvRect_ = {0.0f, 0.0f, width_, height_};
+            uvRect_ = {0.0f, 0.0f, size_.x, size_.y};
         }
     }
 

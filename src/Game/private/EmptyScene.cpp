@@ -1,6 +1,6 @@
 #include "EmptyScene.h"
 #include "SceneRegistry.h"
-#include "Test/Player.h"
+#include "Player.h"
 #include "Input.h"
 #include "Math/Color.h"
 #include "Logger.h"
@@ -54,7 +54,9 @@ namespace BixEngine::Game
 
         if (!player_)
         {
-            player_ = BGameplayStatics::SpawnActor<Player>(this, kPlayerStart, kPlayerSize, Math::Color::Red().ToSDL());
+            Math::Transform playerTransform;
+            playerTransform.SetPosition(kPlayerStart);
+            player_ = BGameplayStatics::SpawnActor<Player>(this, playerTransform);
         }
 
         if (player_ && HasInputManager())

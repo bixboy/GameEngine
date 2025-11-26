@@ -36,7 +36,10 @@ namespace BixEngine::Game
     void AudioSourceComponent::BeginPlay()
     {
         if (!AudioClip)
+        {
+            LOG_WARNING("AudioSourceComponent::BeginPlay: No AudioClip assigned.");
             return;
+        }
 
         ma_engine* engine = Systems::AudioSystem::Get().GetEngine();
         if (!engine)
@@ -94,6 +97,8 @@ namespace BixEngine::Game
             auto pos = owner_->GetTransform().GetPosition();
             ma_sound_set_position(&impl_->sound, pos.x, pos.y, pos.z);
         }
+
+        LOG_INFO("AudioSourceComponent initialized successfully for clip: " + AudioClip->GetPath());
     }
 
     void AudioSourceComponent::Update(float dt)
@@ -112,7 +117,18 @@ namespace BixEngine::Game
     {
         if (impl_->initialized)
         {
-            ma_sound_start(&impl_->sound);
+            if (ma_sound_start(&impl_->sound) != MA_SUCCESS)
+            {
+                LOG_ERROR("Failed to start sound");
+            }
+            else
+            {
+                LOG_INFO("AudioSourceComponent::Play: Sound started.");
+            }
+        }
+        else
+        {
+            LOG_ERROR("AudioSourceComponent::Play: Cannot play, component not initialized.");
         }
     }
 

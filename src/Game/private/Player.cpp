@@ -1,26 +1,23 @@
-#include "Test/Player.h"
-#include <istream>
+#include "Player.h"
 #include <memory>
-#include <ostream>
-#include <stdexcept>
 #include "Components/SpriteComponent.h"
 #include "InputManager.h"
 #include "Components/AudioSourceComponent.h"
 #include "Components/SpriteAnimatorComponent.h"
+#include "Ressources/ResourceManager.h"
+
 
 
 namespace BixEngine::Game
 {
+
     Player::Player() : Actor("Player")
     {
         InitializeSpriteComponent();
     }
 
-    Player::Player(const Math::Vector3& position, const Math::Vector3& size, SDL_Color color) : Actor(
-        Math::Transform(position, Math::Rotator(), size))
+    Player::Player(Math::Transform transform) : Actor(transform)
     {
-        size_ = size;
-        color_ = color;
         InitializeSpriteComponent();
     }
 
@@ -38,7 +35,37 @@ namespace BixEngine::Game
         inputManager.BindAxis("MoveRight", SDLK_Q, this, &Player::MoveRight, -1.0f);
         inputManager.BindAxis("MoveRight", SDLK_LEFT, this, &Player::MoveRight, -1.0f);
 
+        inputManager.BindAction("PlayMusicTest", SDLK_SPACE, Input::InputEvent::Pressed, this, &Player::StarTestMusic);
+
         inputManager.UnbindAxis("MoveRight", SDLK_W);
+    }
+    
+    void Player::BeginPlay()
+    {
+        RefreshSpriteComponent();
+        
+        if (animatorComponent_ && !texturePath_.IsEmpty())
+        {
+            if (animatorComponent_->GetAtlasPath().IsEmpty())
+            {
+                animatorComponent_->LoadSpriteAtlas(texturePath_, animationName_);
+                if (!animationName_.IsEmpty())
+                {
+                    animatorComponent_->Play(animationName_);
+                }
+            }
+        }
+
+        if (audioSrc_ && audioClip_)
+        {
+            if (!audioSrc_->AudioClip)
+            {
+                audioSrc_->AudioClip = audioClip_;
+            }
+        }
+
+        // Initialize components AFTER setting them up
+        Actor::BeginPlay();
     }
 
     void Player::Update(float deltaTime)
@@ -61,6 +88,7 @@ namespace BixEngine::Game
     void Player::ApplyMovement(float deltaTime)
     {
         Math::Vector2<float> input = pendingInput_;
+        
         if (input.LengthSquared() > 1.0f)
             input = input.Normalized();
 
@@ -68,46 +96,6 @@ namespace BixEngine::Game
         movement = movement * (moveSpeed_ * deltaTime);
 
         SetPosition(GetPosition() + movement);
-    }
-
-    void Player::SerializeBinaryImpl(std::ostream& stream) const
-    {
-        WritePrimitive(stream, moveSpeed_);
-        stream.write(reinterpret_cast<const char*>(&color_), sizeof(color_));
-        WritePrimitive(stream, size_.x);
-        WritePrimitive(stream, size_.y);
-        WritePrimitive(stream, size_.z);
-
-        WriteString(stream, animatorComponent_ ? animatorComponent_->GetAtlasPath() : String{});
-        WriteString(stream, animatorComponent_ ? animatorComponent_->GetCurrentAnimation() : String{});
-    }
-
-    void Player::DeserializeBinaryImpl(std::istream& stream)
-    {
-        ReadPrimitive(stream, moveSpeed_);
-        stream.read(reinterpret_cast<char*>(&color_), sizeof(color_));
-
-        if (!stream)
-            throw std::runtime_error("Failed to read player color from stream.");
-
-        ReadPrimitive(stream, size_.x);
-        ReadPrimitive(stream, size_.y);
-        ReadPrimitive(stream, size_.z);
-
-        RefreshSpriteComponent();
-        SetScale(size_);
-
-        String atlasPath = ReadString(stream);
-        String currentAnim = ReadString(stream);
-
-        if (animatorComponent_ && !atlasPath.IsEmpty())
-        {
-            animatorComponent_->LoadSpriteAtlas(atlasPath, currentAnim);
-            if (!currentAnim.IsEmpty())
-            {
-                animatorComponent_->Play(currentAnim);
-            }
-        }
     }
 
     void Player::OnComponentRemoved(const Component& component)
@@ -125,24 +113,29 @@ namespace BixEngine::Game
         animatorComponent_ = AddComponent<SpriteAnimatorComponent>();
         spriteComponent_ = animatorComponent_;
 
-        // Setup
-        animatorComponent_->SetColor(color_);
-        animatorComponent_->SetDimensions(size_.x, size_.y);
-
-        SetScale(size_);
-
         audioSrc_ = AddComponent<AudioSourceComponent>();
+        if (audioSrc_)
+        {
+            audioSrc_->Is3D = false; // Disable 3D for testing
+        }
     }
 
     void Player::RefreshSpriteComponent()
     {
         if (!spriteComponent_)
-        {
             InitializeSpriteComponent();
-            return;
-        }
+    }
 
-        spriteComponent_->SetColor(color_);
-        spriteComponent_->SetDimensions(size_.x, size_.y);
+    void Player::StarTestMusic()
+    {
+        LOG_INFO("Player::StarTestMusic triggered");
+        if (audioSrc_)
+        {
+            audioSrc_->Play();
+        }
+        else
+        {
+            LOG_ERROR("Player::StarTestMusic: No AudioSourceComponent!");
+        }
     }
 }

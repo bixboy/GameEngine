@@ -37,6 +37,9 @@ namespace BixEngine::Gui
         PopupRequestState popupRequests_;
 
         static ContentBrowserPanel* activeInstance_;
+
+        bool m_PendingRefresh = false;
+        int m_RefreshCountdown = 0;
     };
 
 }

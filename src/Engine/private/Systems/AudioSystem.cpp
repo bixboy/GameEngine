@@ -45,7 +45,11 @@ namespace BixEngine::Systems
         }
 
         impl_->initialized = true;
-        LOG_INFO("AudioSystem initialized successfully.");
+        LOG_INFO("AudioSystem initialized successfully. Engine ptr: " + std::to_string((uintptr_t)&impl_->engine));
+        
+        // Set master volume to 1.0 just in case
+        ma_engine_set_volume(&impl_->engine, 1.0f);
+        
         return true;
     }
 
