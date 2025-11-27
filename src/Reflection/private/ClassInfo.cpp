@@ -1,5 +1,5 @@
-#include "ClassInfo.h"
-#include "PropertyInfo.h"
+#include "Core/ClassInfo.h"
+#include "Core/PropertyInfo.h"
 
 
 namespace Bix::Reflection

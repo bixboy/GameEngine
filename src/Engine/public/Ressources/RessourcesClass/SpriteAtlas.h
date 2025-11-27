@@ -3,8 +3,8 @@
 #include <unordered_map>
 #include <vector>
 #include "Containers/String.h"
-#include "Render/SpriteFrame.h"
-#include "Ressources/IResource.h"
+#include "Render/Sprite/SpriteFrame.h"
+#include "Ressources/Core/IResource.h"
 
 
 namespace BixEngine::resources

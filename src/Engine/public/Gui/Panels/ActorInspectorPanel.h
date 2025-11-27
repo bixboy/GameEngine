@@ -1,10 +1,10 @@
 #pragma once
 #include <functional>
 
-#include "Gui/GuiPanelBase.h"
+#include "Gui/Base/GuiPanelBase.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "ActorInspector/InspectorSections/ActorInspectorSection.h"
-#include "Gui/DefaultEngineGui.h"
+#include "Gui/Core/DefaultEngineGui.h"
 
 namespace BixEngine::Game
 {

@@ -3,7 +3,7 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include "Actor.h"
+#include "Framework/Actor.h"
 
 
 namespace BixEngine::Gui::ActorInspector

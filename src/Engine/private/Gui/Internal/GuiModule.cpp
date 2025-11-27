@@ -11,25 +11,25 @@
 #include <vector>
 #include <imgui_internal.h>
 
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Containers/String.h"
-#include "Systems/SubsystemManager.h"
-#include "Systems/Window.h"
-#include "Gui/DefaultEngineGui.h"
-#include "Gui/GuiContextFactory.h"
-#include "Gui/GuiManager.h"
+#include "Systems/Core/SubsystemManager.h"
+#include "Systems/Core/Window.h"
+#include "Gui/Core/DefaultEngineGui.h"
+#include "Gui/Core/GuiContextFactory.h"
+#include "Gui/Core/GuiManager.h"
 #include "Gui/Internal/GuiLayoutManager.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "Gui/Internal/NavBar/GuiNavigationBar.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Input.h"
 
-#include "Actor.h"
+#include "Framework/Actor.h"
 #include "Renderer.h"
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "Serializer/SceneSerializer.h"
-#include "Scene.h"
+#include "Framework/Scene.h"
 
 namespace BixEngine::Core
 {
@@ -238,34 +238,6 @@ namespace BixEngine::Core
         {
             guiManager_->DrawAll();
             ProcessFocusRequests();
-        }
-
-        if (const Input::Input* input = subsystems.GetInputDevice())
-        {
-            const Input::MouseStatistics& stats = input->GetMouseStatistics();
-            const ImGuiViewport* viewport = ImGui::GetMainViewport();
-            const ImVec2 viewportPos = viewport ? viewport->WorkPos : ImVec2(0.0f, 0.0f);
-
-            ImGui::SetNextWindowPos(ImVec2(viewportPos.x + 12.0f, viewportPos.y + 12.0f), ImGuiCond_Always);
-            ImGui::SetNextWindowBgAlpha(0.35f);
-            ImGui::SetNextWindowViewport(viewport ? viewport->ID : 0);
-
-            constexpr ImGuiWindowFlags overlayFlags =
-                ImGuiWindowFlags_NoDecoration |
-                ImGuiWindowFlags_NoDocking |
-                ImGuiWindowFlags_NoMove |
-                ImGuiWindowFlags_NoInputs |
-                ImGuiWindowFlags_NoNav |
-                ImGuiWindowFlags_NoFocusOnAppearing |
-                ImGuiWindowFlags_NoSavedSettings |
-                ImGuiWindowFlags_AlwaysAutoResize;
-
-            if (ImGui::Begin("##MouseEventsOverlay", nullptr, overlayFlags))
-            {
-                ImGui::Text("Mouse events: %d/s", stats.eventsPerSecond);
-                ImGui::Text("Dropped: %d/s", stats.droppedEventsPerSecond);
-            }
-            ImGui::End();
         }
 
         guiSystem_->EndFrame();

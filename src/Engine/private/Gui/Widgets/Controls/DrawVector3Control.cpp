@@ -2,7 +2,7 @@
 
 #include <imgui_internal.h>
 
-#include "Gui/GuiCommon.h"
+#include "Gui/Core/GuiCommon.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/MouseWrapping.h"
 #include "Gui/Widgets/Controls/ColorHelpers.h"

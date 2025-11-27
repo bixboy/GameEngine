@@ -1,6 +1,6 @@
 ﻿#include <filesystem>
 #include <array>
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Containers/String.h"
 
 namespace fs = std::filesystem;

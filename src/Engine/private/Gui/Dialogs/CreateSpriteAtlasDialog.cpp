@@ -1,11 +1,11 @@
 ﻿#include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
 #include "Gui/Utils/GuiHelpers.h"
-#include "Ressources/AtlasGenerator.h"
-#include "Ressources/SpriteAtlasFactory.h"
-#include "Ressources/SpriteAtlasUtils.h"
-#include "Ressources/ResourceManager.h"
+#include "Ressources/Atlas/AtlasGenerator.h"
+#include "Ressources/Atlas/SpriteAtlasFactory.h"
+#include "Ressources/Atlas/SpriteAtlasUtils.h"
+#include "Ressources/Core/ResourceManager.h"
 #include "Ressources/RessourcesClass/Texture.h"
-#include "Utils/FilesUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
 #include <algorithm>
 
 using namespace BixEngine::Gui;

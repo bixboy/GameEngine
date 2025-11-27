@@ -1,16 +1,16 @@
 #include "Gui/Panels/SceneOutlinerPanel.h"
 #include <utility>
-#include "Actor.h"
-#include "Scene.h"
-#include "SceneManager.h"
+#include "Framework/Actor.h"
+#include "Framework/Scene.h"
+#include "Framework/SceneManager.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Widgets.h"
 #include "imgui.h"
 #include "Serializer/SceneSerializer.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Utils/PrefabUtils.h"
-#include "Utils/ScriptUtils.h"
-#include "Logger.h"
+#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptUtils.h"
+#include "Debug/Logger.h"
 #include <fstream>
 #include <filesystem>
 

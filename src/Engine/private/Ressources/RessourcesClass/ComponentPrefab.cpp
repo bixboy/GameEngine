@@ -1,6 +1,6 @@
 #include "Ressources/RessourcesClass/ComponentPrefab.h"
 #include <fstream>
-#include "Logger.h"
+#include "Debug/Logger.h"
 
 namespace BixEngine::resources
 {

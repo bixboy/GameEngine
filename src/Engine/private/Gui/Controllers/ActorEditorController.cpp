@@ -4,10 +4,10 @@
 #include <string_view>
 #include <utility>
 #include <nlohmann/json.hpp>
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
-#include "Gui/GuiCommon.h"
+#include "Gui/Core/GuiCommon.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
 

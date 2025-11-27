@@ -1,7 +1,7 @@
 #pragma once
 #include "Containers/String.h"
-#include "Actor.h"
-#include "Scene.h"
+#include "Framework/Actor.h"
+#include "Framework/Scene.h"
 #include <algorithm>
 #include <string>
 

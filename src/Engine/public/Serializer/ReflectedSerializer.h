@@ -1,5 +1,5 @@
 ﻿#pragma once
-#include "Utils/BinaryUtils.h"
+#include "Utils/FileIO/BinaryUtils.h"
 
 namespace BixEngine::Serialization
 {

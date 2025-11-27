@@ -1,9 +1,9 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Gui/Panels/ContentBrowser/ContentEntry.h"
-#include "Utils/FilesUtils.h"
-#include "Utils/StringUtils.h"
-#include "Logger.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/String/StringUtils.h"
+#include "Debug/Logger.h"
 
 #include <filesystem>
 #include <unordered_map>

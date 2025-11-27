@@ -1,6 +1,6 @@
-#include "Registry.h"
+#include "Core/Registry.h"
 #include <iostream>
-#include "ClassInfo.h"
+#include "Core/ClassInfo.h"
 
 
 namespace Bix::Reflection

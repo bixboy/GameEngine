@@ -3,7 +3,7 @@
 #include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
-#include "Actor.h"
+#include "Framework/Actor.h"
 #include "Math/Rotator.h"
 #include "Math/Vector3.h"
 #include <algorithm>

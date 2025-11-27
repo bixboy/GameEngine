@@ -1,6 +1,6 @@
 #pragma once
 #include "Gui/Dialogs/ModalDialog.h"
-#include "Utils/ScriptUtils.h"
+#include "Utils/Editor/ScriptUtils.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 
 namespace BixEngine::Gui

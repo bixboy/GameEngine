@@ -1,6 +1,6 @@
 #include "Ressources/RessourcesClass/Texture.h"
 #include "SDL_image.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Renderer.h"
 #include "SDL3/SDL_render.h"
 

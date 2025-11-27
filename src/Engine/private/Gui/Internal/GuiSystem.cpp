@@ -8,12 +8,12 @@
 
 #include <SDL3/SDL.h>
 
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "imgui_internal.h"
-#include "Gui/GuiCommon.h"
+#include "Gui/Core/GuiCommon.h"
 
 namespace BixEngine::Gui
 {

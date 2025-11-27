@@ -30,7 +30,7 @@ namespace BixEngine::Core
         bool DrawCloseButton(std::string_view label, float buttonHeight) const;
 
         void DrawSceneButton(float buttonHeight);
-        void DrawAssetEditorTabs(float buttonHeight);
+        void DrawAssetEditorTabs(float buttonHeight, float availableWidth);
         void DrawPlayControls(float buttonHeight);
         void DrawAudioPlayer(float buttonHeight);
 

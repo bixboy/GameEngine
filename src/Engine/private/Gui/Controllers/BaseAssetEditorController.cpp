@@ -3,7 +3,7 @@
 #include <utility>
 
 #include "Gui/Panels/GuiPanel.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "imgui.h"
 
 namespace BixEngine::Gui
@@ -96,16 +96,8 @@ namespace BixEngine::Gui
         ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(14.0f, 6.0f));
         ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(12.0f, 0.0f));
 
-        if (ImGui::Button("Play"))
-            OnPlayRequested();
-
-        ImGui::SameLine();
         if (ImGui::Button("Save"))
             OnSaveRequested();
-
-        ImGui::SameLine();
-        if (ImGui::Button("Compile"))
-            OnCompileRequested();
 
         ImGui::PopStyleVar(2);
     }

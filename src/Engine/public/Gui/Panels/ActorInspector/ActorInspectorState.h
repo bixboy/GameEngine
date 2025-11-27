@@ -1,6 +1,6 @@
 #pragma once
 #include <array>
-#include "Actor.h"
+#include "Framework/Actor.h"
 
 namespace BixEngine::Gui::ActorInspector
 {

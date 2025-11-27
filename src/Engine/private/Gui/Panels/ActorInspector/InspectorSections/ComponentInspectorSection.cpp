@@ -3,19 +3,19 @@
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
-#include "Utils/ScriptUtils.h"
-#include "Actor.h"
-#include "Components/Component.h"
-#include "ClassInfo.h"
+#include "Utils/Editor/ScriptUtils.h"
+#include "Framework/Actor.h"
+#include "Components/Core/Component.h"
+#include "Core/ClassInfo.h"
 #include <algorithm>
 #include <memory>
 #include <string>
 #include <vector>
 #include <utility>
 #include <imgui.h>
-#include "ReflectionHelpers.h"
+#include "Utils/ReflectionHelpers.h"
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
-#include "Utils/ScriptUtils.h"
+#include "Utils/Editor/ScriptUtils.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -308,36 +308,40 @@ namespace BixEngine::Gui::ActorInspector
             }
             const std::string treeLabel = "🧩 " + typeLabel;
 
-            const float startX = ImGui::GetCursorPosX();
-            const float startY = ImGui::GetCursorPosY();
-
-            bool open = ImGui::TreeNodeEx(component.get(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_FramePadding, "%s", treeLabel.c_str());
-
-            const float labelWidth = ImGui::CalcTextSize(treeLabel.c_str()).x;
-            const float iconSpacing = ImGui::GetTreeNodeToLabelSpacing();
-
-            const float buttonHeight = ImGui::GetFrameHeight();
-            const float textHeight = ImGui::GetTextLineHeight();
-
-            float centerOffsetY = (textHeight - buttonHeight) * 0.5f;
-            float buttonPosX = startX + labelWidth + iconSpacing + ImGui::GetStyle().ItemInnerSpacing.x;
-            float buttonPosY = startY + centerOffsetY;
-
-            ImVec2 prevCursor = ImGui::GetCursorPos();
-            ImGui::SetCursorPos(ImVec2(buttonPosX, buttonPosY));
-
-            if (IconButton("🗑", "Remove this component"))
-            {
-                componentPendingRemoval = component.get();
-            }
-
-            ImGui::SetCursorPos(prevCursor);
-            ImGui::PushStyleVar(ImGuiStyleVar_ItemSpacing, ImVec2(0.0f, 0.0f));
-            ImGui::Dummy(ImVec2(0.0f, 0.0f));
+            // Header Styling
+            ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 6.0f));
+            bool open = ImGui::CollapsingHeader(treeLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::PopStyleVar();
+
+            // Right-aligned Remove Button
+            {
+                const float buttonSize = ImGui::GetFrameHeight();
+                const float availableWidth = ImGui::GetContentRegionAvail().x;
+                const float buttonX = ImGui::GetCursorPosX() + availableWidth - buttonSize - 5.0f;
+                const float buttonY = ImGui::GetItemRectMin().y; // Align with header
+
+                // Save cursor to restore after button
+                ImVec2 backupCursor = ImGui::GetCursorPos();
+                
+                // Convert screen pos to window pos for SetCursorPos if needed, or just use SetCursorScreenPos
+                ImGui::SetCursorScreenPos(ImVec2(ImGui::GetWindowPos().x + buttonX, buttonY));
+                
+                ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
+                if (IconButton("🗑", "Remove this component"))
+                {
+                    componentPendingRemoval = component.get();
+                }
+                ImGui::PopStyleColor();
+
+                ImGui::SetCursorPos(backupCursor);
+            }
 
             if (open)
             {
+                ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 2.0f));
+                ImGui::Indent(10.0f);
+                ImGui::Spacing();
+
                 const float cursorBefore = ImGui::GetCursorPosY();
                 const bool drewReflected = PropertyInspector::DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
                 const float cursorAfterReflected = ImGui::GetCursorPosY();
@@ -350,8 +354,14 @@ namespace BixEngine::Gui::ActorInspector
                     DrawEmptyStateMessage("No editable properties.");
                 }
 
-                ImGui::TreePop();
+                ImGui::Unindent(10.0f);
+                ImGui::PopStyleVar();
+                ImGui::Spacing();
             }
+
+            // Separator between components
+            ImGui::Separator();
+            ImGui::Spacing();
         }
 
         if (componentPendingRemoval)

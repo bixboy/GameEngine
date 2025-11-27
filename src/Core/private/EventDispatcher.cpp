@@ -1,9 +1,9 @@
-#include "EventDispatcher.h"
+#include "Events/EventDispatcher.h"
 #include <SDL3/SDL_events.h>
 #include <SDL3/SDL_timer.h>
 #include <limits>
 #include "Gui/Internal/GuiModule.h"
-#include "Systems/SubsystemManager.h"
+#include "Systems/Core/SubsystemManager.h"
 
 
 namespace BixEngine::Core

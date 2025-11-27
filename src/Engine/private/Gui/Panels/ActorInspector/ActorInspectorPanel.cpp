@@ -4,8 +4,8 @@
 
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 
-#include "Actor.h"
-#include "Scene.h"
+#include "Framework/Actor.h"
+#include "Framework/Scene.h"
 
 namespace BixEngine::Gui
 {

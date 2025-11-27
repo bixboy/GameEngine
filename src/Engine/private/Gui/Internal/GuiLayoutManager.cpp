@@ -1,5 +1,5 @@
 #include "Gui/Internal/GuiLayoutManager.h"
-#include "EmptyScene.h"
+#include "Levels/EmptyScene.h"
 
 #include <algorithm>
 #include <array>
@@ -11,14 +11,14 @@
 #include <system_error>
 
 #include "imgui.h"
-#include "Gui/GuiManager.h"
+#include "Gui/Core/GuiManager.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "Gui/Internal/GuiSystem.h"
-#include "Utils/FilesUtils.h"
-#include "Utils/StringUtils.h"
-#include "SceneManager.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/String/StringUtils.h"
+#include "Framework/SceneManager.h"
 #include "Serializer/SceneSerializer.h"
-#include "SceneRegistry.h"
+#include "Framework/SceneRegistry.h"
 
 namespace BixEngine::Gui
 {
@@ -552,6 +552,20 @@ namespace BixEngine::Gui
                     for (GuiPanel* panel : guiManager_->GetPanels())
                     {
                         if (!panel) continue;
+                        
+                        // Filter panels based on context
+                        if (menuPanelFilter_)
+                        {
+                            if (!menuPanelFilter_(panel))
+                                continue;
+                        }
+                        else
+                        {
+                            // Default behavior: only show panels belonging to current layout
+                            auto it = panelLayoutLookup_.find(panel);
+                            if (it != panelLayoutLookup_.end() && it->second != currentLayout_)
+                                continue;
+                        }
                         
                         bool visible = panel->IsVisible();
                         if (ImGui::MenuItem(panel->GetTitle().c_str(), nullptr, &visible))

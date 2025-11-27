@@ -1,6 +1,6 @@
 #pragma once
 #include "Containers/String.h"
-#include "Ressources/IResource.h"
+#include "Ressources/Core/IResource.h"
 #include "SDL3/SDL_render.h"
 
 

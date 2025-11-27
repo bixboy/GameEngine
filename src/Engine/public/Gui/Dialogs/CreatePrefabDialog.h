@@ -3,7 +3,7 @@
 #include "Gui/Dialogs/ModalDialog.h"
 #include "Containers/String.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-#include "Utils/PrefabUtils.h"
+#include "Utils/FileIO/PrefabUtils.h"
 
 namespace BixEngine::Gui
 {

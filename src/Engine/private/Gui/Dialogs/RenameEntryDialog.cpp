@@ -1,8 +1,8 @@
 #include "Gui/Dialogs/RenameEntryDialog.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-#include "Utils/FilesUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;

@@ -1,8 +1,8 @@
 #include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include <filesystem>
-#include "Logger.h"
-#include "Ressources/ResourceManager.h"
-#include "Ressources/SpriteAtlasUtils.h"
+#include "Debug/Logger.h"
+#include "Ressources/Core/ResourceManager.h"
+#include "Ressources/Atlas/SpriteAtlasUtils.h"
 #include "Ressources/RessourcesClass/Texture.h"
 
 

@@ -1,5 +1,5 @@
 #include "Gui/Panels/GuiPanel.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include <utility>
 
 namespace BixEngine::Gui

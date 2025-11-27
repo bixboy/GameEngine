@@ -1,6 +1,6 @@
-#include "EmptyScene.h"
-#include "Systems/Application.h"
-#include "Logger.h"
+#include "Levels/EmptyScene.h"
+#include "Systems/Core/Application.h"
+#include "Debug/Logger.h"
 
 int main(int, char**)
 {

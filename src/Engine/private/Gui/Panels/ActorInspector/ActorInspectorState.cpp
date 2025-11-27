@@ -1,6 +1,6 @@
 #include "Gui/Panels/ActorInspector/ActorInspectorState.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
-#include "Actor.h"
+#include "Framework/Actor.h"
 #include <unordered_map>
 #include <algorithm>
 

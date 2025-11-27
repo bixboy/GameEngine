@@ -7,10 +7,11 @@
 #include "Gui/Dialogs/CreatePrefabDialog.h"
 #include "Gui/Dialogs/CreateScriptDialog.h"
 #include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
+#include "Gui/Dialogs/CreateAudioContainerDialog.h"
 #include "Gui/Dialogs/RenameEntryDialog.h"
-#include "Utils/EditorUtils.h"
-#include "Utils/FilesUtils.h"
-#include "Utils/StringUtils.h"
+#include "Utils/Editor/EditorUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/String/StringUtils.h"
 #include <imgui.h>
 #include <filesystem>
 #include <unordered_map>
@@ -236,6 +237,9 @@ namespace BixEngine::Gui
             
             if (ImGui::MenuItem("New Sprite Atlas"))
                 req.createSpriteAtlas = true;
+
+            if (ImGui::MenuItem("New Audio Container"))
+                req.createAudioContainer = true;
             
             ImGui::EndPopup();
         }
@@ -304,7 +308,7 @@ namespace BixEngine::Gui
                         for (auto& f : files)
                             EditorUtils::Utilities::OpenFileInCodeEditor(f);
                     }
-                    else if (entry.IsPrefab() || entry.IsSpriteAtlas())
+                    else if (entry.IsPrefab() || entry.IsSpriteAtlas() || entry.IsAudioContainer())
                     {
                         if (state.openAssetEditorCallback)
                             state.openAssetEditorCallback(entry.path);
@@ -399,12 +403,14 @@ namespace BixEngine::Gui
         static CreateScriptDialog script(state, selected);
         static CreateFolderDialog folder(state, selected);
         static CreateSpriteAtlasDialog atlas(state, selected);
+        static CreateAudioContainerDialog audioContainer(state, selected);
         static RenameEntryDialog rename(state, selected);
 
         if (req.createPrefab) { prefab.Open(); req.createPrefab = false; }
         if (req.createScript) { script.Open(); req.createScript = false; }
         if (req.createFolder) { folder.Open(state.current); req.createFolder = false; }
         if (req.createSpriteAtlas) { atlas.Open(state.current); req.createSpriteAtlas = false; }
+        if (req.createAudioContainer) { audioContainer.Open(state.current); req.createAudioContainer = false; }
         if (req.renameEntry)
         {
             rename.Open(req.renameTarget, req.renameSecondaryTarget, req.renameTargetIsScriptGroup);
@@ -422,6 +428,9 @@ namespace BixEngine::Gui
         
         if (atlas.IsOpen())
             atlas.Render();
+
+        if (audioContainer.IsOpen())
+            audioContainer.Render();
         
         if (rename.IsOpen())
             rename.Render();

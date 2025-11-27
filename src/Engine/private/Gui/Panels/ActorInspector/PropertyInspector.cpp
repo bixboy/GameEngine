@@ -13,12 +13,15 @@
 #include "Math/Vector3.h"
 
 #include "SDL3/SDL.h"
-#include "ClassInfo.h"
-#include "PropertyInfo.h"
+#include "Core/ClassInfo.h"
+#include "Core/PropertyInfo.h"
 #include "Gui/Utils/ExposedVariableUtils.h"
-#include "Ressources/ResourceManager.h"
+#include "Ressources/Core/ResourceManager.h"
 #include "Ressources/RessourcesClass/Texture.h"
-#include "Utils/FilesUtils.h"
+#include "Ressources/RessourcesClass/AudioClip.h"
+#include "Ressources/RessourcesClass/AudioContainer.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Gui/Utils/ContentBrowserUtils.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -74,6 +77,25 @@ namespace BixEngine::Gui::ActorInspector
             return false;
 
         std::string typeName = SimplifyTypeName(property.TypeName);
+        
+        // --- Generic Resource Drawer Registry ---
+        using DrawerFunc = std::function<bool(const Bix::Reflection::PropertyInfo&, void*)>;
+        static const std::unordered_map<std::string, DrawerFunc> ResourceDrawers = 
+        {
+            { "AudioClip", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioClip>(p, i, { ".mp3", ".wav", ".ogg" }); } },
+            { "AudioContainer", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioContainer>(p, i, { ".bixaudio" }); } },
+            // Texture is handled specifically below because it has a custom preview widget, but could be moved here if generalized.
+        };
+
+        // Check registry first
+        auto it = ResourceDrawers.find(typeName);
+        if (it != ResourceDrawers.end())
+        {
+            ImGui::TextUnformatted((label + " : " + typeName).c_str());
+            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
+            return it->second(property, instance);
+        }
+
         ImGui::TextUnformatted((label + " : " + typeName).c_str());
         ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
 
@@ -115,6 +137,47 @@ namespace BixEngine::Gui::ActorInspector
             return DrawTexture(property, instance);
 
         return false;
+    }
+
+    template <typename T>
+    bool PropertyInspector::DrawSharedResourceProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::vector<std::string>& extensions)
+    {
+        std::shared_ptr<T>& resourcePtr = property.Get<std::shared_ptr<T>>(instance);
+
+        ImGui::PushID(property.Name.c_str());
+        
+        const std::filesystem::path root = Gui::ContentBrowserUtils::GetContentRoot();
+        std::string currentPath = resourcePtr ? resourcePtr->GetPath().ToStdString() : "";
+        std::string previewStr = resourcePtr ? FilesUtils::Utilities::ExtractDisplayName(resourcePtr->GetPath().ToStdString()).Std() : "None";
+
+        float availableWidth = ImGui::GetContentRegionAvail().x;
+        ImGui::SetNextItemWidth(availableWidth);
+
+        if (ImGui::BeginCombo("##ResourceCombo", previewStr.c_str()))
+        {
+            if (ImGui::Selectable("None", !resourcePtr))
+            {
+                resourcePtr.reset();
+            }
+
+            std::vector<std::filesystem::path> files = FilesUtils::Utilities::ScanDirectory(root, extensions);
+            
+            for (const auto& file : files)
+            {
+                std::string display = FilesUtils::Utilities::ExtractDisplayName(file).Std();
+                bool selected = (currentPath == file.generic_string());
+                
+                if (ImGui::Selectable(display.c_str(), selected))
+                {
+                    resourcePtr = resources::ResourceManager::Get().Get<T>(file.generic_string());
+                }
+                if (selected) ImGui::SetItemDefaultFocus();
+            }
+            ImGui::EndCombo();
+        }
+
+        ImGui::PopID();
+        return true;
     }
 
     bool PropertyInspector::DrawBool(const Bix::Reflection::PropertyInfo& property, void* instance)

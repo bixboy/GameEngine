@@ -1,5 +1,5 @@
 #pragma once
-#include "Ressources/IResource.h"
+#include "Ressources/Core/IResource.h"
 #include <vector>
 
 namespace BixEngine::resources

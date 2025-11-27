@@ -1,6 +1,6 @@
 #include "Gui/Internal/WorkspaceRegistry.h"
 
-#include "Gui/GuiManager.h"
+#include "Gui/Core/GuiManager.h"
 
 namespace BixEngine::Gui
 {

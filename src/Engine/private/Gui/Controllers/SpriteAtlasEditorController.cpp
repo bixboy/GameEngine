@@ -1,10 +1,10 @@
 #include "Gui/Controllers/SpriteAtlasEditorController.h"
 #include <algorithm>
 #include <cstdio>
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
-#include "Ressources/SpriteAtlasFactory.h"
+#include "Ressources/Atlas/SpriteAtlasFactory.h"
 #include "Ressources/RessourcesClass/Texture.h"
 #include "imgui.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"

@@ -4,9 +4,9 @@
 #include <string>
 #include <vector>
 
-#include "Timer.h"
-#include "Scene.h"
-#include "SceneManager.h"
+#include "Time/Timer.h"
+#include "Framework/Scene.h"
+#include "Framework/SceneManager.h"
 #include "Gui/Widgets/Widgets.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Input.h"

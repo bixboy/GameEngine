@@ -115,6 +115,7 @@ namespace BixEngine::Core
         bool CreateActorPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const std::string& navigationId);
         bool CreateComponentPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const std::string& navigationId);
         bool CreateSpriteAtlasEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const String& navigationId);
+        bool CreateAudioContainerEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const String& navigationId);
         
         void PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorController::SharedState& state);
         

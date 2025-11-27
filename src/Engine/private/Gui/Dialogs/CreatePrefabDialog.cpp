@@ -11,8 +11,8 @@
 #include <vector>
 
 #include "Gui/Utils/ContentBrowserUtils.h"
-#include "Utils/FilesUtils.h"
-#include "Utils/PrefabUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/FileIO/PrefabUtils.h"
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;

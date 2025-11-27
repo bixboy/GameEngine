@@ -1,8 +1,8 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
-#include "Utils/FilesUtils.h" // Restauré
-#include "Logger.h"
+#include "Utils/FileIO/FilesUtils.h" // Restauré
+#include "Debug/Logger.h"
 
 #include <filesystem>
 #include <imgui.h>

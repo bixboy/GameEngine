@@ -1,12 +1,13 @@
 #include "Ressources/Loaders/ResourceLoaders.h"
-#include "Ressources/ResourceManager.h"
+#include "Ressources/Core/ResourceManager.h"
 #include "Ressources/RessourcesClass/Texture.h"
 #include "Ressources/RessourcesClass/SpriteAtlas.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Ressources/Loaders/SpriteAtlasLoader.h"
 #include "Ressources/Loaders/TextureLoader.h"
 #include "Ressources/RessourcesClass/AudioClip.h"
 #include "Ressources/RessourcesClass/ComponentPrefab.h"
+#include "Ressources/RessourcesClass/AudioContainer.h"
 
 namespace BixEngine::resources
 {
@@ -46,6 +47,16 @@ namespace BixEngine::resources
                 if (prefab->LoadFromFile(path))
                     return prefab;
                 return std::shared_ptr<ComponentPrefab>(nullptr);
+            });
+
+        LOG_INFO("Registering AudioContainer loader...");
+        rm.RegisterLoader<AudioContainer>(
+            [](const String& path)
+            {
+                auto container = std::make_shared<AudioContainer>();
+                if (container->LoadFromFile(path))
+                    return container;
+                return std::shared_ptr<AudioContainer>(nullptr);
             });
 
         LOG_INFO("All resource loaders registered successfully.");

@@ -8,8 +8,9 @@
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+#include <functional>
 
-#include "Gui/GuiCommon.h"
+#include "Gui/Core/GuiCommon.h"
 #include "imgui.h"
 
 
@@ -65,6 +66,8 @@ namespace BixEngine::Gui
         void RemovePanel(GuiPanel& panel);
         void DetachPanels(std::span<GuiPanel*> panels);
 
+        void SetMenuPanelFilter(std::function<bool(GuiPanel*)> filter) { menuPanelFilter_ = std::move(filter); }
+
         [[nodiscard]] EditorLayoutType GetCurrentLayout() const noexcept { return currentLayout_; }
 
     private:
@@ -102,6 +105,7 @@ namespace BixEngine::Gui
 
         GuiSystem* guiSystem_{nullptr};
         GuiManager* guiManager_{nullptr};
+        std::function<bool(GuiPanel*)> menuPanelFilter_;
 
         EditorLayoutType currentLayout_{EditorLayoutType::Scene};
         std::optional<EditorLayoutType> pendingLayout_;

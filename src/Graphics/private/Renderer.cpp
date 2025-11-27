@@ -1,5 +1,5 @@
 #include "Renderer.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include "Containers/String.h"
 
 namespace BixEngine::Graphics

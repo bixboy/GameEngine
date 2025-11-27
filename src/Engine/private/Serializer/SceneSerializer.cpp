@@ -1,13 +1,13 @@
 #include "Serializer/SceneSerializer.h"
-#include "Actor.h"
-#include "Scene.h"
-#include "Utils/BinaryUtils.h"
-#include "Reflection/public/Registry.h"
-#include "Reflection/public/ClassInfo.h"
-#include "Logger.h"
+#include "Framework/Actor.h"
+#include "Framework/Scene.h"
+#include "Utils/FileIO/BinaryUtils.h"
+#include "Core/Registry.h"
+#include "Core/ClassInfo.h"
+#include "Debug/Logger.h"
 #include <fstream>
 
-#include "Player.h"
+#include "Entities/Player.h"
 
 
 namespace BixEngine::Serialization

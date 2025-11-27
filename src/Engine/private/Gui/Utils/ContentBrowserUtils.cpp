@@ -1,10 +1,10 @@
 ﻿#include "Gui/Utils//ContentBrowserUtils.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 #include <ranges>
 #include <unordered_map>
 
-#include "Utils/FilesUtils.h"
-#include "Utils/StringUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/String/StringUtils.h"
 
 namespace BixEngine::Gui::ContentBrowserUtils
 {

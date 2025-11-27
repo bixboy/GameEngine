@@ -3,8 +3,8 @@
 #include <array>
 #include <functional>
 
-#include "Gui/DefaultEngineGui.h"
-#include "Gui/GuiPanelBase.h"
+#include "Gui/Core/DefaultEngineGui.h"
+#include "Gui/Base/GuiPanelBase.h"
 
 namespace BixEngine::Game
 {

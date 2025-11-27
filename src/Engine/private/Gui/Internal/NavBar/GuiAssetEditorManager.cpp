@@ -11,14 +11,15 @@
 #include <Gui/Internal/GuiLayoutManager.h>
 #include <nlohmann/json.hpp>
 
-#include "Logger.h"
-#include "Gui/GuiManager.h"
+#include "Debug/Logger.h"
+#include "Gui/Core/GuiManager.h"
 #include "Gui/Controllers/ActorEditorController.h"
 #include "Gui/Controllers/ComponentEditorController.h"
 #include "Gui/Controllers/SpriteAtlasEditorController.h"
+#include "Gui/Controllers/AudioContainerEditorController.h"
 #include "Gui/Panels/GuiPanel.h"
-#include "Utils/EditorUtils.h"
-#include "Utils/StringUtils.h"
+#include "Utils/Editor/EditorUtils.h"
+#include "Utils/String/StringUtils.h"
 
 
 namespace BixEngine::Core
@@ -132,7 +133,36 @@ namespace BixEngine::Core
         activeLayout_ = layout;
 
         if (layoutManager_)
+        {
             layoutManager_->Switch(layout);
+
+            if (layout == EditorLayoutType::Scene)
+            {
+                // In Scene mode, rely on default layout filtering
+                layoutManager_->SetMenuPanelFilter(nullptr);
+            }
+            else if (layout == EditorLayoutType::ActorEditor)
+            {
+                // In Editor mode, only show panels belonging to the active editor
+                // We need to capture the active panels. Since navId is just a string, we need to look up the entry.
+                // But we can't capture 'this' safely if it might be destroyed (unlikely here but good practice).
+                // Actually, we can just look up the active editor in the filter lambda.
+                
+                layoutManager_->SetMenuPanelFilter([this, currentNavId = std::string(navId)](Gui::GuiPanel* panel) -> bool
+                {
+                    auto it = assetEditors_.find(currentNavId);
+                    if (it == assetEditors_.end()) return false;
+                    
+                    const auto& entry = it->second;
+                    bool found = false;
+                    entry.panels.ForEachPanel([panel, &found](Gui::GuiPanel* p)
+                    {
+                        if (p == panel) found = true;
+                    });
+                    return found;
+                });
+            }
+        }
 
         RefreshAssetPanelsVisibility();
 
@@ -336,6 +366,11 @@ namespace BixEngine::Core
             typeTag = "atlas";
             assetType = "Sprite Atlas";
         }
+        else if (extensionLower == ".bixaudio")
+        {
+            typeTag = "audio_container";
+            assetType = "Audio Container";
+        }
         else
         {
             LOG_WARNING("[GuiAssetEditorManager] Unsupported asset extension: " + path.generic_string());
@@ -351,9 +386,18 @@ namespace BixEngine::Core
         else if (assetType == "Component Prefab")
             sharedState =
                 Gui::ComponentEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
-        else
+        else if (assetType == "Sprite Atlas")
             sharedState = Gui::SpriteAtlasEditorController::CreateSharedState(
                 path, String(navigationId.c_str()), onClose);
+        else if (assetType == "Audio Container")
+        {
+            sharedState = std::make_shared<Gui::BaseAssetEditorController::SharedState>();
+            sharedState->assetPath = path;
+            sharedState->assetDisplayName = String(path.stem().generic_string().c_str());
+            sharedState->stableIdRoot = String(navigationId.c_str());
+            sharedState->assetTypeLabel = String("Audio Container");
+            sharedState->onCloseRequest = onClose;
+        }
 
         if (!sharedState)
         {
@@ -377,8 +421,10 @@ namespace BixEngine::Core
             created = CreateActorPrefabEditor(path, entry, navigationId);
         else if (assetType == "Component Prefab")
             created = CreateComponentPrefabEditor(path, entry, navigationId);
-        else
+        else if (assetType == "Sprite Atlas")
             created = CreateSpriteAtlasEditor(path, entry, navigationId);
+        else if (assetType == "Audio Container")
+            created = CreateAudioContainerEditor(path, entry, navigationId);
 
         if (!created)
             return false;
@@ -452,6 +498,23 @@ namespace BixEngine::Core
         panel.SetVisible(false);
         guiManager_->AttachController(panel, std::make_unique<SpriteAtlasEditorController>(atlasState));
         entry.panels.viewport = &panel;
+        entry.panels.toolbar = nullptr;
+        entry.panels.outline = nullptr;
+        entry.panels.inspector = nullptr;
+        return true;
+    }
+
+    bool GuiAssetEditorManager::CreateAudioContainerEditor(const std::filesystem::path& path, AssetEditorEntry& entry, const String& navigationId)
+    {
+        static_cast<void>(path);
+        if (!guiManager_)
+            return false;
+
+        const std::string panelId = std::format("{}_audiocontainer", navigationId);
+        GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Audio Container"});
+        panel.SetVisible(false);
+        guiManager_->AttachController(panel, std::make_unique<AudioContainerEditorController>(entry.sharedState));
+        entry.panels.viewport = &panel; // Using viewport slot for the main editor panel
         entry.panels.toolbar = nullptr;
         entry.panels.outline = nullptr;
         entry.panels.inspector = nullptr;

@@ -1,5 +1,5 @@
 ﻿#include "Gui/Internal/NavBar/GuiNavigationBar.h"
-#include "Systems/AudioSystem.h"
+#include "Systems/Audio/AudioSystem.h"
 
 #include <string_view>
 
@@ -13,6 +13,9 @@
 #include <vector>
 #include <string>
 #include <algorithm>
+#include "Ressources/RessourcesClass/AudioContainer.h"
+#include "Ressources/RessourcesClass/AudioClip.h"
+#include "Ressources/Core/ResourceManager.h"
 
 namespace BixEngine::Core
 {
@@ -50,7 +53,7 @@ namespace BixEngine::Core
                 std::string extension = it->path().extension().generic_string();
                 std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){ return std::tolower(c); });
                 
-                if (extension == ".mp3" || extension == ".wav" || extension == ".ogg")
+                if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".bixaudio")
                     outFiles.push_back(it->path());
             }
 
@@ -111,9 +114,47 @@ namespace BixEngine::Core
 
             constexpr float buttonHeight = kNavigationBarHeight - 16.0f;
 
+            // 1. Scene Button (Always Left)
             DrawSceneButton(buttonHeight);
-            DrawPlayControls(buttonHeight);
-            DrawAssetEditorTabs(buttonHeight);
+            ImGui::SameLine();
+
+            // 2. Asset Editor Tabs (Left, Scrollable)
+            // Calculate available width for tabs
+            // We need to reserve space for PlayControls (Center) and AudioPlayer (Right)
+            
+            const float windowWidth = ImGui::GetWindowWidth();
+            const float centerX = windowWidth * 0.5f;
+            
+            // Audio Player is on the right. Let's assume it takes ~450px (calculated in DrawAudioPlayer)
+            // But we can just use the cursor pos logic.
+            // Play Controls take ~150px centered.
+            
+            bool showPlayControls = false;
+            if (auto* manager = owner_->GetAssetEditorManager())
+            {
+                showPlayControls = (manager->GetActiveLayout() == EditorLayoutType::Scene);
+            }
+
+            float tabsEndX = windowWidth - 460.0f; // Reserve space for Audio Player (approx)
+            if (showPlayControls)
+            {
+                // If play controls are visible, tabs must stop before the center region
+                // Center region is roughly [centerX - 75, centerX + 75]
+                tabsEndX = std::min(tabsEndX, centerX - 80.0f);
+            }
+
+            float currentX = ImGui::GetCursorPosX();
+            float tabsWidth = std::max(10.0f, tabsEndX - currentX);
+
+            DrawAssetEditorTabs(buttonHeight, tabsWidth);
+
+            // 3. Play Controls (Center, Conditional)
+            if (showPlayControls)
+            {
+                DrawPlayControls(buttonHeight);
+            }
+
+            // 4. Audio Player (Right)
             DrawAudioPlayer(buttonHeight);
         }
 
@@ -178,67 +219,93 @@ namespace BixEngine::Core
             owner_->FocusSceneViewport();
     }
 
-    void GuiNavigationBar::DrawAssetEditorTabs(float buttonHeight)
+    void GuiNavigationBar::DrawAssetEditorTabs(float buttonHeight, float availableWidth)
     {
         auto* manager = owner_->GetAssetEditorManager();
         if (!manager || manager->GetEditorOrder().empty())
             return;
 
-        std::vector<std::string> closeRequests;
-        std::vector<std::string> staleEntries;
-        closeRequests.reserve(manager->GetEditorOrder().size());
-        staleEntries.reserve(manager->GetEditorOrder().size());
-
-        for (const std::string& navId : manager->GetEditorOrder())
+        // Use a child window for scrolling
+        ImGui::PushStyleColor(ImGuiCol_ScrollbarBg, ImVec4(0,0,0,0));
+        if (ImGui::BeginChild("AssetTabsRegion", ImVec2(availableWidth, buttonHeight + 10.0f), false, ImGuiWindowFlags_HorizontalScrollbar | ImGuiWindowFlags_NoBackground))
         {
-            auto* entry = manager->FindEditor(navId);
-            if (!entry)
+            std::vector<std::string> closeRequests;
+            std::vector<std::string> staleEntries;
+            closeRequests.reserve(manager->GetEditorOrder().size());
+            staleEntries.reserve(manager->GetEditorOrder().size());
+
+            bool first = true;
+            for (const std::string& navId : manager->GetEditorOrder())
             {
-                staleEntries.push_back(navId);
-                continue;
+                auto* entry = manager->FindEditor(navId);
+                if (!entry)
+                {
+                    staleEntries.push_back(navId);
+                    continue;
+                }
+
+                if (entry->sharedState)
+                {
+                    const std::string displayName = entry->sharedState->assetDisplayName.Std();
+                    if (entry->buttonLabel != displayName)
+                        entry->buttonLabel = displayName;
+                }
+
+                if (!first) ImGui::SameLine();
+                first = false;
+
+                const bool isActive = manager->GetActiveNavigationId() == entry->navigationId;
+
+                ImGui::PushID(entry->navigationId.c_str());
+
+                const std::string& label = entry->buttonLabel.empty() ? entry->navigationId : entry->buttonLabel;
+                if (DrawNavigationButton(label, isActive, buttonHeight))
+                    manager->ActivateEditor(entry->navigationId, true);
+
+                ImGui::SameLine(0.0f, 6.0f);
+                if (DrawCloseButton(label, buttonHeight))
+                    closeRequests.push_back(entry->navigationId);
+
+                ImGui::PopID();
             }
 
-            if (entry->sharedState)
-            {
-                const std::string displayName = entry->sharedState->assetDisplayName.Std();
-                if (entry->buttonLabel != displayName)
-                    entry->buttonLabel = displayName;
-            }
+            for (const std::string& stale : staleEntries)
+                manager->CloseAssetEditor(stale);
 
-            ImGui::SameLine();
-            const bool isActive = manager->GetActiveNavigationId() == entry->navigationId;
-
-            ImGui::PushID(entry->navigationId.c_str());
-
-            const std::string& label = entry->buttonLabel.empty() ? entry->navigationId : entry->buttonLabel;
-            if (DrawNavigationButton(label, isActive, buttonHeight))
-                manager->ActivateEditor(entry->navigationId, true);
-
-            ImGui::SameLine(0.0f, 6.0f);
-            if (DrawCloseButton(label, buttonHeight))
-                closeRequests.push_back(entry->navigationId);
-
-            ImGui::PopID();
+            for (const std::string& navigationId : closeRequests)
+                manager->CloseAssetEditor(navigationId);
         }
-
-        for (const std::string& stale : staleEntries)
-            manager->CloseAssetEditor(stale);
-
-        for (const std::string& navigationId : closeRequests)
-            manager->CloseAssetEditor(navigationId);
+        ImGui::EndChild();
+        ImGui::PopStyleColor();
     }
 
     void GuiNavigationBar::DrawPlayControls(float buttonHeight)
     {
-        ImGui::SameLine();
-        
         // Center the controls
         const float width = ImGui::GetWindowWidth();
         const float controlsWidth = 150.0f; // Approximate
+        
+        // We need to use SetCursorPos to place it in the center, 
+        // but we must be careful not to mess up the layout if we were using SameLine.
+        // Since we used a Child for tabs, we are on a new line? No, EndChild puts us at bottom left of child?
+        // Actually, we want PlayControls to be on the SameLine as the Scene button and Tabs.
+        // But we used BeginChild which creates a block.
+        // We should use ImGui::SameLine() before DrawPlayControls?
+        // Wait, Render() calls them sequentially.
+        
+        // To align everything on one line:
+        // SceneButton (Item)
+        // SameLine
+        // Tabs (Child)
+        // SameLine
+        // PlayControls (Group/Item)
+        
+        // But SetCursorPosX is absolute.
+        ImGui::SameLine();
         ImGui::SetCursorPosX((width - controlsWidth) * 0.5f);
 
         auto state = owner_->GetEngineState();
-        bool isPlay = state == GuiModule::EngineState::Play;
+        // bool isPlay = state == GuiModule::EngineState::Play; // Unused
         bool isPause = state == GuiModule::EngineState::Pause;
         bool isEdit = state == GuiModule::EngineState::Edit;
 
@@ -271,13 +338,60 @@ namespace BixEngine::Core
 
     void GuiNavigationBar::DrawAudioPlayer(float buttonHeight)
     {
-        // Estimated width: Combo(150) + Play(30) + Stop(30) + Progress(100) + Slider(80) + Spacing
-        constexpr float estimatedWidth = 450.0f; 
-        constexpr float padding = 20.0f;
+        // --- Layout Constants (Minimalist) ---
+        constexpr float kComboWidth = 120.0f; // Reduced from 160
+        constexpr float kButtonSize = 18.0f;  // Reduced from 20
+        constexpr float kProgressWidth = 80.0f; // Reduced from 120
+        constexpr float kVolumeWidth = 60.0f;   // Reduced from 80
+        constexpr float kItemSpacing = 4.0f;    // Reduced from 8
+        constexpr float kPaddingX = 8.0f;       // Reduced from 16
+        constexpr float kPaddingY = 6.0f;
+        
+        // Calculate total width
+        // Note: ArrowButton size is roughly FrameHeight. We assume it fits in kButtonSize for width calc, 
+        // but we add extra buffer to totalRectWidth just in case.
+        const float totalContentWidth = kComboWidth + kItemSpacing + 
+                                      kButtonSize + kItemSpacing + 
+                                      kButtonSize + kItemSpacing + 
+                                      kProgressWidth + kItemSpacing + 
+                                      kVolumeWidth;
+        
+        const float totalRectWidth = totalContentWidth + (kPaddingX * 2.0f) + 20.0f; // Extra buffer
+        const float rectHeight = 32.0f; // Fixed height, fits in 38px bar
 
+        // Position
         ImGui::SameLine();
-        ImGui::SetCursorPosX(ImGui::GetWindowWidth() - estimatedWidth - padding);
+        const float startX = ImGui::GetWindowWidth() - totalRectWidth - 10.0f;
+        ImGui::SetCursorPosX(startX);
+        
+        // Vertical centering relative to Window Height (38px)
+        // We want the 32px container to be centered in 38px.
+        // Top offset = (38 - 32) / 2 = 3px.
+        const float windowHeight = ImGui::GetWindowHeight();
+        const float containerY = (windowHeight - rectHeight) * 0.5f;
+        
+        ImGui::SetCursorPosY(containerY);
 
+        // --- Draw Background ---
+        ImDrawList* drawList = ImGui::GetWindowDrawList();
+        ImVec2 pMin = ImGui::GetCursorScreenPos();
+        ImVec2 pMax = ImVec2(pMin.x + totalRectWidth, pMin.y + rectHeight);
+        
+        drawList->AddRectFilled(pMin, pMax, IM_COL32(30, 30, 35, 255), 6.0f);
+        drawList->AddRect(pMin, pMax, IM_COL32(60, 60, 65, 255), 6.0f);
+
+        // --- Content ---
+        // --- Content ---
+        // Center content vertically within the rect
+        // We assume content height is roughly kButtonSize (18) or FrameHeight.
+        // Let's align based on FrameHeight to be safe for the Combo.
+        const float contentHeight = ImGui::GetFrameHeight(); // ~19-20px usually
+        const float contentY = containerY + (rectHeight - contentHeight) * 0.5f;
+        
+        ImGui::SetCursorPosX(startX + kPaddingX);
+        ImGui::SetCursorPosY(contentY);
+
+        // 1. Music Selector (Combo)
         // Collect Audio Files (Note: In a real engine, this should be cached)
         std::vector<std::filesystem::path> audioFiles;
         CollectAudioFiles(audioFiles);
@@ -289,25 +403,27 @@ namespace BixEngine::Core
         audioLabels.reserve(audioFiles.size());
 
         int currentAudioIndex = -1;
-        
         for (size_t index = 0; index < audioFiles.size(); ++index)
         {
             const std::string pathString = audioFiles[index].generic_string();
             audioPaths.push_back(pathString);
             audioLabels.push_back(MakeDisplayName(audioFiles[index], root));
 
-            // Check if this is the current song
-            // We compare full paths or just check if current song name matches
             if (m_CurrentSongName == pathString)
-            {
                 currentAudioIndex = static_cast<int>(index);
-            }
         }
 
-        // Combo Box
-        ImGui::SetNextItemWidth(150.0f);
-        const char* previewValue = currentAudioIndex >= 0 ? audioLabels[currentAudioIndex].c_str() : (m_CurrentSongName == "No Audio" ? "Select Audio..." : m_CurrentSongName.c_str());
-        if (ImGui::BeginCombo("##AudioSelect", previewValue))
+        ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.17f, 1.0f));
+        
+        ImGui::SetNextItemWidth(kComboWidth);
+        const char* previewValue = currentAudioIndex >= 0 ? audioLabels[currentAudioIndex].c_str() : (m_CurrentSongName == "No Audio" ? "Select Audio..." : "Unknown");
+        
+        std::string previewStr = previewValue;
+        if (previewStr.size() > 20) previewStr = previewStr.substr(0, 17) + "...";
+
+        ImGui::SetCursorPosY(contentY); // Force Y alignment
+        if (ImGui::BeginCombo("##AudioSelect", previewStr.c_str(), ImGuiComboFlags_HeightLarge))
         {
             for (int i = 0; i < static_cast<int>(audioPaths.size()); ++i)
             {
@@ -315,67 +431,109 @@ namespace BixEngine::Core
                 if (ImGui::Selectable(audioLabels[i].c_str(), isSelected))
                 {
                     m_CurrentSongName = audioPaths[i];
-                    Systems::AudioSystem::Get().PlayMusic(m_CurrentSongName);
+                    
+                    std::string playPath = m_CurrentSongName;
+                    if (std::filesystem::path(playPath).extension() == ".bixaudio")
+                    {
+                        if (auto container = BixEngine::resources::ResourceManager::Get().Get<BixEngine::resources::AudioContainer>(playPath.c_str()))
+                        {
+                            auto resolved = container->ResolveSound();
+                            if (resolved.Clip)
+                            {
+                                playPath = resolved.Clip->GetPath().Std();
+                            }
+                        }
+                    }
+
+                    Systems::AudioSystem::Get().PlayMusic(playPath);
                     m_IsPlaying = true;
                 }
-
-                if (isSelected)
-                    ImGui::SetItemDefaultFocus();
+                if (isSelected) ImGui::SetItemDefaultFocus();
             }
             ImGui::EndCombo();
         }
-        if (ImGui::IsItemHovered())
-            ImGui::SetTooltip("Select Music");
+        ImGui::PopStyleColor();
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("%s", m_CurrentSongName.c_str());
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, kItemSpacing);
+        ImGui::SetCursorPosY(contentY); // Force Y alignment
 
-        // Play/Pause Button
+        // 2. Play/Pause Button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); // Transparent background
         if (!m_IsPlaying)
         {
             if (ImGui::ArrowButton("##PlayMusic", ImGuiDir_Right))
             {
-                Systems::AudioSystem::Get().PlayMusic(m_CurrentSongName);
+                std::string playPath = m_CurrentSongName;
+                if (std::filesystem::path(playPath).extension() == ".bixaudio")
+                {
+                    if (auto container = BixEngine::resources::ResourceManager::Get().Get<BixEngine::resources::AudioContainer>(playPath.c_str()))
+                    {
+                        auto resolved = container->ResolveSound();
+                        if (resolved.Clip)
+                        {
+                            playPath = resolved.Clip->GetPath().Std();
+                        }
+                    }
+                }
+                Systems::AudioSystem::Get().PlayMusic(playPath);
                 m_IsPlaying = true;
             }
         }
         else
         {
-            if (ImGui::Button("||", ImVec2(20, 0))) 
+            if (ImGui::Button("||", ImVec2(kButtonSize, 0))) 
             {
                 Systems::AudioSystem::Get().Pause();
                 m_IsPlaying = false;
             }
         }
+        ImGui::PopStyleColor();
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, kItemSpacing);
+        ImGui::SetCursorPosY(contentY); // Force Y alignment
 
-        // Stop Button
-        if (ImGui::Button("[]", ImVec2(20, 0)))
+        // 3. Stop Button
+        ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.3f, 0.3f, 1.0f)); // Reddish stop
+        if (ImGui::Button("[]", ImVec2(kButtonSize, 0)))
         {
             Systems::AudioSystem::Get().Stop();
             m_IsPlaying = false;
         }
+        ImGui::PopStyleColor(2);
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, kItemSpacing);
+        ImGui::SetCursorPosY(contentY); // Force Y alignment
 
-        // Progress Bar
+        // 4. Progress Bar
         float duration = Systems::AudioSystem::Get().GetMusicDuration();
         float cursor = Systems::AudioSystem::Get().GetMusicCursor();
         float progress = (duration > 0.0f) ? (cursor / duration) : 0.0f;
         
-        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.6f, 1.0f, 1.0f));
-        ImGui::ProgressBar(progress, ImVec2(100, 0), "");
-        ImGui::PopStyleColor();
+        ImGui::PushStyleColor(ImGuiCol_PlotHistogram, ImVec4(0.2f, 0.7f, 0.3f, 1.0f)); // Greenish progress
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+        // Note: ProgressBar default height is FrameHeight, so it aligns with others
+        ImGui::ProgressBar(progress, ImVec2(kProgressWidth, 0), "");
+        ImGui::PopStyleColor(2);
+        
         if (ImGui::IsItemHovered())
             ImGui::SetTooltip("%.1f / %.1f s", cursor, duration);
 
-        ImGui::SameLine();
+        ImGui::SameLine(0, kItemSpacing);
+        ImGui::SetCursorPosY(contentY); // Force Y alignment
 
-        // Volume Slider
-        ImGui::SetNextItemWidth(80.0f);
+        // 5. Volume Slider
+        ImGui::SetNextItemWidth(kVolumeWidth);
+        ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
+        ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
         if (ImGui::SliderFloat("##Vol", &m_MasterVolume, 0.0f, 1.0f, ""))
         {
             Systems::AudioSystem::Get().SetGlobalVolume(m_MasterVolume);
         }
+        ImGui::PopStyleColor(2);
+        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Volume: %.0f%%", m_MasterVolume * 100.0f);
+
+        ImGui::PopStyleVar(); // FrameRounding
     }
 }

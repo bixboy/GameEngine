@@ -1,6 +1,6 @@
 #include "Ressources/Loaders/SpriteAtlasLoader.h"
 #include "Ressources/RessourcesClass/SpriteAtlas.h"
-#include "Logger.h"
+#include "Debug/Logger.h"
 
 namespace BixEngine::resources
 {

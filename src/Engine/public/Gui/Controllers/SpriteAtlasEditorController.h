@@ -4,8 +4,8 @@
 #include <memory>
 #include <vector>
 #include "Gui/Controllers/BaseAssetEditorController.h"
-#include "Render/SpriteFrame.h"
-#include "Ressources/SpriteAtlasUtils.h"
+#include "Render/Sprite/SpriteFrame.h"
+#include "Ressources/Atlas/SpriteAtlasUtils.h"
 
 
 namespace BixEngine::resources

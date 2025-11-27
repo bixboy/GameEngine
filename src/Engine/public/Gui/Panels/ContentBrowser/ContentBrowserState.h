@@ -37,6 +37,7 @@ namespace BixEngine::Gui
         bool createPrefab{false};
         bool createFolder{false};
         bool createSpriteAtlas{false};
+        bool createAudioContainer{false};
         bool renameEntry{false};
 
         ScriptTemplateType scriptType{ScriptTemplateType::Actor};

@@ -47,6 +47,7 @@ namespace BixEngine::Gui
         [[nodiscard]] bool IsComponentPrefab() const noexcept { return type == ContentType::ComponentPrefab; }
         [[nodiscard]] bool IsSpriteAtlas() const noexcept { return type == ContentType::SpriteAtlas; }
         [[nodiscard]] bool IsAudio() const noexcept { return type == ContentType::Audio; }
+        [[nodiscard]] bool IsAudioContainer() const noexcept { return extension == ".bixaudio"; }
         [[nodiscard]] bool IsPrefab() const noexcept { return IsActorPrefab() || IsComponentPrefab(); }
 
         [[nodiscard]] bool HasHeader() const noexcept { return !headerPath.empty(); }

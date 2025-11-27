@@ -5,11 +5,11 @@
 #include <unordered_map>
 #include <vector>
 
-#include "Gui/GuiCommon.h"
+#include "Gui/Core/GuiCommon.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"
 #include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"
-#include "Utils/ScriptUtils.h"
+#include "Utils/Editor/ScriptUtils.h"
 
 
 namespace BixEngine::Gui::Utils
