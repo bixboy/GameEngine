@@ -55,6 +55,19 @@ namespace
         return std::nullopt;
     }
 
+    [[nodiscard]] std::string EscapeString(const std::string& input)
+    {
+        std::string result;
+        result.reserve(input.size() + 10);
+        for (char c : input)
+        {
+            if (c == '"') result += "\\\"";
+            else if (c == '\\') result += "\\\\";
+            else result += c;
+        }
+        return result;
+    }
+
 }
 
 namespace BixTool
@@ -145,11 +158,44 @@ namespace BixTool
         }
         else
         {
+
+
             for (const Property& property : cls.Properties)
             {
+                std::string escapedMetadata;
+                for(char c : property.Metadata) {
+                    if(c == '"') escapedMetadata += "\\\"";
+                    else if(c == '\\') escapedMetadata += "\\\\";
+                    else escapedMetadata += c;
+                }
+
                 oss << "                ::Bix::Reflection::detail::RegisterProperty<ThisClass, "
                     << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
-                    << property.Name << ", \"" << property.Type << "\"); \\\n";
+                    << property.Name << ", \"" << property.Type << "\", \"" << escapedMetadata << "\"); \\\n";
+            } 
+    
+    /* ... inside GenerateHeader ... */
+            for (const Property& property : cls.Properties)
+            {
+                // Inject Access Specifier
+                std::string extendedMetadata = property.Metadata;
+                if (!extendedMetadata.empty()) extendedMetadata += ", ";
+                
+                // Parser returns lowercase "public", "private". Check and capitalize or explicit set.
+                if (property.AccessSpecifier == "public") extendedMetadata += "Access=Public";
+                else if (property.AccessSpecifier == "protected") extendedMetadata += "Access=Protected";
+                else extendedMetadata += "Access=Private"; // Default or explict private
+
+                std::string escapedMetadata;
+                for(char c : extendedMetadata) {
+                    if(c == '"') escapedMetadata += "\\\"";
+                    else if(c == '\\') escapedMetadata += "\\\\";
+                    else escapedMetadata += c;
+                }
+
+                oss << "                ::Bix::Reflection::detail::RegisterProperty<ThisClass, "
+                    << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
+                    << property.Name << ", \"" << property.Type << "\", \"" << escapedMetadata << "\"); \\\n";
             }
         }
 

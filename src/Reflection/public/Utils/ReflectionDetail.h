@@ -141,7 +141,7 @@ namespace Bix::Reflection::detail
 
     template <typename ClassType, typename PropertyType>
     PropertyInfo& RegisterProperty(ClassInfo& classInfo, const char* name, PropertyType ClassType::* member,
-                                   const char* displayTypeName)
+                                   const char* displayTypeName, const char* metadata = nullptr)
     {
         PropertyInfo& info = classInfo.Properties.emplace_back();
 
@@ -149,6 +149,11 @@ namespace Bix::Reflection::detail
             info.Name = name;
 
         info.TypeName = displayTypeName ? displayTypeName : typeid(PropertyType).name();
+        if (metadata)
+        {
+            info.Metadata = metadata;
+            info.ParseMetadata();
+        }
         info.Size = sizeof(PropertyType);
         info.Owner = &classInfo;
 

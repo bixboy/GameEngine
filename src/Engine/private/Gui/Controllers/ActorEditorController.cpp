@@ -8,6 +8,7 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
 #include "Gui/Core/GuiCommon.h"
+#include "Gui/Core/EditorPreferences.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
 
@@ -265,12 +266,16 @@ namespace BixEngine::Gui
 
     void ActorEditorController::DrawViewportGrid_(const ImVec2& size)
     {
+        const auto& settings = EditorSettings::Get();
+        if (!settings.ShowGrid)
+            return;
+
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         const ImVec2 origin = ImGui::GetCursorScreenPos();
-        const ImU32 gridColor = ImGui::GetColorU32(ImVec4{0.2f, 0.2f, 0.2f, 1.0f});
-        const ImU32 axisColor = ImGui::GetColorU32(ImVec4{0.8f, 0.3f, 0.3f, 1.0f});
+        const ImU32 gridColor = ImGui::ColorConvertFloat4ToU32(settings.GridColor);
+        const ImU32 axisColor = ImGui::ColorConvertFloat4ToU32(settings.AxisColorX);
 
-        constexpr float spacing = 24.0f;
+        const float spacing = settings.GridSpacing;
         for (float x = 0.0f; x <= size.x; x += spacing)
         {
             const ImVec2 start{origin.x + x, origin.y};

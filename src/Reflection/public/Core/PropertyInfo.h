@@ -1,6 +1,8 @@
 #pragma once
 #include <functional>
+
 #include <string>
+#include <unordered_map>
 
 
 namespace Bix::Reflection
@@ -14,6 +16,8 @@ namespace Bix::Reflection
 
         std::string Name;
         std::string TypeName;
+        std::string Metadata;
+        std::unordered_map<std::string, std::string> ParsedMetadata;
 
         std::size_t Offset = 0;
         bool HasOffset = false;
@@ -36,5 +40,10 @@ namespace Bix::Reflection
 
         template <typename T>
         const T& Get(const void* instance) const { return *static_cast<const T*>(GetRaw(instance)); }
+
+
+        bool HasMetadata(const std::string& key) const;
+        std::string GetMetadata(const std::string& key) const;
+        void ParseMetadata();
     };
 }

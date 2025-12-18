@@ -82,6 +82,46 @@ namespace BixTool
         return Trim(result.str());
     }
 
+    std::string GetAccessSpecifier(const std::string& content, std::size_t bodyStart, std::size_t propertyStart, const std::string& classType)
+    {
+        // Scan backwards from propertyStart to bodyStart
+        // Default access
+        std::string currentAccess = (classType == "class") ? "private" : "public";
+
+        if (propertyStart <= bodyStart) return currentAccess;
+
+        std::size_t pos = propertyStart;
+        int depth = 0;
+
+        while (pos > bodyStart)
+        {
+            pos--;
+            char c = content[pos];
+
+            // Handle braces/parens to ignore nested scopes
+            if (c == '}' || c == ')' || c == ']') depth++;
+            else if (c == '{' || c == '(' || c == '[') depth--;
+
+            if (depth == 0)
+            {
+                // Check for access specifiers
+                // Need to match "public:", "private:", "protected:"
+                // We check if we are at the ':'
+                if (c == ':')
+                {
+                    // Look back for keywords
+                    std::size_t check = pos;
+                    while (check > bodyStart && std::isspace(static_cast<unsigned char>(content[check - 1]))) check--;
+                    
+                    if (check >= 6 && content.compare(check - 6, 6, "public") == 0) return "public";
+                    if (check >= 7 && content.compare(check - 7, 7, "private") == 0) return "private";
+                    if (check >= 9 && content.compare(check - 9, 9, "protected") == 0) return "protected";
+                }
+            }
+        }
+        return currentAccess;
+    }
+
     HeaderParseResult ParseHeader(const fs::path& filePath)
     {
         HeaderParseResult result;
@@ -231,7 +271,37 @@ namespace BixTool
 
                 result.ContainsReflection = true;
 
-                std::size_t pos = i + kBClassMacro.size();
+                // BPROPERTY(EditAnywhere, Category="Physics")
+                // We want to capture the content inside ().
+                std::string metadata;
+                std::size_t openParen = content.find('(', i);
+                std::size_t closeParen = std::string::npos;
+                
+                if (openParen != std::string::npos)
+                {
+                     // Ensure openParen is before the end of the macro usage line/block
+                     // But simpler: just find matching paren from openParen
+                     closeParen = FindMatchingBrace(content, openParen); // Reusing brace finder for parens works if implementation allows or use specific Paret finder
+                     // Actually FindMatchingBrace might assume '{'. Let's check TokenUtils or do simple scan.
+                     // The parser seems simple. Let's write a simple extraction loop.
+                     
+                     std::size_t depth = 1;
+                     std::size_t cursor = openParen + 1;
+                     while (cursor < size && depth > 0)
+                     {
+                         if (content[cursor] == '(') depth++;
+                         else if (content[cursor] == ')') depth--;
+                         cursor++;
+                     }
+                     
+                     if (depth == 0)
+                     {
+                         closeParen = cursor - 1;
+                         metadata = content.substr(openParen + 1, closeParen - openParen - 1);
+                     }
+                }
+
+                std::size_t pos = (closeParen != std::string::npos) ? closeParen + 1 : i + kBPropertyMacro.size();
                 pos = SkipWhitespaceAndComments(content, pos);
                 
                 std::string keyword = ReadToken(content, pos);
@@ -369,13 +439,43 @@ namespace BixTool
                 std::size_t searchPos = bodyStart;
                 while (true)
                 {
-                    searchPos = FindMacroWithin(content, searchPos, bodyEnd, kBPropertyMacro);
+                    searchPos = FindMacroWithin(content, searchPos, bodyEnd, "BPROPERTY");
                     if (searchPos == std::string::npos || searchPos >= bodyEnd)
                     {
                         break;
                     }
 
-                    std::size_t propertyStart = searchPos + kBPropertyMacro.size();
+                    std::size_t propertyStart = searchPos + sizeof("BPROPERTY") - 1; // "BPROPERTY" length is 9
+
+                    // Capture Metadata
+                    std::string propertyMetadata;
+                    std::size_t propOpenParen = content.find('(', searchPos);
+                    if (propOpenParen != std::string::npos && propOpenParen < bodyEnd)
+                    {
+                         // Check if it's right after BPROPERTY
+                         // Allow whitespace
+                         std::size_t checkPos = searchPos + 9;
+                         while(checkPos < propOpenParen && std::isspace(content[checkPos])) checkPos++;
+                         
+                         if (checkPos == propOpenParen)
+                         {
+                             std::size_t depth = 1;
+                             std::size_t cursor = propOpenParen + 1;
+                             while (cursor < bodyEnd && depth > 0)
+                             {
+                                 if (content[cursor] == '(') depth++;
+                                 else if (content[cursor] == ')') depth--;
+                                 cursor++;
+                             }
+                             
+                             if (depth == 0)
+                             {
+                                 propertyMetadata = content.substr(propOpenParen + 1, cursor - 1 - propOpenParen - 1);
+                                 propertyStart = cursor;
+                             }
+                         }
+                    }
+
                     propertyStart = SkipWhitespaceAndComments(content, propertyStart);
                     if (propertyStart >= bodyEnd)
                     {
@@ -438,7 +538,8 @@ namespace BixTool
                         continue;
                     }
 
-                    parsed.Properties.push_back(Property{propertyType, propertyName});
+                    std::string access = GetAccessSpecifier(content, bodyStart, propertyStart, keyword);
+                    parsed.Properties.push_back(Property{propertyType, propertyName, propertyMetadata, access});
                     searchPos = statementEnd + 1;
                 }
 

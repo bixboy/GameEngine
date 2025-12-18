@@ -34,7 +34,7 @@ namespace BixEngine::Game
         void Render(Graphics::Renderer& renderer) const override;
 
         void Update(float deltaTime) override;
-        void DrawInspectorUI() override;
+        // DrawInspectorUI removed
 
         void ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 
@@ -82,21 +82,21 @@ namespace BixEngine::Game
         [[nodiscard]] String GetTypeName() const override { return "SpriteComponent"; }
 
     private:
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category = "Rendering")
         SDL_Color color_{255, 255, 255, 255};
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category = "Rendering")
         SDL_Color tint_{255, 255, 255, 255};
 
         SDL_Color additiveTint_{0, 0, 0, 0};
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category = "Dimensions")
         Math::Vector2<float> size_ = Math::Vector2(150.f, 150.f);
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category = "Rendering")
         resources::Texture* texture_{nullptr};
 
-        BPROPERTY()
+        BPROPERTY(Category = "Internal")
         Math::Rect uvRect_{};
 
         BPROPERTY()

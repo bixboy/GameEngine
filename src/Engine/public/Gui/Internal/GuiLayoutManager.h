@@ -137,5 +137,7 @@ namespace BixEngine::Gui
         
         // Scene State Tracking
         bool isSceneDirty_{false};
+        
+        bool showEditorPreferences_{false};
     };
 }

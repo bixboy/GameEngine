@@ -9,6 +9,8 @@
 #include "Gui/Core/GuiManager.h"
 #include "Debug/Logger.h"
 #include "Serializer/SceneSerializer.h"
+#include <box2d/box2d.h>
+
 
 
 namespace BixEngine::Game
@@ -16,7 +18,9 @@ namespace BixEngine::Game
     Scene::Scene(String name) : name_(std::move(name))
     {
         LOG_INFO("Scene created: " + name_);
+        physicsWorldId_ = b2_nullWorldId;
     }
+
 
     void Scene::SetContext(SceneContext context) noexcept
     {
@@ -150,6 +154,11 @@ namespace BixEngine::Game
     }
     void Scene::OnRuntimeStart()
     {
+        // 1. Init Physics
+        b2WorldDef worldDef = b2DefaultWorldDef();
+        worldDef.gravity = {0.0f, 9.8f};
+        physicsWorldId_ = b2CreateWorld(&worldDef);
+
         bool hasInput = HasInputManager();
         Input::InputManager* inputManager = hasInput ? &GetInputManager() : nullptr;
 
@@ -167,7 +176,13 @@ namespace BixEngine::Game
     void Scene::OnRuntimeStop()
     {
         // Reset logic if needed
+        if (b2World_IsValid(physicsWorldId_))
+        {
+            b2DestroyWorld(physicsWorldId_);
+            physicsWorldId_ = b2_nullWorldId;
+        }
     }
+
 
     void Scene::OnEditorUpdate(float deltaTime)
     {
@@ -177,6 +192,14 @@ namespace BixEngine::Game
 
     void Scene::OnRuntimeUpdate(float deltaTime)
     {
+        // Physics Step
+        if (b2World_IsValid(physicsWorldId_))
+        {
+            // Fixed time step is better, but for simplicity here we use deltaTime
+            // generic 4 sub-steps
+            b2World_Step(physicsWorldId_, deltaTime, 4);
+        }
+
         for (auto& actor : actors_)
         {
             if (actor && actor->IsActive())

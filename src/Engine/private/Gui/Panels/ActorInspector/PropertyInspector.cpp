@@ -4,6 +4,9 @@
 #include <cstdio>
 #include <format>
 #include <cmath>
+#include <imgui.h>
+#include <map>
+#include <vector>
 
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Widgets.h"
@@ -71,7 +74,7 @@ namespace BixEngine::Gui::ActorInspector
     // ============================================================================
     //  DrawSupportedProperty
     // ============================================================================
-    bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& label)
+    bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& /*label*/)
     {
         if (!property.IsValid())
             return false;
@@ -91,13 +94,8 @@ namespace BixEngine::Gui::ActorInspector
         auto it = ResourceDrawers.find(typeName);
         if (it != ResourceDrawers.end())
         {
-            ImGui::TextUnformatted((label + " : " + typeName).c_str());
-            ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
             return it->second(property, instance);
         }
-
-        ImGui::TextUnformatted((label + " : " + typeName).c_str());
-        ImGui::SetCursorPosY(ImGui::GetCursorPosY() + 2.0f);
 
         if (ExposedVariableUtils::MatchesType(property.TypeName, "bool"))
             return DrawBool(property, instance);
@@ -388,21 +386,17 @@ namespace BixEngine::Gui::ActorInspector
 
         ImGui::PushID(property.Name.c_str());
         
-        bool handled = false;
-        // Hide internal properties
-        if (property.Name != "lastTexture_" && 
-            property.Name != "hasCustomUV_" && 
-            property.Name != "uvRect_")
-        {
-            handled = DrawSupportedProperty(property, instance, label);
-        }
+        bool handled = DrawSupportedProperty(property, instance, label);
         
         ImGui::PopID();
 
+        // Debug info if not handled?
+        /*
         if (!handled)
         {
             const std::string typeName = ExposedVariableUtils::CleanTypeName(property.TypeName);
         }
+        */
 
         if (handled)
             ImGui::Dummy(ImVec2(0.f, 8.f));
@@ -427,6 +421,9 @@ namespace BixEngine::Gui::ActorInspector
     // ============================================================================
     //  DrawClassProperties
     // ============================================================================
+    // ============================================================================
+    //  DrawClassProperties
+    // ============================================================================
     bool PropertyInspector::DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage)
     {
         std::vector<const Bix::Reflection::PropertyInfo*> props;
@@ -447,14 +444,126 @@ namespace BixEngine::Gui::ActorInspector
         if (includeHeader && headerLabel && headerLabel[0])
             Utils::DrawSeparatorText(headerLabel);
 
-        bool any = false;
+        // Group by Category
+        std::map<std::string, std::vector<const Bix::Reflection::PropertyInfo*>> categories;
+        std::vector<const Bix::Reflection::PropertyInfo*> uncategorized;
+        std::vector<std::string> processedNames;
 
         for (auto* p : props)
         {
-            if (!p)
-                continue;
+            if (!p) continue;
+            
+            // Deduplicate by name
+            bool alreadyExists = false;
+            for (const auto& existing : processedNames)
+            {
+                if (existing == p->Name) 
+                {
+                    alreadyExists = true;
+                    break;
+                }
+            }
+            if (alreadyExists) continue;
+            processedNames.push_back(p->Name);
 
-            any = DrawReflectedProperty(*p, instance) || any;
+            // Visibility Logic
+            bool isPublic = p->GetMetadata("Access") == "Public";
+            bool hasEditAnywhere = p->HasMetadata("EditAnywhere");
+            bool hasHide = p->HasMetadata("HideInInspector");
+
+            bool visible = false;
+            if (isPublic)
+            {
+                visible = !hasHide;
+            }
+            else // Private/Protected
+            {
+                visible = hasEditAnywhere;
+            }
+
+            if (!visible) continue;
+
+            std::string cat = p->GetMetadata("Category");
+            if (!cat.empty())
+            {
+                categories[cat].push_back(p);
+            }
+            else
+            {
+                uncategorized.push_back(p);
+            }
+        }
+
+        bool any = false;
+
+        // Helper to draw a list of properties
+        auto DrawPropertyList = [&](const std::vector<const Bix::Reflection::PropertyInfo*>& list, const std::string& idSuffix)
+        {
+            if (ImGui::BeginTable(("##PropsTable_" + idSuffix).c_str(), 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable))
+            {
+                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 120.0f);
+                ImGui::TableSetupColumn("Control", ImGuiTableColumnFlags_WidthStretch);
+                
+                for (auto* p : list)
+                {
+                    // Filter internal/hidden properties
+                    if (p->Name == "lastTexture_" || 
+                        p->Name == "hasCustomUV_" || 
+                        p->Name == "uvRect_")
+                    {
+                        continue;
+                    }
+
+                    ImGui::TableNextRow();
+                    ImGui::TableSetColumnIndex(0);
+                    
+                    const std::string label = ExposedVariableUtils::MakeDisplayName(p->Name);
+                    ImGui::AlignTextToFramePadding();
+                    ImGui::TextUnformatted(label.c_str());
+                    
+                    // ... (rest of loop)
+                    
+                    if (ImGui::IsItemHovered())
+                        ImGui::SetTooltip("%s (%s)", p->Name.c_str(), p->TypeName.c_str());
+
+                    ImGui::TableSetColumnIndex(1);
+                    ImGui::PushItemWidth(-1);
+                    if (DrawReflectedProperty(*p, instance))
+                        any = true;
+                    ImGui::PopItemWidth();
+                }
+                ImGui::EndTable();
+            }
+        };
+
+        // Draw Default Category first
+        if (!uncategorized.empty())
+        {
+            // If we have other categories, show "Default" header, otherwise show nothing (flat)
+            if (!categories.empty())
+            {
+                if (ImGui::CollapsingHeader("Default", ImGuiTreeNodeFlags_DefaultOpen))
+                {
+                    ImGui::Indent();
+                    DrawPropertyList(uncategorized, "Default");
+                    ImGui::Unindent();
+                }
+            }
+            else
+            {
+                 DrawPropertyList(uncategorized, "DefaultFlat");
+            }
+        }
+
+        // Draw Named Categories
+        for (const auto& [catName, catProps] : categories)
+        {
+            if (ImGui::CollapsingHeader(catName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                ImGui::Indent();
+                DrawPropertyList(catProps, catName);
+                ImGui::Unindent();
+            }
         }
 
         return any;

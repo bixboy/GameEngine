@@ -19,6 +19,10 @@ namespace BixEngine::Game
         bool initialized = false;
     };
     
+    AudioSourceComponent::AudioSourceComponent() : impl_(std::make_unique<Impl>())
+    {
+    }
+
     AudioSourceComponent::AudioSourceComponent(Actor* owner) : Component(owner), impl_(std::make_unique<Impl>())
     {
     }
@@ -144,8 +148,5 @@ namespace BixEngine::Game
     // ==============================================================================
     // EDITOR UI
     // ==============================================================================
-    void AudioSourceComponent::DrawInspectorUI()
-    {
-        Component::DrawInspectorUI();
-    }
+    // DrawInspectorUI removed
 }

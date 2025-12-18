@@ -11,6 +11,8 @@ namespace BixTool {
     struct Property {
         std::string Type;
         std::string Name;
+        std::string Metadata;
+        std::string AccessSpecifier;
     };
 
     struct ParsedClass {

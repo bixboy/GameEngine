@@ -278,45 +278,5 @@ namespace BixEngine::Serialization
         { 
             return std::make_unique<Game::Player>(Math::Transform()); 
         });
-
-        // Patch reflection for components that have issues with the generator
-        auto PatchReflection = []()
-        {
-            const char* typeNames[] = {
-                "SpriteComponent",
-                "BixEngine::Game::SpriteComponent", 
-                "BixEngine::Render::SpriteComponent"
-            };
-
-            for (const auto* name : typeNames)
-            {
-                if (auto* info = const_cast<Bix::Reflection::ClassInfo*>(Bix::Reflection::Registry::Get().Find(name)))
-                {
-                    bool broken = !info->ConstructorFn;
-                    
-                    if (!broken)
-                    {
-                        // Test if the constructor actually works
-                        if (void* testInstance = info->Construct())
-                        {
-                            // It works, clean up the test instance
-                            delete static_cast<Game::SpriteComponent*>(testInstance);
-                        }
-                        else
-                        {
-                            broken = true;
-                        }
-                    }
-
-                    if (broken)
-                    {
-                        // LOG_WARNING(String("Patching ConstructorFn for ") + name);
-                        info->ConstructorFn = [](void*) -> void* { return new Game::SpriteComponent(); };
-                    }
-                }
-            }
-        };
-
-        PatchReflection();
     }
 }

@@ -11,6 +11,8 @@ set_languages("cxx20")
 set_warnings("allextra")
 set_optimize("faster")
 
+add_requires("box2d")
+
 add_moduledirs(path.join(os.projectdir(), "Tools/xmake"))
 
 -- =====================================================================
@@ -140,6 +142,8 @@ local function define_module_target(m, group)
         set_group(group or "Modules")
 
         add_deps("BixHeaderTool", "GenerateHeaders")
+        
+        add_packages("box2d")
 
         -- Includes globaux
         add_includedirs(engine_public_includes, { public = true })
@@ -278,6 +282,8 @@ target("BixEngine")
     if #engine_targets > 0 then
         add_deps(table.unpack(engine_targets))
     end
+    
+    add_packages("box2d")
 
     add_includedirs(engine_public_includes, { public = true })
     add_includedirs("src", { public = true })
@@ -308,6 +314,7 @@ target("BixRun")
     add_includedirs(engine_public_includes)
     add_linkdirs(sdl3_lib, sdlimg_lib)
     add_links("SDL3", "SDL3_image")
+    add_packages("box2d")
 
     local content_dir = get_path(build_root, "Content")
     if os.isdir(content_dir) then

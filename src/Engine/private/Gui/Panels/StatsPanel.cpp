@@ -10,6 +10,7 @@
 #include "Gui/Widgets/Widgets.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Input.h"
+#include "Gui/Core/EditorPreferences.h"
 
 #include "imgui.h"
 
@@ -19,9 +20,6 @@ namespace BixEngine::Gui
 
     namespace
     {
-        constexpr float kSmoothingFactor = 0.1f;
-        constexpr float kUpdateInterval = 0.25f;
-
         std::string FormatValue(float value, const char* format)
         {
             char buffer[64];
@@ -49,16 +47,20 @@ namespace BixEngine::Gui
         const float deltaMs = lastDeltaTime_ ? (*lastDeltaTime_ * 1000.0f) : 0.0f;
         const ImGuiIO& io = ImGui::GetIO();
 
+        const auto& settings = EditorSettings::Get();
+        const float smoothing = settings.StatsSmoothingFactor;
+        const float updateInt = settings.StatsUpdateInterval;
+
         if (!std::isnan(fps) && fps > 0.0f)
-            smoothedFps_ = smoothedFps_ * (1.0f - kSmoothingFactor) + fps * kSmoothingFactor;
+            smoothedFps_ = smoothedFps_ * (1.0f - smoothing) + fps * smoothing;
 
         if (!std::isnan(deltaMs) && deltaMs > 0.0f)
-            smoothedDelta_ = smoothedDelta_ * (1.0f - kSmoothingFactor) + deltaMs * kSmoothingFactor;
+            smoothedDelta_ = smoothedDelta_ * (1.0f - smoothing) + deltaMs * smoothing;
 
         if (lastDeltaTime_)
             timeSinceUpdate_ += *lastDeltaTime_;
 
-        if (timeSinceUpdate_ >= kUpdateInterval)
+        if (timeSinceUpdate_ >= updateInt)
         {
             displayedFps_ = smoothedFps_;
             displayedDelta_ = smoothedDelta_;

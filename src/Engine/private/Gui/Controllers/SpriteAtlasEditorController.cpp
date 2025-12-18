@@ -7,6 +7,8 @@
 #include "Ressources/Atlas/SpriteAtlasFactory.h"
 #include "Ressources/RessourcesClass/Texture.h"
 #include "imgui.h"
+#include "Gui/Core/EditorPreferences.h"
+#include "Gui/Core/GuiTheme.h"
 #include "Gui/Controllers/BaseAssetEditorController.h"
 
 
@@ -134,7 +136,7 @@ namespace BixEngine::Gui
         if (!state)
             return;
 
-        SaveAtlas(*state);
+        (void)SaveAtlas(*state);
     }
 
     void SpriteAtlasEditorController::DrawAtlasPreview(SharedState& state)
@@ -202,13 +204,19 @@ namespace BixEngine::Gui
                 const int idx = y * cols + x;
                 const bool sel = idx < static_cast<int>(state.frameSelection.size()) && state.frameSelection[idx];
 
+                const auto& settings = EditorSettings::Get();
+                const ImU32 accentColor = ImGui::ColorConvertFloat4ToU32(settings.ThemeAccentColor);
+                const ImU32 accentTransparent = (accentColor & 0x00FFFFFF) | 0x46000000; // Alpha 70
+                const ImU32 hoverColor = IM_COL32(255, 255, 255, 25);
+                const ImU32 gridColor = IM_COL32(255, 255, 255, 90);
+
                 // surbrillance sélection / hover
                 if (sel)
-                    draw->AddRectFilled(min, max, IM_COL32(90, 180, 255, 70));
+                    draw->AddRectFilled(min, max, accentTransparent);
                 else if (ImGui::IsMouseHoveringRect(min, max))
-                    draw->AddRectFilled(min, max, IM_COL32(255, 255, 255, 25));
+                    draw->AddRectFilled(min, max, hoverColor);
 
-                draw->AddRect(min, max, IM_COL32(255, 255, 255, 90));
+                draw->AddRect(min, max, gridColor);
 
                 if (ImGui::IsMouseHoveringRect(min, max))
                     hovered = idx;
@@ -290,7 +298,7 @@ namespace BixEngine::Gui
                 auto& anim = state.animations[state.activeAnimation];
 
                 char buffer[128]{};
-                std::snprintf(buffer, sizeof(buffer), "%s", anim.name.IsEmpty() ? "" : anim.name.View());
+                std::snprintf(buffer, sizeof(buffer), "%s", anim.name.IsEmpty() ? "" : anim.name.Std().c_str());
                 if (ImGui::InputText("Name", buffer, sizeof(buffer)))
                 {
                     anim.name = buffer;
@@ -438,12 +446,12 @@ namespace BixEngine::Gui
     {
         if (ImGui::Button("💾 Save Atlas"))
         {
-            SaveAtlas(state);
+            (void)SaveAtlas(state);
         }
 
         ImGui::SameLine();
         if (state.dirty)
-            ImGui::TextColored(ImVec4(0.9f, 0.75f, 0.2f, 1.0f), "Unsaved changes");
+            ImGui::TextColored(Theme::WarningColor, "Unsaved changes");
         else
             ImGui::TextDisabled("No pending changes.");
     }

@@ -55,7 +55,7 @@ namespace BixEngine::Game
 
             Math::Vector2<float> pendingInput_{};
 
-            BPROPERTY()
+            BPROPERTY(EditAnywhere, Category="Gameplay")
             float moveSpeed_{200.0f};
 
             SpriteComponent* spriteComponent_{nullptr};

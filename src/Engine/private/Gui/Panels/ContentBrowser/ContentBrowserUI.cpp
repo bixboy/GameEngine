@@ -13,6 +13,7 @@
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/String/StringUtils.h"
 #include <imgui.h>
+#include "Gui/Core/EditorPreferences.h"
 #include <filesystem>
 #include <unordered_map>
 #include <functional>
@@ -122,7 +123,8 @@ namespace BixEngine::Gui
         static std::unordered_map<std::string, std::vector<fs::path>> cache;
         static bool expand = false, collapse = false;
 
-        if (!ImGui::BeginChild("Tree", { Theme::ContentTreeWidth, 0 }, true))
+        const auto& settings = EditorSettings::Get();
+        if (!ImGui::BeginChild("Tree", { settings.ContentTreeWidth, 0 }, true))
         {
             ImGui::EndChild();
             return;
@@ -244,7 +246,8 @@ namespace BixEngine::Gui
             ImGui::EndPopup();
         }
 
-        const float cell = Theme::ThumbnailSize + Theme::ThumbnailPadding;
+        const auto& settings = EditorSettings::Get();
+        const float cell = settings.ContentThumbnailSize + settings.ContentThumbnailPadding;
         const int cols = std::max(1, int(ImGui::GetContentRegionAvail().x / cell));
 
         if (ImGui::BeginTable("Entries", cols, ImGuiTableFlags_SizingFixedFit))
@@ -262,7 +265,7 @@ namespace BixEngine::Gui
 
                 ScopedColor b(ImGuiCol_Button, base);
 
-                if (ImGui::Button(GetIcon(entry.type), { Theme::ThumbnailSize, Theme::ThumbnailSize }))
+                if (ImGui::Button(GetIcon(entry.type), { settings.ContentThumbnailSize, settings.ContentThumbnailSize }))
                 {
                     if (entry.IsDirectory())
                     {

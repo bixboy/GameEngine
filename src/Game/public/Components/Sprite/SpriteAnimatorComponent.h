@@ -16,6 +16,7 @@ namespace BixEngine::Game
         GENERATED_BODY()
 
     public:
+        SpriteAnimatorComponent() = default;
         explicit SpriteAnimatorComponent(Actor* owner);
 
         void BeginPlay() override;

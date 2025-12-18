@@ -1,4 +1,5 @@
 #include "Gui/Internal/GuiLayoutManager.h"
+#include "Gui/Core/EditorPreferences.h"
 #include "Levels/EmptyScene.h"
 
 #include <algorithm>
@@ -149,6 +150,7 @@ namespace BixEngine::Gui
     void GuiLayoutManager::Render()
     {
         DrawMainMenuBar_();
+        EditorPreferencesWindow::Draw(&showEditorPreferences_);
     }
 
     // --------------------------------------------------------------
@@ -409,7 +411,7 @@ namespace BixEngine::Gui
     {
         if (ImGui::BeginMainMenuBar())
         {
-            if (ImGui::BeginMenu("Scene"))
+            if (ImGui::BeginMenu("File"))
             {
                 // New Scene
                 if (ImGui::MenuItem("New Scene"))
@@ -542,6 +544,15 @@ namespace BixEngine::Gui
                     ImGui::TextDisabled("No scene loaded");
                 }
 
+                ImGui::EndMenu();
+            }
+
+            if (ImGui::BeginMenu("Edit"))
+            {
+                if (ImGui::MenuItem("Editor Preferences..."))
+                {
+                    showEditorPreferences_ = true;
+                }
                 ImGui::EndMenu();
             }
 

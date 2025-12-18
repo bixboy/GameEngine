@@ -13,6 +13,7 @@
 #include "Systems/Core/Window.h"
 
 #include "Scene.generated.h"
+#include <box2d/box2d.h>
 
 
 namespace BixEngine::Game
@@ -140,5 +141,11 @@ namespace BixEngine::Game
         String name_;
         SceneContext context_{};
         std::vector<std::unique_ptr<Actor>> actors_;
+        
+        // Physics
+        b2WorldId physicsWorldId_ = b2_nullWorldId;
+
+    public:
+        [[nodiscard]] b2WorldId GetPhysicsWorld() const noexcept { return physicsWorldId_; }
     };
 }

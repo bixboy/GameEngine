@@ -15,12 +15,13 @@ namespace BixEngine::Game
     public:
         using Super = Component;
         
+        AudioSourceComponent();
         explicit AudioSourceComponent(Actor* owner);
         ~AudioSourceComponent() override;
 
         void BeginPlay() override;
         void Update(float dt) override;
-        void DrawInspectorUI() override;
+        // DrawInspectorUI removed (using auto inspector)
         
         void Play();
         void Stop();
@@ -30,22 +31,23 @@ namespace BixEngine::Game
 
         
         // --- Properties ---
-        BPROPERTY()
+        // --- Properties ---
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         std::shared_ptr<resources::AudioClip> AudioClip;
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         std::shared_ptr<resources::AudioContainer> AudioContainer;
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         float Volume = 1.0f;
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         bool Loop = false;
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         bool Is3D = false;
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
         bool IsMusic = false;
 
     private:
