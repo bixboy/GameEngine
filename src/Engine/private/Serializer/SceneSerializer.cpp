@@ -8,6 +8,7 @@
 #include <fstream>
 
 #include "Entities/Player.h"
+#include "Components/Sprite/SpriteComponent.h"
 
 
 namespace BixEngine::Serialization
@@ -145,6 +146,34 @@ namespace BixEngine::Serialization
             scene.AddActor(std::move(actor));
         }
 
+        // 4. Link Hierarchy
+        // We need a lookup map or we can just search linear since we don't have a UUID map yet
+        const auto& allActors = scene.GetActors();
+        for (const auto& actorPtr : allActors)
+        {
+            if (!actorPtr) continue;
+
+            const String& pUUID = actorPtr->GetParentUUID();
+            if (!pUUID.IsEmpty())
+            {
+                // Find parent
+                auto it = std::find_if(allActors.begin(), allActors.end(), 
+                    [&](const std::unique_ptr<Game::Actor>& other)
+                    {
+                        return other && other->GetUUID() == pUUID;
+                    });
+
+                if (it != allActors.end())
+                {
+                    actorPtr->SetParent(it->get());
+                }
+                else
+                {
+                    LOG_WARNING("Deserialize: Could not find parent with UUID: " + pUUID + " for actor: " + actorPtr->GetName());
+                }
+            }
+        }
+
         return reader.Good();
     }
 
@@ -244,10 +273,50 @@ namespace BixEngine::Serialization
         RegisterIfMissing("Actor", [] { return std::make_unique<Game::Actor>(); });
         RegisterIfMissing("BixEngine::Game::Actor", [] { return std::make_unique<Game::Actor>(); });
         
-        RegisterIfMissing("BixEngine::Game::Player",
-        []
-            { 
-                return std::make_unique<Game::Player>(Math::Transform()); 
-            });
+
+        RegisterIfMissing("BixEngine::Game::Player", []
+        { 
+            return std::make_unique<Game::Player>(Math::Transform()); 
+        });
+
+        // Patch reflection for components that have issues with the generator
+        auto PatchReflection = []()
+        {
+            const char* typeNames[] = {
+                "SpriteComponent",
+                "BixEngine::Game::SpriteComponent", 
+                "BixEngine::Render::SpriteComponent"
+            };
+
+            for (const auto* name : typeNames)
+            {
+                if (auto* info = const_cast<Bix::Reflection::ClassInfo*>(Bix::Reflection::Registry::Get().Find(name)))
+                {
+                    bool broken = !info->ConstructorFn;
+                    
+                    if (!broken)
+                    {
+                        // Test if the constructor actually works
+                        if (void* testInstance = info->Construct())
+                        {
+                            // It works, clean up the test instance
+                            delete static_cast<Game::SpriteComponent*>(testInstance);
+                        }
+                        else
+                        {
+                            broken = true;
+                        }
+                    }
+
+                    if (broken)
+                    {
+                        // LOG_WARNING(String("Patching ConstructorFn for ") + name);
+                        info->ConstructorFn = [](void*) -> void* { return new Game::SpriteComponent(); };
+                    }
+                }
+            }
+        };
+
+        PatchReflection();
     }
 }

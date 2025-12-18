@@ -33,6 +33,11 @@ namespace BixEngine::Gui
         std::array<char, 128> renameBuffer_{};
         Game::Actor* actorToRename_{nullptr};
         bool openRenamePopup_{false};
+
+
         Game::Actor* actorWithContextMenu_{nullptr};
+        Game::Actor* actorPendingDelete_{nullptr};
+
+        void DrawActorNode(Game::Actor* actor, Game::Scene* scene, bool hasSearch);
     };
 }

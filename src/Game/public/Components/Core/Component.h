@@ -26,6 +26,7 @@ namespace BixEngine::Game
     public:
         using Super = Component;
 
+        Component() = default;
         explicit Component(Actor* owner) : owner_(owner) {}
 
         virtual ~Component() = default;
@@ -39,6 +40,8 @@ namespace BixEngine::Game
         virtual void DrawInspectorUI(){}
         
         virtual void LoadFromPrefab(const resources::ComponentPrefab* /*prefab*/) {}
+
+        void SetOwner(Actor* owner) { owner_ = owner; }
 
     protected:
         Actor* owner_{nullptr};

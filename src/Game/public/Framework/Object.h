@@ -30,9 +30,12 @@ namespace BixEngine::Game
         void SetName(String name);
 
         [[nodiscard]] Math::Transform GetTransform() const noexcept { return transform_; }
+        [[nodiscard]] const Math::Transform& GetTransformRef() const noexcept { return transform_; }
+        [[nodiscard]] Math::Transform& GetTransformRef() noexcept { return transform_; }
         void SetTransform(const Math::Transform& transform) noexcept { transform_ = transform; }
 
         [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.position; }
+        [[nodiscard]] Math::Vector3 GetWorldPosition() const noexcept { return transform_.GetWorldPosition(); }
         void SetPosition(const Math::Vector3& position) noexcept { transform_.position = position; }
         void SetPosition(float x, float y, float z = 0.0f) noexcept { transform_.position = {x, y, z}; }
 

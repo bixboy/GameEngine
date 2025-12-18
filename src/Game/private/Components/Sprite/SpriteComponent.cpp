@@ -49,6 +49,7 @@ namespace BixEngine::Game
     {
     }
 
+
     void SpriteComponent::BeginPlay()
     {
         Component::BeginPlay();
@@ -56,7 +57,7 @@ namespace BixEngine::Game
 
     void SpriteComponent::Render(Graphics::Renderer& renderer) const
     {
-        auto pos = owner_->GetPosition();
+        auto pos = owner_->GetWorldPosition();
 
         SDL_FRect destRect{pos.x - pivot_.x * size_.x, pos.y - pivot_.y * size_.y, size_.x, size_.y};
 

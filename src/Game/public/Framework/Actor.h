@@ -22,6 +22,7 @@ namespace BixEngine::Game
 
     public:
         explicit Actor(const Math::Transform& transform = Math::Transform());
+        virtual ~Actor();
 
         Actor(String name, const Math::Transform& transform = Math::Transform());
 
@@ -54,11 +55,27 @@ namespace BixEngine::Game
 
         [[nodiscard]] bool HasBegunPlay() const noexcept { return has_begun_play_; }
 
+        // Hierarchy
+        void SetParent(Actor* parent);
+        [[nodiscard]] Actor* GetParent() const noexcept { return parent_; }
+        [[nodiscard]] const std::vector<Actor*>& GetChildren() const noexcept { return children_; }
+        [[nodiscard]] std::vector<Actor*>& GetChildren() noexcept { return children_; }
+        [[nodiscard]] bool IsChildOf(const Actor* potentialParent) const;
+
+        [[nodiscard]] const String& GetParentUUID() const noexcept { return parentUUID_; }
+        void SetParentUUID(String uuid) { parentUUID_ = std::move(uuid); }
+
     protected:
         virtual void OnComponentRemoved(const Component& /*component*/) {}
 
     private:
         std::vector<std::unique_ptr<Component>> components_;
+        
+        // Hierarchy
+        std::vector<Actor*> children_;
+        Actor* parent_{nullptr};
+        String parentUUID_; // Transient for serialization
+        
         bool has_begun_play_{false};
         bool active_{true};
         Scene* owningScene_{nullptr};

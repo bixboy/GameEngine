@@ -19,35 +19,50 @@ namespace BixEngine::Game
         const ClassInfo* FindClassInfo(const String& typeName)
         {
             auto* info = Registry::Get().Find(typeName.c_str());
-            if (!info)
+            if (info) return info;
+
+            // Try common namespaces
+            const std::array<String, 7> namespaces = {
+                "BixEngine::Game::",
+                "BixEngine::Render::",
+                "BixEngine::Physics::",
+                "BixEngine::Audio::",
+                "BixEngine::Core::",
+                "BixEngine::Systems::",
+                "BixEngine::Gui::"
+            };
+
+            for (const auto& ns : namespaces)
             {
-                String qualifiedName = "BixEngine::Game::" + typeName;
-                info = Registry::Get().FindByQualifiedName(qualifiedName.c_str());
+                String qualifiedName = ns + typeName;
+                if (auto* nsInfo = Registry::Get().FindByQualifiedName(qualifiedName.c_str()))
+                    return nsInfo;
                 
-                if (!info)
-                {
-                    info = Registry::Get().Find(qualifiedName.c_str());   
-                }
+                // Fallback to simple Find if qualified name wasn't registered as such but map key matches?
+                // Registry usually keys by what BCLASS registers.
             }
             
-            return info;
+            return nullptr;
         }
 
         Component* FindOrCreateComponent(Actor* actor, const String& typeName, size_t index)
         {
             auto& components = actor->GetComponents();
 
+            // 1. Direct match at expected index (fast path)
             if (index < components.size() && components[index]->GetTypeName() == typeName)
             {
                 return components[index].get();
             }
 
-            for (auto& comp : components)
+            // 2. Loose match: search forward to find duplicates
+            for (size_t i = index; i < components.size(); ++i)
             {
-                if (comp->GetTypeName() == typeName)
-                    return comp.get();
+                if (components[i]->GetTypeName() == typeName)
+                    return components[i].get();
             }
 
+            // 3. Create new component via Reflection
             const auto* classInfo = FindClassInfo(typeName);
             if (classInfo && classInfo->CanConstruct())
             {
@@ -56,6 +71,14 @@ namespace BixEngine::Game
                     actor->AddComponent(std::unique_ptr<Component>(newComp));
                     return actor->GetComponents().back().get();
                 }
+                else
+                {
+                    LOG_ERROR("FindOrCreateComponent: ConstructTyped returned nullptr for '" + typeName + "'");
+                }
+            }
+            else
+            {
+                LOG_ERROR("FindOrCreateComponent: Could not create component '" + typeName + "'. Missing ClassInfo or Reflection data.");
             }
 
             return nullptr;
@@ -68,6 +91,20 @@ namespace BixEngine::Game
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
     {}
+
+    Actor::~Actor()
+    {
+        // Unlink from parent
+        SetParent(nullptr);
+
+        // Unlink children (they become orphans, but usually Scene::RemoveActor handles their deletion)
+        // We copy the list because SetParent modifies it
+        auto kids = children_;
+        for (auto* child : kids)
+        {
+            if (child) child->SetParent(nullptr);
+        }
+    }
 
     void Actor::BeginPlay()
     {
@@ -106,7 +143,10 @@ namespace BixEngine::Game
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
         if (component)
+        {
+            component->SetOwner(this);
             components_.push_back(std::move(component));
+        }
     }
 
     bool Actor::RemoveComponent(const Component* component)
@@ -128,9 +168,72 @@ namespace BixEngine::Game
         return true;
     }
 
+    // ==============================================================================================
+    // HIERARCHY
+    // ==============================================================================================
+
+    void Actor::SetParent(Actor* parent)
+    {
+        if (parent_ == parent)
+            return;
+
+        if (parent == this)
+        {
+            LOG_WARNING("Cannot set parent to self: " + GetName());
+            return;
+        }
+
+        if (parent && parent->IsChildOf(this))
+        {
+            LOG_WARNING("Cannot set parent to a child (cycle detected): " + GetName());
+            return;
+        }
+
+        // 1. Remove from old parent
+        if (parent_)
+        {
+            auto& siblings = parent_->children_;
+            std::erase(siblings, this);
+        }
+
+        // 2. Set new parent
+        parent_ = parent;
+
+        // 3. Add to new parent & Link Transform
+        if (parent_)
+        {
+            parent_->children_.push_back(this);
+            GetTransformRef().SetParent(&parent_->GetTransformRef());
+        }
+        else
+        {
+            GetTransformRef().SetParent(nullptr);
+        }
+    }
+
+    bool Actor::IsChildOf(const Actor* potentialParent) const
+    {
+        if (!potentialParent)
+            return false;
+
+        const Actor* current = parent_;
+        while (current)
+        {
+            if (current == potentialParent)
+                return true;
+            current = current->parent_;
+        }
+        return false;
+    }
+
+    // ==============================================================================================
+    // CLONING
+    // ==============================================================================================
+
     std::unique_ptr<Actor> Actor::ClonePrototype() const
     {
         return std::make_unique<Actor>();
+        // Note: Hierarchy is not cloned for prototypes by default
     }
 
     // ==============================================================================================
@@ -142,6 +245,10 @@ namespace BixEngine::Game
         // 1. Base Object (Transform, Nom...)
         Object::SerializeBinary(stream);
         BinaryWriter writer(stream);
+
+        // Hierarchy
+        String psUUID = parent_ ? parent_->GetUUID() : String();
+        writer.WriteString(psUUID);
 
         // 2. Propriétés de l'Actor
         if (const auto* info = FindClassInfo(GetTypeName()))
@@ -181,6 +288,9 @@ namespace BixEngine::Game
         // 1. Base Object
         Object::DeserializeBinary(stream);
         BinaryReader reader(stream);
+
+        // Hierarchy
+        reader.ReadString(parentUUID_);
 
         // 2. Propriétés de l'Actor
         if (const auto* info = FindClassInfo(GetTypeName()))

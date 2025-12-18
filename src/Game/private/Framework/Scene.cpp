@@ -38,6 +38,14 @@ namespace BixEngine::Game
     {
         if (!actor) return;
 
+        // Recursively remove children first
+        // We copy the list because RemoveActor will modify the hierarchy/ownership
+        std::vector<Actor*> children = actor->GetChildren();
+        for (Actor* child : children)
+        {
+            RemoveActor(child);
+        }
+
         std::erase_if(actors_, [&](const std::unique_ptr<Actor>& ptr)
         {
             if (ptr.get() == actor)

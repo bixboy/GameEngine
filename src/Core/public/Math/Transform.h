@@ -28,7 +28,19 @@ namespace BixEngine::Math
         // ────────────────────────────────────────────────
         void Translate(const Vector3& delta) { position += delta; }
 
-        Vector3 GetPosition() { return position; }
+        Vector3 GetLocalPosition() const { return position; }
+        
+        Vector3 GetWorldPosition() const
+        {
+            if (parent)
+            {
+                return TransformPoint(Vector3::Zero());
+            }
+            return position;
+        }
+
+        Vector3 GetPosition() { return GetWorldPosition(); } // CHANGING BEHAVIOR TO WORLD FOR SAFETY IF USER EXPECTS THAT
+
 
         void SetPosition(const Vector3 NewPosition) { position = NewPosition; } 
 

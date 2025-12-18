@@ -10,6 +10,7 @@
 #include "Ressources/RessourcesClass/AudioClip.h"
 #include "Ressources/RessourcesClass/Texture.h"
 #include "Ressources/RessourcesClass/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/AudioContainer.h"
 
 
 namespace BixEngine::Serialization
@@ -126,7 +127,8 @@ namespace BixEngine::Serialization
                 continue;
             }
 
-            // --- Ressources (Texture, Audio, Atlas) ---
+
+            // --- Ressources (Texture, Audio, Atlas, AudioContainer) ---
             String path = "";
             if (IsResourceType(type, "Texture"))
                 path = GetResourcePath<Texture>(prop, instance);
@@ -136,8 +138,11 @@ namespace BixEngine::Serialization
             
             else if (IsResourceType(type, "SpriteAtlas"))
                 path = GetResourcePath<SpriteAtlas>(prop, instance);
+
+            else if (IsResourceType(type, "AudioContainer"))
+                path = GetResourcePath<AudioContainer>(prop, instance);
             
-            if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas"))
+            if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
             {
                 if (!writer.WriteString(path))
                     return false;
@@ -229,7 +234,7 @@ namespace BixEngine::Serialization
             }
 
             // --- Ressources ---
-            if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas"))
+            if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
             {
                 String path;
                 if (!reader.ReadString(path)) return false;
@@ -244,6 +249,9 @@ namespace BixEngine::Serialization
                     
                     else if (IsResourceType(type, "SpriteAtlas"))
                         SetResourceFromPath<SpriteAtlas>(prop, instance, path);
+
+                    else if (IsResourceType(type, "AudioContainer"))
+                        SetResourceFromPath<AudioContainer>(prop, instance, path);
                 }
                 else
                 {

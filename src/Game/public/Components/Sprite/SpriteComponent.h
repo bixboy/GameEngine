@@ -21,6 +21,8 @@ namespace BixEngine::Game
 
     public:
 
+        SpriteComponent() = default; // REQUIRED for reflection/serialization
+
         explicit SpriteComponent(Actor* owner);
 
         SpriteComponent(Actor* owner, SDL_Color color, Math::Vector2<float> textureScale)
