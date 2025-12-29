@@ -30,8 +30,8 @@ namespace BixEngine::Gui
             bool dirty{false};
             int hoveredFrame{-1};
             int activeAnimation{-1};
-            int cachedColumns{-1};
-            int cachedRows{-1};
+            float cachedColumns{-1.0f};
+            float cachedRows{-1.0f};
             int cachedPadding{-1};
             int cachedMargin{-1};
             int previewAnimationIndex{-1};

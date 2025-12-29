@@ -58,6 +58,9 @@ namespace BixEngine::Gui
         ImVec4 ThemeAccentColor = ImVec4{0.95f, 0.80f, 0.40f, 1.0f}; // BreadcrumbHighlight / Accent
         ImVec4 ThemeWarningColor = ImVec4{0.90f, 0.75f, 0.20f, 1.0f};
         ImVec4 ThemeErrorColor = ImVec4{0.90f, 0.30f, 0.30f, 1.0f};
+
+        // Project
+        std::string DefaultMapPath = ""; // Path to default scene to load on startup
         
         // --- Persistence ---
         void Save() const;

@@ -43,6 +43,8 @@ namespace BixEngine::Serialization
             LOG_ERROR("Failed to open binary scene file for reading: " + filePath.string());
             return false;
         }
+
+        scene.SetSourcePath(filePath.string().c_str());
         return DeserializeBinary(scene, file);
     }
 
@@ -107,6 +109,9 @@ namespace BixEngine::Serialization
             return false;
         
         scene.Rename(std::move(sceneName));
+        // We do not have the file path passed to DeserializeBinary easily unless we modify signature
+        // But LoadBinary calls DeserializeBinary.
+        // Let's modify LoadBinary to set it.
         scene.ClearActors();
 
         std::uint32_t actorCount = 0;
@@ -139,7 +144,12 @@ namespace BixEngine::Serialization
 
             if (!stream)
             {
-                LOG_ERROR("Stream corrupted after deserializing actor: " + typeName);
+                // Check if it's just EOF (which might be fine if file ended exactly after last actor)
+                // But generally, DeserializeBinary reads components etc, so it should know where it ends.
+                bool eof = stream.eof();
+                bool fail = stream.fail();
+                bool bad = stream.bad();
+                LOG_ERROR("SceneSerializer: Stream corrupted after actor '" + typeName + "'. States - EOF: " + (eof?"1":"0") + ", FAIL: " + (fail?"1":"0") + ", BAD: " + (bad?"1":"0"));
                 return false;
             }
 
@@ -153,7 +163,7 @@ namespace BixEngine::Serialization
         {
             if (!actorPtr) continue;
 
-            const String& pUUID = actorPtr->GetParentUUID();
+            const String& pUUID = actorPtr->GetLoadedParentUUID();
             if (!pUUID.IsEmpty())
             {
                 // Find parent
@@ -275,6 +285,12 @@ namespace BixEngine::Serialization
         
 
         RegisterIfMissing("BixEngine::Game::Player", []
+        { 
+            return std::make_unique<Game::Player>(Math::Transform()); 
+        });
+        
+        // Alias for short name compatibility
+        RegisterIfMissing("Player", []
         { 
             return std::make_unique<Game::Player>(Math::Transform()); 
         });

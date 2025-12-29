@@ -174,106 +174,6 @@ namespace BixEngine::Game
         return true;
     }
 
-    void SpriteAnimatorComponent::DrawInspectorUI()
-    {
-        SpriteComponent::DrawInspectorUI();
-
-        std::vector<std::filesystem::path> atlasFiles;
-        CollectAtlasFiles(atlasFiles);
-        const std::filesystem::path root = DetermineAtlasRoot();
-
-        std::vector<std::string> atlasPaths;
-        std::vector<std::string> atlasLabels;
-        atlasPaths.reserve(atlasFiles.size());
-        atlasLabels.reserve(atlasFiles.size());
-
-        int currentAtlasIndex = -1;
-        for (size_t index = 0; index < atlasFiles.size(); ++index)
-        {
-            const std::string pathString = atlasFiles[index].generic_string();
-            atlasPaths.push_back(pathString);
-            atlasLabels.push_back(MakeDisplayName(atlasFiles[index], root));
-
-            if (!atlasPath_.IsEmpty() && atlasPath_.View() == pathString)
-                currentAtlasIndex = static_cast<int>(index);
-        }
-
-        const char* currentAtlasLabel = currentAtlasIndex >= 0 ? atlasLabels[currentAtlasIndex].c_str() : "<None>";
-
-        if (ImGui::BeginCombo("Atlas", currentAtlasLabel))
-        {
-            const bool selectedNone = (currentAtlasIndex < 0);
-            if (ImGui::Selectable("<None>", selectedNone))
-            {
-                atlas_.reset();
-                atlasPath_.Clear();
-                defaultAnimation_.Clear();
-                currentAnimation_.Clear();
-                animator_.SetSpriteAtlas(nullptr);
-                ApplyCurrentFrame(true);
-            }
-
-            for (int i = 0; i < static_cast<int>(atlasPaths.size()); ++i)
-            {
-                const bool selected = (i == currentAtlasIndex);
-                if (ImGui::Selectable(atlasLabels[i].c_str(), selected))
-                {
-                    LoadSpriteAtlas(String(atlasPaths[i].c_str()), defaultAnimation_);
-                    ApplyCurrentFrame(true);
-                }
-            }
-
-            ImGui::EndCombo();
-        }
-
-        if (atlas_)
-        {
-            const auto& animations = atlas_->GetAnimations();
-            int currentAnimationIndex = -1;
-            for (int i = 0; i < static_cast<int>(animations.size()); ++i)
-            {
-                if (defaultAnimation_ == animations[i].name)
-                {
-                    currentAnimationIndex = i;
-                    break;
-                }
-            }
-
-            const char* currentAnimationLabel = currentAnimationIndex >= 0 ? animations[currentAnimationIndex].name.View().data() : "<None>";
-            if (ImGui::BeginCombo("Default Animation", currentAnimationLabel))
-            {
-                const bool noneSelected = (currentAnimationIndex < 0);
-                if (ImGui::Selectable("<None>", noneSelected))
-                {
-                    defaultAnimation_.Clear();
-                    currentAnimation_.Clear();
-                    animator_.Stop();
-                    ApplyCurrentFrame(true);
-                }
-
-                for (int i = 0; i < static_cast<int>(animations.size()); ++i)
-                {
-                    const bool selected = (i == currentAnimationIndex);
-                    const auto& name = animations[i].name;
-                    if (ImGui::Selectable(name.IsEmpty() ? "<unnamed>" : name.View().data(), selected))
-                    {
-                        defaultAnimation_ = name;
-                        currentAnimation_ = name;
-                        animator_.SetSpriteAtlas(atlas_);
-                        animator_.Play(currentAnimation_);
-                        ApplyCurrentFrame(true);
-                    }
-                }
-
-                ImGui::EndCombo();
-            }
-        }
-        else
-        {
-            ImGui::TextDisabled("Select a sprite atlas to configure animations.");
-        }
-    }
-
     void SpriteAnimatorComponent::Play()
     {
         if (currentAnimation_.IsEmpty())
@@ -282,9 +182,15 @@ namespace BixEngine::Game
             return;
         }
 
-        if (!atlas_ || !atlas_->GetAnimation(currentAnimation_))
+        if (!atlas_)
         {
-            LOG_WARNING("⚠️ Animation not found in atlas: " + currentAnimation_);
+            LOG_WARNING("⚠️ Cannot play animation '" + currentAnimation_ + "': No SpriteAtlas assigned.");
+            return;
+        }
+
+        if (!atlas_->GetAnimation(currentAnimation_))
+        {
+            LOG_WARNING("⚠️ Animation '" + currentAnimation_ + "' not found in atlas: " + atlas_->GetPath());
             return;
         }
 
@@ -305,9 +211,15 @@ namespace BixEngine::Game
             return;
         }
 
-        if (!atlas_ || !atlas_->GetAnimation(animationName))
+        if (!atlas_)
         {
-            LOG_WARNING("⚠️ Animation not found in atlas: " + animationName);
+            LOG_WARNING("⚠️ Cannot play animation '" + animationName + "': No SpriteAtlas assigned.");
+            return;
+        }
+
+        if (!atlas_->GetAnimation(animationName))
+        {
+            LOG_WARNING("⚠️ Animation '" + animationName + "' not found in atlas: " + atlas_->GetPath());
             return;
         }
 
@@ -344,6 +256,17 @@ namespace BixEngine::Game
             // Only clear texture if we are supposed to be controlled by an atlas/animator
             // If no atlas is set, we might be using a manual texture (SpriteComponent behavior), so don't clear it.
             SetTexture(nullptr);
+        }
+    }
+    void SpriteAnimatorComponent::DrawInspectorUI()
+    {
+        SpriteComponent::DrawInspectorUI();
+
+        // Sync atlasPath_ if atlas_ is set but path is different
+        // This ensures the generic serializer catches the path even if it fails to serialize the shared_ptr properly
+        if (atlas_ && atlasPath_ != atlas_->GetPath())
+        {
+            atlasPath_ = atlas_->GetPath();
         }
     }
 }

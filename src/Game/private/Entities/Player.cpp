@@ -1,6 +1,7 @@
 #include "Entities/Player.h"
 #include <memory>
 #include "Components/Sprite/SpriteComponent.h"
+#include "Components/Core/BoxColliderComponent.h"
 #include "InputManager.h"
 #include "Components/Audio/AudioSourceComponent.h"
 #include "Components/Sprite/SpriteAnimatorComponent.h"
@@ -11,38 +12,30 @@
 namespace BixEngine::Game
 {
 
-    Player::Player() : Actor("Player")
+    Player::Player(const Math::Transform& transform) : Actor("Player", transform)
     {
-        InitializeSpriteComponent();
+        InitializeComponents();
     }
 
-    Player::Player(Math::Transform transform) : Actor(transform)
+    void Player::SetupInput(Input::InputManager& /*inputManager*/)
     {
-        InitializeSpriteComponent();
-    }
-
-    void Player::SetupInput(Input::InputManager& inputManager)
-    {
-        inputManager.BindAxis("MoveForward", SDLK_W, this, &Player::MoveForward, 1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_Z, this, &Player::MoveForward, 1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_UP, this, &Player::MoveForward, 1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_S, this, &Player::MoveForward, -1.0f);
-        inputManager.BindAxis("MoveForward", SDLK_DOWN, this, &Player::MoveForward, -1.0f);
-
-        inputManager.BindAxis("MoveRight", SDLK_D, this, &Player::MoveRight, 1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_RIGHT, this, &Player::MoveRight, 1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_A, this, &Player::MoveRight, -1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_Q, this, &Player::MoveRight, -1.0f);
-        inputManager.BindAxis("MoveRight", SDLK_LEFT, this, &Player::MoveRight, -1.0f);
-
-        inputManager.BindAction("PlayMusicTest", SDLK_SPACE, Input::InputEvent::Pressed, this, &Player::StarTestMusic);
-
-        inputManager.UnbindAxis("MoveRight", SDLK_W);
+        LOG_INFO("Player::SetupInput called");
     }
     
+
+
     void Player::BeginPlay()
     {
         RefreshSpriteComponent();
+
+        if (GetOwningScene())
+        {
+            SetupInput(GetOwningScene()->GetInputManager());
+        }
+        else
+        {
+            LOG_ERROR("Player::BeginPlay: Owning Scene is null, cannot SetupInput.");
+        }
 
         Actor::BeginPlay();
     }
@@ -50,59 +43,77 @@ namespace BixEngine::Game
     void Player::Update(float deltaTime)
     {
         Actor::Update(deltaTime);
-
         ApplyMovement(deltaTime);
-    }
-
-    void Player::MoveForward(float value)
-    {
-        pendingInput_.y = value;
-    }
-
-    void Player::MoveRight(float value)
-    {
-        pendingInput_.x = value;
     }
 
     void Player::ApplyMovement(float deltaTime)
     {
-        Math::Vector2<float> input = pendingInput_;
-        
-        if (input.LengthSquared() > 1.0f)
-            input = input.Normalized();
+        if (physicsComponent_)
+        {
+            Math::Vector2<float> currentVel = physicsComponent_->GetLinearVelocity();
+            float targetX = moveSpeed_;
+            
+            physicsComponent_->SetLinearVelocity({ targetX, currentVel.y });
+        }
+        else
+        {
+            Math::Vector3 movement{moveSpeed_, 0.0f, 0.0f};
+            SetPosition(GetPosition() + movement * deltaTime);
+        }
+    }
 
-        Math::Vector3 movement{input.x, -input.y, 0.0f};
-        movement = movement * (moveSpeed_ * deltaTime);
+    void Player::SetMoveSpeed(float newSpeed)
+    {
+        moveSpeed_ = newSpeed;
+    }
 
-        SetPosition(GetPosition() + movement);
+    float Player::GetMoveSpeed() const
+    {
+        return moveSpeed_;
     }
 
     void Player::OnComponentRemoved(const Component& component)
     {
-        if (&component == spriteComponent_)
+        if (&component == animatorComponent_)
         {
-            spriteComponent_ = nullptr;
+            animatorComponent_ = nullptr;
         }
 
         Actor::OnComponentRemoved(component);
     }
 
-    void Player::InitializeSpriteComponent()
+    void Player::InitializeComponents()
     {
         animatorComponent_ = AddComponent<SpriteAnimatorComponent>();
-        spriteComponent_ = animatorComponent_;
+
+        physicsComponent_ = AddComponent<BoxColliderComponent>();
+        if (physicsComponent_)
+        {
+            physicsComponent_->SetSimulatePhysics(true);
+            physicsComponent_->SetFixedRotation(true);
+            physicsComponent_->SetBoxExtent({25.0f, 25.0f}); 
+            physicsComponent_->SetFriction(0.0f); 
+            
+            physicsComponent_->SetGravityScale(2.5f);
+            physicsComponent_->SetMass(50.0f);
+            physicsComponent_->SetAirResistance(1.0f);
+            physicsComponent_->SetMaxFallSpeed(1500.0f);
+        }
 
         audioSrc_ = AddComponent<AudioSourceComponent>();
         if (audioSrc_)
         {
-            audioSrc_->Is3D = false; // Disable 3D for testing
+            audioSrc_->Is3D = false; 
         }
     }
 
     void Player::RefreshSpriteComponent()
     {
-        if (!spriteComponent_)
-            InitializeSpriteComponent();
+        if (!animatorComponent_)
+            InitializeComponents();
+
+        if (!physicsComponent_)
+            physicsComponent_ = GetComponent<BoxColliderComponent>();
     }
 
     void Player::StarTestMusic()
@@ -111,10 +122,6 @@ namespace BixEngine::Game
         if (audioSrc_)
         {
             audioSrc_->Play();
-        }
-        else
-        {
-            LOG_ERROR("Player::StarTestMusic: No AudioSourceComponent!");
         }
     }
 }

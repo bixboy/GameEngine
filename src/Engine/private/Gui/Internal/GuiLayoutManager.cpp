@@ -531,7 +531,23 @@ namespace BixEngine::Gui
                 ImGui::Separator();
 
                 // Scene Info
-                if (hasScene)
+                bool sceneLoaded = false;
+                if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
+                {
+                    if (auto* scene = sceneManager->GetScene())
+                    {
+                         // Sync path if needed
+                         if (!scene->GetSourcePath().IsEmpty())
+                         {
+                             std::filesystem::path p(scene->GetSourcePath().c_str());
+                             if (currentScenePath_ != p)
+                                 currentScenePath_ = p;
+                         }
+                         sceneLoaded = true;
+                    }
+                }
+
+                if (sceneLoaded && !currentScenePath_.empty())
                 {
                     ImGui::TextDisabled("Current: %s", currentScenePath_.stem().string().c_str());
                     if (ImGui::IsItemHovered())

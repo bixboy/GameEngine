@@ -23,6 +23,7 @@
 #include "Ressources/RessourcesClass/Texture.h"
 #include "Ressources/RessourcesClass/AudioClip.h"
 #include "Ressources/RessourcesClass/AudioContainer.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include "Utils/FileIO/FilesUtils.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
 
@@ -74,6 +75,267 @@ namespace BixEngine::Gui::ActorInspector
     // ============================================================================
     //  DrawSupportedProperty
     // ============================================================================
+
+    bool DrawStringArray(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        auto& list = property.Get<std::vector<String>>(instance);
+
+        if (ImGui::TreeNode(property.Name.c_str()))
+        {
+            // Add Button
+            if (ImGui::Button("Add Element"))
+            {
+                list.emplace_back();
+            }
+
+            ImGui::SameLine();
+            ImGui::TextDisabled("(%zu elements)", list.size());
+
+            // List Elements
+            for (size_t i = 0; i < list.size(); ++i)
+            {
+                ImGui::PushID(static_cast<int>(i));
+                
+                // Remove Button
+                if (ImGui::Button("X"))
+                {
+                    list.erase(list.begin() + i);
+                    ImGui::PopID();
+                    continue;
+                }
+                ImGui::SameLine();
+
+                char buffer[260];
+                strncpy_s(buffer, sizeof(buffer), list[i].c_str(), _TRUNCATE);
+                
+                ImGui::SetNextItemWidth(ImGui::GetContentRegionAvail().x);
+                if (ImGui::InputText("##Val", buffer, sizeof(buffer)))
+                {
+                    list[i] = buffer;
+                }
+
+                // Drag & Drop Target
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        std::string fullPath = path;
+                        std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+                        list[i] = fullPath.c_str(); 
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::TreePop();
+        }
+        return true;
+    }
+
+    // ============================================================================
+    //  DrawTSubclassOfArray
+    // ============================================================================
+    bool DrawTSubclassOfArray(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        // TArray<TSubclassOf<T>> layout is vector<String>
+        auto& list = property.Get<std::vector<String>>(instance);
+
+        if (ImGui::TreeNode(property.Name.c_str()))
+        {
+            // Add Button
+            if (ImGui::Button("Add Element"))
+            {
+                list.emplace_back();
+            }
+
+            ImGui::SameLine();
+            ImGui::TextDisabled("(%zu elements)", list.size());
+
+            // List Elements
+            for (size_t i = 0; i < list.size(); ++i)
+            {
+                ImGui::PushID(static_cast<int>(i));
+                
+                // Remove Button
+                if (ImGui::Button("X"))
+                {
+                    list.erase(list.begin() + i);
+                    ImGui::PopID();
+                    continue; 
+                }
+                ImGui::SameLine();
+
+                // Asset Selector
+                // Display current value as a button
+                String currentPath = list[i];
+                std::string display = "None";
+                if (!currentPath.IsEmpty())
+                {
+                    display = std::filesystem::path(currentPath.c_str()).filename().string();
+                }
+
+                if (ImGui::Button(display.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+                {
+                    ImGui::OpenPopup("AssetSelectorPopup");
+                }
+
+                // Drag & Drop (keep existing support)
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                    {
+                        const char* path = (const char*)payload->Data;
+                        std::string fullPath = path;
+                        std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+                        list[i] = fullPath.c_str(); 
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
+                // Popup
+                if (ImGui::BeginPopup("AssetSelectorPopup"))
+                {
+                    ImGui::TextDisabled("Select Prefab");
+                    ImGui::Separator();
+                    
+                    if (ImGui::Selectable("None"))
+                    {
+                        list[i] = "";
+                        ImGui::CloseCurrentPopup();
+                    }
+
+                    // Scan for .prefab files
+                    // Assuming generic TSubclassOf is mostly used for prefabs in this context
+                    static std::vector<std::string> extensions = { ".prefab" };
+                    auto foundFiles = FilesUtils::Utilities::ScanDirectory("", extensions);
+
+                    static char searchBuffer[128] = "";
+                    ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, sizeof(searchBuffer));
+
+                    for (const auto& path : foundFiles)
+                    {
+                        std::string pathStr = path.string();
+                        std::replace(pathStr.begin(), pathStr.end(), '\\', '/');
+
+                        std::string filename = path.filename().string();
+
+                        if (searchBuffer[0] != '\0')
+                        {
+                            // Simple substring search
+                            std::string searchS = searchBuffer;
+                            // TODO: Case insensitive
+                            if (filename.find(searchS) == std::string::npos) 
+                                continue;
+                        }
+
+                        if (ImGui::Selectable(filename.c_str(), currentPath == pathStr.c_str()))
+                        {
+                            list[i] = pathStr.c_str();
+                            ImGui::CloseCurrentPopup();
+                        }
+                        
+                        if (ImGui::IsItemHovered())
+                            ImGui::SetTooltip("%s", pathStr.c_str());
+                    }
+
+                    ImGui::EndPopup();
+                }
+
+                ImGui::PopID();
+            }
+
+            ImGui::TreePop();
+        }
+        return true;
+    }
+
+
+
+    // ============================================================================
+    //  DrawTSubclassOf (Single)
+    // ============================================================================
+    bool DrawTSubclassOf(const Bix::Reflection::PropertyInfo& property, void* instance)
+    {
+        // TSubclassOf<T> layout is String (asset path)
+        auto& pathStr = property.Get<String>(instance);
+
+        // Display current value as a button
+        String currentPath = pathStr;
+        std::string display = "None";
+        if (!currentPath.IsEmpty())
+        {
+            display = std::filesystem::path(currentPath.c_str()).filename().string();
+        }
+
+        if (ImGui::Button(display.c_str(), ImVec2(ImGui::GetContentRegionAvail().x, 0)))
+        {
+            ImGui::OpenPopup("AssetSelectorPopup_Single");
+        }
+
+        // Drag & Drop
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                const char* draggedPath = (const char*)payload->Data;
+                std::string fullPath = draggedPath;
+                std::replace(fullPath.begin(), fullPath.end(), '\\', '/');
+                pathStr = fullPath.c_str(); 
+            }
+            ImGui::EndDragDropTarget();
+        }
+
+        // Popup
+        if (ImGui::BeginPopup("AssetSelectorPopup_Single"))
+        {
+             ImGui::TextDisabled("Select Prefab");
+             ImGui::Separator();
+             
+             if (ImGui::Selectable("None"))
+             {
+                 pathStr = "";
+                 ImGui::CloseCurrentPopup();
+             }
+
+             // Scan for .prefab files
+             static std::vector<std::string> extensions = { ".prefab" };
+             auto foundFiles = FilesUtils::Utilities::ScanDirectory("", extensions);
+
+             static char searchBuffer[128] = "";
+             ImGui::InputTextWithHint("##Search", "Search...", searchBuffer, sizeof(searchBuffer));
+
+             for (const auto& path : foundFiles)
+             {
+                 std::string pStr = path.string();
+                 std::replace(pStr.begin(), pStr.end(), '\\', '/');
+                 std::string filename = path.filename().string();
+
+                 if (searchBuffer[0] != '\0')
+                 {
+                     std::string searchS = searchBuffer;
+                     // TODO: Case insensitive
+                     if (filename.find(searchS) == std::string::npos) 
+                         continue;
+                 }
+
+                 if (ImGui::Selectable(filename.c_str(), currentPath == pStr.c_str()))
+                 {
+                     pathStr = pStr.c_str();
+                     ImGui::CloseCurrentPopup();
+                 }
+                 
+                 if (ImGui::IsItemHovered())
+                     ImGui::SetTooltip("%s", pStr.c_str());
+             }
+
+             ImGui::EndPopup();
+        }
+        return true;
+    }
+
     bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& /*label*/)
     {
         if (!property.IsValid())
@@ -87,7 +349,8 @@ namespace BixEngine::Gui::ActorInspector
         {
             { "AudioClip", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioClip>(p, i, { ".mp3", ".wav", ".ogg" }); } },
             { "AudioContainer", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioContainer>(p, i, { ".bixaudio" }); } },
-            // Texture is handled specifically below because it has a custom preview widget, but could be moved here if generalized.
+            { "SpriteAtlas", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::SpriteAtlas>(p, i, { ".atlas" }); } },
+            // Texture is handled specifically below because it has a custom preview widget
         };
 
         // Check registry first
@@ -127,6 +390,28 @@ namespace BixEngine::Gui::ActorInspector
         if (ExposedVariableUtils::MatchesType(property.TypeName, "String") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "std::string"))
             return DrawString(property, instance);
+        
+        if (property.TypeName.find("vector<") != std::string::npos && 
+           (property.TypeName.find("String") != std::string::npos || property.TypeName.find("string") != std::string::npos))
+        {
+             return DrawStringArray(property, instance);
+        }
+
+        // TArray<TSubclassOf<T>> (or vector<TSubclassOf<T>>)
+        // We detect "TSubclassOf" in the type name.
+        if ((property.TypeName.find("vector<") != std::string::npos || property.TypeName.find("TArray<") != std::string::npos) && 
+            property.TypeName.find("TSubclassOf<") != std::string::npos)
+        {
+             // We cast to vector<String> assuming TSubclassOf has same layout as String
+             // This is a safe assumption given our implementation of TSubclassOf
+             return DrawTSubclassOfArray(property, instance);
+        }
+
+        // Single TSubclassOf<T>
+        if (property.TypeName.find("TSubclassOf<") != std::string::npos)
+        {
+            return DrawTSubclassOf(property, instance);
+        }
 
         if (ExposedVariableUtils::MatchesType(property.TypeName, "Texture") ||
             ExposedVariableUtils::MatchesType(property.TypeName, "BixEngine::resources::Texture") ||

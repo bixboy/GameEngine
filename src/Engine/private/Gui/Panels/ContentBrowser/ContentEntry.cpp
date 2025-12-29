@@ -32,12 +32,12 @@ namespace BixEngine::Gui
     {
         constexpr std::array<const char*, 6> kIcons{
             {
-                "\xef\x81\xbc", // Folder
-                "\xef\x87\x83", // File
-                "\xef\x84\x9b", // Script
-                "\xef\x8f\x88", // Actor prefab
-                "\xef\x89\xb2", // Component prefab
-                "\xef\x80\x8b" // Sprite atlas
+                "[DIR]", // Folder
+                "[FILE]", // File
+                "[SCRIPT]", // Script
+                "[ACTOR]", // Actor prefab
+                "[COMP]", // Component prefab
+                "[ATLAS]" // Sprite atlas
             }
         };
     }

@@ -9,10 +9,14 @@
 #include <filesystem>
 #include <sstream>
 #include <vector>
+#include <fstream>
 
 #include "Gui/Utils/ContentBrowserUtils.h"
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/FileIO/PrefabUtils.h"
+#include "Serializer/SceneSerializer.h"
+#include "Utils/FileIO/BinaryUtils.h"
+#include "Framework/Actor.h"
 
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
@@ -60,8 +64,6 @@ void CreatePrefabDialog::SetSelectedScript(const std::string& className, const s
 }
 
 // ============================================================================
-// UI RENDERING
-// ============================================================================
 void CreatePrefabDialog::DrawContent()
 {
     ContentBrowserUtils::EnsureScriptsDirectoryExists(state_);
@@ -69,7 +71,6 @@ void CreatePrefabDialog::DrawContent()
     const path scriptsDir = state_.root / "Scripts";
     auto scripts = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, state_.root);
     auto bases = PrefabUtils::Utilities::GetBaseClasses();
-
     std::vector<PrefabUtils::Utilities::PrefabScriptCandidate> candidates = PrefabUtils::Utilities::GatherPrefabCandidates(scripts, bases);
 
     DrawDescriptionText("Create a prefab asset linked to an existing gameplay script.");
@@ -201,7 +202,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     bool makeComponent = selectedIsComponent_ && !selectedIsActor_;
     const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
-    const char* type = makeComponent ? "Component" : "Actor";
+    // const char* type = makeComponent ? "Component" : "Actor"; // Unused warning fix
 
     std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
     if (baseName.empty())
@@ -217,49 +218,33 @@ bool CreatePrefabDialog::DrawActionButtons()
     if (!PrefabUtils::Utilities::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
         return false;
 
-    std::ostringstream json;
-    json << "{\n"
-        << "  \"type\": \"" << type << "\",\n"
-        << "  \"class\": \"" << PrefabUtils::Utilities::EscapeJson(selectedClass_.ToStdString()) << "\"";
-
-    if (!selectedInclude_.IsEmpty())
-        json << ",\n  \"include\": \"" << PrefabUtils::Utilities::EscapeJson(selectedInclude_.ToStdString()) << "\"";
-
-    auto exposedVars = PrefabUtils::Utilities::ExtractExposedVariables(selectedHeaderPath_, selectedInclude_.ToStdString(), state_.root / "Scripts");
-    if (!exposedVars.empty())
+    LOG_INFO("CreatePrefabDialog: Creating Actor instance of type: " + selectedClass_.ToStdString());
+    
+    // Create the Actor using the SceneSerializer factory (ensures default components)
+    auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(selectedClass_.ToStdString().c_str());
+    
+    if (!newActor)
     {
-        json << ",\n  \"variables\": [\n";
-        for (std::size_t i = 0; i < exposedVars.size(); ++i)
-        {
-            const auto& var = exposedVars[i];
-            json << "    { \"name\": \"" << PrefabUtils::Utilities::EscapeJson(var.name) << "\"";
-            
-            if (!var.type.empty())
-                json << ", \"type\": \"" << PrefabUtils::Utilities::EscapeJson(var.type) << "\"";
-            
-            if (!var.defaultValue.empty())
-                json << ", \"default\": \"" << PrefabUtils::Utilities::EscapeJson(var.defaultValue) << "\"";
-            
-            json << " }";
-            if (i + 1 < exposedVars.size())
-                json << ",";
-            
-            json << "\n";
-        }
-        json << "  ]\n";
-    }
-    else
-    {
-        json << "\n";
+        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "Failed to instantiate actor class: " + selectedClass_.ToStdString(), false);
     }
 
-    json << "}\n";
+    newActor->SetName(baseName);
+    
+    // Debug: Log component count
+    LOG_INFO("CreatePrefabDialog: Created actor has " + std::to_string(newActor->GetComponents().size()) + " components.");
 
-    if (FilesUtils::Utilities::TryWriteFile(target, json.str(), prefabError_))
+    LOG_INFO("CreatePrefabDialog: Serializing directly to Prefab V2...");
+
+    if (PrefabUtils::PrefabSerializer::SavePrefab(newActor.get(), target))
     {
+        LOG_INFO("CreatePrefabDialog: File written successfully. Closing.");
         Close();
         ClearSelection();
         prefabError_.Clear();
         state_.cache.dirty = true;
+        return true;
     }
+    
+    LOG_ERROR("CreatePrefabDialog: File write failed.");
+    return false;
 }

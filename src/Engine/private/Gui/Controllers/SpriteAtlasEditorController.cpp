@@ -32,13 +32,13 @@ namespace BixEngine::Gui
             return String(path.generic_string());
         }
 
-        float ComputeCellDimension(float totalSize, int count, int padding, int margin)
+        float ComputeCellDimension(float totalSize, float count, int padding, int margin)
         {
-            if (count <= 0)
+            if (count <= 0.001f)
                 return 0.0f;
-            const float totalPadding = static_cast<float>(std::max(0, count - 1) * padding);
+            const float totalPadding = std::max(0.0f, count - 1.0f) * padding;
             const float totalMargins = static_cast<float>(margin * 2);
-            return (totalSize - totalPadding - totalMargins) / static_cast<float>(count);
+            return (totalSize - totalPadding - totalMargins) / count;
         }
     }
 
@@ -70,9 +70,10 @@ namespace BixEngine::Gui
         {
             state->definition = definition;
             state->animations = std::move(animations);
-            const int safeColumns = std::max(0, definition.columns);
-            const int safeRows = std::max(0, definition.rows);
-            state->frameSelection.assign(static_cast<size_t>(safeColumns * safeRows), false);
+            const float safeColumns = std::max(0.0f, definition.columns);
+            const float safeRows = std::max(0.0f, definition.rows);
+            // Size is total integer cells required
+            state->frameSelection.assign(static_cast<size_t>(std::ceil(safeColumns) * std::ceil(safeRows)), false);
             if (!state->animations.empty())
             {
                 state->activeAnimation = 0;
@@ -113,7 +114,7 @@ namespace BixEngine::Gui
         // Affiche dimensions et paramètres du layout
         ImGui::Spacing();
         ImGui::Text("Texture: %s", state->textureAbsolutePath.filename().string().c_str());
-        ImGui::Text("Grid: %d cols × %d rows", state->definition.columns, state->definition.rows);
+        ImGui::Text("Grid: %.2f cols × %.2f rows", state->definition.columns, state->definition.rows);
         ImGui::Text("Margin: %d  |  Padding: %d", state->definition.margin, state->definition.padding);
         ImGui::Separator();
 
@@ -183,15 +184,19 @@ namespace BixEngine::Gui
         const float scaleX = dispW / texW;
         const float scaleY = dispH / texH;
 
-        const int cols = std::max(1, state.definition.columns);
-        const int rows = std::max(1, state.definition.rows);
+        const float cols = std::max(1.0f, state.definition.columns);
+        const float rows = std::max(1.0f, state.definition.rows);
         const float cellW = ComputeCellDimension(texW, cols, state.definition.padding, state.definition.margin);
         const float cellH = ComputeCellDimension(texH, rows, state.definition.padding, state.definition.margin);
 
         int hovered = -1;
-        for (int y = 0; y < rows; ++y)
+        
+        int iCols = (int)std::ceil(cols);
+        int iRows = (int)std::ceil(rows);
+        
+        for (int y = 0; y < iRows; ++y)
         {
-            for (int x = 0; x < cols; ++x)
+            for (int x = 0; x < iCols; ++x)
             {
                 const float x0 = (state.definition.margin + x * (cellW + state.definition.padding));
                 const float y0 = (state.definition.margin + y * (cellH + state.definition.padding));
@@ -201,7 +206,7 @@ namespace BixEngine::Gui
                 ImVec2 min(origin.x + x0 * scaleX, origin.y + y0 * scaleY);
                 ImVec2 max(origin.x + x1 * scaleX, origin.y + y1 * scaleY);
 
-                const int idx = y * cols + x;
+                const int idx = y * iCols + x;
                 const bool sel = idx < static_cast<int>(state.frameSelection.size()) && state.frameSelection[idx];
 
                 const auto& settings = EditorSettings::Get();
@@ -231,8 +236,8 @@ namespace BixEngine::Gui
                 ToggleFrameSelection(state, hovered, append);
 
             // infobulle frame
-            const int col = hovered % cols;
-            const int row = hovered / cols;
+            const int col = hovered % iCols;
+            const int row = hovered / iCols;
             ImGui::BeginTooltip();
             ImGui::Text("Frame %d (%d,%d)", hovered, col, row);
             ImGui::EndTooltip();
@@ -479,8 +484,8 @@ namespace BixEngine::Gui
 
         state.texture = std::move(texture);
         state.frames.clear();
-        state.cachedColumns = -1;
-        state.cachedRows = -1;
+        state.cachedColumns = -1.0f;
+        state.cachedRows = -1.0f;
         state.cachedPadding = -1;
         state.cachedMargin = -1;
         state.previewAnimationIndex = -1;
@@ -493,28 +498,28 @@ namespace BixEngine::Gui
         if (!state.texture)
         {
             state.frames.clear();
-            state.cachedColumns = -1;
-            state.cachedRows = -1;
+            state.cachedColumns = -1.0f;
+            state.cachedRows = -1.0f;
             state.cachedPadding = -1;
             state.cachedMargin = -1;
             return;
         }
 
-        const int columns = std::max(0, state.definition.columns);
-        const int rows = std::max(0, state.definition.rows);
-        const int expectedCount = columns * rows;
+        const float columns = std::max(0.0f, state.definition.columns);
+        const float rows = std::max(0.0f, state.definition.rows);
+        const int expectedCount = static_cast<int>(std::ceil(columns) * std::ceil(rows));
         if (expectedCount <= 0)
         {
             state.frames.clear();
-            state.cachedColumns = -1;
-            state.cachedRows = -1;
+            state.cachedColumns = -1.0f;
+            state.cachedRows = -1.0f;
             state.cachedPadding = -1;
             state.cachedMargin = -1;
             return;
         }
 
-        const bool layoutChanged = state.cachedColumns != columns ||
-            state.cachedRows != rows ||
+        const bool layoutChanged = std::abs(state.cachedColumns - columns) > 0.001f ||
+            std::abs(state.cachedRows - rows) > 0.001f ||
             state.cachedPadding != state.definition.padding ||
             state.cachedMargin != state.definition.margin;
 
@@ -525,8 +530,8 @@ namespace BixEngine::Gui
         if (frames.empty())
         {
             state.frames.clear();
-            state.cachedColumns = -1;
-            state.cachedRows = -1;
+            state.cachedColumns = -1.0f;
+            state.cachedRows = -1.0f;
             state.cachedPadding = -1;
             state.cachedMargin = -1;
             return;
@@ -596,10 +601,10 @@ namespace BixEngine::Gui
 
     int SpriteAtlasEditorController::FrameCount(const SharedState& state) const noexcept
     {
-        if (state.definition.columns <= 0 || state.definition.rows <= 0)
+        if (state.definition.columns <= 0.001f || state.definition.rows <= 0.001f)
             return 0;
         
-        return state.definition.columns * state.definition.rows;
+        return static_cast<int>(std::ceil(state.definition.columns) * std::ceil(state.definition.rows));
     }
 
     void SpriteAtlasEditorController::RemoveSelectedAnimation(SharedState& state, int index)

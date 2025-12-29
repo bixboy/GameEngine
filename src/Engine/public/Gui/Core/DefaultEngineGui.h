@@ -24,6 +24,7 @@ namespace BixEngine::Gui
     {
         Core::Timer* timer{nullptr};
         std::function<Game::SceneManager*()> sceneManagerProvider{};
+        std::function<Game::Scene*()> sceneProvider{};
         const float* lastDeltaTime{nullptr};
         std::function<Game::Actor*()> selectedActorGetter{};
         std::function<void(Game::Actor*)> selectedActorSetter{};

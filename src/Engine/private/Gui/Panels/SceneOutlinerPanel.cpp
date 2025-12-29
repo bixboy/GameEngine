@@ -11,6 +11,7 @@
 #include "Utils/FileIO/PrefabUtils.h"
 #include "Utils/Editor/ScriptUtils.h"
 #include "Debug/Logger.h"
+#include "Utils/FileIO/BinaryUtils.h"
 #include <fstream>
 #include <filesystem>
 
@@ -19,16 +20,26 @@ namespace BixEngine::Gui
 {
     using namespace Utils;
 
-    SceneOutlinerPanel::SceneOutlinerPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
+    SceneOutlinerPanel::SceneOutlinerPanel(
+        std::function<Game::Scene*()> sceneProvider, 
+        std::function<Game::Actor*()> selectionGetter, 
+        std::function<void(Game::Actor*)> selectionSetter,
+        std::function<bool(const Game::Actor*)> actorFilter)
         : GuiPanelBase("scene_outliner"),
-        sceneManagerProvider_(std::move(sceneProvider)),
+        getScene_(std::move(sceneProvider)),
         selectedActorGetter_(std::move(selectionGetter)),
-        selectedActorSetter_(std::move(selectionSetter))
+        selectedActorSetter_(std::move(selectionSetter)),
+        actorFilter_(std::move(actorFilter))
     {
         searchBuffer_.fill('\0');
     }
 
-    SceneOutlinerPanel::SceneOutlinerPanel(const DefaultEngineGuiContext& context) : SceneOutlinerPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
+    SceneOutlinerPanel::SceneOutlinerPanel(const DefaultEngineGuiContext& context) 
+        : SceneOutlinerPanel(
+            [context]() { return context.sceneManagerProvider ? context.sceneManagerProvider()->GetScene() : nullptr; }, 
+            context.selectedActorGetter, 
+            context.selectedActorSetter,
+            nullptr)
     {
     }
 
@@ -36,8 +47,7 @@ namespace BixEngine::Gui
     {
         ScopedID panelScope("SceneOutlinerPanel");
 
-        const Game::SceneManager* sceneManager = sceneManagerProvider_ ? sceneManagerProvider_() : nullptr;
-        const Game::Scene* activeScene = sceneManager ? sceneManager->GetScene() : nullptr;
+        const Game::Scene* activeScene = getScene_ ? getScene_() : nullptr;
         if (!activeScene)
         {
             DrawEmptyStateMessage("No active scene.");
@@ -100,36 +110,73 @@ namespace BixEngine::Gui
 
                 if (ImGui::BeginMenu("Add Actor from Script"))
                 {
-                    for (const auto& candidate : candidates)
+                    for (int i = 0; i < candidates.size(); ++i)
                     {
+                        const auto& candidate = candidates[i];
                         if (!candidate.isActor) continue;
+                        
+                        ImGui::PushID(i);
                         bool isPrefab = candidate.assetBaseName == "Prefab";
                         if (ImGui::MenuItem(candidate.displayName.c_str(), isPrefab ? "Prefab" : nullptr))
                         {
                             if (isPrefab) {
-                                // Prefab spawning logic (simplified for copy-paste safety)
-                                std::ifstream file(candidate.className);
-                                if (file.is_open()) {
-                                    std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-                                    std::string searchKey = "\"class\"";
-                                    size_t pos = content.find(searchKey);
-                                    if (pos != std::string::npos) {
-                                        size_t startQuote = content.find('"', pos + searchKey.length());
-                                        // Skip colon/space
-                                        while (startQuote != std::string::npos && (content[startQuote] == ':' || isspace(content[startQuote]))) startQuote = content.find('"', startQuote + 1);
-                                        if (startQuote != std::string::npos) {
-                                            size_t endQuote = content.find('"', startQuote + 1);
-                                            std::string className = content.substr(startQuote + 1, endQuote - startQuote - 1);
-                                            auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(className.c_str());
-                                            if (newActor) { newActor->SetName(candidate.displayName.c_str()); activeSceneMutable->AddActor(std::move(newActor)); }
+                                // Prefab spawning logic
+                                std::filesystem::path path(candidate.className);
+                                if (path.extension() == ".bixactor")
+                                {
+                                     std::ifstream file(path, std::ios::binary);
+                                     if (file.is_open())
+                                     {
+                                         BixEngine::Utils::BinaryReader reader(file);
+                                         String typeName;
+                                         if (reader.ReadString(typeName) && !typeName.IsEmpty())
+                                         {
+                                             auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
+                                             if (newActor)
+                                             {
+                                                 newActor->SetName(candidate.displayName.c_str());
+                                                 try {
+                                                     newActor->DeserializeBinary(file);
+                                                     activeSceneMutable->AddActor(std::move(newActor));
+                                                 } catch(...) {
+                                                     LOG_ERROR("Failed to deserialize actor: " + candidate.displayName);
+                                                 }
+                                             }
+                                         }
+                                     }
+                                }
+                                else
+                                {
+                                    // Fallback for legacy JSON or other
+                                    std::ifstream file(candidate.className);
+                                    if (file.is_open()) {
+                                        std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+                                        std::string searchKey = "\"class\"";
+                                        size_t pos = content.find(searchKey);
+                                        if (pos != std::string::npos) {
+                                            size_t startQuote = content.find('"', pos + searchKey.length());
+                                            while (startQuote != std::string::npos && (content[startQuote] == ':' || isspace(content[startQuote]))) startQuote = content.find('"', startQuote + 1);
+                                            if (startQuote != std::string::npos) {
+                                                size_t endQuote = content.find('"', startQuote + 1);
+                                                std::string className = content.substr(startQuote + 1, endQuote - startQuote - 1);
+                                                auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(className.c_str());
+                                                if (newActor) { 
+                                                    newActor->SetName(candidate.displayName.c_str()); 
+                                                    AddCreatedActor(activeSceneMutable, std::move(newActor));
+                                                }
+                                            }
                                         }
                                     }
                                 }
                             } else {
                                 auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(candidate.className.c_str());
-                                if (newActor) { newActor->SetName(candidate.displayName.c_str()); activeSceneMutable->AddActor(std::move(newActor)); }
+                                if (newActor) { 
+                                    newActor->SetName(candidate.displayName.c_str()); 
+                                    AddCreatedActor(activeSceneMutable, std::move(newActor));
+                                }
                             }
                         }
+                        ImGui::PopID();
                     }
                     ImGui::EndMenu();
                 }
@@ -145,13 +192,18 @@ namespace BixEngine::Gui
         const bool hasSearch = !searchQuery.IsEmpty();
 
         const auto& actors = activeScene->GetActors();
-        // Filter logic is inside DrawActorNode implicitly if hasSearch, or we filter roots here.
-        // Actually, for search, we iterate all and draw matches.
-        // For no search, we iterate roots.
-
-        // Count stats
+    
+        // Count stats (Filtered)
         std::size_t totalActors = 0;
-        for (const auto& actor : actors) if (actor) totalActors++;
+        for (const auto& actor : actors) 
+        {
+            if (actor)
+            {
+                if (actorFilter_ && !actorFilter_(actor.get()))
+                    continue;
+                totalActors++;
+            }
+        }
 
         const String& sceneName = activeScene->GetName();
         const auto sceneNameView = sceneName.View();
@@ -172,7 +224,10 @@ namespace BixEngine::Gui
                     Game::Actor* droppedActor = *(Game::Actor**)payload->Data;
                     if (droppedActor)
                     {
-                        droppedActor->SetParent(nullptr);
+                        if (CanReparentActor(droppedActor, nullptr))
+                        {
+                            OnReparentActor(droppedActor, nullptr);
+                        }
                     }
                 }
                 ImGui::EndDragDropTarget();
@@ -191,10 +246,12 @@ namespace BixEngine::Gui
                 {
                     if (!actor) continue;
 
+                    if (actorFilter_ && !actorFilter_(actor.get()))
+                        continue;
+
                     if (hasSearch)
                     {
                         // Flat search
-                        // Re-implement filter locally or helper
                          const String& actorName = actor->GetName();
                          String typeName(actor->GetTypeName());
                          bool match = (!actorName.IsEmpty() && actorName.Contains(searchQuery.View(), false)) || typeName.Contains(searchQuery.View(), false);
@@ -221,9 +278,17 @@ namespace BixEngine::Gui
         
         if (actorPendingDelete_)
         {
+            // Check if we need to clear selection (if selected actor is being deleted or is a child of it)
+            if (selectedActorGetter_ && selectedActorSetter_)
+            {
+                Game::Actor* selected = selectedActorGetter_();
+                if (selected && (selected == actorPendingDelete_ || selected->IsChildOf(actorPendingDelete_)))
+                {
+                    selectedActorSetter_(nullptr);
+                }
+            }
+
             activeSceneMutable->RemoveActor(actorPendingDelete_);
-            if (selectedActorGetter_ && selectedActorGetter_() == actorPendingDelete_ && selectedActorSetter_)
-                selectedActorSetter_(nullptr);
             actorPendingDelete_ = nullptr;
         }
 
@@ -315,7 +380,10 @@ namespace BixEngine::Gui
                 Game::Actor* droppedActor = *(Game::Actor**)payload->Data;
                 if (droppedActor && droppedActor != actor && !droppedActor->IsChildOf(actor))
                 {
-                    droppedActor->SetParent(actor);
+                    if (CanReparentActor(droppedActor, actor))
+                    {
+                        OnReparentActor(droppedActor, actor);
+                    }
                 }
             }
             ImGui::EndDragDropTarget();
@@ -339,7 +407,7 @@ namespace BixEngine::Gui
                 openRenamePopup_ = true;
             }
 
-            if (ImGui::MenuItem("Delete"))
+            if (CanDeleteActor(actor) && ImGui::MenuItem("Delete"))
             {
                 actorPendingDelete_ = actor;
             }
@@ -362,6 +430,22 @@ namespace BixEngine::Gui
                 }
             }
             ImGui::TreePop();
+        }
+    }
+
+    void SceneOutlinerPanel::AddCreatedActor(Game::Scene* scene, std::unique_ptr<Game::Actor> actor)
+    {
+        if (scene && actor)
+        {
+            scene->AddActor(std::move(actor));
+        }
+    }
+
+    void SceneOutlinerPanel::OnReparentActor(Game::Actor* actor, Game::Actor* newParent)
+    {
+        if (actor)
+        {
+            actor->SetParent(newParent);
         }
     }
 }

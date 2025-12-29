@@ -2,6 +2,7 @@
 #include "Framework/Actor.h"
 #include "Renderer.h"
 #include "Ressources/RessourcesClass/Texture.h"
+#include "Components/Core/CameraComponent.h"
 #include "SDL3/SDL_render.h"
 #include <algorithm>
 
@@ -53,20 +54,16 @@ namespace BixEngine::Game
     void SpriteComponent::BeginPlay()
     {
         Component::BeginPlay();
+        lastTexture_ = texture_;
     }
 
     void SpriteComponent::Render(Graphics::Renderer& renderer) const
     {
         // Use the Actor's World Transform Matrix
-        // This handles Position, Rotation (Yaw), Scale, and Parent Hierarchy automatically.
         const Math::Transform& transform = owner_->GetTransform(); 
-        // Note: GetTransform returns by value in Object.h? Check. 
-        // If it returns by value, we are fine, copy has 'parent' ptr.
-        // Actually access to ToMatrix3() is what we need.
         Math::Matrix3 worldMatrix = transform.ToMatrix3(); 
 
         // 1. Calculate Local Vertices (Object Space) based on Size and Pivot
-        // The actor's transform applies TO these points.
         float w = size_.x;
         float h = size_.y;
         float px = pivot_.x * w;
@@ -79,19 +76,28 @@ namespace BixEngine::Game
 
         auto TransformPoint = [&](const Math::Vector2<float>& p) -> Math::Vector2<float>
         {
-            // Vector3 input(p.x, p.y, 1.0f);
-            // Vector3 res = worldMatrix * input;
-            // But Transform::TransformPoint does exactly this logic if we had the instance.
-            // Or we do it manually with matrix:
             Math::Vector3 input{ p.x, p.y, 1.0f };
             Math::Vector3 res = worldMatrix * input;
             return { res.x, res.y };
         };
 
-        Math::Vector2<float> worldTL = TransformPoint(localTL);
-        Math::Vector2<float> worldTR = TransformPoint(localTR);
-        Math::Vector2<float> worldBL = TransformPoint(localBL);
-        Math::Vector2<float> worldBR = TransformPoint(localBR);
+        Math::Vector2<float> finalTL = TransformPoint(localTL);
+        Math::Vector2<float> finalTR = TransformPoint(localTR);
+        Math::Vector2<float> finalBL = TransformPoint(localBL);
+        Math::Vector2<float> finalBR = TransformPoint(localBR);
+
+        // ---------------------------------------------------------
+        // CAMERA TRANSFORM
+        // ---------------------------------------------------------
+        if (auto* cam = CameraComponent::GetMainCamera())
+        {
+            auto ToVec3 = [](const Math::Vector2<float>& v) { return Math::Vector3(v.x, v.y, 0.0f); };
+            
+            finalTL = cam->WorldToScreen(ToVec3(finalTL));
+            finalTR = cam->WorldToScreen(ToVec3(finalTR));
+            finalBL = cam->WorldToScreen(ToVec3(finalBL));
+            finalBR = cam->WorldToScreen(ToVec3(finalBR));
+        }
 
         // 2. Prepare Colors
         SDL_Texture* nativeTexture = texture_ ? static_cast<SDL_Texture*>(texture_->GetNativeHandle()) : nullptr;
@@ -103,24 +109,31 @@ namespace BixEngine::Game
         Math::Vector2<float> uvs[4];
         if (nativeTexture)
         {
-            // Normalize UVs
             float tw = static_cast<float>(texture_->GetWidth());
             float th = static_cast<float>(texture_->GetHeight());
+
+            Math::Rect effectiveUV = uvRect_;
+            // Fallback: If UV is zero-sized, use the full texture
+            if (effectiveUV.Width <= 0.0f || effectiveUV.Height <= 0.0f)
+            {
+                effectiveUV = {0.0f, 0.0f, tw, th};
+            }
+
             if (tw > 0 && th > 0)
             {
                 float invW = 1.0f / tw;
                 float invH = 1.0f / th;
-                uvs[0] = { uvRect_.X * invW, uvRect_.Y * invH }; // TL
-                uvs[1] = { (uvRect_.X + uvRect_.Width) * invW, uvRect_.Y * invH }; // TR
-                uvs[2] = { uvRect_.X * invW, (uvRect_.Y + uvRect_.Height) * invH }; // BL
-                uvs[3] = { (uvRect_.X + uvRect_.Width) * invW, (uvRect_.Y + uvRect_.Height) * invH }; // BR
+                uvs[0] = { effectiveUV.X * invW, effectiveUV.Y * invH }; // TL
+                uvs[1] = { (effectiveUV.X + effectiveUV.Width) * invW, effectiveUV.Y * invH }; // TR
+                uvs[2] = { effectiveUV.X * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; // BL
+                uvs[3] = { (effectiveUV.X + effectiveUV.Width) * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; // BR
+            }
+            else
+            {
+                uvs[0] = {0,0}; uvs[1] = {1,0}; uvs[2] = {0,1}; uvs[3] = {1,1};
             }
             
             SDL_SetTextureBlendMode(nativeTexture, blendMode_);
-            // SDL_RenderGeometry uses the colors passed in vertices, checks texture alpha logic.
-            // But SDL_RenderGeometry respects SetTextureColorMod? Docs say:
-            // "The color of the vertices is multiplied with the texture color."
-            // So we can burn color into vertices. 
         }
         else
         {
@@ -136,8 +149,8 @@ namespace BixEngine::Game
         // 2: BR
         // 3: BL
         
-        vertices[0] = { {worldTL.x, worldTL.y}, col, {uvs[0].x, uvs[0].y} };
-        vertices[1] = { {worldTR.x, worldTR.y}, col, {uvs[1].x, uvs[1].y} }; // TR 
+        vertices[0] = { {finalTL.x, finalTL.y}, col, {uvs[0].x, uvs[0].y} };
+        vertices[1] = { {finalTR.x, finalTR.y}, col, {uvs[1].x, uvs[1].y} }; // TR 
         
         // Wait, my uvs array filling was:
         // 2 was BL, 3 was BR in my loop above?
@@ -148,10 +161,10 @@ namespace BixEngine::Game
         // uvs[3] -> BR relative to Rect (X, Y)
 
         // Vertex 2: BR
-        vertices[2] = { {worldBR.x, worldBR.y}, col, {uvs[3].x, uvs[3].y} };
+        vertices[2] = { {finalBR.x, finalBR.y}, col, {uvs[3].x, uvs[3].y} };
         
         // Vertex 3: BL
-        vertices[3] = { {worldBL.x, worldBL.y}, col, {uvs[2].x, uvs[2].y} };
+        vertices[3] = { {finalBL.x, finalBL.y}, col, {uvs[2].x, uvs[2].y} };
 
         // Indices: TL(0) -> TR(1) -> BR(2); TL(0) -> BR(2) -> BL(3)
         int indices[] = { 0, 1, 2, 0, 2, 3 };

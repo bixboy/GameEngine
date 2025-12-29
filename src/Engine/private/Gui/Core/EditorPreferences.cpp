@@ -4,12 +4,13 @@
 #include "imgui.h"
 #include <fstream>
 #include <filesystem>
+#include "IO/FileUtils.h"
 
 namespace BixEngine::Gui
 {
     namespace
     {
-        constexpr std::uint32_t kEditorSettingsVersion = 1;
+        constexpr std::uint32_t kEditorSettingsVersion = 2;
         const char* kEditorSettingsFileName = "editor_settings.bin";
     }
 
@@ -114,6 +115,10 @@ namespace BixEngine::Gui
         writer.WritePrimitive(ThemeAccentColor);
         writer.WritePrimitive(ThemeWarningColor);
         writer.WritePrimitive(ThemeErrorColor);
+
+        // Project
+        // Convert to Bix::String for BinaryWriter
+        writer.WriteString(String(DefaultMapPath.c_str())); 
     }
 
     void EditorSettings::Load()
@@ -125,7 +130,7 @@ namespace BixEngine::Gui
         BinaryReader reader(file);
 
         std::uint32_t version = 0;
-        if (!reader.ReadUint32(version) || version != kEditorSettingsVersion) return;
+        if (!reader.ReadUint32(version)) return;
 
         // Gizmos
         reader.ReadPrimitive(EnableSnap);
@@ -172,6 +177,16 @@ namespace BixEngine::Gui
         reader.ReadPrimitive(ThemeAccentColor);
         reader.ReadPrimitive(ThemeWarningColor);
         reader.ReadPrimitive(ThemeErrorColor);
+
+        // Project
+        if (version >= 2)
+        {
+             String tempPath;
+             if (reader.ReadString(tempPath))
+             {
+                 DefaultMapPath = tempPath.size() > 0 ? tempPath.c_str() : "";
+             }
+        }
     }
 
     void EditorPreferencesWindow::Draw(bool* open)
@@ -255,7 +270,54 @@ namespace BixEngine::Gui
                 if (ImGui::ColorEdit4("Warning Tint", (float*)&settings.ThemeWarningColor, ImGuiColorEditFlags_NoInputs)) { SyncTheme(settings); settings.Save(); }
                 if (ImGui::ColorEdit4("Error Tint", (float*)&settings.ThemeErrorColor, ImGuiColorEditFlags_NoInputs)) { SyncTheme(settings); settings.Save(); }
             }
+
+            if (ImGui::CollapsingHeader("Project", ImGuiTreeNodeFlags_DefaultOpen))
+            {
+                // InputText for std::string
+                // Buffer resizing logic or simple static buffer?
+                // imgui_stdlib.h usually provides support for std::string directly.
+                // If not, we use a temp buffer. Assuming stdlib support or basic buffer.
+                // Let's assume user has ImGui STL support or use a char buffer.
+                // Checking previous includes... imgui.h is included.
+                // If imgui_stdlib.h is missing, we must implement a wrapper.
+                // BixEngine ImGui usually has helpers?
+                // Safest is to use a fixed buffer and assign back.
+                
+                static char buffer[256];
+                strncpy_s(buffer, settings.DefaultMapPath.c_str(), _TRUNCATE);
+                if (ImGui::InputText("Default Map", buffer, sizeof(buffer)))
+                {
+                    settings.DefaultMapPath = buffer;
+                    settings.Save();
+                }
+                ImGui::SameLine();
+                if (ImGui::Button("Browse..."))
+                {
+                    // Filter: Display Name \0 Pattern \0 ... \0
+                    const char* filter = "Scene Files (*.bix)\0*.bix\0All Files (*.*)\0*.*\0";
+                    std::string path = BixEngine::Core::OpenFileDialog(filter); // Fixed namespace
+                    if (!path.empty())
+                    {
+                        settings.DefaultMapPath = path;
+                        settings.Save();
+                        // Update buffer for immediate feedback if relying on static buffer
+                        strncpy_s(buffer, path.c_str(), _TRUNCATE);
+                    }
+                }
+                ImGui::SameLine();
+                // Simple helper to verify if file exists
+                if (!settings.DefaultMapPath.empty())
+                {
+                    if (std::filesystem::exists(settings.DefaultMapPath))
+                        ImGui::TextColored({0,1,0,1}, "[Valid]");
+                    else
+                        ImGui::TextColored({1,0,0,1}, "[Invalid]");
+                }
+            }
         }
         ImGui::End();
     }
 }
+
+
+

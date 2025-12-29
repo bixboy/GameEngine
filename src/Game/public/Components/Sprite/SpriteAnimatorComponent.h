@@ -21,9 +21,10 @@ namespace BixEngine::Game
 
         void BeginPlay() override;
         void Update(float deltaTime) override;
-        void DrawInspectorUI() override;
 
         bool LoadSpriteAtlas(const String& atlasPath, const String& defaultAnimation = {});
+        
+        void DrawInspectorUI() override;
 
         void Play();
         void Play(const String& animationName);
@@ -36,13 +37,14 @@ namespace BixEngine::Game
     private:
         void ApplyCurrentFrame(bool allowFallbackToDefault);
 
-        BPROPERTY()
+        BPROPERTY(EditAnywhere)
         std::shared_ptr<resources::SpriteAtlas> atlas_{};
 
         String defaultAnimation_{};
 
         resources::SpriteAnimator animator_{};
         
+        BPROPERTY(VisibleAnywhere)
         String atlasPath_{};
         String currentAnimation_{};
     };

@@ -523,6 +523,12 @@ namespace BixEngine::Core
 
     void GuiAssetEditorManager::PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorController::SharedState& state)
     {
+        if (path.extension() == ".bixactor")
+        {
+             // Binary file, skip JSON parsing
+            return;
+        }
+
         std::ifstream file(path);
         if (!file.is_open())
         {

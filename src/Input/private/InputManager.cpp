@@ -94,10 +94,15 @@ namespace BixEngine::Input
 
     void InputManager::Reset() noexcept
     {
-        if (input_)
-            input_->ResetState();
+        ResetState();
 
         actionBindings_.clear();
         axisBindings_.clear();
+    }
+
+    void InputManager::ResetState() noexcept
+    {
+        if (input_)
+            input_->ResetState();
     }
 }

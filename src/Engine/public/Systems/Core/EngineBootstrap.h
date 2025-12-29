@@ -55,6 +55,8 @@ namespace BixEngine::Core
         // Redémarre entièrement le moteur (shutdown + init).
         bool Restart();
 
+        // Indique si une scène est actuellement active.
+        bool HasActiveScene() const;
 
         // Crée et active une scène de type TScene.
         template <typename TScene, typename... Args>

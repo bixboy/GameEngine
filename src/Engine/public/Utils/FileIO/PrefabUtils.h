@@ -5,6 +5,8 @@
 #include "Utils/Editor/ScriptUtils.h"
 #include "Debug/Logger.h"
 
+namespace BixEngine::Game { class Actor; }
+
 namespace BixEngine::PrefabUtils
 {
     class Utilities
@@ -57,5 +59,12 @@ namespace BixEngine::PrefabUtils
         // ─────────────────────────────────────────────
 
         static std::vector<PrefabScriptCandidate> GatherPrefabCandidates(const std::vector<BixEngine::ScriptUtils::ScriptNode>& roots, const std::vector<BixEngine::ScriptUtils::ParentScriptInfo>& baseClasses);
+    };
+
+    class PrefabSerializer
+    {
+    public:
+        static bool SavePrefab(const BixEngine::Game::Actor* rootActor, const std::filesystem::path& path);
+        static std::unique_ptr<BixEngine::Game::Actor> LoadPrefab(const std::filesystem::path& path);
     };
 }

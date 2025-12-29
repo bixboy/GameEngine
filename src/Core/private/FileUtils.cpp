@@ -3,6 +3,13 @@
 #include "Debug/Logger.h"
 #include "Containers/String.h"
 
+#ifdef _WIN32
+    #define WIN32_LEAN_AND_MEAN
+    #include <windows.h>
+    #include <commdlg.h>
+    #pragma comment(lib, "Comdlg32.lib")
+#endif
+
 namespace fs = std::filesystem;
 
 
@@ -54,5 +61,30 @@ namespace BixEngine::Core
         }
 
         return foundPath;
+    }
+
+    std::string OpenFileDialog(const char* filter)
+    {
+#ifdef _WIN32
+        OPENFILENAMEA ofn;
+        CHAR szFile[260] = { 0 };
+        ZeroMemory(&ofn, sizeof(ofn));
+        ofn.lStructSize = sizeof(ofn);
+        ofn.hwndOwner = nullptr; 
+        ofn.lpstrFile = szFile;
+        ofn.nMaxFile = sizeof(szFile);
+        ofn.lpstrFilter = filter;
+        ofn.nFilterIndex = 1;
+        ofn.lpstrFileTitle = nullptr;
+        ofn.nMaxFileTitle = 0;
+        ofn.lpstrInitialDir = nullptr;
+        ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST | OFN_NOCHANGEDIR;
+
+        if (GetOpenFileNameA(&ofn) == TRUE)
+        {
+            return std::string(ofn.lpstrFile);
+        }
+#endif
+        return std::string();
     }
 }

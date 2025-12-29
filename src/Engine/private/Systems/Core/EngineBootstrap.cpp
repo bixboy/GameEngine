@@ -7,6 +7,9 @@
 #include "Renderer.h"
 #include "Ressources/Core/ResourceManager.h"
 #include "Ressources/Loaders/ResourceLoaders.h"
+#include "Gui/Core/EditorPreferences.h"
+#include "Serializer/SceneSerializer.h"
+#include "Framework/SceneManager.h"
 
 namespace
 {
@@ -111,6 +114,28 @@ namespace BixEngine::Core
         eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         renderLoop_.Configure(&subsystems_, &guiModule_, renderer_.get(), config_.clearColor);
 
+        // --- Load Default Map (if configured) ---
+        // --- Load Default Map (if configured) ---
+        const auto& defaultMap = BixEngine::Gui::EditorSettings::Get().DefaultMapPath;
+        LOG_INFO("Bootstrap: Checking default map path: " + (defaultMap.empty() ? "EMPTY" : defaultMap));
+
+        if (!defaultMap.empty() && std::filesystem::exists(defaultMap))
+        {
+            LOG_INFO("Loading default map: " + defaultMap);
+            // Create a new scene and deserialize into it
+            auto newScene = std::make_unique<Game::Scene>("DefaultScene");
+            
+            if (BixEngine::Serialization::SceneSerializer::LoadBinary(*newScene, defaultMap))
+            {
+                subsystems_.GetSceneManager()->SetScene(std::move(newScene));
+                LOG_INFO("Default map loaded successfully.");
+            }
+            else
+            {
+                LOG_ERROR("Failed to load default map: " + defaultMap);
+            }
+        }
+
         // --- Default GUI panels (debug overlay, FPS counter, etc.) ---
         guiModule_.SetupDefaultGuiPanels(subsystems_, renderLoop_.GetLastDeltaTimePointer());
 
@@ -192,6 +217,19 @@ namespace BixEngine::Core
         LOG_INFO("Restarting EngineBootstrap...");
         ShutdownAll();
         return InitializeAll();
+    }
+
+    bool EngineBootstrap::HasActiveScene() const
+    {
+        // On const_cast car SubsystemManager::GetActiveScene n'est pas const-correct si subsystems_ est const,
+        // mais ici subsystems_ est mutable dans la classe.
+        // Attendez, GetActiveScene() dans SubsystemManager retourne Game::Scene*.
+        // Mais EngineBootstrap::subsystems_ est non-const.
+        // Cependant dans une méthode const, subsystems_ est const.
+        // Je dois vérifier si SubsystemManager a une méthode const pour le getter.
+        // SubsystemManager.h: line 94: const Game::Scene* GetScene() const noexcept;
+        // Donc je peux utiliser GetScene().
+        return subsystems_.GetScene() != nullptr;
     }
 
     bool EngineBootstrap::CreateWindow()

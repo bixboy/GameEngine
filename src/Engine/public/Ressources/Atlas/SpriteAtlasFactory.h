@@ -10,8 +10,8 @@ namespace BixEngine::resources
     struct SpriteAtlasCreationParams
     {
         std::filesystem::path texturePath{};
-        int columns{1};
-        int rows{1};
+        float columns{1.f};
+        float rows{1.f};
         int padding{0};
         int margin{0};
     };

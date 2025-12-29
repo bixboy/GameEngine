@@ -19,7 +19,8 @@ using namespace BixEngine::resources;
 CreateSpriteAtlasDialog::CreateSpriteAtlasDialog(ContentBrowserState& s, String& selected) : ModalDialog(s, selected, "ContentBrowserCreateSpriteAtlas")
 {
     atlasName_[0] = texturePathBuffer_[0] = '\0';
-    columns_ = rows_ = padding_ = margin_ = 0;
+    columns_ = rows_ = 0.0f;
+    padding_ = margin_ = 0;
     frameRate_ = 24.f;
     loop_ = true;
 }
@@ -37,7 +38,8 @@ void CreateSpriteAtlasDialog::Open(const path& src)
 
     printf(atlasName_, IM_ARRAYSIZE(atlasName_), "%s", name.c_str());
 
-    columns_ = rows_ = padding_ = margin_ = 0;
+    columns_ = rows_ = 0.0f;
+    padding_ = margin_ = 0;
     frameRate_ = 24.f;
     loop_ = true;
     textureCandidates_.clear();
@@ -118,9 +120,9 @@ void CreateSpriteAtlasDialog::DrawInputFields()
     ImGui::Text("Grid:");
     ImGui::SameLine();
     ImGui::PushItemWidth(80);
-    ImGui::InputInt("Columns", &columns_);
+    ImGui::InputFloat("Columns", &columns_, 1.0f, 1.0f, "%.1f");
     ImGui::SameLine();
-    ImGui::InputInt("Rows", &rows_);
+    ImGui::InputFloat("Rows", &rows_, 1.0f, 1.0f, "%.1f");
     ImGui::PopItemWidth();
 
     ImGui::InputInt("Padding", &padding_);
@@ -252,8 +254,8 @@ void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
     if (!SpriteAtlasUtils::AutoDetectGrid(texturePath_, detectedCols, detectedRows))
         return;
 
-    columns_ = std::max(1, detectedCols);
-    rows_ = std::max(1, detectedRows);
+    columns_ = std::max(1.0f, (float)detectedCols);
+    rows_ = std::max(1.0f, (float)detectedRows);
 
     padding_ = 0;
     margin_  = 0;
@@ -290,8 +292,8 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
     {
         SpriteAtlasCreationParams p;
         p.texturePath = tex;
-        p.columns = std::max(1,columns_);
-        p.rows    = std::max(1,rows_);
+        p.columns = std::max(1.0f,columns_);
+        p.rows    = std::max(1.0f,rows_);
         p.padding = std::max(0,padding_);
         p.margin  = std::max(0,margin_);
 
@@ -303,7 +305,11 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
         if (framesDir_.empty() || !fs::exists(framesDir_))
             return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
 
-        if (!AtlasGenerator::GenerateAtlas(framesDir_,columns_,rows_,padding_,margin_,frameRate_,loop_))
+        // AtlasGenerator expects INT columns/rows (it packs frames into a grid)
+        int iCols = (int)std::max(1.0f, std::ceil(columns_));
+        int iRows = (int)std::max(1.0f, std::ceil(rows_));
+
+        if (!AtlasGenerator::GenerateAtlas(framesDir_,iCols,iRows,padding_,margin_,frameRate_,loop_))
             return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Failed to generate atlas.",false), false;
 
         path autoOut = framesDir_ / (base+".atlas");

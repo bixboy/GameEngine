@@ -35,6 +35,12 @@ namespace BixEngine::Core
          */
         bool Initialize();
 
+        /**
+         * Indique si une scène est déjà chargée.
+         */
+        bool HasActiveScene() const;
+
+
 
         /**
          * Exécute la boucle principale (Tick) jusqu'à ce que IsRunning() devienne false.

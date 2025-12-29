@@ -58,8 +58,8 @@ namespace BixEngine::Game
         virtual void HandleEvent(const SDL_Event& event) { (void)event; }
         virtual void Update(float deltaTime) { (void)deltaTime; }
         virtual void LateUpdate(float deltaTime) { (void)deltaTime; }
-        virtual void Render(Graphics::Renderer& renderer) { (void)renderer; }
-        virtual void PostRender(Graphics::Renderer& renderer) { (void)renderer; }
+        virtual void Render(Graphics::Renderer& renderer);
+        virtual void PostRender(Graphics::Renderer& renderer);
 
         // Context
         void SetContext(SceneContext context) noexcept;
@@ -119,17 +119,18 @@ namespace BixEngine::Game
             return name_;
         }
 
-    protected:
+        void SetSourcePath(const String& path);
+        [[nodiscard]] const String& GetSourcePath() const noexcept { return sourcePath_; }
 
-        // Safe subsystem access
+        [[nodiscard]] Core::Window& GetWindow() const;
+        [[nodiscard]] bool HasWindow() const noexcept { return context_.window != nullptr; }
+
+        // Safe subsystem access (Now Public for Actors)
         [[nodiscard]] Input::InputManager& GetInputManager() const;
         [[nodiscard]] bool HasInputManager() const noexcept { return context_.inputManager != nullptr; }
 
         [[nodiscard]] Graphics::Renderer& GetRenderer() const;
         [[nodiscard]] bool HasRenderer() const noexcept { return context_.renderer != nullptr; }
-
-        [[nodiscard]] Core::Window& GetWindow() const;
-        [[nodiscard]] bool HasWindow() const noexcept { return context_.window != nullptr; }
 
         [[nodiscard]] Core::Timer& GetTimer() const;
         [[nodiscard]] bool HasTimer() const noexcept { return context_.timer != nullptr; }
@@ -139,11 +140,14 @@ namespace BixEngine::Game
 
     private:
         String name_;
+        String sourcePath_;
         SceneContext context_{};
         std::vector<std::unique_ptr<Actor>> actors_;
+        std::vector<std::unique_ptr<Actor>> pendingDestruction_;
         
         // Physics
         b2WorldId physicsWorldId_ = b2_nullWorldId;
+        float physicsAccumulator_ = 0.0f;
 
     public:
         [[nodiscard]] b2WorldId GetPhysicsWorld() const noexcept { return physicsWorldId_; }

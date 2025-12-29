@@ -95,7 +95,7 @@ namespace BixEngine::Core
             input_->ResetState();
 
         if (inputManager_)
-            inputManager_->Reset();
+            inputManager_->ResetState();
     }
 
     void SubsystemManager::ProcessEvent(const SDL_Event& event)

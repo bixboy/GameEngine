@@ -104,8 +104,8 @@ namespace BixEngine::Core
         }
 
         lastMouseMotionTimestampNs_ = nowNs;
-        lastMouseX_ = motion.x;
-        lastMouseY_ = motion.y;
+        lastMouseX_ = static_cast<int>(motion.x);
+        lastMouseY_ = static_cast<int>(motion.y);
 
         ++mouseEventsWindowCount_;
         return false;

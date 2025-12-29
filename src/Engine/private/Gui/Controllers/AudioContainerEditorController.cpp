@@ -274,11 +274,18 @@ namespace BixEngine::Gui
                 // Drag & Drop Target on the Combo
                 if (ImGui::BeginDragDropTarget())
                 {
-                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM_AUDIO"))
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
                     {
-                        const char* path = (const char*)payload->Data;
-                        track.Clip = resources::ResourceManager::Get().Get<resources::AudioClip>(path);
-                        isDirty_ = true;
+                        const char* pathStr = (const char*)payload->Data;
+                        std::filesystem::path p(pathStr);
+                        std::string ext = p.extension().string();
+                        std::transform(ext.begin(), ext.end(), ext.begin(), [](unsigned char c){ return std::tolower(c); });
+                        
+                        if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
+                        {
+                            track.Clip = resources::ResourceManager::Get().Get<resources::AudioClip>(pathStr);
+                            isDirty_ = true;
+                        }
                     }
                     ImGui::EndDragDropTarget();
                 }

@@ -31,6 +31,7 @@ namespace BixEngine::Input
         void Update();
 
         void Reset() noexcept;
+        void ResetState() noexcept;
 
 
         // ======= Bind Action =======

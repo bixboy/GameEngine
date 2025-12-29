@@ -369,10 +369,7 @@ void CreateScriptDialog::DrawContent()
     headerFile << "    {\n";
     headerFile << "        GENERATED_BODY()\n\n";
     headerFile << "    public:\n";
-    headerFile << "        using Super = "
-               << (hasParent ? selectedParentClass_.c_str()
-                             : (inheritsComponent ? "::BixEngine::Game::Component" : "::BixEngine::Game::Actor"))
-               << ";\n\n";
+
     if (inheritsComponent)
         headerFile << "        explicit " << baseNameStr << "(Actor* owner);\n";
     else
@@ -398,10 +395,10 @@ void CreateScriptDialog::DrawContent()
         sourceFile << "    " << baseNameStr << "::" << baseNameStr << "() = default;\n\n";
     }
     sourceFile << "    void " << baseNameStr << "::BeginPlay() {\n";
-    sourceFile << "        Super::BeginPlay();\n";
+    sourceFile << "        " << baseType << "::BeginPlay();\n";
     sourceFile << "    }\n\n";
     sourceFile << "    void " << baseNameStr << "::Update(float deltaTime) {\n";
-    sourceFile << "        Super::Update(deltaTime);\n";
+    sourceFile << "        " << baseType << "::Update(deltaTime);\n";
     sourceFile << "    }\n";
     sourceFile << "}\n\n";
 

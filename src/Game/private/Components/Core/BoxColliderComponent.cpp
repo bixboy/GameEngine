@@ -2,10 +2,15 @@
 #include "Framework/Actor.h"
 #include "Framework/Scene.h"
 #include "Debug/Logger.h"
+#include "Framework/PhysicsConstants.h"
 #include <imgui.h>
 
 namespace BixEngine::Game
 {
+    // ────────────────────────────────────────────────
+    // Lifecycle
+    // ────────────────────────────────────────────────
+
     BoxColliderComponent::BoxColliderComponent() = default;
 
     BoxColliderComponent::BoxColliderComponent(Actor* owner) : Super(owner)
@@ -29,39 +34,60 @@ namespace BixEngine::Game
 
         if (!b2Body_IsValid(bodyId_)) return;
 
-        // If simulating logic (Dynamic), we sync Physics -> Actor
-        if (simulatePhysics_)
+        // 1. Sync Physics -> Actor (if simulating)
+        if (simulatePhysics_ && owner_)
         {
             b2Vec2 pos = b2Body_GetPosition(bodyId_);
             b2Rot rot = b2Body_GetRotation(bodyId_);
             float angleRad = b2Rot_GetAngle(rot);
 
-            if (owner_)
-            {
-                Math::Transform& transform = owner_->GetTransformRef();
-                // We update local transform assuming parentless or relative to world?
-                // Box2D is world space. BixEngine Actor Transform is local relative to parent.
-                // For simplicity here, assuming root actors or handling world sync properly would require matrix math.
-                // We will set local position to match world pos (assuming no parent for physics objects for now).
-                
-                transform.position.x = pos.x;
-                transform.position.y = pos.y;
-                transform.rotation.yaw = Math::Rad2Deg(angleRad);
-            }
+            Math::Transform& transform = owner_->GetTransformRef();
+            transform.position.x = pos.x * Physics::PPM;
+            transform.position.y = pos.y * Physics::PPM;
+            transform.rotation.yaw = Math::Rad2Deg(angleRad);
+            
+            // 2. Apply Custom Forces
+            ApplyAerodynamics();
+            ClampTerminalVelocity();
         }
-        else
+    }
+
+    void BoxColliderComponent::DrawInspectorUI()
+    {
+        // Auto-Editor handles properties.
+    }
+
+    // ────────────────────────────────────────────────
+    // Internal Physics Logic
+    // ────────────────────────────────────────────────
+
+    void BoxColliderComponent::ApplyAerodynamics()
+    {
+        // F_drag = -k * v
+        if (airResistance_ > 0.001f)
         {
-            // If Static/Kinematic, we might want to sync Actor -> Physics if the actor moved?
-            // E.g. moving platform. For now, we assume static doesn't move every frame.
-            // If we wanted moving platforms, we'd use Kinematic bodies.
-            // For pure Static, we just set it once on creation or via SetTransform calls (not implemented here yet).
+            b2Vec2 v = b2Body_GetLinearVelocity(bodyId_);
+            b2Vec2 dragForce = { -v.x * airResistance_, -v.y * airResistance_ };
+            b2Body_ApplyForceToCenter(bodyId_, dragForce, true);
+        }
+    }
+
+    void BoxColliderComponent::ClampTerminalVelocity()
+    {
+        // Prevent exceeding max fall speed
+        b2Vec2 v = b2Body_GetLinearVelocity(bodyId_);
+        float maxMeters = maxFallSpeed_ / Physics::PPM;
+
+        if (v.y > maxMeters)
+        {
+            v.y = maxMeters;
+            b2Body_SetLinearVelocity(bodyId_, v);
         }
     }
 
     void BoxColliderComponent::CreatePhysicsState()
     {
         DestroyPhysicsState();
-
         if (!owner_) return;
 
         Scene* scene = owner_->GetOwningScene();
@@ -70,70 +96,34 @@ namespace BixEngine::Game
         b2WorldId worldId = scene->GetPhysicsWorld();
         if (!b2World_IsValid(worldId)) return;
 
-        // 1. Def & Body
+        // 1. Body Def
         b2BodyDef bodyDef = b2DefaultBodyDef();
         bodyDef.type = simulatePhysics_ ? b2_dynamicBody : b2_staticBody;
         bodyDef.fixedRotation = fixedRotation_;
+        bodyDef.gravityScale = gravityScale_;
+        bodyDef.linearDamping = 0.0f; // Handled manually by ApplyAerodynamics
 
-        const Math::Transform& transform = owner_->GetTransformRef();
-        bodyDef.position = { transform.position.x, transform.position.y };
-        bodyDef.rotation = b2MakeRot(Math::Deg2Rad(transform.rotation.yaw));
+        // Calculate World Rotation (Yaw)
+        float worldYaw = 0.0f;
+        const Math::Transform* current = &owner_->GetTransformRef();
+        while (current)
+        {
+            worldYaw += current->rotation.yaw;
+            current = current->parent;
+        }
+
+        // Calculate World Position
+        Math::Vector3 worldPos = owner_->GetTransformRef().GetWorldPosition();
+
+        bodyDef.position = { worldPos.x / Physics::PPM, worldPos.y / Physics::PPM };
+        bodyDef.rotation = b2MakeRot(Math::Deg2Rad(worldYaw));
 
         bodyId_ = b2CreateBody(worldId, &bodyDef);
-
-        // 2. Shape
+        
         if (b2Body_IsValid(bodyId_))
         {
+            b2Body_SetUserData(bodyId_, this);
             UpdateShape();
-        }
-    }
-
-    void BoxColliderComponent::UpdateShape()
-    {
-        if (!b2Body_IsValid(bodyId_)) return;
-
-        // If shape exists, destroy it? Box2D v3 allows causing destruction?
-        // Or we just create a new one.
-        // Assuming single shape per component for now.
-        // There isn't a direct "DestroyShape" on body easily without ID.
-        // If we have shapeId_, maybe we can destroy it? 
-        // usage: b2DestroyShape(shapeId_); (if available in v3)
-        // Let's check headers... usually yes.
-        
-        // Wait, v3.1 might differ. Let's try to just create a new shape and maybe leaked old one?
-        // No, we should clean up. 
-        // Attempt: b2DestroyShape(shapeId_) if valid.
-        // But Box2D shapes are destroyed when body is destroyed.
-        // If we change Extent at runtime, we might need to recreate Shape.
-        
-        // For safe implementation in this step: We won't support runtime shape-swapping cleanly without recreation of body
-        // OR we try to destroy shape.
-        
-        // Let's create the shape def.
-        b2ShapeDef shapeDef = b2DefaultShapeDef();
-        shapeDef.density = density_;
-        // Material props set via setters later
-
-        // Box Extent (Half-size)
-        // We might also want to apply Actor Scale?
-        // Unreal applies usage: Final Extent = BoxExtent * ActorScale
-        const Math::Transform& transform = owner_->GetTransformRef();
-        float hx = boxExtent_.x * transform.scale.x;
-        float hy = boxExtent_.y * transform.scale.y;
-
-        // Safety clamp
-        if (hx < 0.1f) hx = 0.5f;
-        if (hy < 0.1f) hy = 0.5f;
-
-        b2Polygon box = b2MakeBox(hx, hy);
-        // Note: Offset can be applied to b2MakeBox(hx, hy, center, angle) if we add Offset property later.
-
-        shapeId_ = b2CreatePolygonShape(bodyId_, &shapeDef, &box);
-
-        if (b2Shape_IsValid(shapeId_))
-        {
-            b2Shape_SetFriction(shapeId_, friction_);
-            b2Shape_SetRestitution(shapeId_, restitution_);
         }
     }
 
@@ -147,69 +137,192 @@ namespace BixEngine::Game
         }
     }
 
+    void BoxColliderComponent::UpdateShape()
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+
+        // Prepare Shape Def
+        b2ShapeDef shapeDef = b2DefaultShapeDef();
+        shapeDef.isSensor = isSensor_;
+        // shapeDef.friction/restitution not available in v3.1.1 def?
+        // We will set them via setters after creation.
+
+        // Calculate Effective Density (Mass Override Logic)
+        const Math::Transform& transform = owner_->GetTransformRef();
+        float hx_m = (boxExtent_.x * transform.scale.x) / Physics::PPM;
+        float hy_m = (boxExtent_.y * transform.scale.y) / Physics::PPM;
+        
+        // Safety clamp
+        if (hx_m < 0.01f) hx_m = 0.01f;
+        if (hy_m < 0.01f) hy_m = 0.01f;
+
+        if (massOverride_ > 0.0f)
+        {
+             // Density = Mass / Area
+             // Area = (2*hx) * (2*hy)
+             float area = (2.0f * hx_m) * (2.0f * hy_m);
+             shapeDef.density = massOverride_ / area;
+        }
+        else
+        {
+             shapeDef.density = density_;
+        }
+
+        // Create Shape
+        b2Polygon box = b2MakeBox(hx_m, hy_m);
+        shapeId_ = b2CreatePolygonShape(bodyId_, &shapeDef, &box);
+        
+        if (b2Shape_IsValid(shapeId_))
+        {
+            b2Shape_SetFriction(shapeId_, friction_);
+            b2Shape_SetRestitution(shapeId_, restitution_);
+        }
+    }
+
+    // ────────────────────────────────────────────────
+    // Main Properties
+    // ────────────────────────────────────────────────
+
     void BoxColliderComponent::SetSimulatePhysics(bool simulate)
     {
         if (simulatePhysics_ == simulate) return;
         simulatePhysics_ = simulate;
-        UpdateBodyType();
-    }
-
-    void BoxColliderComponent::UpdateBodyType()
-    {
-        if (b2Body_IsValid(bodyId_))
-        {
-            b2Body_SetType(bodyId_, simulatePhysics_ ? b2_dynamicBody : b2_staticBody);
-            
-            // Should we wake it up?
-            if (simulatePhysics_) b2Body_SetAwake(bodyId_, true);
-        }
+        CreatePhysicsState(); // Recreate to ensure clean state
     }
 
     void BoxColliderComponent::SetBoxExtent(const Math::Vector2<float>& extent)
     {
         boxExtent_ = extent;
-        // Recreate body/shape to apply size change safely for now
-        CreatePhysicsState();
-    }
-
-    void BoxColliderComponent::SetDensity(float density)
-    {
-        density_ = density;
-        if (b2Shape_IsValid(shapeId_))
-        {
-            b2Shape_SetDensity(shapeId_, density_, true); // Update mass
-        }
-    }
-
-    void BoxColliderComponent::SetFriction(float friction)
-    {
-        friction_ = friction;
-        if (b2Shape_IsValid(shapeId_))
-        {
-            b2Shape_SetFriction(shapeId_, friction_);
-        }
-    }
-
-    void BoxColliderComponent::SetRestitution(float restitution)
-    {
-        restitution_ = restitution;
-        if (b2Shape_IsValid(shapeId_))
-        {
-            b2Shape_SetRestitution(shapeId_, restitution_);
-        }
+        CreatePhysicsState(); // Recreate to resize shape
     }
 
     void BoxColliderComponent::SetFixedRotation(bool fixed)
     {
         fixedRotation_ = fixed;
         if (b2Body_IsValid(bodyId_))
-        {
             b2Body_SetFixedRotation(bodyId_, fixed);
+    }
+
+    void BoxColliderComponent::SetIsSensor(bool isSensor)
+    {
+        if (isSensor_ == isSensor) return;
+        isSensor_ = isSensor;
+        CreatePhysicsState();
+    }
+
+    // ────────────────────────────────────────────────
+    // Material & Mass
+    // ────────────────────────────────────────────────
+
+    void BoxColliderComponent::SetDensity(float density)
+    {
+        density_ = density;
+        if (massOverride_ <= 0.0f && b2Shape_IsValid(shapeId_))
+        {
+            b2Shape_SetDensity(shapeId_, density_, true);
         }
     }
 
-    void BoxColliderComponent::DrawInspectorUI()
+    void BoxColliderComponent::SetMass(float mass)
     {
-        // Use Auto Inspector
+        massOverride_ = mass;
+        CreatePhysicsState(); 
+    }
+
+    void BoxColliderComponent::SetFriction(float friction)
+    {
+        friction_ = friction;
+        if (b2Shape_IsValid(shapeId_))
+            b2Shape_SetFriction(shapeId_, friction_);
+    }
+
+    void BoxColliderComponent::SetRestitution(float restitution)
+    {
+        restitution_ = restitution;
+        if (b2Shape_IsValid(shapeId_))
+            b2Shape_SetRestitution(shapeId_, restitution_);
+    }
+
+    // ────────────────────────────────────────────────
+    // Dynamics (Drag & Gravity)
+    // ────────────────────────────────────────────────
+
+    void BoxColliderComponent::SetGravityScale(float scale)
+    {
+        gravityScale_ = scale;
+        if (b2Body_IsValid(bodyId_))
+        {
+            b2Body_SetGravityScale(bodyId_, scale);
+            b2Body_SetAwake(bodyId_, true);
+        }
+    }
+
+    void BoxColliderComponent::SetAirResistance(float resistance)
+    {
+        airResistance_ = resistance;
+    }
+
+    void BoxColliderComponent::SetMaxFallSpeed(float speed)
+    {
+         maxFallSpeed_ = speed;
+    }
+
+    // ────────────────────────────────────────────────
+    // Runtime Control
+    // ────────────────────────────────────────────────
+
+    void BoxColliderComponent::SetLinearVelocity(const Math::Vector2<float>& velocity)
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+        b2Vec2 v = { velocity.x / Physics::PPM, velocity.y / Physics::PPM };
+        b2Body_SetLinearVelocity(bodyId_, v);
+        b2Body_SetAwake(bodyId_, true);
+    }
+
+    Math::Vector2<float> BoxColliderComponent::GetLinearVelocity() const
+    {
+        if (!b2Body_IsValid(bodyId_)) return {0.0f, 0.0f};
+        b2Vec2 v = b2Body_GetLinearVelocity(bodyId_);
+        return { v.x * Physics::PPM, v.y * Physics::PPM };
+    }
+
+    void BoxColliderComponent::ApplyForce(const Math::Vector2<float>& force, const Math::Vector2<float>& point, bool wake)
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+        b2Vec2 p = { point.x / Physics::PPM, point.y / Physics::PPM };
+        b2Body_ApplyForce(bodyId_, {force.x, force.y}, p, wake);
+    }
+
+    void BoxColliderComponent::ApplyForceToCenter(const Math::Vector2<float>& force, bool wake)
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+        b2Body_ApplyForceToCenter(bodyId_, {force.x, force.y}, wake);
+    }
+
+    void BoxColliderComponent::ApplyLinearImpulse(const Math::Vector2<float>& impulse, const Math::Vector2<float>& point, bool wake)
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+        b2Vec2 p = { point.x / Physics::PPM, point.y / Physics::PPM };
+        b2Body_ApplyLinearImpulse(bodyId_, {impulse.x, impulse.y}, p, wake);
+    }
+
+    void BoxColliderComponent::ApplyLinearImpulseToCenter(const Math::Vector2<float>& impulse, bool wake)
+    {
+        if (!b2Body_IsValid(bodyId_)) return;
+        b2Body_ApplyLinearImpulseToCenter(bodyId_, {impulse.x, impulse.y}, wake);
+    }
+
+    // ────────────────────────────────────────────────
+    // Callbacks
+    // ────────────────────────────────────────────────
+
+    void BoxColliderComponent::DispatchCollisionEnter(Actor* other, const CollisionHitResult& result)
+    {
+        if (onCollisionEnter_) onCollisionEnter_(other, result);
+    }
+
+    void BoxColliderComponent::DispatchCollisionExit(Actor* other, const CollisionHitResult& result)
+    {
+        if (onCollisionExit_) onCollisionExit_(other, result);
     }
 }

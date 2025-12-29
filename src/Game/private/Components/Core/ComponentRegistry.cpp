@@ -4,6 +4,7 @@
 #include "Components/Sprite/SpriteAnimatorComponent.h"
 #include "Components/Audio/AudioSourceComponent.h"
 #include "Components/Core/BoxColliderComponent.h"
+#include "Components/Core/CameraComponent.h" // Added
 #include "Core/Registry.h"
 #include "Core/ClassInfo.h"
 #include "Debug/Logger.h"
@@ -40,5 +41,6 @@ namespace BixEngine::Game
         RegisterComponent<SpriteAnimatorComponent>();
         RegisterComponent<AudioSourceComponent>();
         RegisterComponent<BoxColliderComponent>();
+        RegisterComponent<CameraComponent>(); // Added
     }
 }

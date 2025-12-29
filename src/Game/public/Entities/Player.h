@@ -23,44 +23,45 @@ namespace BixEngine::Game
 {
     class SpriteAnimatorComponent;
     class SpriteComponent;
+    class BoxColliderComponent;
 
     BCLASS()
     class Player : public Actor
     {
         GENERATED_BODY()
 
-        public:
-            Player();
-            Player(Math::Transform transform = Math::Transform());
+    public:
+    
+        explicit Player(const Math::Transform& transform = Math::Transform());
 
-            void SetupInput(Input::InputManager& inputManager) override;
+        void SetupInput(Input::InputManager& inputManager) override;
 
-            void BeginPlay() override;
-            void Update(float deltaTime) override;
+        void BeginPlay() override;
+        void Update(float deltaTime) override;
+    
+        [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
+        [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(Math::Transform()); }
 
-            void MoveForward(float value);
-            void MoveRight(float value);
+        void SetMoveSpeed(float newSpeed);
+        float GetMoveSpeed() const;
 
-            [[nodiscard]] String GetTypeName() const noexcept override { return "Player"; }
-            [[nodiscard]] std::unique_ptr<Actor> ClonePrototype() const override { return std::make_unique<Player>(Math::Transform()); }
+    protected:
+        BPROPERTY(EditAnywhere, Category="Gameplay")
+        float moveSpeed_{200.0f};
 
-        private:
-            void OnComponentRemoved(const Component& component) override;
+        void OnComponentRemoved(const Component& component) override;
 
-            void ApplyMovement(float deltaTime);
-            void InitializeSpriteComponent();
-            void RefreshSpriteComponent();
+        void ApplyMovement(float deltaTime);
+        void InitializeComponents();
+        void RefreshSpriteComponent();
 
-            void StarTestMusic();
+        void StarTestMusic();
 
-            Math::Vector2<float> pendingInput_{};
+        Math::Vector2<float> pendingInput_{};
 
-            BPROPERTY(EditAnywhere, Category="Gameplay")
-            float moveSpeed_{200.0f};
+        SpriteAnimatorComponent* animatorComponent_{nullptr};
+        BoxColliderComponent* physicsComponent_{nullptr};
 
-            SpriteComponent* spriteComponent_{nullptr};
-            SpriteAnimatorComponent* animatorComponent_{nullptr};
-
-            AudioSourceComponent* audioSrc_{nullptr};
-        };
+        AudioSourceComponent* audioSrc_{nullptr};
+    };
 }

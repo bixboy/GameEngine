@@ -42,6 +42,7 @@ namespace BixEngine::Game
         virtual void LoadFromPrefab(const resources::ComponentPrefab* /*prefab*/) {}
 
         void SetOwner(Actor* owner) { owner_ = owner; }
+        [[nodiscard]] Actor* GetOwner() const { return owner_; }
 
     protected:
         Actor* owner_{nullptr};

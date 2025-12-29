@@ -3,6 +3,7 @@
 
 #include <string>
 #include <unordered_map>
+#include <memory>
 
 
 namespace Bix::Reflection
@@ -45,5 +46,15 @@ namespace Bix::Reflection
         bool HasMetadata(const std::string& key) const;
         std::string GetMetadata(const std::string& key) const;
         void ParseMetadata();
+
+        struct ArrayAccess
+        {
+            std::function<void(void*)> Clear;
+            std::function<void(void*, const std::string&)> AddString; 
+            std::function<std::size_t(const void*)> GetSize;
+            std::function<std::string(const void*, std::size_t)> GetStringAt;
+        };
+        // Optional: contains accessors if this property detects it is a supported TArray
+        std::shared_ptr<ArrayAccess> ArrayFunctions = nullptr; 
     };
 }

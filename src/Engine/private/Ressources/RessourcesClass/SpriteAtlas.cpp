@@ -29,6 +29,7 @@ namespace BixEngine::resources
             return false;
         }
 
+        path_ = path;
         texturePath_ = ResolveTexturePath(path, definition.texturePath);
 
         auto& resourceManager = ResourceManager::Get();

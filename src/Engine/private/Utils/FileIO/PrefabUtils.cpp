@@ -1,10 +1,14 @@
 #include "Utils/FileIO/PrefabUtils.h"
+#include "Containers/String.h"
 #include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <sstream>
 #include <functional>
 #include "Utils/FileIO/FilesUtils.h"
+#include "Serializer/SceneSerializer.h"
+#include "Utils/FileIO/BinaryUtils.h"
+#include "Framework/Actor.h"
 
 
 namespace BixEngine::PrefabUtils
@@ -168,6 +172,9 @@ namespace BixEngine::PrefabUtils
                     const auto candidate = search / relativePath;
                     if (std::filesystem::exists(candidate))
                         return candidate;
+                    
+                    if (search == search.parent_path()) // Root reached
+                        break;
                 }
                 
                 return {};
@@ -313,5 +320,179 @@ namespace BixEngine::PrefabUtils
         });
 
         return candidates;
+    }
+
+    // ─────────────────────────────────────────────
+    // Prefab Serializer Implementation
+    // ─────────────────────────────────────────────
+
+    // Recursive helper
+    static void CollectDescendants(const BixEngine::Game::Actor* actor, std::vector<const BixEngine::Game::Actor*>& outList)
+    {
+        if (!actor) return;
+        for (auto* child : actor->GetChildren())
+        {
+            outList.push_back(child);
+            CollectDescendants(child, outList);
+        }
+    }
+
+    bool PrefabSerializer::SavePrefab(const BixEngine::Game::Actor* rootActor, const std::filesystem::path& path)
+    {
+        if (!rootActor) return false;
+
+        std::ofstream file(path, std::ios::binary);
+        if (!file.is_open())
+        {
+            LOG_ERROR("Failed to open file for writing prefab: " + path.string());
+            return false;
+        }
+
+        BixEngine::Utils::BinaryWriter writer(file);
+        
+        // Header
+        writer.WriteString("PREFAB_V2");
+        
+        // Root
+        writer.WriteString(rootActor->GetTypeName());
+        rootActor->SerializeBinary(file);
+
+        // Descendants
+        std::vector<const BixEngine::Game::Actor*> descendants;
+        CollectDescendants(rootActor, descendants);
+
+        writer.WriteUint32(static_cast<uint32_t>(descendants.size()));
+        
+        for (const auto* child : descendants)
+        {
+            writer.WriteString(child->GetTypeName());
+            child->SerializeBinary(file);
+        }
+
+        return true;
+    }
+
+    std::unique_ptr<BixEngine::Game::Actor> PrefabSerializer::LoadPrefab(const std::filesystem::path& path)
+    {
+        std::ifstream file(path, std::ios::binary);
+        if (!file.is_open())
+        {
+             LOG_ERROR("Failed to open file for reading prefab: " + path.string());
+             return nullptr;
+        }
+
+        BixEngine::Utils::BinaryReader reader(file);
+        
+        // Check Header
+        String header;
+        long long startPos = file.tellg();
+        
+        bool isV2 = false;
+        if (reader.ReadString(header))
+        {
+            if (header == "PREFAB_V2")
+            {
+                isV2 = true;
+            }
+            else
+            {
+                isV2 = false;
+            }
+        }
+        else
+        {
+             return nullptr;
+        }
+
+        std::unique_ptr<BixEngine::Game::Actor> root = nullptr;
+
+        if (isV2)
+        {
+            // Read Root
+            String typeName;
+            if (!reader.ReadString(typeName)) return nullptr;
+            
+            root = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
+            if (!root) root = std::make_unique<BixEngine::Game::Actor>("Root(Fallback)");
+            
+            root->DeserializeBinary(file);
+
+            // Read Descendants
+            uint32_t count = 0;
+            if (reader.ReadUint32(count))
+            {
+                // We store loaded children in a temporary list. 
+                // Since we rely on SetParent to link them, and we want to return the Root which now OWNS them (conceptually),
+                // we must ensure they are properly kept alive. 
+                // In BixEngine, Actor* children are owned by SCENE usually.
+                // Here we are creating them detached.
+                // We will attach them to Root using SetParent, which adds them to `children_` (raw ptrs).
+                // WARNING: `std::unique_ptr` in local scope will delete them if we don't release!
+                // We must release them if we attach them to hierarchy? 
+                // But who deletes them?
+                // If Root is deleted, it doesn't delete children (checked Actor.cpp -> Destructor doesn't loop children delete).
+                // THIS IS A MEMORY LEAK RISK unless the caller adds ALL of them to a Scene.
+                // BUT we return only Root.
+                
+                // To support "User adds prefab to scene", the USER/CALLER must walk the hierarchy and AddActor for everyone.
+                // So we just return the Root with Linked Hierarchy.
+                // The descendants must be RELEASED from unique_ptr so they don't die here.
+                
+                std::vector<BixEngine::Game::Actor*> loadedRawActors;
+                loadedRawActors.reserve(count);
+
+                for (uint32_t i = 0; i < count; ++i)
+                {
+                    String childType;
+                    reader.ReadString(childType);
+                    auto child = BixEngine::Serialization::SceneSerializer::CreateActor(childType);
+                    if (!child) child = std::make_unique<BixEngine::Game::Actor>("Child(Fallback)");
+                    
+                    child->DeserializeBinary(file);
+                    
+                    // Release ownership to the wild (caller must eventually own or Scene must take them)
+                    loadedRawActors.push_back(child.release());
+                }
+
+                // Link Hierarchy
+                auto FindActorByUUID = [&](const String& uuid) -> BixEngine::Game::Actor*
+                {
+                    if (root->GetUUID() == uuid) return root.get();
+                    for (auto* a : loadedRawActors)
+                        if (a->GetUUID() == uuid) return a;
+                    return nullptr;
+                };
+
+                for (auto* child : loadedRawActors)
+                {
+                    String pUUID = child->GetLoadedParentUUID();
+                    if (!pUUID.IsEmpty())
+                    {
+                        if (auto* parent = FindActorByUUID(pUUID))
+                        {
+                            child->SetParent(parent);
+                        }
+                    }
+                    else
+                    {
+                         child->SetParent(root.get());
+                    }
+                }
+            }
+            return root;
+        }
+        else
+        {
+            file.clear();
+            file.seekg(startPos, std::ios::beg);
+            
+             String typeName;
+             if (!reader.ReadString(typeName)) return nullptr;
+             
+             auto actor = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
+             if (!actor) return nullptr;
+             actor->DeserializeBinary(file);
+             return actor;
+        }
     }
 }

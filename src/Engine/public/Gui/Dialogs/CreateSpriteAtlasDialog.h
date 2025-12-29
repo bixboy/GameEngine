@@ -30,8 +30,8 @@ namespace BixEngine::Gui
         
         char atlasName_[128];
 
-        int columns_;
-        int rows_;
+        float columns_;
+        float rows_;
         float frameRate_;
         bool loop_;
 

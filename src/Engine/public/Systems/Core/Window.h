@@ -26,10 +26,26 @@ namespace BixEngine::Core
         [[nodiscard]] SDL_Window* GetSDLWindow() const noexcept { return window_; }
 
         // Retourne la largeur actuelle de la fenêtre.
-        [[nodiscard]] int GetWidth() const noexcept { return width_; }
+        [[nodiscard]] int GetWidth() const noexcept 
+        { 
+            int w, h;
+            if (window_)
+                SDL_GetWindowSize(window_, &w, &h);
+            else
+                w = width_;
+            return w; 
+        }
 
         // Retourne la hauteur actuelle de la fenêtre.
-        [[nodiscard]] int GetHeight() const noexcept { return height_; }
+        [[nodiscard]] int GetHeight() const noexcept 
+        { 
+            int w, h;
+            if (window_)
+                SDL_GetWindowSize(window_, &w, &h);
+            else
+                h = height_;
+            return h; 
+        }
 
         // Indique si la fenêtre est valide.
         [[nodiscard]] bool IsValid() const noexcept { return window_ != nullptr; }

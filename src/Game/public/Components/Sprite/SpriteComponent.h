@@ -112,7 +112,6 @@ namespace BixEngine::Game
 
         String materialId_{};
 
-        BPROPERTY()
         resources::Texture* lastTexture_{nullptr};
     };
 }

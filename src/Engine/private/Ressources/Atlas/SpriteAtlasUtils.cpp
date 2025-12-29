@@ -7,6 +7,8 @@
 #include "Debug/Logger.h"
 #include "Ressources/Core/ResourceManager.h"
 #include "Ressources/RessourcesClass/Texture.h"
+#include "SDL_image.h"
+#include "SDL3/SDL_surface.h"
 
 
 namespace BixEngine::resources
@@ -19,9 +21,9 @@ namespace BixEngine::resources
 
     namespace
     {
-        [[nodiscard]] bool ValidateGrid(int columns, int rows)
+        [[nodiscard]] bool ValidateGrid(float columns, float rows)
         {
-            return columns > 0 && rows > 0;
+            return columns > 0.f && rows > 0.f;
         }
 
         int ExtractFrameCount(const std::string& name)
@@ -43,7 +45,7 @@ namespace BixEngine::resources
             catch (...) { return 0; }
         }
 
-        struct GridInfo { int cols, rows, pad, margin; };
+        struct GridInfo { int cols, rows; };
 
         std::optional<GridInfo> DetectGridExact(int frames, int w, int h)
         {
@@ -72,180 +74,215 @@ namespace BixEngine::resources
             if (best.c == 0)
                 return std::nullopt;
 
-            return GridInfo{best.c, best.r, 0, 0};
+            return GridInfo{best.c, best.r};
+        }
+
+        std::optional<GridInfo> DetectGridFromPixels(const fs::path& path)
+        {
+            SDL_Surface* rawSurf = IMG_Load(path.string().c_str());
+            if (!rawSurf) return std::nullopt;
+
+            SDL_Surface* surf = SDL_ConvertSurface(rawSurf, SDL_PIXELFORMAT_RGBA32);
+            SDL_DestroySurface(rawSurf);
+            if (!surf) return std::nullopt;
+
+            if (SDL_LockSurface(surf) != 0)
+            {
+                SDL_DestroySurface(surf);
+                return std::nullopt;
+            }
+
+            int w = surf->w;
+            int h = surf->h;
+            Uint32* pixels = (Uint32*)surf->pixels;
+
+            auto HasAlpha = [&](int x, int y) {
+                Uint8 r, g, b, a;
+                const SDL_PixelFormatDetails* details = SDL_GetPixelFormatDetails(surf->format);
+                SDL_GetRGBA(pixels[y * w + x], details, nullptr, &r, &g, &b, &a);
+                return a > 10;
+            };
+
+            std::vector<int> islandWidths;
+            bool inBlock = false;
+            int startX = 0;
+            for (int x = 0; x < w; ++x)
+            {
+                bool hasContent = false;
+                for (int y = 0; y < h; ++y) { if (HasAlpha(x, y)) { hasContent = true; break; } }
+                if (hasContent) { if (!inBlock) { inBlock = true; startX = x; } }
+                else { if (inBlock) { inBlock = false; if (x - startX > 2) islandWidths.push_back(x - startX); } }
+            }
+            if (inBlock) islandWidths.push_back(w - startX);
+
+            std::vector<int> islandHeights;
+            inBlock = false;
+            int startY = 0;
+            for (int y = 0; y < h; ++y)
+            {
+                bool hasContent = false;
+                for (int x = 0; x < w; ++x) { if (HasAlpha(x, y)) { hasContent = true; break; } }
+                if (hasContent) { if (!inBlock) { inBlock = true; startY = y; } }
+                else { if (inBlock) { inBlock = false; if (y - startY > 2) islandHeights.push_back(y - startY); } }
+            }
+            if (inBlock) islandHeights.push_back(h - startY);
+
+            SDL_UnlockSurface(surf);
+            SDL_DestroySurface(surf);
+
+            int cols = 1;
+            if (!islandWidths.empty())
+            {
+                std::sort(islandWidths.begin(), islandWidths.end());
+                int medianW = islandWidths[islandWidths.size() / 2];
+                if (medianW > 1) cols = std::max(1, (int)std::round((float)w / (float)medianW));
+                else cols = islandWidths.size();
+            }
+
+            int rows = 1;
+            if (!islandHeights.empty())
+            {
+                std::sort(islandHeights.begin(), islandHeights.end());
+                int medianH = islandHeights[islandHeights.size() / 2];
+                if (medianH > 1) rows = std::max(1, (int)std::round((float)h / (float)medianH));
+                else rows = islandHeights.size();
+            }
+
+            LOG_INFO("DetectGridFromPixels: Found " + std::to_string(cols) + " cols, " + std::to_string(rows) + " rows (Median)");
+            return GridInfo{cols, rows};
         }
 
         std::optional<GridInfo> DetectGridAspect(int w, int h)
         {
-            if (w >= h && w % h == 0)
-                return GridInfo{w / h, 1, 0, 0};
-
-            if (h > w && h % w == 0)
-                return GridInfo{1, h / w, 0, 0};
-
-            return GridInfo{1, 1, 0, 0};
+            if (w >= h && w % h == 0) return GridInfo{w / h, 1};
+            if (h > w && h % w == 0) return GridInfo{1, h / w};
+            return GridInfo{1, 1};
         }
     }
-
-    // ──────────────────────────────────────────────
-    // PUBLIC — Auto-detection
-    // ──────────────────────────────────────────────
 
     bool SpriteAtlasUtils::AutoDetectGrid(const fs::path& texturePath, int& outCols, int& outRows)
     {
         outCols = outRows = 1;
+        if (!fs::exists(texturePath)) return false;
 
-        if (!fs::exists(texturePath))
-            return false;
-
-        auto texture = ResourceManager::Get().Get<Texture>(texturePath.generic_string().c_str());
-        if (!texture) return false;
-
-        const int w = texture->GetWidth();
-        const int h = texture->GetHeight();
-
-        if (w <= 0 || h <= 0)
-            return false;
+        int w = 0, h = 0;
+        if (auto tex = ResourceManager::Get().Get<Texture>(texturePath.generic_string().c_str()))
+        {
+            w = (int)tex->GetWidth();
+            h = (int)tex->GetHeight();
+        }
 
         std::optional<GridInfo> detected;
+        int frameCount = ExtractFrameCount(texturePath.stem().string());
+        
+        if (frameCount > 0 && w > 0 && h > 0) detected = DetectGridExact(frameCount, w, h);
+        if (!detected) detected = DetectGridFromPixels(texturePath);
+        if (!detected || (detected->cols == 1 && detected->rows == 1)) 
+        {
+            if (w > 0 && h > 0) detected = DetectGridAspect(w, h);
+        }
 
-        const int frameCount = ExtractFrameCount(texturePath.stem().string());
-        if (frameCount > 0)
-            detected = DetectGridExact(frameCount, w, h);
-
-        if (!detected.has_value())
-            detected = DetectGridAspect(w, h);
-
-        if (!detected.has_value())
-            return false;
-
-        outCols = std::max(detected->cols, 1);
-        outRows = std::max(detected->rows, 1);
-
-        return true;
+        if (detected)
+        {
+            outCols = detected->cols;
+            outRows = detected->rows;
+            return true;
+        }
+        return false;
     }
-
-    // ──────────────────────────────────────────────
-    // PARSE .atlas FILE
-    // ──────────────────────────────────────────────
-
     bool SpriteAtlasUtils::ParseAtlasFile(const String& path, SpriteAtlasDefinition& outDefinition, std::vector<SpriteAnimationDefinition>& outAnimations)
     {
-        std::ifstream stream(path.c_str());
-        if (!stream.is_open())
-        {
-            LOG_ERROR("SpriteAtlasUtils::ParseAtlasFile: unable to open file " + path);
+        std::ifstream file(path.Std());
+        if (!file.is_open())
             return false;
-        }
 
-        nlohmann::json doc;
-        try { stream >> doc; }
-        catch (const std::exception& ex)
+        try
         {
-            LOG_ERROR("SpriteAtlasUtils::ParseAtlasFile: invalid JSON: " + String(ex.what()));
-            return false;
-        }
+            nlohmann::json doc;
+            file >> doc;
 
-        if (!doc.contains("texture"))
-        {
-            LOG_ERROR("SpriteAtlasUtils::ParseAtlasFile: missing 'texture'");
-            return false;
-        }
+            if (doc.contains("texture")) 
+                outDefinition.texturePath = String(doc["texture"].get<std::string>());
+            
+            // Support both int and float reading
+            if (doc.contains("columns")) outDefinition.columns = doc["columns"].get<float>();
+            else outDefinition.columns = 1.0f;
 
-        outDefinition.texturePath = doc["texture"].get<std::string>().c_str();
-        outDefinition.columns = doc.value("columns", 1);
-        outDefinition.rows    = doc.value("rows", 1);
-        outDefinition.padding = doc.value("padding", 0);
-        outDefinition.margin  = doc.value("margin", 0);
+            if (doc.contains("rows")) outDefinition.rows = doc["rows"].get<float>();
+            else outDefinition.rows = 1.0f;
 
-        if (!ValidateGrid(outDefinition.columns, outDefinition.rows))
-        {
-            LOG_ERROR("SpriteAtlasUtils::ParseAtlasFile: invalid grid");
-            return false;
-        }
+            outDefinition.padding = doc.value("padding", 0);
+            outDefinition.margin = doc.value("margin", 0);
 
-        // animations
-        outAnimations.clear();
-        if (doc.contains("animations"))
-        {
-            try
+            if (doc.contains("animations") && doc["animations"].is_array())
             {
                 for (const auto& animJson : doc["animations"])
                 {
                     SpriteAnimationDefinition anim;
-                    anim.name = animJson.value("name", "").c_str();
-                    anim.frameRate = animJson.value("frameRate", 0.0f);
+                    anim.name = String(animJson.value("name", "Animation"));
+                    anim.frameRate = animJson.value("frameRate", 12.0f);
                     anim.loop = animJson.value("loop", true);
-
-                    if (animJson.contains("frames"))
+                    
+                    if (animJson.contains("frames") && animJson["frames"].is_array())
                     {
-                        for (const auto& f : animJson["frames"])
+                        for (auto& f : animJson["frames"])
                             anim.frames.push_back(f.get<size_t>());
                     }
-
-                    outAnimations.push_back(std::move(anim));
+                    outAnimations.push_back(anim);
                 }
             }
-            catch (...)
-            {
-                LOG_ERROR("SpriteAtlasUtils::ParseAtlasFile: bad animation block");
-                outAnimations.clear();
-            }
         }
-
+        catch (const std::exception& e)
+        {
+            LOG_ERROR(String("SpriteAtlasUtils::ParseAtlasFile: JSON error in ") + path + String(": ") + String(e.what()));
+            return false;
+        }
         return true;
     }
 
-    // ──────────────────────────────────────────────
-    // FRAME GENERATION
-    // ──────────────────────────────────────────────
-
-    std::vector<SpriteFrame>
-    SpriteAtlasUtils::GenerateFrames(Texture& texture, int columns, int rows, int padding, int margin)
+    std::vector<SpriteFrame> SpriteAtlasUtils::GenerateFrames(Texture& texture, float columns, float rows, int padding, int margin)
     {
         std::vector<SpriteFrame> frames;
-
-        columns = std::max(columns, 1);
-        rows = std::max(rows, 1);
-        padding = std::max(padding, 0);
-        margin = std::max(margin, 0);
-
         if (!ValidateGrid(columns, rows))
             return frames;
 
-        const float texW = (float)texture.GetWidth();
-        const float texH = (float)texture.GetHeight();
+        float texW = (float)texture.GetWidth();
+        float texH = (float)texture.GetHeight();
 
-        const float cellW = (texW - 2.f * margin - (columns - 1) * padding) / columns;
-        const float cellH = (texH - 2.f * margin - (rows - 1) * padding) / rows;
-
-        if (cellW <= 0 || cellH <= 0)
-        {
-            LOG_ERROR("SpriteAtlasUtils::GenerateFrames: invalid cell size");
+        if (texW <= 0.0f || texH <= 0.0f)
             return frames;
-        }
 
-        frames.reserve((size_t)(columns * rows));
+        // Calculate cell size using float division
+        float cellW = (texW - 2.0f * margin - (columns - 1.0f) * padding) / columns;
+        float cellH = (texH - 2.0f * margin - (rows - 1.0f) * padding) / rows;
 
-        for (int r = 0; r < rows; ++r)
+        if (cellW <= 0.0f || cellH <= 0.0f)
+            return frames;
+
+        int iCols = (int)std::ceil(columns);
+        int iRows = (int)std::ceil(rows);
+
+        frames.reserve((size_t)iCols * iRows);
+
+        for (int y = 0; y < iRows; ++y)
         {
-            for (int c = 0; c < columns; ++c)
+            for (int x = 0; x < iCols; ++x)
             {
-                Math::Rect rect{
-                    margin + c * (cellW + padding),
-                    margin + r * (cellH + padding),
-                    cellW,
-                    cellH
-                };
+                float posX = margin + x * (cellW + padding);
+                float posY = margin + y * (cellH + padding);
 
-                SpriteFrame f;
-                f.texture = &texture;
-                f.uvRect  = rect;
-
-                frames.push_back(f);
+                SpriteFrame frame;
+                frame.uvRect.X = posX;
+                frame.uvRect.Y = posY;
+                frame.uvRect.Width = cellW;
+                frame.uvRect.Height = cellH;
+                frame.texture = &texture; // Ensure texture is set
+                
+                frames.push_back(frame);
             }
         }
 
         return frames;
     }
 }
+

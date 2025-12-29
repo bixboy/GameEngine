@@ -127,7 +127,6 @@ namespace BixEngine::Gui
         }
 
         // Tri sur le vecteur temporaire
-        LOG_INFO("Sorting " + std::to_string(newEntries.size()) + " entries...");
         std::ranges::sort(newEntries, [](const ContentEntry& a, const ContentEntry& b)
         {
             int pa = GetSortPriority(a.type);

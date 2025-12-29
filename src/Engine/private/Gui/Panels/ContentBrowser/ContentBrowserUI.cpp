@@ -165,6 +165,37 @@ namespace BixEngine::Gui
                     GetIcon(ContentType::Directory),
                     dir.filename().string().c_str());
 
+                // Drag Source
+                if (ImGui::BeginDragDropSource())
+                {
+                    const std::string pathStr = dir.string();
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", pathStr.c_str(), pathStr.size() + 1);
+                    ImGui::Text("%s", dir.filename().string().c_str());
+                    ImGui::EndDragDropSource();
+                }
+
+                // Drop Target
+                if (ImGui::BeginDragDropTarget())
+                {
+                    if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                    {
+                        std::filesystem::path sourcePath((const char*)payload->Data);
+                        std::filesystem::path destPath = dir / sourcePath.filename();
+                        
+                        String err;
+                        if (!FilesUtils::Utilities::TryRename(sourcePath, destPath, false, err))
+                        {
+                            state.error = err;
+                        }
+                        else
+                        {
+                             state.cache.dirty = true;
+                             selected.Clear();
+                        }
+                    }
+                    ImGui::EndDragDropTarget();
+                }
+
                 if (ImGui::IsItemClicked())
                 {
                     state.current = dir;
@@ -276,14 +307,35 @@ namespace BixEngine::Gui
                     else selected = entry.SelectionKey();
                 }
 
-                if (entry.IsAudio())
+                if (ImGui::BeginDragDropSource())
                 {
-                    if (ImGui::BeginDragDropSource())
+                    const std::string pathStr = entry.path.string();
+                    ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM", pathStr.c_str(), pathStr.size() + 1);
+                    ImGui::Text("%s", entry.name.c_str());
+                    ImGui::EndDragDropSource();
+                }
+
+                if (entry.IsDirectory())
+                {
+                    if (ImGui::BeginDragDropTarget())
                     {
-                        const std::string pathStr = entry.path.string();
-                        ImGui::SetDragDropPayload("CONTENT_BROWSER_ITEM_AUDIO", pathStr.c_str(), pathStr.size() + 1);
-                        ImGui::Text("%s", entry.name.c_str());
-                        ImGui::EndDragDropSource();
+                        if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+                        {
+                            std::filesystem::path sourcePath((const char*)payload->Data);
+                            std::filesystem::path destPath = entry.path / sourcePath.filename();
+                            
+                            String err;
+                            if (!FilesUtils::Utilities::TryRename(sourcePath, destPath, false, err))
+                            {
+                                state.error = err;
+                            }
+                            else
+                            {
+                                 state.cache.dirty = true;
+                                 selected.Clear();
+                            }
+                        }
+                        ImGui::EndDragDropTarget();
                     }
                 }
 

@@ -9,7 +9,16 @@
 #include "Framework/Actor.h"
 #include "Components/Sprite/SpriteComponent.h"
 #include "Components/Core/BoxColliderComponent.h"
-#include "Math/Rect.h"
+#include "Components/Core/CameraComponent.h"
+#include "Serializer/SceneSerializer.h"
+#include "Utils/FileIO/BinaryUtils.h"
+#include "Utils/FileIO/PrefabUtils.h"
+#include "Debug/Logger.h"
+#include <filesystem>
+#include <fstream>
+#include "Math/Rect.h" // Keep existing include
+
+namespace fs = std::filesystem;
 
 // COLOR_SELECTION removed, now using EditorSettings::Get().ThemeAccentColor
 
@@ -20,6 +29,48 @@ namespace BixEngine::Gui
 
     namespace
     {
+        // Helper to load actor from binary (Duplicated from ActorEditorController for now)
+        std::unique_ptr<Game::Actor> LoadActorBinary(const std::filesystem::path& path)
+        {
+            std::ifstream file(path, std::ios::binary);
+            if (file.is_open())
+            {
+                BixEngine::Utils::BinaryReader reader(file);
+                
+                String typeName;
+                std::unique_ptr<Game::Actor> actor = nullptr;
+
+                // Try reading type name first
+                if (reader.ReadString(typeName) && !typeName.IsEmpty())
+                {
+                    actor = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
+                    if (!actor)
+                    {
+                        LOG_WARNING("LoadActorBinary: Could not create actor of type " + typeName + ". Fallback to Game::Actor.");
+                        actor = std::make_unique<Game::Actor>("Root");
+                    }
+                }
+                else
+                {
+                    file.clear();
+                    file.seekg(0, std::ios::beg); // Reset if read failed
+                    actor = std::make_unique<Game::Actor>("Root");
+                }
+
+                try
+                {
+                    // Load data
+                    actor->DeserializeBinary(file);
+                    return actor;
+                }
+                catch (const std::exception& e)
+                {
+                    LOG_ERROR("[SceneViewportPanel] Failed to load prefab binary: " + path.generic_string() + ". Error: " + e.what());
+                }
+            }
+            return nullptr;
+        }
+
         ImVec2 ComputeImageSize(const ImVec2& availableSize, int textureWidth, int textureHeight)
         {
             if (availableSize.x <= 0.0f || availableSize.y <= 0.0f || textureWidth <= 0 || textureWidth <= 0)
@@ -101,6 +152,72 @@ namespace BixEngine::Gui
         ImVec2 overlayPos = { drawPos.x + 12.f, drawPos.y + 12.f };
         ImGui::GetWindowDrawList()->AddText(overlayPos, ImGui::GetColorU32(ImVec4(1,1,1,0.8f)), "Scene Viewport");
 
+        // --- Drag & Drop Target ---
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                std::filesystem::path path((const char*)payload->Data);
+                if (path.extension() == ".bixactor")
+                {
+                    // Use PrefabSerializer to support V2 hierarchy
+                    auto root = PrefabUtils::PrefabSerializer::LoadPrefab(path);
+                    if (root)
+                    {
+                        Game::Scene* scene = nullptr;
+                        if (context_.sceneProvider) scene = context_.sceneProvider();
+                        else if (context_.sceneManagerProvider && context_.sceneManagerProvider()) 
+                            scene = context_.sceneManagerProvider()->GetActiveScene();
+
+                        if (scene)
+                        {
+                            // 1. Snapshot Hierarchy (because Scene::AddActor resets parents)
+                            struct HierarchyNode { Game::Actor* actor; Game::Actor* parent; };
+                            std::vector<HierarchyNode> hierarchy;
+                            std::vector<Game::Actor*> descendants;
+
+                            std::function<void(Game::Actor*)> collect = [&](Game::Actor* node)
+                            {
+                                for(auto* child : node->GetChildren())
+                                {
+                                    hierarchy.push_back({child, node});
+                                    descendants.push_back(child);
+                                    collect(child);
+                                }
+                            };
+                            collect(root.get());
+
+                            // 2. Add Root to Scene
+                            Game::Actor* rootPtr = root.get();
+                            scene->AddActor(std::move(root));
+
+                            // 3. Add Descendants to Scene (Transfer ownership)
+                            for(auto* child : descendants)
+                            {
+                                // Re-acquire ownership (was released in LoadPrefab)
+                                std::unique_ptr<Game::Actor> uChild(child);
+                                scene->AddActor(std::move(uChild));
+                            }
+
+                            // 4. Restore Hierarchy
+                            for(const auto& node : hierarchy)
+                            {
+                                if (node.actor && node.parent)
+                                    node.actor->SetParent(node.parent);
+                            }
+
+                            // 5. Select Root
+                             if (context_.selectedActorSetter)
+                                context_.selectedActorSetter(rootPtr);
+
+                            LOG_INFO("Added Prefab to Scene: " + path.generic_string());
+                        }
+                    }
+                }
+            }
+            ImGui::EndDragDropTarget();
+        }
+
         // --- GIZMO & SELECTION Logic ---
         // 1. Determine Scale and Offset (Texture Space -> Screen Space)
         // Texture Space: (0,0) to (size.first, size.second)
@@ -156,13 +273,24 @@ namespace BixEngine::Gui
 
     void SceneViewportPanel::HandleSelection(const ImVec2& viewportMousePos)
     {
-         if (!context_.sceneManagerProvider) return;
-         auto* sm = context_.sceneManagerProvider();
-         if (!sm) return;
-         auto* scene = sm->GetActiveScene();
+         Game::Scene* scene = nullptr;
+         if (context_.sceneProvider)
+         {
+             scene = context_.sceneProvider();
+         }
+         else if (context_.sceneManagerProvider)
+         {
+             if (auto* sm = context_.sceneManagerProvider())
+                 scene = sm->GetActiveScene();
+         }
+
          if (!scene) return;
          
          const auto& actors = scene->GetActors();
+         
+         // Get Camera if active
+         Game::CameraComponent* cam = Game::CameraComponent::GetMainCamera();
+
          for (auto it = actors.rbegin(); it != actors.rend(); ++it)
          {
              Game::Actor* actor = it->get();
@@ -171,8 +299,19 @@ namespace BixEngine::Gui
              // Use Helper
              Math::Vector2<float> worldCorners[4];
              GetActorWorldCorners(actor, worldCorners);
+                
+             // If Camera is active, transform World Corners to Screen Space (Pixel Space)
+             if (cam)
+             {
+                 for(int i=0; i<4; ++i)
+                 {
+                      Math::Vector3 p3(worldCorners[i].x, worldCorners[i].y, 0.0f);
+                      Math::Vector2<float> screenPos = cam->WorldToScreen(p3);
+                      worldCorners[i] = screenPos;
+                 }
+             }
 
-             // Compute AABB of the OBB for picking
+             // Compute AABB of the (possibly projected) corners for picking
              float wMinX = worldCorners[0].x, wMaxX = worldCorners[0].x;
              float wMinY = worldCorners[0].y, wMaxY = worldCorners[0].y;
 
@@ -192,6 +331,10 @@ namespace BixEngine::Gui
                  return;
              }
          }
+
+         // Deselect if clicking on empty space
+         if (context_.selectedActorSetter)
+             context_.selectedActorSetter(nullptr);
     }
 
     void SceneViewportPanel::DrawGizmo(Game::Actor* actor, const ImVec2& screenOffset, float viewScale)
@@ -439,6 +582,43 @@ namespace BixEngine::Gui
 
     ImVec2 SceneViewportPanel::WorldToScreen(const Math::Vector2<float>& worldPos, const ImVec2& screenOffset, float viewScale) const
     {
+        Math::Vector2<float> posToConvert = worldPos;
+        
+        // If there is an active game camera, the viewport (which renders the scene) is already shifted by it.
+        // So we must apply the same shift to the gizmos that we draw ON TOP of that scene.
+        if (auto* cam = Game::CameraComponent::GetMainCamera())
+        {
+             // Camera WorldToScreen transforms World -> Screen (Pixels)
+             // But here we are in "Viewport Texture Space".
+             // We need to match what SpriteComponent does.
+             
+             // SpriteComponent: final = cam->WorldToScreen(world)
+             // This returns coordinates in the logical screen resolution.
+             
+             Math::Vector3 p3(worldPos.x, worldPos.y, 0.0f);
+             posToConvert = cam->WorldToScreen(p3);
+             
+             // Now 'posToConvert' is in "Screen Pixel Coords" (e.g. 0 to 1600).
+             // BUT, SceneViewportPanel draws into an ImGui window that might be scaled.
+             // 'screenOffset' corresponds to the top-left of the image in ImGui window.
+             // 'viewScale' relates the Texture Size to the Display Size.
+             
+             // If Camera is active, the Texture content ITSELF is already transformed.
+             // So (0,0) in the Texture is actually (0,0) on the Screen.
+             // Wait.
+             // The Sprite at 'posToConvert' (e.g. 800, 450) is drawn at pixel (800, 450) in the Texture.
+             // So we just need to map Texture Pixel (800, 450) to ImGui Screen Coord.
+             
+             // SceneViewportPanel Logic:
+             // DrawTexture(texture, drawPos, imgSize)
+             // scaleX = imgSize.x / textureWidth.
+             
+             // So Output = drawPos + (TextureCoord * Scale).
+             
+             return { screenOffset.x + posToConvert.x * viewScale, screenOffset.y + posToConvert.y * viewScale };
+        }
+
+        // Default behavior (No Camera)
         return { screenOffset.x + worldPos.x * viewScale, screenOffset.y + worldPos.y * viewScale };
     }
 

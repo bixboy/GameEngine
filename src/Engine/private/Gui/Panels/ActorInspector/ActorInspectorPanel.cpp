@@ -11,9 +11,19 @@ namespace BixEngine::Gui
 {
     using namespace Utils;
 
-    ActorInspectorPanel::ActorInspectorPanel(std::function<Game::SceneManager*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
+    ActorInspectorPanel::ActorInspectorPanel(std::function<Game::SceneManager*()> sceneManagerProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
         : GuiPanelBase("actor_inspector"),
-          sceneManagerProvider_(std::move(sceneProvider)),
+          sceneManagerProvider_(std::move(sceneManagerProvider)),
+          selectedActorGetter_(std::move(selectionGetter)),
+          selectedActorSetter_(std::move(selectionSetter)),
+          sections_(ActorInspector::BuildActorInspectorSections()),
+          registeredFactoryCount_(ActorInspector::GetRegisteredActorInspectorFactoryCount())
+    {
+    }
+
+    ActorInspectorPanel::ActorInspectorPanel(std::function<Game::Scene*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter)
+        : GuiPanelBase("actor_inspector"),
+          sceneProvider_(std::move(sceneProvider)),
           selectedActorGetter_(std::move(selectionGetter)),
           selectedActorSetter_(std::move(selectionSetter)),
           sections_(ActorInspector::BuildActorInspectorSections()),
@@ -22,7 +32,13 @@ namespace BixEngine::Gui
     }
 
     ActorInspectorPanel::ActorInspectorPanel(const DefaultEngineGuiContext& context)
-        : ActorInspectorPanel(context.sceneManagerProvider, context.selectedActorGetter, context.selectedActorSetter)
+        : GuiPanelBase("actor_inspector"),
+          sceneManagerProvider_(context.sceneManagerProvider), // Keep reference if provided
+          sceneProvider_(context.sceneProvider),               // Use direct provider if available
+          selectedActorGetter_(context.selectedActorGetter),
+          selectedActorSetter_(context.selectedActorSetter),
+          sections_(ActorInspector::BuildActorInspectorSections()),
+          registeredFactoryCount_(ActorInspector::GetRegisteredActorInspectorFactoryCount())
     {
     }
 
@@ -30,8 +46,18 @@ namespace BixEngine::Gui
     {
         ScopedID panelScope("ActorInspectorPanel");
 
-        Game::SceneManager* sceneManager = sceneManagerProvider_ ? sceneManagerProvider_() : nullptr;
-        Game::Scene* activeScene = sceneManager ? sceneManager->GetScene() : nullptr;
+        Game::Scene* activeScene = nullptr;
+        
+        if (sceneProvider_)
+        {
+            activeScene = sceneProvider_();
+        }
+        else if (sceneManagerProvider_)
+        {
+             if (auto* sm = sceneManagerProvider_())
+                 activeScene = sm->GetScene();
+        }
+
         if (!activeScene)
         {
             DrawEmptyStateMessage("Aucune scène active.");

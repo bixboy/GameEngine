@@ -10,7 +10,17 @@ int main(int, char**)
     if (app.Initialize())
     {
         LOG_INFO("Main: Initialized. Starting Run loop.");
-        app.EmplaceScene<BixEngine::Game::EmptyScene>();
+        
+        if (!app.HasActiveScene())
+        {
+            LOG_INFO("Main: No default scene loaded, creating EmptyScene.");
+            app.EmplaceScene<BixEngine::Game::EmptyScene>();
+        }
+        else
+        {
+            LOG_INFO("Main: Default scene already loaded. Skipping EmptyScene creation.");
+        }
+
         app.Run();
         LOG_INFO("Main: Run loop finished.");
     }

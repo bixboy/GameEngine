@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <cstdint>
+#include <cstddef>
 #include "Containers/String.h"
 
 

@@ -43,7 +43,7 @@ namespace BixEngine::resources
         [[nodiscard]] std::shared_ptr<Texture> GetTexture() const noexcept { return texture_; }
         [[nodiscard]] const String& GetTexturePath() const noexcept { return texturePath_; }
 
-        [[nodiscard]] String GetPath() const { return texturePath_; }
+        [[nodiscard]] String GetPath() const { return path_; }
 
     private:
         void BuildAnimationLookup();
@@ -53,5 +53,6 @@ namespace BixEngine::resources
         std::vector<SpriteAnimation> animations_{};
         std::unordered_map<String, size_t> animationLookup_{};
         String texturePath_{};
+        String path_{};
     };
 }

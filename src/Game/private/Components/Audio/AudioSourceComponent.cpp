@@ -39,7 +39,7 @@ namespace BixEngine::Game
     {
     }
 
-    void AudioSourceComponent::Update(float dt)
+    void AudioSourceComponent::Update(float /*dt*/)
     {
         if (!impl_->initialized) return;
 

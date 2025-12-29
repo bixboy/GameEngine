@@ -190,6 +190,12 @@ namespace BixEngine::Core
         case SDL_EVENT_TEXT_INPUT:
             return io.WantCaptureKeyboard && !overViewport;
 
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            // If we click on UI (and not viewport), we want to consume the event so the game doesn't react.
+            // If we click on Viewport, we DO NOT want to consume it, so the game gets it.
+            return io.WantCaptureMouse && !overViewport;
+
         default:
             return false;
         }

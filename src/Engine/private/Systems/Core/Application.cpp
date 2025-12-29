@@ -20,6 +20,11 @@ namespace BixEngine::Core
         return EnsureInitialized() && bootstrap_->IsReady();
     }
 
+    bool Application::HasActiveScene() const
+    {
+        return bootstrap_ && bootstrap_->HasActiveScene();
+    }
+
     void Application::Run()
     {
         if (!EnsureInitialized())

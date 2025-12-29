@@ -14,8 +14,8 @@ namespace BixEngine::resources
      */
     struct SpriteAtlasDefinition
     {
-        int columns{0};
-        int rows{0};
+        float columns{0.f};
+        float rows{0.f};
         int padding{0};
         int margin{0};
         String texturePath{};
@@ -61,6 +61,6 @@ namespace BixEngine::resources
          * @param padding Padding entre les frames.
          * @param margin Marge autour de tous les frames.
          */
-        std::vector<SpriteFrame> GenerateFrames(Texture& texture, int columns, int rows, int padding, int margin);
+        std::vector<SpriteFrame> GenerateFrames(Texture& texture, float columns, float rows, int padding, int margin);
     }
 }

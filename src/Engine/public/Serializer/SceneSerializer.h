@@ -1,5 +1,4 @@
 #pragma once
-#pragma once
 #include "Containers/String.h"
 #include <filesystem>
 #include <functional>

@@ -160,21 +160,7 @@ namespace BixTool
         {
 
 
-            for (const Property& property : cls.Properties)
-            {
-                std::string escapedMetadata;
-                for(char c : property.Metadata) {
-                    if(c == '"') escapedMetadata += "\\\"";
-                    else if(c == '\\') escapedMetadata += "\\\\";
-                    else escapedMetadata += c;
-                }
 
-                oss << "                ::Bix::Reflection::detail::RegisterProperty<ThisClass, "
-                    << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
-                    << property.Name << ", \"" << property.Type << "\", \"" << escapedMetadata << "\"); \\\n";
-            } 
-    
-    /* ... inside GenerateHeader ... */
             for (const Property& property : cls.Properties)
             {
                 // Inject Access Specifier
@@ -196,6 +182,19 @@ namespace BixTool
                 oss << "                ::Bix::Reflection::detail::RegisterProperty<ThisClass, "
                     << property.Type << ">(info, \"" << property.Name << "\", &ThisClass::"
                     << property.Name << ", \"" << property.Type << "\", \"" << escapedMetadata << "\"); \\\n";
+
+                // Auto-generate ArrayAccess for TArray<TSubclassOf<...>>
+                if (property.Type.find("TArray<TSubclassOf<") != std::string::npos)
+                {
+                    oss << "                { \\\n";
+                    oss << "                    auto& p = info.Properties.back(); \\\n";
+                    oss << "                    p.ArrayFunctions = std::make_shared<::Bix::Reflection::PropertyInfo::ArrayAccess>(); \\\n";
+                    oss << "                    p.ArrayFunctions->Clear = [](void* inst) { static_cast<ThisClass*>(inst)->" << property.Name << ".clear(); }; \\\n";
+                    oss << "                    p.ArrayFunctions->GetSize = [](const void* inst) { return static_cast<const ThisClass*>(inst)->" << property.Name << ".size(); }; \\\n";
+                    oss << "                    p.ArrayFunctions->AddString = [](void* inst, const std::string& s) { static_cast<ThisClass*>(inst)->" << property.Name << ".emplace_back(s.c_str()); }; \\\n";
+                    oss << "                    p.ArrayFunctions->GetStringAt = [](const void* inst, std::size_t idx) { return static_cast<const ThisClass*>(inst)->" << property.Name << "[idx].GetAssetPath().ToStdString(); }; \\\n";
+                    oss << "                } \\\n";
+                }
             }
         }
 

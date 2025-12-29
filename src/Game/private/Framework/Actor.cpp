@@ -1,13 +1,9 @@
 #include "Framework/Actor.h"
-#include "Components/Core/Component.h"
 #include "Core/Registry.h"
 #include "Utils/FileIO/BinaryUtils.h"
+#include "Serializer/ReflectedSerializer.h"
 #include "Debug/Logger.h"
 #include <algorithm>
-#include <memory>
-#include <utility>
-#include "Serializer/ReflectedSerializer.h"
-
 
 namespace BixEngine::Game
 {
@@ -18,91 +14,66 @@ namespace BixEngine::Game
     {
         const ClassInfo* FindClassInfo(const String& typeName)
         {
-            auto* info = Registry::Get().Find(typeName.c_str());
-            if (info) return info;
+            if (auto* info = Registry::Get().Find(typeName.c_str()))
+                return info;
 
-            // Try common namespaces
             const std::array<String, 7> namespaces = {
-                "BixEngine::Game::",
-                "BixEngine::Render::",
-                "BixEngine::Physics::",
-                "BixEngine::Audio::",
-                "BixEngine::Core::",
-                "BixEngine::Systems::",
-                "BixEngine::Gui::"
+                "BixEngine::Game::", "BixEngine::Render::", "BixEngine::Physics::",
+                "BixEngine::Audio::", "BixEngine::Core::", "BixEngine::Systems::", "BixEngine::Gui::"
             };
 
             for (const auto& ns : namespaces)
             {
-                String qualifiedName = ns + typeName;
-                if (auto* nsInfo = Registry::Get().FindByQualifiedName(qualifiedName.c_str()))
-                    return nsInfo;
-                
-                // Fallback to simple Find if qualified name wasn't registered as such but map key matches?
-                // Registry usually keys by what BCLASS registers.
+                if (auto* info = Registry::Get().FindByQualifiedName((ns + typeName).c_str()))
+                    return info;
             }
             
             return nullptr;
         }
 
-        Component* FindOrCreateComponent(Actor* actor, const String& typeName, size_t index)
+        Component* FindOrCreateComponentForLoad(Actor* actor, const String& typeName, size_t index)
         {
             auto& components = actor->GetComponents();
 
-            // 1. Direct match at expected index (fast path)
             if (index < components.size() && components[index]->GetTypeName() == typeName)
-            {
                 return components[index].get();
-            }
 
-            // 2. Loose match: search forward to find duplicates
-            for (size_t i = index; i < components.size(); ++i)
-            {
-                if (components[i]->GetTypeName() == typeName)
-                    return components[i].get();
-            }
+            for (const auto& comp : components)
+                if (comp->GetTypeName() == typeName) return comp.get();
 
-            // 3. Create new component via Reflection
-            const auto* classInfo = FindClassInfo(typeName);
-            if (classInfo && classInfo->CanConstruct())
+            if (const auto* info = FindClassInfo(typeName))
             {
-                if (auto* newComp = classInfo->ConstructTyped<Component>())
+                if (info->CanConstruct())
                 {
-                    actor->AddComponent(std::unique_ptr<Component>(newComp));
-                    return actor->GetComponents().back().get();
-                }
-                else
-                {
-                    LOG_ERROR("FindOrCreateComponent: ConstructTyped returned nullptr for '" + typeName + "'");
+                    if (auto* newComp = info->ConstructTyped<Component>())
+                    {
+                        actor->AddComponent(std::unique_ptr<Component>(newComp));
+                        return actor->GetComponents().back().get();
+                    }
                 }
             }
-            else
-            {
-                LOG_ERROR("FindOrCreateComponent: Could not create component '" + typeName + "'. Missing ClassInfo or Reflection data.");
-            }
-
+            
             return nullptr;
         }
     }
-    
 
-    Actor::Actor(const Math::Transform& transform) : Object("Actor", transform)
-    {}
+    // ==============================================================================
+    // CONSTRUCTEURS & LIFECYCLE
+    // ==============================================================================
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
-    {}
+    {
+    }
 
     Actor::~Actor()
     {
-        // Unlink from parent
         SetParent(nullptr);
-
-        // Unlink children (they become orphans, but usually Scene::RemoveActor handles their deletion)
-        // We copy the list because SetParent modifies it
-        auto kids = children_;
-        for (auto* child : kids)
+        
+        auto childrenCopy = children_;
+        for (auto* child : childrenCopy)
         {
-            if (child) child->SetParent(nullptr);
+            if (child)
+                child->SetParent(nullptr);
         }
     }
 
@@ -110,6 +81,8 @@ namespace BixEngine::Game
     {
         for (auto& c : components_)
             c->BeginPlay();
+        
+        hasBegunPlay_ = true;
     }
 
     void Actor::Update(float deltaTime)
@@ -117,11 +90,8 @@ namespace BixEngine::Game
         if (!active_)
             return;
 
-        if (!has_begun_play_)
-        {
+        if (!hasBegunPlay_)
             BeginPlay();
-            has_begun_play_ = true;
-        }
 
         for (auto& comp : components_)
             comp->Update(deltaTime);
@@ -136,9 +106,60 @@ namespace BixEngine::Game
             comp->Render(renderer);
     }
 
-    // ==============================================================================================
-    // GESTION DES COMPOSANTS
-    // ==============================================================================================
+    // ==============================================================================
+    // PARENTS / ENFANTS
+    // ==============================================================================
+
+    void Actor::SetParent(Actor* parent)
+    {
+        if (parent_ == parent)
+            return;
+        
+        if (parent == this)
+            return;
+        
+        if (parent && parent->IsChildOf(this))
+        {
+            LOG_WARNING("Hierarchy cycle detected for actor: " + GetName());
+            return;
+        }
+
+        if (parent_)
+        {
+            auto& siblings = parent_->children_;
+            std::erase(siblings, this);
+        }
+
+        parent_ = parent;
+
+        if (parent_)
+        {
+            parent_->children_.push_back(this);
+            GetTransformRef().SetParent(&parent_->GetTransformRef());
+        }
+        else
+        {
+            GetTransformRef().SetParent(nullptr);
+        }
+    }
+
+    bool Actor::IsChildOf(const Actor* potentialParent) const
+    {
+        if (!potentialParent)
+            return false;
+        
+        for (const Actor* curr = parent_; curr != nullptr; curr = curr->parent_)
+        {
+            if (curr == potentialParent)
+                return true;
+        }
+        
+        return false;
+    }
+
+    // ==============================================================================
+    // COMPOSANTS
+    // ==============================================================================
 
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
@@ -155,112 +176,53 @@ namespace BixEngine::Game
             return false;
 
         auto it = std::find_if(components_.begin(), components_.end(),
-        [component](const auto& ptr)
+            [component](const auto& ptr)
+            {
+                return ptr.get() == component;
+            });
+
+        if (it != components_.end())
         {
-            return ptr.get() == component;
-        });
-
-        if (it == components_.end())
-            return false;
-
-        OnComponentRemoved(*(*it));
-        components_.erase(it);
-        return true;
-    }
-
-    // ==============================================================================================
-    // HIERARCHY
-    // ==============================================================================================
-
-    void Actor::SetParent(Actor* parent)
-    {
-        if (parent_ == parent)
-            return;
-
-        if (parent == this)
-        {
-            LOG_WARNING("Cannot set parent to self: " + GetName());
-            return;
+            OnComponentRemoved(*(*it));
+            components_.erase(it);
+            
+            return true;
         }
-
-        if (parent && parent->IsChildOf(this))
-        {
-            LOG_WARNING("Cannot set parent to a child (cycle detected): " + GetName());
-            return;
-        }
-
-        // 1. Remove from old parent
-        if (parent_)
-        {
-            auto& siblings = parent_->children_;
-            std::erase(siblings, this);
-        }
-
-        // 2. Set new parent
-        parent_ = parent;
-
-        // 3. Add to new parent & Link Transform
-        if (parent_)
-        {
-            parent_->children_.push_back(this);
-            GetTransformRef().SetParent(&parent_->GetTransformRef());
-        }
-        else
-        {
-            GetTransformRef().SetParent(nullptr);
-        }
-    }
-
-    bool Actor::IsChildOf(const Actor* potentialParent) const
-    {
-        if (!potentialParent)
-            return false;
-
-        const Actor* current = parent_;
-        while (current)
-        {
-            if (current == potentialParent)
-                return true;
-            current = current->parent_;
-        }
+        
         return false;
     }
 
-    // ==============================================================================================
-    // CLONING
-    // ==============================================================================================
+    // ==============================================================================
+    // SÉRIALISATION
+    // ==============================================================================
 
     std::unique_ptr<Actor> Actor::ClonePrototype() const
     {
         return std::make_unique<Actor>();
-        // Note: Hierarchy is not cloned for prototypes by default
     }
-
-    // ==============================================================================================
-    // SÉRIALISATION
-    // ==============================================================================================
 
     void Actor::SerializeBinary(std::ostream& stream) const
     {
-        // 1. Base Object (Transform, Nom...)
         Object::SerializeBinary(stream);
         BinaryWriter writer(stream);
 
-        // Hierarchy
-        String psUUID = parent_ ? parent_->GetUUID() : String();
-        writer.WriteString(psUUID);
+        writer.WriteString(parent_ ? parent_->GetUUID() : String());
 
-        // 2. Propriétés de l'Actor
         if (const auto* info = FindClassInfo(GetTypeName()))
         {
-            Serialization::ReflectedSerializer::Serialize(this, info, writer);
+            Serialization::ReflectedSerializer::Serialize(this, info, writer);   
         }
         else
         {
-            LOG_WARNING("Serialize: No reflection info for Actor: " + GetTypeName());
+            LOG_WARNING("Serialize: Missing ClassInfo for " + GetTypeName());   
         }
 
-        // 3. Composants
+        SerializeComponents(stream);
+    }
+
+    void Actor::SerializeComponents(std::ostream& stream) const
+    {
+        BinaryWriter writer(stream);
         writer.WriteUint32(static_cast<uint32_t>(components_.size()));
 
         for (const auto& comp : components_)
@@ -268,55 +230,46 @@ namespace BixEngine::Game
             String typeName = comp->GetTypeName();
             writer.WriteString(typeName);
 
-            if (const auto* compInfo = FindClassInfo(typeName))
-            {
-                Serialization::ReflectedSerializer::Serialize(comp.get(), compInfo, writer);
-            }
-            else
-            {
-                LOG_WARNING("Serialize: No reflection info for Component: " + typeName);
-            }
+            if (const auto* info = FindClassInfo(typeName))
+                Serialization::ReflectedSerializer::Serialize(comp.get(), info, writer);
         }
     }
 
-    // ==============================================================================================
-    // DÉSÉRIALISATION
-    // ==============================================================================================
-
     void Actor::DeserializeBinary(std::istream& stream)
     {
-        // 1. Base Object
         Object::DeserializeBinary(stream);
         BinaryReader reader(stream);
 
-        // Hierarchy
         reader.ReadString(parentUUID_);
 
-        // 2. Propriétés de l'Actor
         if (const auto* info = FindClassInfo(GetTypeName()))
-        {
             Serialization::ReflectedSerializer::Deserialize(this, info, reader);
-        }
 
-        // 3. Composants
-        uint32_t compCount = 0;
-        if (!reader.ReadUint32(compCount)) return;
+        DeserializeComponents(stream);
+    }
 
-        for (uint32_t i = 0; i < compCount; ++i)
+    void Actor::DeserializeComponents(std::istream& stream)
+    {
+        BinaryReader reader(stream);
+        uint32_t count = 0;
+        
+        if (!reader.ReadUint32(count))
+            return;
+
+        for (uint32_t i = 0; i < count; ++i)
         {
             String typeName;
-            if (!reader.ReadString(typeName)) break;
+            if (!reader.ReadString(typeName))
+                break;
 
-            if (Component* comp = FindOrCreateComponent(this, typeName, i))
+            if (Component* comp = FindOrCreateComponentForLoad(this, typeName, i))
             {
-                if (const auto* compInfo = FindClassInfo(typeName))
-                {
-                    Serialization::ReflectedSerializer::Deserialize(comp, compInfo, reader);
-                }
+                if (const auto* info = FindClassInfo(typeName))
+                    Serialization::ReflectedSerializer::Deserialize(comp, info, reader);
             }
             else
             {
-                LOG_ERROR("Deserialize: Failed to restore component of type: " + typeName);
+                LOG_ERROR("Deserialize: Failed to resolve component: " + typeName);
             }
         }
     }
