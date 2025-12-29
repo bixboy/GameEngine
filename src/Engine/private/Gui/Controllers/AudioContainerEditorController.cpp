@@ -91,15 +91,15 @@ namespace BixEngine::Gui
         auto state = GetSharedState();
         if (!state) return;
 
-        // Ensure resource is loaded
+        
         audioContainer_ = resources::ResourceManager::Get().Get<resources::AudioContainer>(state->assetPath.string());
         if (!audioContainer_)
         {
-            // Try to load it if not cached (though Get should load it)
+            
             audioContainer_ = std::make_shared<resources::AudioContainer>();
             if (!audioContainer_->LoadFromFile(state->assetPath.string()))
             {
-                // Handle error
+                
             }
         }
     }
@@ -126,12 +126,12 @@ namespace BixEngine::Gui
 
         DrawStandardToolbar();
         
-        // Use a child window for the main content to allow scrolling independent of the toolbar
+        
         if (ImGui::BeginChild("MainContent", ImVec2(0, 0), true))
         {
             ImGui::Spacing();
             
-            // --- Header Section (Properties) ---
+            
             if (ImGui::CollapsingHeader("Container Settings", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::Indent();
@@ -143,7 +143,7 @@ namespace BixEngine::Gui
             ImGui::Separator();
             ImGui::Spacing();
 
-            // --- Tracks Section ---
+            
             if (ImGui::CollapsingHeader("Audio Tracks", ImGuiTreeNodeFlags_DefaultOpen))
             {
                 ImGui::Indent();
@@ -164,7 +164,7 @@ namespace BixEngine::Gui
             ImGui::TableSetupColumn("Property", ImGuiTableColumnFlags_WidthFixed, 150.0f);
             ImGui::TableSetupColumn("Value");
             
-            // Mode
+            
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
@@ -177,7 +177,7 @@ namespace BixEngine::Gui
                 changed = true;
             }
 
-            // Loop
+            
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
@@ -186,7 +186,7 @@ namespace BixEngine::Gui
             if (ImGui::Checkbox("##Loop", &audioContainer_->Loop))
                 changed = true;
 
-            // Volume Variance
+            
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
@@ -195,7 +195,7 @@ namespace BixEngine::Gui
             if (ImGui::DragFloat("##VolVar", &audioContainer_->VolumeVariance, 0.01f, 0.0f, 1.0f, "%.2f"))
                 changed = true;
             
-            // Pitch Variance
+            
             ImGui::TableNextRow();
             ImGui::TableSetColumnIndex(0);
             ImGui::AlignTextToFramePadding();
@@ -226,7 +226,7 @@ namespace BixEngine::Gui
 
         int indexToRemove = -1;
 
-        // Table for tracks
+        
         if (ImGui::BeginTable("TracksTable", 6, ImGuiTableFlags_Borders | ImGuiTableFlags_RowBg | ImGuiTableFlags_Resizable | ImGuiTableFlags_Reorderable))
         {
             ImGui::TableSetupColumn("Clip", ImGuiTableColumnFlags_WidthStretch);
@@ -243,7 +243,7 @@ namespace BixEngine::Gui
                 ImGui::PushID(i);
                 ImGui::TableNextRow();
 
-                // Column 1: Clip Selection
+                
                 ImGui::TableSetColumnIndex(0);
                 std::string currentPath = track.Clip ? track.Clip->GetPath().ToStdString() : "";
                 std::string preview = track.Clip ? MakeDisplayName(track.Clip->GetPath().ToStdString(), root) : "Select Audio Clip...";
@@ -271,7 +271,7 @@ namespace BixEngine::Gui
                     ImGui::EndCombo();
                 }
 
-                // Drag & Drop Target on the Combo
+                
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -290,25 +290,25 @@ namespace BixEngine::Gui
                     ImGui::EndDragDropTarget();
                 }
 
-                // Column 2: Weight
+                
                 ImGui::TableSetColumnIndex(1);
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 if (ImGui::DragFloat("##Weight", &track.Weight, 0.1f, 0.0f, 100.0f, "%.1f")) isDirty_ = true;
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Probability Weight");
 
-                // Column 3: Volume Multiplier
+                
                 ImGui::TableSetColumnIndex(2);
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 if (ImGui::DragFloat("##Vol", &track.VolumeMultiplier, 0.01f, 0.0f, 2.0f, "%.2f")) isDirty_ = true;
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Volume Multiplier");
 
-                // Column 4: Pitch Multiplier
+                
                 ImGui::TableSetColumnIndex(3);
                 ImGui::SetNextItemWidth(-FLT_MIN);
                 if (ImGui::DragFloat("##Pitch", &track.PitchMultiplier, 0.01f, 0.1f, 3.0f, "%.2f")) isDirty_ = true;
                 if (ImGui::IsItemHovered()) ImGui::SetTooltip("Pitch Multiplier");
 
-                // Column 5: Preview
+                
                 ImGui::TableSetColumnIndex(4);
                 
                 bool isPlayingThis = (previewState_->initialized && previewState_->trackIndex == i);
@@ -316,7 +316,7 @@ namespace BixEngine::Gui
                 {
                     if (ma_sound_at_end(&previewState_->sound))
                     {
-                        // Auto-stop if finished
+                        
                         ma_sound_stop(&previewState_->sound);
                         ma_sound_uninit(&previewState_->sound);
                         previewState_->initialized = false;
@@ -341,7 +341,7 @@ namespace BixEngine::Gui
                     {
                         if (track.Clip)
                         {
-                            // Stop previous if any
+                            
                             if (previewState_->initialized)
                             {
                                 ma_sound_stop(&previewState_->sound);
@@ -363,7 +363,7 @@ namespace BixEngine::Gui
 
                                 if (result == MA_SUCCESS)
                                 {
-                                    ma_sound_set_volume(&previewState_->sound, track.VolumeMultiplier); // Note: Should we apply container variance? Maybe not for raw track preview.
+                                    ma_sound_set_volume(&previewState_->sound, track.VolumeMultiplier); 
                                     ma_sound_set_pitch(&previewState_->sound, track.PitchMultiplier);
                                     ma_sound_start(&previewState_->sound);
                                     previewState_->initialized = true;
@@ -374,7 +374,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Column 6: Action
+                
                 ImGui::TableSetColumnIndex(5);
                 if (ImGui::Button("X"))
                 {

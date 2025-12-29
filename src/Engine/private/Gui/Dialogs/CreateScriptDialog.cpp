@@ -15,9 +15,9 @@
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
 
-// ============================================================================
-//  CreateScriptDialog
-// ============================================================================
+
+
+
 
 CreateScriptDialog::CreateScriptDialog(ContentBrowserState& state, String& selectedEntry)
     : ModalDialog(state, selectedEntry, "ContentBrowserCreateScript"),
@@ -87,7 +87,7 @@ void CreateScriptDialog::DrawContent()
     ImGui::Spacing();
     DrawSeparatorText("Script details");
 
-    // Affiche l’emplacement cible
+    
     path relativeLocation = state_.current.lexically_relative(state_.root);
     std::string locationDisplay = "Content";
     
@@ -99,7 +99,7 @@ void CreateScriptDialog::DrawContent()
     
     DrawLabelValue("Location", locationDisplay, "Content");
 
-    // Saisie du nom du script
+    
     const bool enterPressed = InputTextWithLabel("Script name (.h / .cpp)",
         scriptName_,
         IM_ARRAYSIZE(scriptName_),
@@ -109,7 +109,7 @@ void CreateScriptDialog::DrawContent()
     if (!scriptError_.IsEmpty())
         DrawErrorMessage(scriptError_.ToStdString());
 
-    // Prépare le baseName
+    
     String trimmedInput = scriptName_;
     std::string baseName = trimmedInput.IsEmpty() ? std::string() : trimmedInput.ToStdString();
 
@@ -129,7 +129,7 @@ void CreateScriptDialog::DrawContent()
     DrawSeparatorText("Parent (optional)");
     ImGui::TextDisabled("Pick an inheritance target or leave empty for a standalone script.");
 
-    // Sélection du parent
+    
     const float listHeight = ImGui::GetTextLineHeightWithSpacing() * 7.0f;
     
     if (ImGui::BeginTable("ParentSelectionTable", 2,
@@ -142,7 +142,7 @@ void CreateScriptDialog::DrawContent()
         ImGui::TableHeadersRow();
         ImGui::TableNextRow();
 
-        // Colonne base classes
+        
         ImGui::TableSetColumnIndex(0);
         if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, listHeight), true))
         {
@@ -170,7 +170,7 @@ void CreateScriptDialog::DrawContent()
         }
         ImGui::EndChild();
 
-        // Colonne scripts existants
+        
         ImGui::TableSetColumnIndex(1);
         if (ImGui::BeginChild("UserScriptList", ImVec2(0.0f, listHeight), true, ImGuiWindowFlags_HorizontalScrollbar))
         {
@@ -195,7 +195,7 @@ void CreateScriptDialog::DrawContent()
         ImGui::EndTable();
     }
 
-    // Résumé du parent sélectionné
+    
     ImGui::Spacing();
     std::string parentLabel = "None";
     
@@ -220,7 +220,7 @@ void CreateScriptDialog::DrawContent()
         ImGui::TextDisabled("This script will not inherit from another class.");
     }
 
-    // Preview des fichiers générés
+    
     ImGui::Spacing();
     DrawSeparatorText("Preview");
     if (baseName.empty())
@@ -251,7 +251,7 @@ void CreateScriptDialog::DrawContent()
         }
     }
 
-    // Boutons Create / Cancel
+    
     ImGui::Spacing();
     const bool confirm = DrawConfirmButtons("Create", "Cancel", []{},
         [&]
@@ -265,7 +265,7 @@ void CreateScriptDialog::DrawContent()
     if (!createTriggered)
         return;
 
-    // Validation du nom
+    
     String rawName = String(scriptName_);
     if (rawName.IsEmpty())
     {
@@ -281,7 +281,7 @@ void CreateScriptDialog::DrawContent()
 
     std::string baseNameStr = rawName.ToStdString();
 
-    // Retire extensions si saisies
+    
     if (baseNameStr.size() > 2 && baseNameStr.ends_with(".h"))
     {
         baseNameStr.erase(baseNameStr.size() - 2);   
@@ -297,7 +297,7 @@ void CreateScriptDialog::DrawContent()
         return;
     }
 
-    // Chemins de sortie
+    
     path headerPath = state_.current / (baseNameStr + ".h");
     path sourcePath = state_.current / (baseNameStr + ".cpp");
 
@@ -307,7 +307,7 @@ void CreateScriptDialog::DrawContent()
         return;
     }
 
-    // S’assure que le dossier existe
+    
     std::error_code dirErr;
     fs::create_directories(headerPath.parent_path(), dirErr);
     if (dirErr)
@@ -318,7 +318,7 @@ void CreateScriptDialog::DrawContent()
         return;
     }
 
-    // Création des fichiers
+    
     std::ofstream headerFile(headerPath);
     if (!headerFile.is_open())
     {
@@ -337,14 +337,14 @@ void CreateScriptDialog::DrawContent()
         return;
     }
 
-    // Détermine l’héritage
+    
     const bool hasParent = !selectedParentClass_.IsEmpty();
     const bool hasParentInclude = hasParent && !selectedParentInclude_.IsEmpty();
     const bool defaultComponent = (scriptType_ == ScriptTemplateType::Component);
     bool inheritsComponent = selectedParentIsComponent_ || defaultComponent;
     bool inheritsActor = selectedParentIsActor_;
 
-    // Si le parent n’est ni actor ni component (utility), par défaut Actor (sauf template Utility)
+    
     if (!inheritsActor && !inheritsComponent && scriptType_ != ScriptTemplateType::Utility)
         inheritsActor = true;
 
@@ -352,10 +352,8 @@ void CreateScriptDialog::DrawContent()
 
     const std::string baseInclude = inheritsComponent ? "Game/Components/Component.h" : "Game/Actor.h";
 
-    // Écrit le header
+    
     headerFile << "#pragma once\n\n";
-    headerFile << "// Parent: " << (hasParent ? selectedParentClass_.c_str() : "(none)") << "\n";
-    headerFile << "// Created automatically from the Content Browser\n\n";
     headerFile << "#include \"" << baseInclude << "\"\n";
     if (hasParentInclude)
         headerFile << "#include \"" << selectedParentInclude_.c_str() << "\"\n";

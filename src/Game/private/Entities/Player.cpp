@@ -17,7 +17,7 @@ namespace BixEngine::Game
         InitializeComponents();
     }
 
-    void Player::SetupInput(Input::InputManager& /*inputManager*/)
+    void Player::SetupInput(Input::InputManager&  )
     {
         LOG_INFO("Player::SetupInput called");
     }

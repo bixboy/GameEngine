@@ -138,15 +138,15 @@ namespace BixEngine::Core
 
             if (layout == EditorLayoutType::Scene)
             {
-                // In Scene mode, rely on default layout filtering
+                
                 layoutManager_->SetMenuPanelFilter(nullptr);
             }
             else if (layout == EditorLayoutType::ActorEditor)
             {
-                // In Editor mode, only show panels belonging to the active editor
-                // We need to capture the active panels. Since navId is just a string, we need to look up the entry.
-                // But we can't capture 'this' safely if it might be destroyed (unlikely here but good practice).
-                // Actually, we can just look up the active editor in the filter lambda.
+                
+                
+                
+                
                 
                 layoutManager_->SetMenuPanelFilter([this, currentNavId = std::string(navId)](Gui::GuiPanel* panel) -> bool
                 {
@@ -514,7 +514,7 @@ namespace BixEngine::Core
         GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Audio Container"});
         panel.SetVisible(false);
         guiManager_->AttachController(panel, std::make_unique<AudioContainerEditorController>(entry.sharedState));
-        entry.panels.viewport = &panel; // Using viewport slot for the main editor panel
+        entry.panels.viewport = &panel; 
         entry.panels.toolbar = nullptr;
         entry.panels.outline = nullptr;
         entry.panels.inspector = nullptr;
@@ -525,7 +525,7 @@ namespace BixEngine::Core
     {
         if (path.extension() == ".bixactor")
         {
-             // Binary file, skip JSON parsing
+             
             return;
         }
 

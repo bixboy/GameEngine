@@ -34,9 +34,7 @@ namespace BixEngine::Gui
         }
     };
 
-    /**
-     * @brief Gère indépendamment plusieurs ImGui dock layouts et panel.
-     */
+     
     class GuiLayoutManager
     {
     public:
@@ -72,7 +70,7 @@ namespace BixEngine::Gui
 
     private:
         
-        // ---- Internal lifecycle ----
+        
         void ProcessPendingSwitch_();
         void EnsureDockspaceForCurrentLayout_();
         void ApplyPanelVisibility_();
@@ -120,7 +118,7 @@ namespace BixEngine::Gui
         std::unordered_set<EditorLayoutType> initializedLayouts_;
         std::unordered_set<EditorLayoutType> pendingInitialization_;
 
-        // Scene Management State
+        
         std::filesystem::path currentScenePath_;
         bool showSaveAsDialog_{false};
         bool showOpenSceneDialog_{false};
@@ -130,12 +128,12 @@ namespace BixEngine::Gui
         char saveAsFilenameBuffer_[256]{};
         char renameFilenameBuffer_[256]{};
         
-        // Recent Scenes
+        
         std::vector<std::filesystem::path> recentScenes_;
         std::filesystem::path recentScenesFile_;
         std::filesystem::path sceneToDelete_;
         
-        // Scene State Tracking
+        
         bool isSceneDirty_{false};
         
         bool showEditorPreferences_{false};

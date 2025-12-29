@@ -8,9 +8,7 @@ namespace BixEngine::resources
     struct SpriteAnimation;
     struct SpriteFrame;
 
-    /**
-     * @brief Lightweight animator responsible for advancing sprite atlas animations.
-     */
+     
     class SpriteAnimator
     {
     public:

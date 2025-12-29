@@ -18,9 +18,9 @@ namespace BixEngine::Gui
         : guiManager_(guiManager), context_(context)
     {}
 
-    // ==========================================================================
-    // TryRegisterPanel — gestion sécurisée
-    // ==========================================================================
+    
+    
+    
 
     template <typename PanelT, typename... Args>
     GuiPanel* DefaultEngineGuiPanelManager::TryRegisterPanel(const char* name, GuiManager::PanelDescriptor descriptor, Args&&... args)
@@ -37,9 +37,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // ==========================================================================
-    // Création de tous les panneaux
-    // ==========================================================================
+    
+    
+    
 
     DefaultEngineGuiPanels DefaultEngineGuiPanelManager::CreatePanels()
     {
@@ -54,7 +54,7 @@ namespace BixEngine::Gui
         using Descriptor = GuiManager::PanelDescriptor;
 
 
-        // Scene viewport
+        
         auto viewportDesc = Descriptor{};
         viewportDesc.identifier   = "scene_viewport";
         viewportDesc.title        = "Scene";
@@ -71,7 +71,7 @@ namespace BixEngine::Gui
         panels.sceneViewportPanel = TryRegisterPanel<SceneViewportPanel>("SceneViewport", viewportDesc, context_);
 
 
-        // Engine stats
+        
         auto statsDesc = Descriptor{};
         statsDesc.identifier   = "engine_stats";
         statsDesc.title        = "Engine Stats";
@@ -87,7 +87,7 @@ namespace BixEngine::Gui
         panels.statsPanel = TryRegisterPanel<StatsPanel>("Stats", statsDesc, context_);
 
         
-        // Scene outliner
+        
         auto outlinerDesc = Descriptor{};
         outlinerDesc.identifier   = "scene_outliner";
         outlinerDesc.title        = "Scene Outliner";
@@ -102,7 +102,7 @@ namespace BixEngine::Gui
         panels.sceneOutlinerPanel = TryRegisterPanel<SceneOutlinerPanel>("SceneOutliner", outlinerDesc, context_);
 
         
-        // Actor inspector
+        
         auto inspectorDesc = Descriptor{};
         inspectorDesc.identifier   = "actor_inspector";
         inspectorDesc.title        = "Actor Details";
@@ -116,7 +116,7 @@ namespace BixEngine::Gui
         };
         panels.actorInspectorPanel = TryRegisterPanel<ActorInspectorPanel>("ActorInspector", inspectorDesc, context_);
 
-        // Content browser
+        
         auto browserDesc = Descriptor{};
         browserDesc.identifier   = "content_browser";
         browserDesc.title        = "Content Browser";

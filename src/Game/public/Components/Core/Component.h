@@ -32,14 +32,14 @@ namespace BixEngine::Game
         virtual ~Component() = default;
 
         virtual void BeginPlay(){}
-        virtual void Update(float /*deltaTime*/){}
-        virtual void Render(Graphics::Renderer& /*renderer*/) const{}
+        virtual void Update(float  ){}
+        virtual void Render(Graphics::Renderer&  ) const{}
 
         [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
 
         virtual void DrawInspectorUI(){}
         
-        virtual void LoadFromPrefab(const resources::ComponentPrefab* /*prefab*/) {}
+        virtual void LoadFromPrefab(const resources::ComponentPrefab*  ) {}
 
         void SetOwner(Actor* owner) { owner_ = owner; }
         [[nodiscard]] Actor* GetOwner() const { return owner_; }

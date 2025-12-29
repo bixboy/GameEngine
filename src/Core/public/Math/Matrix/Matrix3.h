@@ -27,9 +27,9 @@ namespace BixEngine::Math
             m[2][2] = m22;
         }
 
-        // ────────────────────────────────────────────────
-        // Identité
-        // ────────────────────────────────────────────────
+        
+        
+        
         [[nodiscard]] static constexpr Matrix3 Identity() noexcept
         {
             return Matrix3(
@@ -39,9 +39,9 @@ namespace BixEngine::Math
             );
         }
 
-        // ────────────────────────────────────────────────
-        // Opérateurs de base
-        // ────────────────────────────────────────────────
+        
+        
+        
         [[nodiscard]] constexpr Matrix3 operator*(const Matrix3& rhs) const noexcept
         {
             Matrix3 result{};
@@ -60,9 +60,9 @@ namespace BixEngine::Math
             };
         }
 
-        // ────────────────────────────────────────────────
-        // Déterminant / Inversion
-        // ────────────────────────────────────────────────
+        
+        
+        
         [[nodiscard]] float Determinant() const noexcept
         {
             return
@@ -94,9 +94,9 @@ namespace BixEngine::Math
             return r;
         }
 
-        // ────────────────────────────────────────────────
-        // Matrices de transformation 2D 
-        // ────────────────────────────────────────────────
+        
+        
+        
         [[nodiscard]] static Matrix3 Translation(float tx, float ty) noexcept
         {
             return Matrix3(

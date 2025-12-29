@@ -34,7 +34,7 @@ namespace BixEngine::Input
         void ResetState() noexcept;
 
 
-        // ======= Bind Action =======
+        
         template <typename T>
         void BindAction(String actionName, SDL_Keycode key, InputEvent eventType, T* instance, void (T::*func)())
         {
@@ -48,7 +48,7 @@ namespace BixEngine::Input
         }
 
 
-        // ======= Bind Axis =======
+        
         template <typename T>
         void BindAxis(String axisName, SDL_Keycode key, T* instance, void (T::*func)(float), float scale = 1.0f)
         {
@@ -85,7 +85,7 @@ namespace BixEngine::Input
         }
 
 
-        // ======= Unbind Action =======
+        
         void UnbindAction(const String& actionName, SDL_Keycode key, InputEvent eventType)
         {
             std::erase_if(actionBindings_, [&](const ActionBinding& binding)
@@ -97,7 +97,7 @@ namespace BixEngine::Input
         }
 
 
-        // ======= Unbind Axis =======
+        
         void UnbindAxis(const String& axisName, SDL_Keycode key)
         {
             for (auto it = axisBindings_.begin(); it != axisBindings_.end();)

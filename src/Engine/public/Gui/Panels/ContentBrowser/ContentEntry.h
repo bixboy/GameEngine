@@ -7,9 +7,9 @@ namespace BixEngine::Gui
 {
     struct ContentBrowserState;
     
-    // ─────────────────────────────────────────────
-    // Types d'entrées du Content Browser
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     enum class ContentType
     {
@@ -22,9 +22,9 @@ namespace BixEngine::Gui
         Audio,
     };
 
-    // ─────────────────────────────────────────────
-    // Métadonnées d'une entrée de contenu
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     struct ContentEntry
     {
@@ -36,9 +36,9 @@ namespace BixEngine::Gui
         std::filesystem::path headerPath{};
         std::filesystem::path sourcePath{};
 
-        // ─────────────────────────────────────────────
-        // Helpers de type et de statut
-        // ─────────────────────────────────────────────
+        
+        
+        
 
         [[nodiscard]] bool IsDirectory() const noexcept { return type == ContentType::Directory; }
         [[nodiscard]] bool IsFile() const noexcept { return type == ContentType::File; }
@@ -58,9 +58,9 @@ namespace BixEngine::Gui
         [[nodiscard]] String SelectionKey() const;
     };
 
-    // ─────────────────────────────────────────────
-    // Fonctions utilitaires
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     const char* GetIcon(ContentType type);
     int GetSortPriority(ContentType type);

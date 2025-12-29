@@ -66,18 +66,18 @@ namespace BixEngine::Game
         [[nodiscard]] virtual std::unique_ptr<Actor> ClonePrototype() const;
         [[nodiscard]] String GetTypeName() const noexcept override { return GetClass().Name.c_str(); }
 
-        // Active Value
+        
         [[nodiscard]] bool IsActive() const noexcept { return active_; }
         void SetActive(bool active) noexcept { active_ = active; }
 
-        // Owning Scene Value
+        
         void SetOwningScene(Scene* scene) noexcept { owningScene_ = scene; }
         [[nodiscard]] Scene* GetOwningScene() const noexcept { return owningScene_; }
 
         [[nodiscard]] const String& GetLoadedParentUUID() const noexcept { return parentUUID_; }
 
     protected:
-        virtual void OnComponentRemoved(const Component& /*component*/) {}
+        virtual void OnComponentRemoved(const Component&  ) {}
 
     private:
         

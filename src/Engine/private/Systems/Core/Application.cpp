@@ -32,9 +32,9 @@ namespace BixEngine::Core
 
         while (bootstrap_->IsRunning())
         {
-            // LOG_INFO("Application: Tick start"); // Commented out to avoid spam, uncomment if needed
+            
             bootstrap_->Tick();
-            // LOG_INFO("Application: Tick end");
+            
         }
 
         bootstrap_->ShutdownAll();

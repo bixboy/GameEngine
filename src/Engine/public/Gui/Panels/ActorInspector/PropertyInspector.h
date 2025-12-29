@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <string_view>
 #include <vector>
 #include "Core/PropertyInfo.h"
@@ -13,11 +13,11 @@ namespace BixEngine::Gui::ActorInspector
         PropertyInspector() = default;
         ~PropertyInspector() = default;
 
-        // --- Reflection ---
+        
         static bool DrawReflectedProperty(const Bix::Reflection::PropertyInfo& property, void* instance);
         static bool DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader = true, const char* headerLabel = "Properties", bool showEmptyMessage = true);
 
-        // --- Exposed variables ---
+        
         static void DrawExposedVariablesSection(BaseAssetEditorController::SharedState& state, std::string_view sectionLabel = "Variables", const char* emptyMessage = "No exposed variables.");
 
     private:

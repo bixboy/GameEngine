@@ -5,10 +5,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     *
-     * Utiliser cette classe pour appliquer temporairement une couleur à un contrôle.
-     */
+     
     class ScopedColor : Internal::ImGuiScopeBase
     {
     public:

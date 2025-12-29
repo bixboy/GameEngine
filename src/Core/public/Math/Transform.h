@@ -23,9 +23,9 @@ namespace BixEngine::Math
         {
         }
 
-        // ────────────────────────────────────────────────
-        // Fonctions de manipulation
-        // ────────────────────────────────────────────────
+        
+        
+        
         void Translate(const Vector3& delta) { position += delta; }
 
         Vector3 GetLocalPosition() const { return position; }
@@ -39,7 +39,7 @@ namespace BixEngine::Math
             return position;
         }
 
-        Vector3 GetPosition() { return GetWorldPosition(); } // CHANGING BEHAVIOR TO WORLD FOR SAFETY IF USER EXPECTS THAT
+        Vector3 GetPosition() { return GetWorldPosition(); } 
 
 
         void SetPosition(const Vector3 NewPosition) { position = NewPosition; } 
@@ -74,9 +74,9 @@ namespace BixEngine::Math
             return local;
         }
 
-        // ────────────────────────────────────────────────
-        // Application des transformations
-        // ────────────────────────────────────────────────
+        
+        
+        
         [[nodiscard]] Vector3 TransformPoint(const Vector3& localPoint) const noexcept
         {
             Vector3 input(localPoint.x, localPoint.y, 1.0f);

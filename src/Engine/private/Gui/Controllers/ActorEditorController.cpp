@@ -49,7 +49,7 @@ namespace BixEngine::Gui
                 config.dockRegion = DockSpaceRegion::Center;
                 config.stableIdSuffix = "Viewport";
                 break;
-            case Section::Outline: // Not fully implemented yet, maybe reuse SceneHierarchy?
+            case Section::Outline: 
                 config.titlePrefix = "Prefab Outline";
                 config.dockRegion = DockSpaceRegion::Left;
                 config.stableIdSuffix = "Outline";
@@ -63,7 +63,7 @@ namespace BixEngine::Gui
             return config;
         }
 
-        // Helper to load actor from binary
+        
         std::unique_ptr<Game::Actor> LoadActorBinary(const std::filesystem::path& path)
         {
             auto root = BixEngine::PrefabUtils::PrefabSerializer::LoadPrefab(path);
@@ -93,21 +93,21 @@ namespace BixEngine::Gui
         state->assetDisplayName = BuildDisplayName(state->assetPath);
         state->assetTypeLabel = "Actor Prefab";
 
-        // Create Preview Scene
+        
         state->previewScene = std::make_unique<Game::Scene>("PreviewScene");
         
-        // Load Actor
-        // Load Actor
+        
+        
         std::unique_ptr<Game::Actor> loadedActor = LoadActorBinary(state->assetPath);
         state->previewActor = loadedActor.get();
         state->selectedActor = state->previewActor;
 
         if (loadedActor)
         {
-            // 1. Snapshot Hierarchy
-            // We need to collect all descendants because Scene::AddActor resets parent-child links.
-            // Also, LoadPrefab returns a root with children that are technically "leaked" (released from unique_ptr)
-            // until we explicitly give them to the Scene.
+            
+            
+            
+            
             struct HierarchyNode { Game::Actor* actor; Game::Actor* parent; };
             std::vector<HierarchyNode> hierarchy;
             std::vector<Game::Actor*> descendants;
@@ -123,18 +123,18 @@ namespace BixEngine::Gui
             };
             collect(state->previewActor);
 
-            // 2. Add Root to Scene
+            
             state->previewScene->AddActor(std::move(loadedActor));
 
-            // 3. Add Descendants to Scene (Transfer ownership)
+            
             for (auto* child : descendants)
             {
-                // Re-acquire ownership (was released in LoadPrefab)
+                
                 std::unique_ptr<Game::Actor> uChild(child);
                 state->previewScene->AddActor(std::move(uChild));
             }
 
-            // 4. Restore Hierarchy
+            
             for (const auto& node : hierarchy)
             {
                 if (node.actor && node.parent)
@@ -142,7 +142,7 @@ namespace BixEngine::Gui
             }
         }
 
-        // Create Editor Camera
+        
         if (state->previewActor)
         {
             auto& camActor = state->previewScene->SpawnActor<Game::Actor>("EditorCamera");
@@ -151,28 +151,28 @@ namespace BixEngine::Gui
             {
                 camComp->SetAsMainCamera();
                 camComp->Zoom = 1.0f; 
-                // Center on Actor
-                Math::Vector3 pos = state->previewActor->GetTransform().GetPosition();
-                // Offset Camera back (Z or Y depending on 2D/3D). Assuming 2D Engine with Z depth or similar? 
-                // Usually 2D engines use Z for depth sorting but camera implies projection.
-                // LevelGenerator uses Z=0. 
-                // Let's set it to valid position. If 2D, Z might not matter or needs to be negative?
-                // Default Camera usually looks at Z=0?
-                // Let's just match X/Y and set Z to something standardized if widely used.
-                // LevelSegment logic uses Z=0.
                 
-                // Let's check SceneViewportPanel logic... it doesn't really enforce distance.
-                // Just use Actor position.
-                camActor.SetPosition({pos.x, pos.y, 10.0f}); // Set Z to 10 just in case
+                Math::Vector3 pos = state->previewActor->GetTransform().GetPosition();
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                camActor.SetPosition({pos.x, pos.y, 10.0f}); 
             }
             state->cameraActor = &camActor;
         }
-        // We will mock the provider lambda instead of creating a full SceneManager.
+        
         
         return state;
     }
 
-    void ActorEditorController::DrawPanelContents(GuiPanel& /*panel*/)
+    void ActorEditorController::DrawPanelContents(GuiPanel&  )
     {
         auto state = std::static_pointer_cast<ActorEditorSharedState>(GetSharedState());
         if (!state) return;
@@ -205,11 +205,11 @@ namespace BixEngine::Gui
         if (!viewportPanel_)
         {
             viewportPanel_ = std::make_unique<PrefabViewportPanel>(
-                // Texture Provider
+                
                 [state]() -> SDL_Texture* {
                     return static_cast<SDL_Texture*>(state->renderTarget.get());
                 },
-                // Size Provider (Texture Size)
+                
                 [state]() -> std::pair<int, int> {
                      if (auto* tex = static_cast<SDL_Texture*>(state->renderTarget.get()))
                      {
@@ -219,36 +219,36 @@ namespace BixEngine::Gui
                      }
                      return {0,0};
                 },
-                // Scene Provider
+                
                 [state]() -> Game::Scene* {
                     return state->previewScene.get();
                 },
-                // Selection Getter
+                
                 [state]() -> Game::Actor* { return state->selectedActor; },
-                // Selection Setter
+                
                 [state](Game::Actor* actor) { state->selectedActor = actor; }
             );
             
-            // Override Scene Provider in PrefabViewportPanel?
-            // SceneViewportPanel calls `context_.sceneManagerProvider()->GetActiveScene()`.
-            // We need to subclass `SceneManager` or patch `SceneViewportPanel`.
-            // The cleanest way is to modify `SceneViewportPanel` to accept `std::function<Scene*()>` directly.
-            // But `SceneViewportPanel` base takes the context struct.
             
-            // IMPORTANT: Since we can't easily mock SceneManager, we must make sure PrefabViewportPanel
-            // overrides `HandleSelection` or methods that use SceneManager, OR we modify SceneViewportPanel to use a SceneProvider.
-            // Given the code I saw earlier, `SceneViewportPanel` uses `context_.sceneManagerProvider()` in `HandleSelection`.
+            
+            
+            
+            
+            
+            
+            
+            
         }
         
-        // --- Rendering Logic ---
+        
         
         ImVec2 availContentSize = ImGui::GetContentRegionAvail();
         if (availContentSize.x < 1.0f) availContentSize.x = 1.0f;
         if (availContentSize.y < 1.0f) availContentSize.y = 1.0f;
 
-        // Force Fixed 1080p Resolution
-        // This ensures the camera/game logic behaves consistently regardless of editor panel size.
-        // SceneViewportPanel will handle downscaling to fit 'availContentSize'.
+        
+        
+        
         ImVec2 viewportSize = { 1920.0f, 1080.0f };
 
         SDL_Renderer* renderer = Graphics::Renderer::Get()->GetSDLRenderer();
@@ -257,11 +257,11 @@ namespace BixEngine::Gui
         float texW = 0, texH = 0;
         if (texture) SDL_GetTextureSize(texture, &texW, &texH);
         
-        // Check if create/resize is needed
+        
         if (!texture || (int)texW != (int)viewportSize.x || (int)texH != (int)viewportSize.y)
         {
-             // Recreate texture
-             if (texture) state->renderTarget.reset(); // Destroy old (Deleter will handle)
+             
+             if (texture) state->renderTarget.reset(); 
              
              texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGBA8888, SDL_TEXTUREACCESS_TARGET, (int)viewportSize.x, (int)viewportSize.y);
              if (texture)
@@ -274,25 +274,25 @@ namespace BixEngine::Gui
         
         if (state->renderTarget)
         {
-             // Render Preview Scene
+             
              SDL_SetRenderTarget(renderer, static_cast<SDL_Texture*>(state->renderTarget.get()));
-             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255); // Dark Gray Background
+             SDL_SetRenderDrawColor(renderer, 50, 50, 50, 255); 
              SDL_RenderClear(renderer);
              
-             // Setup Graphics Context if needed (Viewport size)
-             // context_.window->SetViewport(...) ? Scene usually uses the Window size.
-             // We might need to trick the renderer/scene about the window size?
-             // For now, let's just call Render.
+             
+             
+             
+             
              
              state->previewScene->Render(*Graphics::Renderer::Get());
              
-             SDL_SetRenderTarget(renderer, nullptr); // Reset to window
+             SDL_SetRenderTarget(renderer, nullptr); 
         }
 
-        // --- Draw Panel ---
-        // We know we passed a SceneManager provider that returns nullptr.
-        // This will crash `HandleSelection` in `SceneViewportPanel`.
-        // We should fix this. But for now, we just want to see it.
+        
+        
+        
+        
         viewportPanel_->Draw();
     }
 
@@ -302,16 +302,16 @@ namespace BixEngine::Gui
         if (!inspectorPanel_)
         {
             inspectorPanel_ = std::make_unique<PrefabInspectorPanel>(
-                 // Scene Provider
+                 
                  [state](){ return state->previewScene.get(); },
-                 // Selection
+                 
                  [state](){ return state->selectedActor; },
-                 [state](Game::Actor* /*a*/){ /* no op */ }
+                 [state](Game::Actor*  ){   }
             );
         }
         inspectorPanel_->Draw();
 
-        // Debug: Show Actor status
+        
         if (state && state->previewActor)
         {
             ImGui::Separator();
@@ -334,13 +334,13 @@ namespace BixEngine::Gui
         if (!outlinerPanel_)
         {
             outlinerPanel_ = std::make_unique<PrefabOutlinerPanel>(
-                // Scene Provider
+                
                 [state](){ return state->previewScene.get(); },
-                // Selection Getter
+                
                 [state](){ return state->selectedActor; },
-                // Selection Setter
+                
                 [state](Game::Actor* a){ state->selectedActor = a; },
-                // Actor Filter
+                
                 [state](const Game::Actor* a){ return a != state->cameraActor; }
             );
         }
@@ -350,7 +350,7 @@ namespace BixEngine::Gui
     void ActorEditorController::DrawToolbar()
     {
         DrawStandardToolbar();
-        // Add "Add Component" button logic here later
+        
     }
 
     void ActorEditorController::OnSaveRequested()
@@ -373,5 +373,5 @@ namespace BixEngine::Gui
 
     void ActorEditorController::OnPlayRequested() {}
     void ActorEditorController::OnCompileRequested() {}
-    void ActorEditorController::DrawViewportGrid_(const ImVec2& /*size*/) {} 
+    void ActorEditorController::DrawViewportGrid_(const ImVec2&  ) {} 
 }

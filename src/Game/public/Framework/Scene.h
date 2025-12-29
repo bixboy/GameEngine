@@ -20,7 +20,7 @@ namespace BixEngine::Game
 {
     class Actor;
 
-    // Contexte passé à chaque scène par le moteur
+    
     struct SceneContext
     {
         Graphics::Renderer* renderer{nullptr};
@@ -42,7 +42,7 @@ namespace BixEngine::Game
 
         void SetName(String name);
         
-        // Lifecycle
+        
         virtual void OnInitialize() {}
         virtual void OnEnter() {}
         virtual void OnExit() {}
@@ -54,17 +54,17 @@ namespace BixEngine::Game
         void OnEditorUpdate(float deltaTime);
         void OnRuntimeUpdate(float deltaTime);
 
-        // Loop
+        
         virtual void HandleEvent(const SDL_Event& event) { (void)event; }
         virtual void Update(float deltaTime) { (void)deltaTime; }
         virtual void LateUpdate(float deltaTime) { (void)deltaTime; }
         virtual void Render(Graphics::Renderer& renderer);
         virtual void PostRender(Graphics::Renderer& renderer);
 
-        // Context
+        
         void SetContext(SceneContext context) noexcept;
 
-        // Actors
+        
         void AddActor(std::unique_ptr<Actor> actor);
         void RemoveActor(Actor* actor);
         void ClearActors() noexcept;
@@ -112,7 +112,7 @@ namespace BixEngine::Game
             return result;
         }
 
-        // Name
+        
         void Rename(String name);
         [[nodiscard]] const String& GetName() const noexcept
         {
@@ -125,7 +125,7 @@ namespace BixEngine::Game
         [[nodiscard]] Core::Window& GetWindow() const;
         [[nodiscard]] bool HasWindow() const noexcept { return context_.window != nullptr; }
 
-        // Safe subsystem access (Now Public for Actors)
+        
         [[nodiscard]] Input::InputManager& GetInputManager() const;
         [[nodiscard]] bool HasInputManager() const noexcept { return context_.inputManager != nullptr; }
 
@@ -145,7 +145,7 @@ namespace BixEngine::Game
         std::vector<std::unique_ptr<Actor>> actors_;
         std::vector<std::unique_ptr<Actor>> pendingDestruction_;
         
-        // Physics
+        
         b2WorldId physicsWorldId_ = b2_nullWorldId;
         float physicsAccumulator_ = 0.0f;
 

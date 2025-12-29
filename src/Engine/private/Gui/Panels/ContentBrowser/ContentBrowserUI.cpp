@@ -25,9 +25,9 @@ namespace BixEngine::Gui
     using namespace Utils;
     namespace fs = std::filesystem;
 
-    // ─────────────────────────────────────────────
-    // 🧭 Header
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void RenderHeader(ContentBrowserState& state, String& selected, char (&search)[256])
     {
@@ -44,7 +44,7 @@ namespace BixEngine::Gui
 
         Widgets::PanelToolbar bar{};
 
-        // Boutons Content + Up
+        
         bar.AddLeft([&]
         {
             if (ImGui::Button("Content"))
@@ -70,7 +70,7 @@ namespace BixEngine::Gui
             ImGui::EndDisabled();
         });
 
-        // Fil d'Ariane
+        
         bar.AddLeft([&]
         {
             path cur = state.root;
@@ -102,7 +102,7 @@ namespace BixEngine::Gui
             }
         });
 
-        // Recherche
+        
         bar.AddRight([&]
         {
             ImGui::SetNextItemWidth(200);
@@ -114,9 +114,9 @@ namespace BixEngine::Gui
         ImGui::EndChild();
     }
 
-    // ─────────────────────────────────────────────
-    // 🌳 Directory Tree
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void RenderDirectoryTree(ContentBrowserState& state, String& selected)
     {
@@ -165,7 +165,7 @@ namespace BixEngine::Gui
                     GetIcon(ContentType::Directory),
                     dir.filename().string().c_str());
 
-                // Drag Source
+                
                 if (ImGui::BeginDragDropSource())
                 {
                     const std::string pathStr = dir.string();
@@ -174,7 +174,7 @@ namespace BixEngine::Gui
                     ImGui::EndDragDropSource();
                 }
 
-                // Drop Target
+                
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -238,9 +238,9 @@ namespace BixEngine::Gui
         expand = collapse = false;
     }
 
-    // ─────────────────────────────────────────────
-    // 🗂️ Grid View
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void RenderEntries(ContentBrowserState& state, String& selected, PopupRequestState& req, const String& query)
     {
@@ -256,7 +256,7 @@ namespace BixEngine::Gui
             return;
         }
 
-        // Menu clic droit
+        
         if (ImGui::BeginPopupContextWindow("GridCtx"))
         {
             if (ImGui::MenuItem("New Script"))
@@ -339,7 +339,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Double click
+                
                 if (IsItemDoubleClicked(ImGuiMouseButton_Left))
                 {
                     selected = entry.SelectionKey();
@@ -370,7 +370,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Menu contextuel par item
+                
                 if (ImGui::BeginPopupContextItem("EntryCtx"))
                 {
                     const bool isScript = entry.IsScript();
@@ -448,9 +448,9 @@ namespace BixEngine::Gui
         ImGui::EndChild();
     }
 
-    // ─────────────────────────────────────────────
-    // 📦 Popups
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void RenderPopups(ContentBrowserState& state, String& selected, PopupRequestState& req)
     {

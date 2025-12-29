@@ -3,9 +3,9 @@
 
 namespace BixEngine::Utils
 {
-    // ==============================================================================
-    // BinaryWriter
-    // ==============================================================================
+    
+    
+    
     
     BinaryWriter::BinaryWriter(std::ostream& stream) : stream_(stream)
     {}
@@ -35,9 +35,9 @@ namespace BixEngine::Utils
     }
     
 
-    // ==============================================================================
-    // BinaryReader
-    // ==============================================================================
+    
+    
+    
     
     BinaryReader::BinaryReader(std::istream& stream) : stream_(stream)
     {}

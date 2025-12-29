@@ -90,8 +90,8 @@ namespace BixEngine::resources
 
         if (!currentAnimation_->loop && currentFrameIndex_ + 1 == currentAnimation_->frameIndices.size())
         {
-            // Stop once the final frame has been displayed without looping.
-            // The caller can continue to read the last frame until Play() is called again.
+            
+            
             if (accumulatedTime_ == 0.0f)
                 isPlaying_ = false;
         }

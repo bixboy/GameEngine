@@ -126,7 +126,7 @@ namespace BixEngine::Game
 
          std::filesystem::path prefabPath = path.ToStdString();
                 
-        // Use PrefabSerializer to load entire hierarchy
+        
         auto actorUnique = BixEngine::PrefabUtils::PrefabSerializer::LoadPrefab(prefabPath);
         
         if (!actorUnique)
@@ -135,8 +135,8 @@ namespace BixEngine::Game
             return nullptr;
         }
 
-        // Correctly register hierarchy into Scene
-        // 1. Snapshot Hierarchy
+        
+        
         struct HierarchyNode { Actor* actor; Actor* parent; };
         std::vector<HierarchyNode> hierarchy;
         std::vector<Actor*> descendants;
@@ -154,16 +154,16 @@ namespace BixEngine::Game
 
         Actor* rootPtr = actorUnique.get();
 
-        // 2. Add Root
+        
         scene->AddActor(std::move(actorUnique));
 
-        // 3. Add Descendants (Must re-wrap in unique_ptr because LoadPrefab released them)
+        
         for(auto* child : descendants)
         {
             scene->AddActor(std::unique_ptr<Actor>(child));
         }
 
-        // 4. Restore Hierarchy (Scene::AddActor clears parents)
+        
         for(const auto& node : hierarchy)
         {
             if (node.actor && node.parent)

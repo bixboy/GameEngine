@@ -92,6 +92,8 @@ namespace BixEngine::Game
     {
         SpriteComponent::BeginPlay();
 
+        LOG_INFO("ANIMATOR_DEBUG: BeginPlay. AtlasPtr Valid: " + String(atlas_ ? "YES" : "NO") + ", AtlasPath: '" + atlasPath_ + "'");
+
         if (!atlas_ && !atlasPath_.IsEmpty())
             LoadSpriteAtlas(atlasPath_, defaultAnimation_);
 
@@ -253,8 +255,8 @@ namespace BixEngine::Game
         }
         else if (atlas_)
         {
-            // Only clear texture if we are supposed to be controlled by an atlas/animator
-            // If no atlas is set, we might be using a manual texture (SpriteComponent behavior), so don't clear it.
+            
+            
             SetTexture(nullptr);
         }
     }
@@ -262,11 +264,13 @@ namespace BixEngine::Game
     {
         SpriteComponent::DrawInspectorUI();
 
-        // Sync atlasPath_ if atlas_ is set but path is different
-        // This ensures the generic serializer catches the path even if it fails to serialize the shared_ptr properly
+        
+        
         if (atlas_ && atlasPath_ != atlas_->GetPath())
         {
+            String oldPath = atlasPath_;
             atlasPath_ = atlas_->GetPath();
+            LOG_INFO("ANIMATOR_DEBUG: Inspector Synced AtlasPath. Old: '" + oldPath + "' New: '" + atlasPath_ + "'");
         }
     }
 }

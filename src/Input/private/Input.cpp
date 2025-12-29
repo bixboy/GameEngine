@@ -12,9 +12,9 @@ namespace BixEngine::Input
             quitRequested_ = true;
             break;
 
-        // ----------------------------
-        // Clavier
-        // ----------------------------
+        
+        
+        
         case SDL_EVENT_KEY_DOWN:
             if (!event.key.repeat)
             {
@@ -28,9 +28,9 @@ namespace BixEngine::Input
             releasedKeys_.insert(event.key.key);
             break;
 
-        // ----------------------------
-        // Souris
-        // ----------------------------
+        
+        
+        
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (event.button.button < kMaxMouseButtons)
             {
@@ -127,9 +127,9 @@ namespace BixEngine::Input
         quitRequested_ = false;
     }
 
-    // ============================
-    // Clavier
-    // ============================
+    
+    
+    
     bool Input::IsKeyDown(SDL_Keycode key) const noexcept
     {
         return heldKeys_.contains(key);
@@ -145,9 +145,9 @@ namespace BixEngine::Input
         return releasedKeys_.contains(key);
     }
 
-    // ============================
-    // Souris
-    // ============================
+    
+    
+    
 
     bool Input::IsMouseButtonDown(int button) const noexcept
     {

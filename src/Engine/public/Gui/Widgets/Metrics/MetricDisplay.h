@@ -4,9 +4,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief Représente une ligne de métrique (label + valeur + couleur + info-bulle optionnelle).
-     */
+     
     struct MetricDisplay
     {
         std::string label{};

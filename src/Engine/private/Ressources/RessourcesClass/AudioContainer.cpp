@@ -108,13 +108,13 @@ namespace BixEngine::resources
         if (Tracks.empty())
             return result;
 
-        // Select Track
+        
         int selectedIndex = 0;
         if (Mode == AudioContainerMode::Sequence)
         {
             selectedIndex = (lastPlayedIndex_ + 1) % Tracks.size();
         }
-        else // Random
+        else 
         {
             float totalWeight = 0.0f;
             for (const auto& track : Tracks)
@@ -137,20 +137,20 @@ namespace BixEngine::resources
         const auto& selectedTrack = Tracks[selectedIndex];
         result.Clip = selectedTrack.Clip;
 
-        // Apply Modifiers
+        
         result.Volume = selectedTrack.VolumeMultiplier;
         result.Pitch = selectedTrack.PitchMultiplier;
 
-        // Apply Variance
+        
         if (VolumeVariance > 0.0f)
             result.Volume += RandomFloat(-VolumeVariance, VolumeVariance);
         
         if (PitchVariance > 0.0f)
             result.Pitch += RandomFloat(-PitchVariance, PitchVariance);
 
-        // Clamp
+        
         result.Volume = std::max(0.0f, result.Volume);
-        result.Pitch = std::max(0.1f, result.Pitch); // Avoid 0 or negative pitch
+        result.Pitch = std::max(0.1f, result.Pitch); 
 
         return result;
     }

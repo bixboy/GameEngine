@@ -7,9 +7,7 @@
 
 namespace BixEngine::Gui
 {
-    /**
-     * @brief Historique simple des panneaux visités avec navigation avant/arrière.
-     */
+     
     class PanelHistory
     {
     public:

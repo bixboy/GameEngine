@@ -11,9 +11,7 @@ namespace BixEngine::resources
 {
     class Texture;
 
-    /**
-     * @brief Represents an animation clip defined by a sprite atlas.
-     */
+     
     struct SpriteAnimation
     {
         String name{};
@@ -22,9 +20,7 @@ namespace BixEngine::resources
         std::vector<size_t> frameIndices{};
     };
 
-    /**
-     * @brief Le sprite atlas represente la texture, frames et animations.
-     */
+     
     class SpriteAtlas : public IResource
     {
     public:

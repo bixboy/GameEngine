@@ -31,7 +31,7 @@ namespace BixEngine::Core
     }
 
     void ForceLinkPlayer() {
-        // On force le linker à voir la classe
+        
         const auto& info = Game::Player::StaticClass(); 
         LOG_INFO("ForceLinkPlayer: Linked class " + info.Name);
     }
@@ -50,7 +50,7 @@ namespace BixEngine::Core
 
         ForceLinkPlayer();
 
-        // --- SDL ---
+        
         LOG_INFO("Initializing SDL system...");
         if (!sdlSystem_.Initialize(kDefaultAppName, kDefaultAppId, kDefaultAppVersion))
         {
@@ -58,7 +58,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Window ---
+        
         LOG_INFO("Creating main window...");
         if (!CreateWindow())
         {
@@ -67,7 +67,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Renderer ---
+        
         LOG_INFO("Creating renderer...");
         if (!CreateRenderer())
         {
@@ -76,12 +76,12 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Resource Manager ---
+        
         LOG_INFO("Configuring resource loaders...");
         resources::RegisterAllResourceLoaders(renderer_->GetSDLRenderer());
 
 
-        // --- GUI ---
+        
         LOG_INFO("Initializing GUI module...");
         if (!guiModule_.Initialize(*window_, *renderer_))
         {
@@ -90,7 +90,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Subsystems ---
+        
         LOG_INFO("Initializing SubsystemManager...");
         if (!subsystems_.Initialize(*renderer_, *window_, guiModule_.GetGuiManager()))
         {
@@ -99,7 +99,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Audio ---
+        
         LOG_INFO("Initializing AudioSystem...");
         if (!audioSystem_.Initialize())
         {
@@ -108,21 +108,21 @@ namespace BixEngine::Core
             return false;
         }
 
-        // --- Event dispatcher + render loop ---
+        
         LOG_INFO("Configuring event dispatcher and render loop...");
         eventDispatcher_.Configure(&guiModule_, &subsystems_);
         eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         renderLoop_.Configure(&subsystems_, &guiModule_, renderer_.get(), config_.clearColor);
 
-        // --- Load Default Map (if configured) ---
-        // --- Load Default Map (if configured) ---
+        
+        
         const auto& defaultMap = BixEngine::Gui::EditorSettings::Get().DefaultMapPath;
         LOG_INFO("Bootstrap: Checking default map path: " + (defaultMap.empty() ? "EMPTY" : defaultMap));
 
         if (!defaultMap.empty() && std::filesystem::exists(defaultMap))
         {
             LOG_INFO("Loading default map: " + defaultMap);
-            // Create a new scene and deserialize into it
+            
             auto newScene = std::make_unique<Game::Scene>("DefaultScene");
             
             if (BixEngine::Serialization::SceneSerializer::LoadBinary(*newScene, defaultMap))
@@ -136,7 +136,7 @@ namespace BixEngine::Core
             }
         }
 
-        // --- Default GUI panels (debug overlay, FPS counter, etc.) ---
+        
         guiModule_.SetupDefaultGuiPanels(subsystems_, renderLoop_.GetLastDeltaTimePointer());
 
         initialized_ = true;
@@ -164,7 +164,7 @@ namespace BixEngine::Core
 
         const float deltaTime = renderLoop_.CalculateDeltaTime();
 
-        // Récupère les événements SDL (fermeture, clavier, etc.)
+        
         eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         eventDispatcher_.PumpEvents(running_);
         if (!running_)
@@ -173,7 +173,7 @@ namespace BixEngine::Core
             return;
         }
 
-        // --- Frame sequence ---
+        
         renderLoop_.BeginFrame();
         renderLoop_.Update(deltaTime);
         renderLoop_.Render();
@@ -221,14 +221,14 @@ namespace BixEngine::Core
 
     bool EngineBootstrap::HasActiveScene() const
     {
-        // On const_cast car SubsystemManager::GetActiveScene n'est pas const-correct si subsystems_ est const,
-        // mais ici subsystems_ est mutable dans la classe.
-        // Attendez, GetActiveScene() dans SubsystemManager retourne Game::Scene*.
-        // Mais EngineBootstrap::subsystems_ est non-const.
-        // Cependant dans une méthode const, subsystems_ est const.
-        // Je dois vérifier si SubsystemManager a une méthode const pour le getter.
-        // SubsystemManager.h: line 94: const Game::Scene* GetScene() const noexcept;
-        // Donc je peux utiliser GetScene().
+        
+        
+        
+        
+        
+        
+        
+        
         return subsystems_.GetScene() != nullptr;
     }
 

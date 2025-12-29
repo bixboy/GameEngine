@@ -35,10 +35,10 @@ namespace BixEngine::resources
 
         ResolvedSound ResolveSound();
 
-        // Properties
+        
         std::vector<AudioTrack> Tracks;
-        float VolumeVariance = 0.0f; // +/- variance
-        float PitchVariance = 0.0f;  // +/- variance
+        float VolumeVariance = 0.0f; 
+        float PitchVariance = 0.0f;  
         bool Loop = false;
         AudioContainerMode Mode = AudioContainerMode::Random;
 

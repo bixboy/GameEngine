@@ -54,7 +54,7 @@ namespace BixEngine::Gui
             return;
         }
 
-        // Need non-const scene for spawning
+        
         Game::Scene* activeSceneMutable = const_cast<Game::Scene*>(activeScene);
 
         Widgets::PanelToolbar toolbar;
@@ -70,21 +70,21 @@ namespace BixEngine::Gui
 
                 ImGui::Separator();
                 
-                // Simplified Prefab Logic for brevity (keeping existing structure but minimizing diff noise if possible)
-                // ... (Assuming unchanged, but restricted by replacement chunk. Since I am replacing the whole function, I must include it or minimize it)
-                // To save tokens/complexity, I will keep the prefab candidates logic but compacted or assume it's part of the context.
-                // Re-writing the prefab logic as it was:
+                
+                
+                
+                
                 static std::vector<PrefabUtils::Utilities::PrefabScriptCandidate> candidates;
                 if (ImGui::IsWindowAppearing())
                 {
                     candidates.clear();
                     auto bases = PrefabUtils::Utilities::GetBaseClasses();
-                    // Content/Scripts logic...
-                    // (Just calling the gather utility for brevity in this manual rewrite, assuming headers are there)
-                     // Try to get content root from Content Browser
+                    
+                    
+                     
                     auto* contentBrowser = ContentBrowserPanel::GetActiveInstance();
                     if (contentBrowser) {
-                         // Full logic from original file
+                         
                          std::filesystem::path contentRoot = std::filesystem::current_path() / "Content";
                          std::filesystem::path scriptsDir = contentRoot / "Scripts";
                          std::vector<ScriptUtils::ScriptNode> scriptRoots;
@@ -120,7 +120,7 @@ namespace BixEngine::Gui
                         if (ImGui::MenuItem(candidate.displayName.c_str(), isPrefab ? "Prefab" : nullptr))
                         {
                             if (isPrefab) {
-                                // Prefab spawning logic
+                                
                                 std::filesystem::path path(candidate.className);
                                 if (path.extension() == ".bixactor")
                                 {
@@ -147,7 +147,7 @@ namespace BixEngine::Gui
                                 }
                                 else
                                 {
-                                    // Fallback for legacy JSON or other
+                                    
                                     std::ifstream file(candidate.className);
                                     if (file.is_open()) {
                                         std::string content((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
@@ -193,7 +193,7 @@ namespace BixEngine::Gui
 
         const auto& actors = activeScene->GetActors();
     
-        // Count stats (Filtered)
+        
         std::size_t totalActors = 0;
         for (const auto& actor : actors) 
         {
@@ -216,7 +216,7 @@ namespace BixEngine::Gui
         if (ImGui::TreeNodeEx(activeScene, sceneFlags, "%.*s",
                               static_cast<int>(sceneNameView.size()), sceneNameView.data()))
         {
-            // Drop on Scene -> Unparent
+            
             if (ImGui::BeginDragDropTarget())
             {
                 if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_ACTOR"))
@@ -251,7 +251,7 @@ namespace BixEngine::Gui
 
                     if (hasSearch)
                     {
-                        // Flat search
+                        
                          const String& actorName = actor->GetName();
                          String typeName(actor->GetTypeName());
                          bool match = (!actorName.IsEmpty() && actorName.Contains(searchQuery.View(), false)) || typeName.Contains(searchQuery.View(), false);
@@ -261,7 +261,7 @@ namespace BixEngine::Gui
                     }
                     else
                     {
-                        // Hierarchy view - Roots only
+                        
                         if (actor->GetParent() == nullptr)
                         {
                             DrawActorNode(actor.get(), activeSceneMutable, false);
@@ -278,7 +278,7 @@ namespace BixEngine::Gui
         
         if (actorPendingDelete_)
         {
-            // Check if we need to clear selection (if selected actor is being deleted or is a child of it)
+            
             if (selectedActorGetter_ && selectedActorSetter_)
             {
                 Game::Actor* selected = selectedActorGetter_();
@@ -360,11 +360,11 @@ namespace BixEngine::Gui
                                          static_cast<int>(actorTypeView.size()), actorTypeView.data());
         }
 
-        // Selection
+        
         if (ImGui::IsItemClicked() && selectedActorSetter_)
             selectedActorSetter_(actor);
 
-        // Drag & Drop Source
+        
         if (ImGui::BeginDragDropSource())
         {
             ImGui::SetDragDropPayload("SCENE_ACTOR", &actor, sizeof(Game::Actor*));
@@ -372,7 +372,7 @@ namespace BixEngine::Gui
             ImGui::EndDragDropSource();
         }
 
-        // Drag & Drop Target
+        
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("SCENE_ACTOR"))
@@ -389,7 +389,7 @@ namespace BixEngine::Gui
             ImGui::EndDragDropTarget();
         }
 
-        // Context Menu
+        
         if (ImGui::BeginPopupContextItem())
         {
             actorWithContextMenu_ = actor;
@@ -419,7 +419,7 @@ namespace BixEngine::Gui
             actorWithContextMenu_ = nullptr;
         }
 
-        // Recursion
+        
         if (expanded)
         {
             if (!hasSearch && hasChildren)

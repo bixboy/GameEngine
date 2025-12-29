@@ -1,4 +1,4 @@
-﻿#include "Gui/Utils//ContentBrowserUtils.h"
+#include "Gui/Utils/ContentBrowserUtils.h"
 #include "Debug/Logger.h"
 #include <ranges>
 #include <unordered_map>
@@ -216,7 +216,7 @@ namespace BixEngine::Gui::ContentBrowserUtils
         }
         else if (!FilesUtils::Utilities::TryCreateDir(state.root, state.error))
         {
-            // Error already stored.
+            
         }
         else if (!exists(state.root))
         {

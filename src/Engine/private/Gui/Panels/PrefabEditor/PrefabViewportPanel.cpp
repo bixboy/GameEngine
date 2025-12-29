@@ -18,6 +18,6 @@ namespace BixEngine::Gui
         .sceneRenderTextureSizeProvider = std::move(sizeProvider)
     })
     {
-        // Custom initialization if needed
+        
     }
 }

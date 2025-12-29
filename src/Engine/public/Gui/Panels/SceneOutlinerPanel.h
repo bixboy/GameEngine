@@ -18,7 +18,7 @@ namespace BixEngine::Gui
     class SceneOutlinerPanel : public GuiPanelBase
     {
     public:
-        // Changed to return Scene* directly instead of SceneManager*
+        
         SceneOutlinerPanel(std::function<Game::Scene*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter, std::function<bool(const Game::Actor*)> actorFilter = nullptr);
         
         explicit SceneOutlinerPanel(const DefaultEngineGuiContext& context);
@@ -33,7 +33,7 @@ namespace BixEngine::Gui
         std::function<bool(const Game::Actor*)> actorFilter_{nullptr};
         std::array<char, 128> searchBuffer_{};
         
-        // Rename state
+        
         std::array<char, 128> renameBuffer_{};
         Game::Actor* actorToRename_{nullptr};
         bool openRenamePopup_{false};

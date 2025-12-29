@@ -1,4 +1,4 @@
-﻿#include "Utils/Editor/ScriptUtils.h"
+#include "Utils/Editor/ScriptUtils.h"
 #include <fstream>
 #include <sstream>
 #include <algorithm>
@@ -6,9 +6,9 @@
 
 namespace BixEngine::ScriptUtils
 {
-    // -----------------------
-    // Type checks
-    // -----------------------
+    
+    
+    
     bool Utilities::IsActorType(std::string_view n)
     {
         return n == "Actor" || n == "BixEngine::Game::Actor" || n == "::BixEngine::Game::Actor";
@@ -19,9 +19,9 @@ namespace BixEngine::ScriptUtils
         return n == "Component" || n == "BixEngine::Game::Component" || n == "::BixEngine::Game::Component";
     }
 
-    // -----------------------
-    // Reflection helpers
-    // -----------------------
+    
+    
+    
     bool Utilities::AreEquivalent(const Bix::Reflection::ClassInfo& lhs, const Bix::Reflection::ClassInfo& rhs)
     {
         if (&lhs == &rhs)
@@ -50,9 +50,9 @@ namespace BixEngine::ScriptUtils
         return false;
     }
 
-    // -----------------------
-    // Parsing / tree helpers
-    // -----------------------
+    
+    
+    
     std::vector<ScriptNode> Utilities::BuildScriptTree(const std::filesystem::path& scriptsDir, const std::filesystem::path& contentRoot)
     {
         namespace fs = std::filesystem;

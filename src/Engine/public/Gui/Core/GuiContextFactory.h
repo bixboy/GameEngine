@@ -25,36 +25,36 @@ namespace BixEngine::Gui
 {
     struct DefaultEngineGuiContext;
 
-    // ────────────────────────────────────────────────
-    // ⚙️ Paramètres de création du contexte GUI
-    // ────────────────────────────────────────────────
+    
+    
+    
     struct DefaultEngineGuiContextArgs
     {
-        // Accès global aux sous-systèmes
+        
         Core::SubsystemManager& subsystems;
 
-        // Durée du dernier frame
+        
         const float* lastDeltaTime{nullptr};
 
-        // Pointeur vers l’acteur sélectionné
+        
         Game::Actor** selectedActorSlot{nullptr};
 
-        // Texture du rendu 3D (viewport)
+        
         SDL_Texture** sceneViewportTexture{nullptr};
 
-        // Fournisseur de taille du viewport
+        
         std::function<std::pair<int, int>()> sceneViewportSizeProvider{};
 
         std::function<void(const std::vector<std::filesystem::path>&)> openScriptFilesInEditor{};
         std::function<void(const std::filesystem::path&)> openAssetInEditor{};
 
-        // Nouveau : permet un mode headless
+        
         bool bEnableGui{true};
     };
 
-    // ────────────────────────────────────────────────
-    // 🧩 Factory
-    // ────────────────────────────────────────────────
+    
+    
+    
     class DefaultEngineGuiContextFactory
     {
     public:

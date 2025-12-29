@@ -25,40 +25,40 @@ namespace BixEngine::Core
         explicit EngineBootstrap(ApplicationConfig config = {});
         ~EngineBootstrap();
 
-        // Copie et déplacement interdits (un seul moteur actif à la fois).
+        
         EngineBootstrap(const EngineBootstrap&) = delete;
         EngineBootstrap& operator=(const EngineBootstrap&) = delete;
         EngineBootstrap(EngineBootstrap&&) noexcept = delete;
         EngineBootstrap& operator=(EngineBootstrap&&) noexcept = delete;
 
 
-        // Initialise tous les sous-systèmes (SDL, fenêtre, renderer, GUI, etc.).
+        
         bool InitializeAll();
 
 
-        // Indique si le moteur est prêt à tourner.
+        
         bool IsReady() const noexcept;
 
 
-        // Indique si la boucle principale est en cours d’exécution.
+        
         bool IsRunning() const noexcept;
 
 
-        // Exécute une frame complète (events → update → render).
+        
         void Tick();
 
 
-        // Ferme proprement tous les systèmes du moteur.
+        
         void ShutdownAll() noexcept;
 
 
-        // Redémarre entièrement le moteur (shutdown + init).
+        
         bool Restart();
 
-        // Indique si une scène est actuellement active.
+        
         bool HasActiveScene() const;
 
-        // Crée et active une scène de type TScene.
+        
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args)
         {
@@ -70,11 +70,11 @@ namespace BixEngine::Core
         [[nodiscard]] const EditorSettings& GetEditorSettings() const noexcept { return editorSettings_; }
 
     private:
-        // Crée la fenêtre principale SDL.
+        
         bool CreateWindow();
 
 
-        // Crée le renderer associé à la fenêtre.
+        
         bool CreateRenderer();
 
 

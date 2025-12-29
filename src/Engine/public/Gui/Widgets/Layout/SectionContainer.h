@@ -6,12 +6,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief Conteneur enfant stylisé pour encapsuler une section avec fond et marges.
-     *
-     * Crée un ImGui::BeginChild configuré pour s'adapter verticalement au contenu et applique
-     * les styles de fond/padding nécessaires pour harmoniser les panneaux de l'éditeur.
-     */
+     
     class SectionContainer
     {
     public:

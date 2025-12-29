@@ -13,9 +13,9 @@
 
 namespace BixEngine::PrefabUtils
 {
-    // ─────────────────────────────────────────────
-    // Engine base class list
-    // ─────────────────────────────────────────────
+    
+    
+    
     const std::vector<ScriptUtils::ParentScriptInfo>& Utilities::GetBaseClasses()
     {
         static const std::vector<ScriptUtils::ParentScriptInfo> BaseClasses = {
@@ -68,9 +68,9 @@ namespace BixEngine::PrefabUtils
         return BaseClasses;
     }
 
-    // ─────────────────────────────────────────────
-    // String & metadata utilities
-    // ─────────────────────────────────────────────
+    
+    
+    
     std::string Utilities::SanitizeAssetName(std::string name)
     {
         std::replace_if(name.begin(), name.end(),
@@ -144,9 +144,9 @@ namespace BixEngine::PrefabUtils
         return escaped.str();
     }
 
-    // ─────────────────────────────────────────────
-    // Helper functions
-    // ─────────────────────────────────────────────
+    
+    
+    
     namespace
     {
         std::string Trim(std::string_view input)
@@ -173,7 +173,7 @@ namespace BixEngine::PrefabUtils
                     if (std::filesystem::exists(candidate))
                         return candidate;
                     
-                    if (search == search.parent_path()) // Root reached
+                    if (search == search.parent_path()) 
                         break;
                 }
                 
@@ -250,9 +250,9 @@ namespace BixEngine::PrefabUtils
         return variables;
     }
 
-    // ─────────────────────────────────────────────
-    // Prefab candidate construction
-    // ─────────────────────────────────────────────
+    
+    
+    
     std::vector<Utilities::PrefabScriptCandidate> Utilities::GatherPrefabCandidates(
         const std::vector<ScriptUtils::ScriptNode>& roots,
         const std::vector<ScriptUtils::ParentScriptInfo>& baseClasses)
@@ -260,7 +260,7 @@ namespace BixEngine::PrefabUtils
         std::vector<PrefabScriptCandidate> candidates;
         candidates.reserve(roots.size() + baseClasses.size());
 
-        // --- Add engine base classes
+        
         for (const auto& base : baseClasses)
         {
             candidates.push_back({
@@ -275,7 +275,7 @@ namespace BixEngine::PrefabUtils
             });
         }
 
-        // --- Recursive traversal of user scripts
+        
         std::function<void(const ScriptUtils::ScriptNode&)> collect = [&](const ScriptUtils::ScriptNode& node)
         {
             if (node.inheritsActor || node.inheritsComponent || node.hasBlueprintMacro)
@@ -298,7 +298,7 @@ namespace BixEngine::PrefabUtils
 
         for (const auto& root : roots) collect(root);
 
-        // --- Sort alphabetically
+        
         std::sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b)
         {
             std::string al = a.displayName;
@@ -322,11 +322,11 @@ namespace BixEngine::PrefabUtils
         return candidates;
     }
 
-    // ─────────────────────────────────────────────
-    // Prefab Serializer Implementation
-    // ─────────────────────────────────────────────
+    
+    
+    
 
-    // Recursive helper
+    
     static void CollectDescendants(const BixEngine::Game::Actor* actor, std::vector<const BixEngine::Game::Actor*>& outList)
     {
         if (!actor) return;
@@ -350,14 +350,14 @@ namespace BixEngine::PrefabUtils
 
         BixEngine::Utils::BinaryWriter writer(file);
         
-        // Header
+        
         writer.WriteString("PREFAB_V2");
         
-        // Root
+        
         writer.WriteString(rootActor->GetTypeName());
         rootActor->SerializeBinary(file);
 
-        // Descendants
+        
         std::vector<const BixEngine::Game::Actor*> descendants;
         CollectDescendants(rootActor, descendants);
 
@@ -383,7 +383,7 @@ namespace BixEngine::PrefabUtils
 
         BixEngine::Utils::BinaryReader reader(file);
         
-        // Check Header
+        
         String header;
         long long startPos = file.tellg();
         
@@ -408,7 +408,7 @@ namespace BixEngine::PrefabUtils
 
         if (isV2)
         {
-            // Read Root
+            
             String typeName;
             if (!reader.ReadString(typeName)) return nullptr;
             
@@ -417,26 +417,26 @@ namespace BixEngine::PrefabUtils
             
             root->DeserializeBinary(file);
 
-            // Read Descendants
+            
             uint32_t count = 0;
             if (reader.ReadUint32(count))
             {
-                // We store loaded children in a temporary list. 
-                // Since we rely on SetParent to link them, and we want to return the Root which now OWNS them (conceptually),
-                // we must ensure they are properly kept alive. 
-                // In BixEngine, Actor* children are owned by SCENE usually.
-                // Here we are creating them detached.
-                // We will attach them to Root using SetParent, which adds them to `children_` (raw ptrs).
-                // WARNING: `std::unique_ptr` in local scope will delete them if we don't release!
-                // We must release them if we attach them to hierarchy? 
-                // But who deletes them?
-                // If Root is deleted, it doesn't delete children (checked Actor.cpp -> Destructor doesn't loop children delete).
-                // THIS IS A MEMORY LEAK RISK unless the caller adds ALL of them to a Scene.
-                // BUT we return only Root.
                 
-                // To support "User adds prefab to scene", the USER/CALLER must walk the hierarchy and AddActor for everyone.
-                // So we just return the Root with Linked Hierarchy.
-                // The descendants must be RELEASED from unique_ptr so they don't die here.
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 
                 std::vector<BixEngine::Game::Actor*> loadedRawActors;
                 loadedRawActors.reserve(count);
@@ -450,11 +450,11 @@ namespace BixEngine::PrefabUtils
                     
                     child->DeserializeBinary(file);
                     
-                    // Release ownership to the wild (caller must eventually own or Scene must take them)
+                    
                     loadedRawActors.push_back(child.release());
                 }
 
-                // Link Hierarchy
+                
                 auto FindActorByUUID = [&](const String& uuid) -> BixEngine::Game::Actor*
                 {
                     if (root->GetUUID() == uuid) return root.get();

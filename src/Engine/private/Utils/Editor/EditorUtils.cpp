@@ -1,4 +1,4 @@
-﻿#include "Utils/Editor/EditorUtils.h"
+#include "Utils/Editor/EditorUtils.h"
 #include "Debug/Logger.h"
 #include <windows.h>
 
@@ -7,18 +7,18 @@ namespace BixEngine::EditorUtils
     std::string Utilities::s_EditorCommand;
 
     
-    // ─────────────────────────────────────────────
-    // Utilitaires internes
-    // ─────────────────────────────────────────────
+    
+    
+    
     namespace
     {
         void LaunchDetachedProcess(const std::wstring& cmd, const std::wstring& args)
         {
-            // We concatenate cmd + " " + args for lpCommandLine
-            // CreateProcess requires a mutable string for command line
+            
+            
             std::wstring fullCmd = cmd + L" " + args;
             std::vector<wchar_t> cmdBuffer(fullCmd.begin(), fullCmd.end());
-            cmdBuffer.push_back(0); // Null terminator
+            cmdBuffer.push_back(0); 
 
             STARTUPINFOW si;
             PROCESS_INFORMATION pi;
@@ -27,24 +27,24 @@ namespace BixEngine::EditorUtils
             si.cb = sizeof(si);
             ZeroMemory(&pi, sizeof(pi));
 
-            // DETACHED_PROCESS (0x00000008) -> No console window inherited
-            // CREATE_BREAKAWAY_FROM_JOB (0x01000000) -> Detach from parent job (if any)
+            
+            
             DWORD flags = DETACHED_PROCESS | 0x01000000; 
 
             if (CreateProcessW(
-                NULL,               // No module name (use command line)
-                cmdBuffer.data(),   // Command line
-                NULL,               // Process handle not inheritable
-                NULL,               // Thread handle not inheritable
-                FALSE,              // Set handle inheritance to FALSE
-                flags,              // Creation flags
-                NULL,               // Use parent's environment block
-                NULL,               // Use parent's starting directory
-                &si,                // Pointer to STARTUPINFO structure
-                &pi)                // Pointer to PROCESS_INFORMATION structure
+                NULL,               
+                cmdBuffer.data(),   
+                NULL,               
+                NULL,               
+                FALSE,              
+                flags,              
+                NULL,               
+                NULL,               
+                &si,                
+                &pi)                
             )
             {
-                // We don't need to wait or hold handles
+                
                 CloseHandle(pi.hProcess);
                 CloseHandle(pi.hThread);
                 LOG_INFO("[EditorUtils] Detached process launched successfully.");
@@ -65,7 +65,7 @@ namespace BixEngine::EditorUtils
 
     void Utilities::DetectDefaultEditor()
     {
-        // Detect in order of preference for "heavy" development: Rider -> Visual Studio -> VS Code
+        
         if (IsExecutableAvailable("rider64"))
             s_EditorCommand = "rider64";
         else if (IsExecutableAvailable("devenv"))
@@ -74,15 +74,15 @@ namespace BixEngine::EditorUtils
             s_EditorCommand = "code";
         else 
         {
-            s_EditorCommand = ""; // Empty implies "Use System Association"
+            s_EditorCommand = ""; 
         }
 
         LOG_INFO("[EditorUtils] Code editor strategy: " + (s_EditorCommand.empty() ? "System Association" : s_EditorCommand));
     }
 
-    // ─────────────────────────────────────────────
-    // Configuration
-    // ─────────────────────────────────────────────
+    
+    
+    
     void Utilities::SetPreferredCodeEditor(const std::string& command)
     {
         s_EditorCommand = command;
@@ -97,9 +97,9 @@ namespace BixEngine::EditorUtils
         return s_EditorCommand;
     }
 
-    // ─────────────────────────────────────────────
-    // Ouverture de fichiers / dossiers
-    // ─────────────────────────────────────────────
+    
+    
+    
     void Utilities::OpenFileInCodeEditor(const std::filesystem::path& path)
     {
         namespace fs = std::filesystem;
@@ -113,13 +113,13 @@ namespace BixEngine::EditorUtils
         if (s_EditorCommand.empty())
             DetectDefaultEditor();
 
-        // 1. If explicit editor is set, try to use it with workspace/solution context
+        
         if (!s_EditorCommand.empty())
         {
              std::wstring wpath = path.wstring();
              std::wstring editorCmd(s_EditorCommand.begin(), s_EditorCommand.end());
 
-             // Determine project root (look for xmake.lua)
+             
              fs::path projectRoot = path.parent_path();
              fs::path current = projectRoot;
              bool foundRoot = false;
@@ -134,11 +134,11 @@ namespace BixEngine::EditorUtils
                  current = current.parent_path();
              }
 
-             // Find Solution File (.sln) if we have a project root
+             
              fs::path solutionPath;
              if (foundRoot)
              {
-                 // Check root
+                 
                  for (auto const& dir_entry : fs::directory_iterator(projectRoot))
                  {
                      if (dir_entry.path().extension() == ".sln")
@@ -147,7 +147,7 @@ namespace BixEngine::EditorUtils
                          break;
                      }
                  }
-                 // Check vsxmake2022/ folder 
+                 
                  if (solutionPath.empty() && fs::exists(projectRoot / "vsxmake2022"))
                  {
                      for (auto const& dir_entry : fs::directory_iterator(projectRoot / "vsxmake2022"))
@@ -168,21 +168,21 @@ namespace BixEngine::EditorUtils
 
              if (s_EditorCommand == "rider64" && !solutionPath.empty())
              {
-                 // rider64 "Solution.sln" --line <line> "File"
+                 
                  args = L"\"" + wSolution + L"\" --line 1 \"" + wpath + L"\"";
                  LaunchDetachedProcess(editorCmd, args);
                  handled = true;
              }
              else if (s_EditorCommand == "devenv" && !solutionPath.empty())
              {
-                 // devenv "Solution.sln" /Edit "File"
+                 
                  args = L"\"" + wSolution + L"\" /Edit \"" + wpath + L"\"";
                  LaunchDetachedProcess(editorCmd, args);
                  handled = true;
              }
              else if (s_EditorCommand == "code") 
              {
-                 // code "Root" -g "File"
+                 
                  if (foundRoot)
                      args = L"\"" + wRoot + L"\" -g \"" + wpath + L"\"";
                  else
@@ -198,7 +198,7 @@ namespace BixEngine::EditorUtils
              LOG_WARNING("[EditorUtils] Fallback strategy for editor '" + s_EditorCommand + "'.");
         }
 
-        // 2. Fallback: Open file with system default association
+        
         ShellExecuteW(nullptr, L"open", path.wstring().c_str(), nullptr, nullptr, SW_SHOWNORMAL);
     }
 
@@ -211,20 +211,20 @@ namespace BixEngine::EditorUtils
 
         if (isDirectory)
         {
-            // Ouvre un dossier
+            
             ShellExecuteW(nullptr, L"open", wpath.c_str(), nullptr, nullptr, SW_SHOWNORMAL);
         }
         else
         {
-            // Sélectionne le fichier dans l'explorateur
+            
             std::wstring cmd = L"/select,\"" + wpath + L"\"";
             ShellExecuteW(nullptr, L"open", L"explorer.exe", cmd.c_str(), nullptr, SW_SHOWNORMAL);
         }
     }
 
-    // ─────────────────────────────────────────────
-    // Hash FNV-1a 64-bit
-    // ─────────────────────────────────────────────
+    
+    
+    
     std::uint64_t Utilities::HashFNV1a(std::string_view str)
     {
         constexpr std::uint64_t FNV_OFFSET = 14695981039346656037ull;

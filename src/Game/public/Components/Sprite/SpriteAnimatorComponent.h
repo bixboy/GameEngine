@@ -44,7 +44,7 @@ namespace BixEngine::Game
 
         resources::SpriteAnimator animator_{};
         
-        BPROPERTY(VisibleAnywhere)
+        BPROPERTY(EditAnywhere)
         String atlasPath_{};
         String currentAnimation_{};
     };

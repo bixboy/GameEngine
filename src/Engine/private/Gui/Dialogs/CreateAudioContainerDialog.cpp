@@ -24,7 +24,7 @@ namespace BixEngine::Gui
         ImGui::Text("Name:");
         if (ImGui::InputText("##Name", nameBuffer_, sizeof(nameBuffer_), ImGuiInputTextFlags_EnterReturnsTrue))
         {
-            // Trigger creation on Enter
+            
         }
 
         if (!error_.IsEmpty())
@@ -54,7 +54,7 @@ namespace BixEngine::Gui
                 }
                 else
                 {
-                    // Create default AudioContainer
+                    
                     resources::AudioContainer container;
                     if (container.SaveToFile(fullPath.string()))
                     {

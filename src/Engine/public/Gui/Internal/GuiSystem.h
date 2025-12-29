@@ -24,9 +24,9 @@ namespace BixEngine::Gui
         GuiSystem(GuiSystem&&) noexcept = delete;
         GuiSystem& operator=(GuiSystem&&) noexcept = delete;
 
-        // ────────────────────────────────────────────────
-        // ⚙️ Cycle de vie
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         bool Initialize(SDL_Window* window, SDL_Renderer* renderer);
         void Shutdown() noexcept;
@@ -35,9 +35,9 @@ namespace BixEngine::Gui
         void EndFrame();
         void Render();
 
-        // ────────────────────────────────────────────────
-        // 🧩 Docking
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         [[nodiscard]] bool IsDockingEnabled() const noexcept { return dockingEnabled_; }
         [[nodiscard]] ImGuiID GetDockspaceId() const noexcept { return dockspaceId_; }
@@ -53,24 +53,24 @@ namespace BixEngine::Gui
         [[nodiscard]] std::string SaveLayoutToMemory() const;
         void LoadLayoutFromMemory(const std::string& data);
 
-        // ────────────────────────────────────────────────
-        // 🪟 Gestion des panneaux
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         void RegisterPanel(GuiPanel& panel);
         void UnregisterPanel(GuiPanel& panel);
         void EnqueueDockUpdate(GuiPanel& panel);
 
-        // ────────────────────────────────────────────────
-        // 🧠 Événements & état
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         void ProcessEvent(const SDL_Event& event);
         [[nodiscard]] bool IsInitialized() const noexcept { return initialized_; }
 
-        // ────────────────────────────────────────────────
-        // 🧰 Outils de debug
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         void DumpGuiState() const;
         void ToggleDockDebugOverlay(bool enable) noexcept { bShowDockDebugOverlay_ = enable; }
@@ -78,9 +78,9 @@ namespace BixEngine::Gui
         void SetDockspaceTopPadding(float padding) noexcept { dockspaceTopPadding_ = padding < 0.0f ? 0.0f : padding; }
 
     private:
-        // ────────────────────────────────────────────────
-        // 🧩 Docking interne
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         void BeginDockspaceLayout_();
         void BuildDefaultDockLayout_(ImGuiViewport& viewport,

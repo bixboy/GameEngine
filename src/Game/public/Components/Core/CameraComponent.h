@@ -25,9 +25,9 @@ namespace BixEngine::Game
 
         [[nodiscard]] String GetTypeName() const override { return "CameraComponent"; }
 
-        // ────────────────────────────────────────────────
-        // Public API
-        // ────────────────────────────────────────────────
+        
+        
+        
         
         void SetAsMainCamera();
 
@@ -36,9 +36,9 @@ namespace BixEngine::Game
 
         static CameraComponent* GetMainCamera();
 
-        // ────────────────────────────────────────────────
-        // Properties
-        // ────────────────────────────────────────────────
+        
+        
+        
         
         BPROPERTY()
         float Zoom{1.0f};
@@ -47,7 +47,7 @@ namespace BixEngine::Game
         Math::Vector2<float> Offset{0.0f, 0.0f};
 
         BPROPERTY()
-        SDL_Color ClearColor{0, 0, 0, 255}; // Default Black
+        SDL_Color ClearColor{0, 0, 0, 255}; 
 
         BPROPERTY()
         bool IsActive{false};

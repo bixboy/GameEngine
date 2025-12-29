@@ -1,4 +1,4 @@
-﻿#include "Gui/Panels/ActorInspector/PropertyInspector.h"
+#include "Gui/Panels/ActorInspector/PropertyInspector.h"
 
 #include <array>
 #include <cstdio>
@@ -31,12 +31,12 @@
 namespace BixEngine::Gui::ActorInspector
 {
 
-    // ============================================================================
-    //  Helper: SimplifyTypeName
-    // ============================================================================
+    
+    
+    
     static std::string SimplifyTypeName(std::string typeName)
     {
-        // Remove common namespaces
+        
         const std::array<std::string, 6> namespaces = { 
             "BixEngine::", "Game::", "Math::", "resources::", "std::", "Graphics::" 
         };
@@ -50,7 +50,7 @@ namespace BixEngine::Gui::ActorInspector
             }
         }
 
-        // Handle templates like shared_ptr<T> -> T
+        
         if (typeName.find("shared_ptr<") != std::string::npos)
         {
             size_t start = typeName.find('<') + 1;
@@ -59,22 +59,22 @@ namespace BixEngine::Gui::ActorInspector
                 typeName = typeName.substr(start, end - start);
         }
         
-        // Handle Vector2<float> -> Vector2
+        
         if (typeName.find("Vector2<") != std::string::npos)
         {
              typeName = "Vector2";
         }
 
-        // Remove pointers/refs
+        
         typeName.erase(std::remove(typeName.begin(), typeName.end(), '*'), typeName.end());
         typeName.erase(std::remove(typeName.begin(), typeName.end(), '&'), typeName.end());
 
         return typeName;
     }
 
-    // ============================================================================
-    //  DrawSupportedProperty
-    // ============================================================================
+    
+    
+    
 
     bool DrawStringArray(const Bix::Reflection::PropertyInfo& property, void* instance)
     {
@@ -82,7 +82,7 @@ namespace BixEngine::Gui::ActorInspector
 
         if (ImGui::TreeNode(property.Name.c_str()))
         {
-            // Add Button
+            
             if (ImGui::Button("Add Element"))
             {
                 list.emplace_back();
@@ -91,12 +91,12 @@ namespace BixEngine::Gui::ActorInspector
             ImGui::SameLine();
             ImGui::TextDisabled("(%zu elements)", list.size());
 
-            // List Elements
+            
             for (size_t i = 0; i < list.size(); ++i)
             {
                 ImGui::PushID(static_cast<int>(i));
                 
-                // Remove Button
+                
                 if (ImGui::Button("X"))
                 {
                     list.erase(list.begin() + i);
@@ -114,7 +114,7 @@ namespace BixEngine::Gui::ActorInspector
                     list[i] = buffer;
                 }
 
-                // Drag & Drop Target
+                
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -135,17 +135,17 @@ namespace BixEngine::Gui::ActorInspector
         return true;
     }
 
-    // ============================================================================
-    //  DrawTSubclassOfArray
-    // ============================================================================
+    
+    
+    
     bool DrawTSubclassOfArray(const Bix::Reflection::PropertyInfo& property, void* instance)
     {
-        // TArray<TSubclassOf<T>> layout is vector<String>
+        
         auto& list = property.Get<std::vector<String>>(instance);
 
         if (ImGui::TreeNode(property.Name.c_str()))
         {
-            // Add Button
+            
             if (ImGui::Button("Add Element"))
             {
                 list.emplace_back();
@@ -154,12 +154,12 @@ namespace BixEngine::Gui::ActorInspector
             ImGui::SameLine();
             ImGui::TextDisabled("(%zu elements)", list.size());
 
-            // List Elements
+            
             for (size_t i = 0; i < list.size(); ++i)
             {
                 ImGui::PushID(static_cast<int>(i));
                 
-                // Remove Button
+                
                 if (ImGui::Button("X"))
                 {
                     list.erase(list.begin() + i);
@@ -168,8 +168,8 @@ namespace BixEngine::Gui::ActorInspector
                 }
                 ImGui::SameLine();
 
-                // Asset Selector
-                // Display current value as a button
+                
+                
                 String currentPath = list[i];
                 std::string display = "None";
                 if (!currentPath.IsEmpty())
@@ -182,7 +182,7 @@ namespace BixEngine::Gui::ActorInspector
                     ImGui::OpenPopup("AssetSelectorPopup");
                 }
 
-                // Drag & Drop (keep existing support)
+                
                 if (ImGui::BeginDragDropTarget())
                 {
                     if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -195,7 +195,7 @@ namespace BixEngine::Gui::ActorInspector
                     ImGui::EndDragDropTarget();
                 }
 
-                // Popup
+                
                 if (ImGui::BeginPopup("AssetSelectorPopup"))
                 {
                     ImGui::TextDisabled("Select Prefab");
@@ -207,8 +207,8 @@ namespace BixEngine::Gui::ActorInspector
                         ImGui::CloseCurrentPopup();
                     }
 
-                    // Scan for .prefab files
-                    // Assuming generic TSubclassOf is mostly used for prefabs in this context
+                    
+                    
                     static std::vector<std::string> extensions = { ".prefab" };
                     auto foundFiles = FilesUtils::Utilities::ScanDirectory("", extensions);
 
@@ -224,9 +224,9 @@ namespace BixEngine::Gui::ActorInspector
 
                         if (searchBuffer[0] != '\0')
                         {
-                            // Simple substring search
+                            
                             std::string searchS = searchBuffer;
-                            // TODO: Case insensitive
+                            
                             if (filename.find(searchS) == std::string::npos) 
                                 continue;
                         }
@@ -254,15 +254,15 @@ namespace BixEngine::Gui::ActorInspector
 
 
 
-    // ============================================================================
-    //  DrawTSubclassOf (Single)
-    // ============================================================================
+    
+    
+    
     bool DrawTSubclassOf(const Bix::Reflection::PropertyInfo& property, void* instance)
     {
-        // TSubclassOf<T> layout is String (asset path)
+        
         auto& pathStr = property.Get<String>(instance);
 
-        // Display current value as a button
+        
         String currentPath = pathStr;
         std::string display = "None";
         if (!currentPath.IsEmpty())
@@ -275,7 +275,7 @@ namespace BixEngine::Gui::ActorInspector
             ImGui::OpenPopup("AssetSelectorPopup_Single");
         }
 
-        // Drag & Drop
+        
         if (ImGui::BeginDragDropTarget())
         {
             if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
@@ -288,7 +288,7 @@ namespace BixEngine::Gui::ActorInspector
             ImGui::EndDragDropTarget();
         }
 
-        // Popup
+        
         if (ImGui::BeginPopup("AssetSelectorPopup_Single"))
         {
              ImGui::TextDisabled("Select Prefab");
@@ -300,7 +300,7 @@ namespace BixEngine::Gui::ActorInspector
                  ImGui::CloseCurrentPopup();
              }
 
-             // Scan for .prefab files
+             
              static std::vector<std::string> extensions = { ".prefab" };
              auto foundFiles = FilesUtils::Utilities::ScanDirectory("", extensions);
 
@@ -316,7 +316,7 @@ namespace BixEngine::Gui::ActorInspector
                  if (searchBuffer[0] != '\0')
                  {
                      std::string searchS = searchBuffer;
-                     // TODO: Case insensitive
+                     
                      if (filename.find(searchS) == std::string::npos) 
                          continue;
                  }
@@ -336,24 +336,24 @@ namespace BixEngine::Gui::ActorInspector
         return true;
     }
 
-    bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string& /*label*/)
+    bool PropertyInspector::DrawSupportedProperty(const Bix::Reflection::PropertyInfo& property, void* instance, const std::string&  )
     {
         if (!property.IsValid())
             return false;
 
         std::string typeName = SimplifyTypeName(property.TypeName);
         
-        // --- Generic Resource Drawer Registry ---
+        
         using DrawerFunc = std::function<bool(const Bix::Reflection::PropertyInfo&, void*)>;
         static const std::unordered_map<std::string, DrawerFunc> ResourceDrawers = 
         {
             { "AudioClip", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioClip>(p, i, { ".mp3", ".wav", ".ogg" }); } },
             { "AudioContainer", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::AudioContainer>(p, i, { ".bixaudio" }); } },
             { "SpriteAtlas", [](const auto& p, void* i) { return DrawSharedResourceProperty<resources::SpriteAtlas>(p, i, { ".atlas" }); } },
-            // Texture is handled specifically below because it has a custom preview widget
+            
         };
 
-        // Check registry first
+        
         auto it = ResourceDrawers.find(typeName);
         if (it != ResourceDrawers.end())
         {
@@ -397,17 +397,17 @@ namespace BixEngine::Gui::ActorInspector
              return DrawStringArray(property, instance);
         }
 
-        // TArray<TSubclassOf<T>> (or vector<TSubclassOf<T>>)
-        // We detect "TSubclassOf" in the type name.
+        
+        
         if ((property.TypeName.find("vector<") != std::string::npos || property.TypeName.find("TArray<") != std::string::npos) && 
             property.TypeName.find("TSubclassOf<") != std::string::npos)
         {
-             // We cast to vector<String> assuming TSubclassOf has same layout as String
-             // This is a safe assumption given our implementation of TSubclassOf
+             
+             
              return DrawTSubclassOfArray(property, instance);
         }
 
-        // Single TSubclassOf<T>
+        
         if (property.TypeName.find("TSubclassOf<") != std::string::npos)
         {
             return DrawTSubclassOf(property, instance);
@@ -565,7 +565,7 @@ namespace BixEngine::Gui::ActorInspector
         ImGui::PushID(property.Name.c_str());
         ImGui::BeginGroup();
 
-        // --- PREVIEW ---
+        
         float previewSize = 64.0f;
         ImVec2 sizeVec(previewSize, previewSize);
         bool openSelector = false;
@@ -593,7 +593,7 @@ namespace BixEngine::Gui::ActorInspector
 
         ImGui::SameLine();
 
-        // --- ACTION BUTTONS ---
+        
         ImGui::BeginGroup();
         if (tex)
         {
@@ -606,7 +606,7 @@ namespace BixEngine::Gui::ActorInspector
         }
         ImGui::EndGroup();
 
-        // --- TEXTURE SELECTOR POPUP ---
+        
         ImGui::SetNextWindowSize(ImVec2(300, 400), ImGuiCond_FirstUseEver);
         if (ImGui::BeginPopup("TextureSelectorPopup"))
         {
@@ -662,9 +662,9 @@ namespace BixEngine::Gui::ActorInspector
     }
 
 
-    // ============================================================================
-    //  DrawReflectedProperty
-    // ============================================================================
+    
+    
+    
     bool PropertyInspector::DrawReflectedProperty(const Bix::Reflection::PropertyInfo& property, void* instance)
     {
         const std::string label = ExposedVariableUtils::MakeDisplayName(property.Name);
@@ -675,13 +675,8 @@ namespace BixEngine::Gui::ActorInspector
         
         ImGui::PopID();
 
-        // Debug info if not handled?
-        /*
-        if (!handled)
-        {
-            const std::string typeName = ExposedVariableUtils::CleanTypeName(property.TypeName);
-        }
-        */
+        
+         
 
         if (handled)
             ImGui::Dummy(ImVec2(0.f, 8.f));
@@ -690,9 +685,9 @@ namespace BixEngine::Gui::ActorInspector
     }
 
 
-    // ============================================================================
-    //  GatherClassProperties
-    // ============================================================================
+    
+    
+    
     void PropertyInspector::GatherClassProperties(const Bix::Reflection::ClassInfo& cls, std::vector<const Bix::Reflection::PropertyInfo*>& out)
     {
         if (cls.SuperClass)
@@ -703,12 +698,12 @@ namespace BixEngine::Gui::ActorInspector
     }
 
 
-    // ============================================================================
-    //  DrawClassProperties
-    // ============================================================================
-    // ============================================================================
-    //  DrawClassProperties
-    // ============================================================================
+    
+    
+    
+    
+    
+    
     bool PropertyInspector::DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage)
     {
         std::vector<const Bix::Reflection::PropertyInfo*> props;
@@ -729,7 +724,7 @@ namespace BixEngine::Gui::ActorInspector
         if (includeHeader && headerLabel && headerLabel[0])
             Utils::DrawSeparatorText(headerLabel);
 
-        // Group by Category
+        
         std::map<std::string, std::vector<const Bix::Reflection::PropertyInfo*>> categories;
         std::vector<const Bix::Reflection::PropertyInfo*> uncategorized;
         std::vector<std::string> processedNames;
@@ -738,7 +733,7 @@ namespace BixEngine::Gui::ActorInspector
         {
             if (!p) continue;
             
-            // Deduplicate by name
+            
             bool alreadyExists = false;
             for (const auto& existing : processedNames)
             {
@@ -751,7 +746,7 @@ namespace BixEngine::Gui::ActorInspector
             if (alreadyExists) continue;
             processedNames.push_back(p->Name);
 
-            // Visibility Logic
+            
             bool isPublic = p->GetMetadata("Access") == "Public";
             bool hasEditAnywhere = p->HasMetadata("EditAnywhere");
             bool hasHide = p->HasMetadata("HideInInspector");
@@ -761,7 +756,7 @@ namespace BixEngine::Gui::ActorInspector
             {
                 visible = !hasHide;
             }
-            else // Private/Protected
+            else 
             {
                 visible = hasEditAnywhere;
             }
@@ -781,7 +776,7 @@ namespace BixEngine::Gui::ActorInspector
 
         bool any = false;
 
-        // Helper to draw a list of properties
+        
         auto DrawPropertyList = [&](const std::vector<const Bix::Reflection::PropertyInfo*>& list, const std::string& idSuffix)
         {
             if (ImGui::BeginTable(("##PropsTable_" + idSuffix).c_str(), 2, ImGuiTableFlags_SizingStretchSame | ImGuiTableFlags_Resizable))
@@ -791,7 +786,7 @@ namespace BixEngine::Gui::ActorInspector
                 
                 for (auto* p : list)
                 {
-                    // Filter internal/hidden properties
+                    
                     if (p->Name == "lastTexture_" || 
                         p->Name == "hasCustomUV_" || 
                         p->Name == "uvRect_")
@@ -806,7 +801,7 @@ namespace BixEngine::Gui::ActorInspector
                     ImGui::AlignTextToFramePadding();
                     ImGui::TextUnformatted(label.c_str());
                     
-                    // ... (rest of loop)
+                    
                     
                     if (ImGui::IsItemHovered())
                         ImGui::SetTooltip("%s (%s)", p->Name.c_str(), p->TypeName.c_str());
@@ -821,10 +816,10 @@ namespace BixEngine::Gui::ActorInspector
             }
         };
 
-        // Draw Default Category first
+        
         if (!uncategorized.empty())
         {
-            // If we have other categories, show "Default" header, otherwise show nothing (flat)
+            
             if (!categories.empty())
             {
                 if (ImGui::CollapsingHeader("Default", ImGuiTreeNodeFlags_DefaultOpen))
@@ -840,7 +835,7 @@ namespace BixEngine::Gui::ActorInspector
             }
         }
 
-        // Draw Named Categories
+        
         for (const auto& [catName, catProps] : categories)
         {
             if (ImGui::CollapsingHeader(catName.c_str(), ImGuiTreeNodeFlags_DefaultOpen))
@@ -855,9 +850,9 @@ namespace BixEngine::Gui::ActorInspector
     }
 
 
-    // ============================================================================
-    //  DrawExposedVariablesSection
-    // ============================================================================
+    
+    
+    
     void PropertyInspector::DrawExposedVariablesSection(BaseAssetEditorController::SharedState& state, std::string_view sectionLabel, const char* emptyMessage)
     {
         const std::string header = sectionLabel.empty() ? "Variables" : std::string(sectionLabel);
@@ -890,7 +885,7 @@ namespace BixEngine::Gui::ActorInspector
 
             bool handled = false;
 
-            // bool
+            
             if (ExposedVariableUtils::MatchesType(typeName, "bool"))
             {
                 bool value = (cleaned == "true" || cleaned == "1");
@@ -900,7 +895,7 @@ namespace BixEngine::Gui::ActorInspector
 
                 handled = true;
             }
-            // int
+            
             else if (ExposedVariableUtils::MatchesType(typeName, "int") || ExposedVariableUtils::MatchesType(typeName, "int32_t"))
             {
                 int v = nums.empty() ? 0 : static_cast<int>(nums.front());
@@ -910,7 +905,7 @@ namespace BixEngine::Gui::ActorInspector
 
                 handled = true;
             }
-            // float
+            
             else if (ExposedVariableUtils::MatchesType(typeName, "float"))
             {
                 float v = nums.empty() ? 0.f : nums.front();
@@ -924,7 +919,7 @@ namespace BixEngine::Gui::ActorInspector
 
                 handled = true;
             }
-            // vec2
+            
             else if (ExposedVariableUtils::MatchesType(typeName, "Vector2") ||
                      ExposedVariableUtils::MatchesType(typeName, "Math::Vector2"))
             {
@@ -939,7 +934,7 @@ namespace BixEngine::Gui::ActorInspector
 
                 handled = true;
             }
-            // vec3
+            
             else if (ExposedVariableUtils::MatchesType(typeName, "Vector3") ||
                      ExposedVariableUtils::MatchesType(typeName, "Math::Vector3"))
             {

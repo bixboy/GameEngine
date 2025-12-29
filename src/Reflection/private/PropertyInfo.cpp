@@ -28,7 +28,7 @@ namespace Bix::Reflection
         return it != ParsedMetadata.end() ? it->second : "";
     }
 
-    // Helper to trim spaces
+    
     static std::string Trim(const std::string& s)
     {
         auto start = s.find_first_not_of(" \t\n\r");
@@ -48,14 +48,14 @@ namespace Bix::Reflection
             size_t commaPos = current.find(',');
             std::string token = (commaPos == std::string::npos) ? current : current.substr(0, commaPos);
             
-            // "Key=Value" or "Flag"
+            
             size_t eqPos = token.find('=');
             if (eqPos != std::string::npos)
             {
                 std::string key = Trim(token.substr(0, eqPos));
                 std::string value = Trim(token.substr(eqPos + 1));
                 
-                // Remove quotes if present
+                
                 if (value.size() >= 2 && value.front() == '"' && value.back() == '"')
                     value = value.substr(1, value.size() - 2);
                     

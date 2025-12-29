@@ -7,9 +7,9 @@
 
 namespace BixEngine::Game
 {
-    // ────────────────────────────────────────────────
-    // Lifecycle
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     BoxColliderComponent::BoxColliderComponent() = default;
 
@@ -34,7 +34,7 @@ namespace BixEngine::Game
 
         if (!b2Body_IsValid(bodyId_)) return;
 
-        // 1. Sync Physics -> Actor (if simulating)
+        
         if (simulatePhysics_ && owner_)
         {
             b2Vec2 pos = b2Body_GetPosition(bodyId_);
@@ -46,7 +46,7 @@ namespace BixEngine::Game
             transform.position.y = pos.y * Physics::PPM;
             transform.rotation.yaw = Math::Rad2Deg(angleRad);
             
-            // 2. Apply Custom Forces
+            
             ApplyAerodynamics();
             ClampTerminalVelocity();
         }
@@ -54,16 +54,16 @@ namespace BixEngine::Game
 
     void BoxColliderComponent::DrawInspectorUI()
     {
-        // Auto-Editor handles properties.
+        
     }
 
-    // ────────────────────────────────────────────────
-    // Internal Physics Logic
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::ApplyAerodynamics()
     {
-        // F_drag = -k * v
+        
         if (airResistance_ > 0.001f)
         {
             b2Vec2 v = b2Body_GetLinearVelocity(bodyId_);
@@ -74,7 +74,7 @@ namespace BixEngine::Game
 
     void BoxColliderComponent::ClampTerminalVelocity()
     {
-        // Prevent exceeding max fall speed
+        
         b2Vec2 v = b2Body_GetLinearVelocity(bodyId_);
         float maxMeters = maxFallSpeed_ / Physics::PPM;
 
@@ -96,14 +96,14 @@ namespace BixEngine::Game
         b2WorldId worldId = scene->GetPhysicsWorld();
         if (!b2World_IsValid(worldId)) return;
 
-        // 1. Body Def
+        
         b2BodyDef bodyDef = b2DefaultBodyDef();
         bodyDef.type = simulatePhysics_ ? b2_dynamicBody : b2_staticBody;
         bodyDef.fixedRotation = fixedRotation_;
         bodyDef.gravityScale = gravityScale_;
-        bodyDef.linearDamping = 0.0f; // Handled manually by ApplyAerodynamics
+        bodyDef.linearDamping = 0.0f; 
 
-        // Calculate World Rotation (Yaw)
+        
         float worldYaw = 0.0f;
         const Math::Transform* current = &owner_->GetTransformRef();
         while (current)
@@ -112,7 +112,7 @@ namespace BixEngine::Game
             current = current->parent;
         }
 
-        // Calculate World Position
+        
         Math::Vector3 worldPos = owner_->GetTransformRef().GetWorldPosition();
 
         bodyDef.position = { worldPos.x / Physics::PPM, worldPos.y / Physics::PPM };
@@ -141,25 +141,25 @@ namespace BixEngine::Game
     {
         if (!b2Body_IsValid(bodyId_)) return;
 
-        // Prepare Shape Def
+        
         b2ShapeDef shapeDef = b2DefaultShapeDef();
         shapeDef.isSensor = isSensor_;
-        // shapeDef.friction/restitution not available in v3.1.1 def?
-        // We will set them via setters after creation.
+        
+        
 
-        // Calculate Effective Density (Mass Override Logic)
+        
         const Math::Transform& transform = owner_->GetTransformRef();
         float hx_m = (boxExtent_.x * transform.scale.x) / Physics::PPM;
         float hy_m = (boxExtent_.y * transform.scale.y) / Physics::PPM;
         
-        // Safety clamp
+        
         if (hx_m < 0.01f) hx_m = 0.01f;
         if (hy_m < 0.01f) hy_m = 0.01f;
 
         if (massOverride_ > 0.0f)
         {
-             // Density = Mass / Area
-             // Area = (2*hx) * (2*hy)
+             
+             
              float area = (2.0f * hx_m) * (2.0f * hy_m);
              shapeDef.density = massOverride_ / area;
         }
@@ -168,7 +168,7 @@ namespace BixEngine::Game
              shapeDef.density = density_;
         }
 
-        // Create Shape
+        
         b2Polygon box = b2MakeBox(hx_m, hy_m);
         shapeId_ = b2CreatePolygonShape(bodyId_, &shapeDef, &box);
         
@@ -179,21 +179,21 @@ namespace BixEngine::Game
         }
     }
 
-    // ────────────────────────────────────────────────
-    // Main Properties
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::SetSimulatePhysics(bool simulate)
     {
         if (simulatePhysics_ == simulate) return;
         simulatePhysics_ = simulate;
-        CreatePhysicsState(); // Recreate to ensure clean state
+        CreatePhysicsState(); 
     }
 
     void BoxColliderComponent::SetBoxExtent(const Math::Vector2<float>& extent)
     {
         boxExtent_ = extent;
-        CreatePhysicsState(); // Recreate to resize shape
+        CreatePhysicsState(); 
     }
 
     void BoxColliderComponent::SetFixedRotation(bool fixed)
@@ -210,9 +210,9 @@ namespace BixEngine::Game
         CreatePhysicsState();
     }
 
-    // ────────────────────────────────────────────────
-    // Material & Mass
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::SetDensity(float density)
     {
@@ -243,9 +243,9 @@ namespace BixEngine::Game
             b2Shape_SetRestitution(shapeId_, restitution_);
     }
 
-    // ────────────────────────────────────────────────
-    // Dynamics (Drag & Gravity)
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::SetGravityScale(float scale)
     {
@@ -267,9 +267,9 @@ namespace BixEngine::Game
          maxFallSpeed_ = speed;
     }
 
-    // ────────────────────────────────────────────────
-    // Runtime Control
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::SetLinearVelocity(const Math::Vector2<float>& velocity)
     {
@@ -312,9 +312,9 @@ namespace BixEngine::Game
         b2Body_ApplyLinearImpulseToCenter(bodyId_, {impulse.x, impulse.y}, wake);
     }
 
-    // ────────────────────────────────────────────────
-    // Callbacks
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void BoxColliderComponent::DispatchCollisionEnter(Actor* other, const CollisionHitResult& result)
     {

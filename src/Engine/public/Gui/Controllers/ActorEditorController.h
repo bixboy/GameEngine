@@ -27,14 +27,14 @@ namespace BixEngine::Gui
         struct ActorEditorSharedState : public SharedState
         {
              std::unique_ptr<Game::Scene> previewScene;
-             std::unique_ptr<Game::SceneManager> sceneManager; // Wraps the preview scene
+             std::unique_ptr<Game::SceneManager> sceneManager; 
              Game::Actor* previewActor{nullptr};
              
-             // Texture provider for the viewport (Scene renders to a framebuffer/texture)
-             // We might need a FrameBuffer here or in the Scene?
-             // For now, let's assume Scene has a way to get its render target or we create one.
-             // For now, let's assume Scene has a way to get its render target or we create one.
-             std::shared_ptr<void> renderTarget; // Placeholder
+             
+             
+             
+             
+             std::shared_ptr<void> renderTarget; 
              Game::Actor* selectedActor{nullptr};
              Game::Actor* cameraActor{nullptr};
         };
@@ -59,7 +59,7 @@ namespace BixEngine::Gui
         
         Section section_;
         
-        // Sub-panels (Lazy initialized)
+        
         std::unique_ptr<PrefabViewportPanel> viewportPanel_;
         std::unique_ptr<PrefabInspectorPanel> inspectorPanel_;
         std::unique_ptr<class PrefabOutlinerPanel> outlinerPanel_;

@@ -1,4 +1,4 @@
-﻿#include "Utils/String/StringUtils.h"
+#include "Utils/String/StringUtils.h"
 #include <algorithm>
 #include <windows.h>
 #include <cctype>
@@ -6,9 +6,9 @@
 
 namespace BixEngine::StringUtils
 {
-    // ─────────────────────────────────────────────
-    // Chaînes de caractères
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     std::string Utilities::ToLowerCopy(std::string value)
     {
@@ -54,9 +54,9 @@ namespace BixEngine::StringUtils
         return valueLower.find(queryLower.View()) != std::string::npos;
     }
 
-    // ─────────────────────────────────────────────
-    // Fichiers et dossiers
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void Utilities::ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory)
     {
@@ -72,9 +72,9 @@ namespace BixEngine::StringUtils
         std::system(command.c_str());
     }
 
-    // ─────────────────────────────────────────────
-    // Transforme un path en identifiant string
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     String Utilities::MakeSafeIdentifier(const std::string& raw)
     {
@@ -93,9 +93,9 @@ namespace BixEngine::StringUtils
         return out;
     }
 
-    // ─────────────────────────────────────────────
-    // Supprime les caractères '\r'
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void Utilities::TrimCarriageReturn(std::string& v)
     {

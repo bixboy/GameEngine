@@ -6,9 +6,7 @@ namespace BixEngine::resources
 {
     class Texture;
 
-    /**
-     * @brief Represents a single sprite frame referencing a texture region.
-     */
+     
     struct SpriteFrame
     {
         Texture* texture{nullptr};

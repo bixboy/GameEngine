@@ -25,7 +25,7 @@ namespace BixEngine::Gui
 {
     namespace
     {
-        // ---------------------- CONSTANTES ----------------------
+        
         constexpr const char* kRootDockspaceWindow = "EditorRootDockspace";
         constexpr const char* kLayoutStorageFileName = "imgui_layouts.dat";
 
@@ -37,7 +37,7 @@ namespace BixEngine::Gui
 
         using DockRegionArray = std::array<ImGuiID, static_cast<size_t>(DockSpaceRegion::Count)>;
 
-        // ---------------------- HELPERS ----------------------
+        
         std::string SerializeRegionIds(const DockRegionArray& ids)
         {
             std::string out = "RegionIds=";
@@ -90,9 +90,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // CONSTRUCTEUR
-    // --------------------------------------------------------------
+    
+    
+    
     GuiLayoutManager::GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager)
         : guiSystem_(&guiSystem), guiManager_(&guiManager)
     {
@@ -116,9 +116,9 @@ namespace BixEngine::Gui
         LoadLayout(currentLayout_);
     }
 
-    // --------------------------------------------------------------
-    // SWITCH
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::Switch(EditorLayoutType newLayout)
     {
         if (!guiSystem_)
@@ -135,27 +135,27 @@ namespace BixEngine::Gui
         switchRequested_ = true;
     }
 
-    // --------------------------------------------------------------
-    // UPDATE LOOP (Before NewFrame)
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::Update()
     {
         ProcessPendingSwitch_();
         EnsureDockspaceForCurrentLayout_();
     }
 
-    // --------------------------------------------------------------
-    // RENDER LOOP (After NewFrame)
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::Render()
     {
         DrawMainMenuBar_();
         EditorPreferencesWindow::Draw(&showEditorPreferences_);
     }
 
-    // --------------------------------------------------------------
-    // SAVE CURRENT
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::SaveCurrentLayout()
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
@@ -168,17 +168,17 @@ namespace BixEngine::Gui
         layoutData_[currentLayout_] = std::move(record);
     }
 
-    // --------------------------------------------------------------
-    // SAVE ALL (DISK)
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::SaveAllLayoutsToDisk()
     {
         PersistLayoutsToDisk_();
     }
 
-    // --------------------------------------------------------------
-    // PANEL REGISTRATION
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::RegisterPanels(EditorLayoutType layout, std::span<GuiPanel*> panels, LayoutRegistrationMode mode)
     {
         SetPanelsForLayout(layout, panels);
@@ -205,18 +205,18 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // DETACH PANELS
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::DetachPanels(std::span<GuiPanel*> panels)
     {
         for (GuiPanel* p : panels)
             if (p) RemovePanel(*p);
     }
 
-    // --------------------------------------------------------------
-    // RESET
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::ResetLayout(EditorLayoutType layout)
     {
         auto it = layoutPanels_.find(layout);
@@ -234,9 +234,9 @@ namespace BixEngine::Gui
         initializedLayouts_.erase(layout);
     }
 
-    // --------------------------------------------------------------
-    // LOAD LAYOUT
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::LoadLayout(EditorLayoutType layout)
     {
         if (!guiSystem_ || !guiSystem_->IsInitialized())
@@ -273,9 +273,9 @@ namespace BixEngine::Gui
         initializedLayouts_.insert(layout);
     }
 
-    // --------------------------------------------------------------
-    // SET PANELS FOR LAYOUT
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::SetPanelsForLayout(EditorLayoutType layout, std::span<GuiPanel*> panels)
     {
         auto& vect = layoutPanels_[layout];
@@ -298,9 +298,9 @@ namespace BixEngine::Gui
         ApplyPanelVisibility_();
     }
 
-    // --------------------------------------------------------------
-    // ADD PANEL
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::AddPanel(EditorLayoutType layout, GuiPanel& panel)
     {
         RemovePanel(panel);
@@ -312,9 +312,9 @@ namespace BixEngine::Gui
         panel.SetVisible(currentLayout_ == layout);
     }
 
-    // --------------------------------------------------------------
-    // REMOVE PANEL
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::RemovePanel(GuiPanel& panel)
     {
         auto it = panelLayoutLookup_.find(&panel);
@@ -333,9 +333,9 @@ namespace BixEngine::Gui
         std::erase(vect, &panel);
     }
 
-    // --------------------------------------------------------------
-    // DOCKSPACE HANDLING
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::EnsureDockspaceForCurrentLayout_()
     {
         if (!guiSystem_ || !dockspaceDirty_)
@@ -347,9 +347,9 @@ namespace BixEngine::Gui
         dockspaceDirty_ = false;
     }
 
-    // --------------------------------------------------------------
-    // PENDING SWITCH
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::ProcessPendingSwitch_()
     {
         if (!switchRequested_ || !pendingLayout_.has_value() || !guiSystem_)
@@ -381,9 +381,9 @@ namespace BixEngine::Gui
         pendingLayout_.reset();
     }
 
-    // --------------------------------------------------------------
-    // VISIBILITY
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::ApplyPanelVisibility_()
     {
         if (!guiManager_)
@@ -401,19 +401,19 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // MAIN MENU BAR
-    // --------------------------------------------------------------
-    // --------------------------------------------------------------
-    // MAIN MENU BAR
-    // --------------------------------------------------------------
+    
+    
+    
+    
+    
+    
     void GuiLayoutManager::DrawMainMenuBar_()
     {
         if (ImGui::BeginMainMenuBar())
         {
             if (ImGui::BeginMenu("File"))
             {
-                // New Scene
+                
                 if (ImGui::MenuItem("New Scene"))
                 {
                      if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
@@ -424,13 +424,13 @@ namespace BixEngine::Gui
                      }
                 }
 
-                // Open Scene
+                
                 if (ImGui::MenuItem("Open Scene..."))
                 {
                     showOpenSceneDialog_ = true;
                 }
 
-                // Recent Scenes submenu
+                
                 if (ImGui::BeginMenu("Recent Scenes", !recentScenes_.empty()))
                 {
                     for (size_t i = 0; i < recentScenes_.size(); ++i)
@@ -463,7 +463,7 @@ namespace BixEngine::Gui
 
                 ImGui::Separator();
 
-                // Close Scene
+                
                 bool hasScene = !currentScenePath_.empty();
                 if (ImGui::MenuItem("Close Scene", nullptr, false, hasScene))
                 {
@@ -482,7 +482,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Save Scene
+                
                 if (ImGui::MenuItem("Save Scene", "Ctrl+S"))
                 {
                     if (currentScenePath_.empty())
@@ -504,7 +504,7 @@ namespace BixEngine::Gui
                     }
                 }
 
-                // Save Scene As
+                
                 if (ImGui::MenuItem("Save Scene As..."))
                 {
                     showSaveAsDialog_ = true;
@@ -513,16 +513,16 @@ namespace BixEngine::Gui
 
                 ImGui::Separator();
 
-                // Rename Scene
+                
                 if (ImGui::MenuItem("Rename Scene...", nullptr, false, hasScene))
                 {
                     showRenameSceneDialog_ = true;
-                    // Pre-fill with current name
+                    
                     std::string currentName = currentScenePath_.stem().string();
                     strncpy_s(renameFilenameBuffer_, currentName.c_str(), sizeof(renameFilenameBuffer_) - 1);
                 }
 
-                // Delete Scene
+                
                 if (ImGui::MenuItem("Delete Scene..."))
                 {
                     showDeleteSceneDialog_ = true;
@@ -530,13 +530,13 @@ namespace BixEngine::Gui
 
                 ImGui::Separator();
 
-                // Scene Info
+                
                 bool sceneLoaded = false;
                 if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
                 {
                     if (auto* scene = sceneManager->GetScene())
                     {
-                         // Sync path if needed
+                         
                          if (!scene->GetSourcePath().IsEmpty())
                          {
                              std::filesystem::path p(scene->GetSourcePath().c_str());
@@ -580,7 +580,7 @@ namespace BixEngine::Gui
                     {
                         if (!panel) continue;
                         
-                        // Filter panels based on context
+                        
                         if (menuPanelFilter_)
                         {
                             if (!menuPanelFilter_(panel))
@@ -588,7 +588,7 @@ namespace BixEngine::Gui
                         }
                         else
                         {
-                            // Default behavior: only show panels belonging to current layout
+                            
                             auto it = panelLayoutLookup_.find(panel);
                             if (it != panelLayoutLookup_.end() && it->second != currentLayout_)
                                 continue;
@@ -733,9 +733,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // LOAD FROM DISK
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::LoadPersistedLayouts_()
     {
         layoutStorageFile_ = FilesUtils::Utilities::ResolveUserConfigPath(kLayoutStorageFileName);
@@ -837,9 +837,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // SAVE TO DISK
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::PersistLayoutsToDisk_()
     {
         if (layoutStorageFile_.empty())
@@ -890,9 +890,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // MISC HELPERS
-    // --------------------------------------------------------------
+    
+    
+    
 
     std::string GuiLayoutManager::LayoutTypeToString(EditorLayoutType type)
     {
@@ -919,9 +919,9 @@ namespace BixEngine::Gui
         return std::nullopt;
     }
 
-    // --------------------------------------------------------------
-    // DELETE SCENE DIALOG
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::DrawDeleteSceneDialog_()
     {
         if (showDeleteSceneDialog_)
@@ -960,7 +960,7 @@ namespace BixEngine::Gui
                 ImGui::Text("Select a scene to delete:");
                 ImGui::Separator();
                 
-                // Use a child window to contain the list
+                
                 if (ImGui::BeginChild("SceneList", ImVec2(300, 200), true))
                 {
                     for (size_t i = 0; i < sceneFiles.size(); ++i)
@@ -984,7 +984,7 @@ namespace BixEngine::Gui
             bool canDelete = !selectedScene.empty();
             if (ImGui::Button("Delete", ImVec2(120, 0)) && canDelete)
             {
-                // Confirmation popup
+                
                 sceneToDelete_ = selectedScene;
                 ImGui::OpenPopup("Confirm Delete");
             }
@@ -995,7 +995,7 @@ namespace BixEngine::Gui
                 ImGui::CloseCurrentPopup();
             }
 
-            // Nested confirmation dialog
+            
             if (ImGui::BeginPopupModal("Confirm Delete", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
             {
                 ImGui::Text("Are you sure you want to delete:");
@@ -1010,7 +1010,7 @@ namespace BixEngine::Gui
                     std::error_code ec;
                     std::filesystem::remove(sceneToDelete_, ec);
                     
-                    // Remove from recent scenes
+                    
                     auto it = std::find(recentScenes_.begin(), recentScenes_.end(), sceneToDelete_);
                     if (it != recentScenes_.end())
                     {
@@ -1018,7 +1018,7 @@ namespace BixEngine::Gui
                         SaveRecentScenes_();
                     }
                     
-                    // If we deleted the current scene, clear it
+                    
                     if (currentScenePath_ == sceneToDelete_)
                     {
                         if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
@@ -1029,7 +1029,7 @@ namespace BixEngine::Gui
                         }
                     }
                     
-                    // Remove from the list and clear selection
+                    
                     auto fileIt = std::find(sceneFiles.begin(), sceneFiles.end(), sceneToDelete_);
                     if (fileIt != sceneFiles.end())
                     {
@@ -1038,8 +1038,8 @@ namespace BixEngine::Gui
                     selectedScene.clear();
                     sceneToDelete_.clear();
                     
-                    ImGui::CloseCurrentPopup(); // Close confirm dialog
-                    ImGui::CloseCurrentPopup(); // Close parent dialog
+                    ImGui::CloseCurrentPopup(); 
+                    ImGui::CloseCurrentPopup(); 
                 }
                 
                 ImGui::SameLine();
@@ -1056,9 +1056,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // RENAME SCENE DIALOG
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::DrawRenameSceneDialog_()
     {
         if (showRenameSceneDialog_)
@@ -1092,7 +1092,7 @@ namespace BixEngine::Gui
                         
                         if (!ec)
                         {
-                            // Update recent scenes
+                            
                             auto it = std::find(recentScenes_.begin(), recentScenes_.end(), currentScenePath_);
                             if (it != recentScenes_.end())
                             {
@@ -1100,7 +1100,7 @@ namespace BixEngine::Gui
                                 SaveRecentScenes_();
                             }
                             
-                            // Update current path and scene name
+                            
                             currentScenePath_ = newPath;
                             if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
                             {
@@ -1127,9 +1127,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // CLOSE SCENE CONFIRMATION
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::DrawCloseSceneConfirmation_()
     {
         if (showCloseSceneConfirmation_)
@@ -1146,7 +1146,7 @@ namespace BixEngine::Gui
 
             if (ImGui::Button("Save and Close", ImVec2(140, 0)))
             {
-                // Save the scene first
+                
                 if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
                 {
                     if (auto* scene = sceneManager->GetScene())
@@ -1154,7 +1154,7 @@ namespace BixEngine::Gui
                         BixEngine::Serialization::SceneSerializer::SaveBinary(*scene, currentScenePath_);
                     }
                     
-                    // Then close
+                    
                     sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
                     currentScenePath_.clear();
                     isSceneDirty_ = false;
@@ -1166,7 +1166,7 @@ namespace BixEngine::Gui
             ImGui::SameLine();
             if (ImGui::Button("Don't Save", ImVec2(140, 0)))
             {
-                // Close without saving
+                
                 if (auto* sceneManager = Game::SceneManager::GetActiveSceneManager())
                 {
                     sceneManager->SetScene(std::make_unique<Game::EmptyScene>());
@@ -1187,25 +1187,25 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // RECENT SCENES MANAGEMENT
-    // --------------------------------------------------------------
+    
+    
+    
     void GuiLayoutManager::AddToRecentScenes_(const std::filesystem::path& path)
     {
         if (path.empty())
             return;
         
-        // Remove if already exists
+        
         auto it = std::find(recentScenes_.begin(), recentScenes_.end(), path);
         if (it != recentScenes_.end())
         {
             recentScenes_.erase(it);
         }
         
-        // Add to front
+        
         recentScenes_.insert(recentScenes_.begin(), path);
         
-        // Keep only 5 most recent
+        
         if (recentScenes_.size() > 5)
         {
             recentScenes_.resize(5);

@@ -80,7 +80,7 @@ namespace BixEngine::Gui
         [[nodiscard]] std::optional<PageId> GetActivePage() const noexcept;
         [[nodiscard]] bool DrawEditorPages(GuiPanel& panel);
 
-        virtual void OnPageChanged(PageId /*newIndex*/, const EditorPage& /*page*/) {}
+        virtual void OnPageChanged(PageId  , const EditorPage&  ) {}
 
     private:
         void OnAttach(GuiPanel& panel) override;

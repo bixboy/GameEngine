@@ -15,9 +15,7 @@ namespace BixEngine::Gui
         bool closeWithParent = true;
     };
 
-    /**
-     * @brief Gestion centralisée des panels enfants appartenant à un contrôleur parent.
-     */
+     
     class ChildPanelManager
     {
     public:

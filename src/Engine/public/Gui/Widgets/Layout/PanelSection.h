@@ -3,18 +3,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief RAII pour ImGui::CollapsingHeader, avec gestion automatique de l'espacement final.
-     *
-     * Utiliser PanelSection pour encapsuler le contenu d'une section repliable :
-     * \code
-     * PanelSection section("Transform");
-     * if (section.IsOpen())
-     * {
-     *     // ... contenu ...
-     * }
-     * \endcode
-     */
+     
     class PanelSection
     {
     public:

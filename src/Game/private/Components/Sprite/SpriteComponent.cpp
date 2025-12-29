@@ -59,11 +59,11 @@ namespace BixEngine::Game
 
     void SpriteComponent::Render(Graphics::Renderer& renderer) const
     {
-        // Use the Actor's World Transform Matrix
+        
         const Math::Transform& transform = owner_->GetTransform(); 
         Math::Matrix3 worldMatrix = transform.ToMatrix3(); 
 
-        // 1. Calculate Local Vertices (Object Space) based on Size and Pivot
+        
         float w = size_.x;
         float h = size_.y;
         float px = pivot_.x * w;
@@ -86,9 +86,9 @@ namespace BixEngine::Game
         Math::Vector2<float> finalBL = TransformPoint(localBL);
         Math::Vector2<float> finalBR = TransformPoint(localBR);
 
-        // ---------------------------------------------------------
-        // CAMERA TRANSFORM
-        // ---------------------------------------------------------
+        
+        
+        
         if (auto* cam = CameraComponent::GetMainCamera())
         {
             auto ToVec3 = [](const Math::Vector2<float>& v) { return Math::Vector3(v.x, v.y, 0.0f); };
@@ -99,13 +99,13 @@ namespace BixEngine::Game
             finalBR = cam->WorldToScreen(ToVec3(finalBR));
         }
 
-        // 2. Prepare Colors
+        
         SDL_Texture* nativeTexture = texture_ ? static_cast<SDL_Texture*>(texture_->GetNativeHandle()) : nullptr;
         
         SDL_Color combined = CombineColor(color_, tint_, additiveTint_);
         SDL_FColor col = { combined.r / 255.0f, combined.g / 255.0f, combined.b / 255.0f, combined.a / 255.0f };
 
-        // 3. Prepare UVs
+        
         Math::Vector2<float> uvs[4];
         if (nativeTexture)
         {
@@ -113,7 +113,7 @@ namespace BixEngine::Game
             float th = static_cast<float>(texture_->GetHeight());
 
             Math::Rect effectiveUV = uvRect_;
-            // Fallback: If UV is zero-sized, use the full texture
+            
             if (effectiveUV.Width <= 0.0f || effectiveUV.Height <= 0.0f)
             {
                 effectiveUV = {0.0f, 0.0f, tw, th};
@@ -123,10 +123,10 @@ namespace BixEngine::Game
             {
                 float invW = 1.0f / tw;
                 float invH = 1.0f / th;
-                uvs[0] = { effectiveUV.X * invW, effectiveUV.Y * invH }; // TL
-                uvs[1] = { (effectiveUV.X + effectiveUV.Width) * invW, effectiveUV.Y * invH }; // TR
-                uvs[2] = { effectiveUV.X * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; // BL
-                uvs[3] = { (effectiveUV.X + effectiveUV.Width) * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; // BR
+                uvs[0] = { effectiveUV.X * invW, effectiveUV.Y * invH }; 
+                uvs[1] = { (effectiveUV.X + effectiveUV.Width) * invW, effectiveUV.Y * invH }; 
+                uvs[2] = { effectiveUV.X * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; 
+                uvs[3] = { (effectiveUV.X + effectiveUV.Width) * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; 
             }
             else
             {
@@ -140,33 +140,33 @@ namespace BixEngine::Game
             uvs[0] = {0,0}; uvs[1] = {1,0}; uvs[2] = {0,1}; uvs[3] = {1,1};
         }
 
-        // 4. Submit Geometry
+        
         SDL_Vertex vertices[4];
-        // Order: TL, TR, BR, BL - wait, Indices define the mesh.
-        // Let's stick to standard TL, TR, BR, BL order generally used in quad logic or simpler:
-        // 0: TL
-        // 1: TR
-        // 2: BR
-        // 3: BL
+        
+        
+        
+        
+        
+        
         
         vertices[0] = { {finalTL.x, finalTL.y}, col, {uvs[0].x, uvs[0].y} };
-        vertices[1] = { {finalTR.x, finalTR.y}, col, {uvs[1].x, uvs[1].y} }; // TR 
+        vertices[1] = { {finalTR.x, finalTR.y}, col, {uvs[1].x, uvs[1].y} }; 
         
-        // Wait, my uvs array filling was:
-        // 2 was BL, 3 was BR in my loop above?
-        // Let's match explicit indices.
-        // uvs[0] -> TL
-        // uvs[1] -> TR
-        // uvs[2] -> BL
-        // uvs[3] -> BR relative to Rect (X, Y)
+        
+        
+        
+        
+        
+        
+        
 
-        // Vertex 2: BR
+        
         vertices[2] = { {finalBR.x, finalBR.y}, col, {uvs[3].x, uvs[3].y} };
         
-        // Vertex 3: BL
+        
         vertices[3] = { {finalBL.x, finalBL.y}, col, {uvs[2].x, uvs[2].y} };
 
-        // Indices: TL(0) -> TR(1) -> BR(2); TL(0) -> BR(2) -> BL(3)
+        
         int indices[] = { 0, 1, 2, 0, 2, 3 };
 
         SDL_RenderGeometry(renderer.GetSDLRenderer(), nativeTexture, vertices, 4, indices, 6);

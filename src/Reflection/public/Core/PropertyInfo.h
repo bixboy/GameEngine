@@ -54,7 +54,7 @@ namespace Bix::Reflection
             std::function<std::size_t(const void*)> GetSize;
             std::function<std::string(const void*, std::size_t)> GetStringAt;
         };
-        // Optional: contains accessors if this property detects it is a supported TArray
+        
         std::shared_ptr<ArrayAccess> ArrayFunctions = nullptr; 
     };
 }

@@ -39,7 +39,7 @@ namespace BixEngine::Game
     {
     }
 
-    void AudioSourceComponent::Update(float /*dt*/)
+    void AudioSourceComponent::Update(float  )
     {
         if (!impl_->initialized) return;
 
@@ -50,9 +50,9 @@ namespace BixEngine::Game
         }
     }
     
-    // ==============================================================================
-    // AUDIO CONTROL
-    // ==============================================================================
+    
+    
+    
     void AudioSourceComponent::Play()
     {
         auto* audioSystem = &Systems::AudioSystem::Get();
@@ -145,8 +145,8 @@ namespace BixEngine::Game
         }
     }
 
-    // ==============================================================================
-    // EDITOR UI
-    // ==============================================================================
-    // DrawInspectorUI removed
+    
+    
+    
+    
 }

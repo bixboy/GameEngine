@@ -44,15 +44,15 @@ namespace BixEngine::ScriptUtils
     class Utilities
     {
     public:
-        // Type checks
+        
         static bool IsActorType(std::string_view name);
         static bool IsComponentType(std::string_view name);
 
-        // Reflection helpers
+        
         static bool AreEquivalent(const Bix::Reflection::ClassInfo& lhs, const Bix::Reflection::ClassInfo& rhs);
         static bool IsSubclassOf(const Bix::Reflection::ClassInfo& type, const Bix::Reflection::ClassInfo& base);
 
-        // Parsing / tree helpers
+        
         static std::vector<ScriptNode> BuildScriptTree(const std::filesystem::path& scriptsDir, const std::filesystem::path& contentRoot);
         static std::vector<TreeNodeData> BuildGuiTree(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo);
     };

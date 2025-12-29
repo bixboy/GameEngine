@@ -1,4 +1,4 @@
-﻿#include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
+#include "Gui/Dialogs/CreateSpriteAtlasDialog.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Ressources/Atlas/AtlasGenerator.h"
 #include "Ressources/Atlas/SpriteAtlasFactory.h"
@@ -13,9 +13,9 @@ using namespace BixEngine::Gui::Utils;
 using namespace BixEngine::resources;
 
 
-// ============================================================================
-// Constructor
-// ============================================================================
+
+
+
 CreateSpriteAtlasDialog::CreateSpriteAtlasDialog(ContentBrowserState& s, String& selected) : ModalDialog(s, selected, "ContentBrowserCreateSpriteAtlas")
 {
     atlasName_[0] = texturePathBuffer_[0] = '\0';
@@ -25,9 +25,9 @@ CreateSpriteAtlasDialog::CreateSpriteAtlasDialog(ContentBrowserState& s, String&
     loop_ = true;
 }
 
-// ============================================================================
-// Open Dialog
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::Open(const path& src)
 {
     atlasError_.Clear();
@@ -70,9 +70,9 @@ void CreateSpriteAtlasDialog::SetTexturePath(const path& newPath)
 }
 
 
-// ============================================================================
-// DrawContent
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::DrawContent()
 {
     DrawHeader();
@@ -90,9 +90,9 @@ void CreateSpriteAtlasDialog::DrawContent()
         Close();
 }
 
-// ============================================================================
-// Header
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::DrawHeader()
 {
     if (!texturePath_.empty())
@@ -110,9 +110,9 @@ void CreateSpriteAtlasDialog::DrawHeader()
     DrawDescriptionText("Generate a sprite atlas from PNG frames.");
 }
 
-// ============================================================================
-// Input Fields
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::DrawInputFields()
 {
     InputTextWithLabel("Atlas name (.atlas)", atlasName_, IM_ARRAYSIZE(atlasName_));
@@ -135,15 +135,15 @@ void CreateSpriteAtlasDialog::DrawInputFields()
     DrawTextureSelector();
 }
 
-// ============================================================================
-// Texture Selector + Preview
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::DrawTextureSelector()
 {
     DrawSeparatorText("Texture source");
     ImGui::Columns(2);
 
-    // LEFT : PNG list
+    
     ImGui::Text("PNG files:");
     ImGui::Separator();
     ImGui::BeginChild("PNG_LIST", ImVec2(0,250), true);
@@ -165,7 +165,7 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     if (ImGui::Button("Refresh")) RefreshTextureCandidates();
     ImGui::NextColumn();
 
-    // RIGHT : path + preview
+    
     ImGui::Text("Selected texture:");
     ImGui::Separator();
 
@@ -208,7 +208,7 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
 
     ImGui::Image(ref, ImVec2(previewW, previewH));
 
-    // Draw slicing overlay
+    
     ImVec2 min = ImGui::GetItemRectMin();
     ImVec2 max = ImGui::GetItemRectMax();
     float sx = (max.x-min.x) / tex->GetWidth();
@@ -236,9 +236,9 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     ImGui::Columns(1);
 }
 
-// ============================================================================
-// Auto-detect columns/rows
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
 {
     if (texturePath_.empty() || !fs::exists(texturePath_))
@@ -262,9 +262,9 @@ void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
 }
 
 
-// ============================================================================
-// Generate Atlas
-// ============================================================================
+
+
+
 bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 {
     if (atlasName_[0]=='\0')
@@ -305,7 +305,7 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
         if (framesDir_.empty() || !fs::exists(framesDir_))
             return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
 
-        // AtlasGenerator expects INT columns/rows (it packs frames into a grid)
+        
         int iCols = (int)std::max(1.0f, std::ceil(columns_));
         int iRows = (int)std::max(1.0f, std::ceil(rows_));
 
@@ -323,9 +323,9 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
     return true;
 }
 
-// ============================================================================
-// Helpers
-// ============================================================================
+
+
+
 void CreateSpriteAtlasDialog::RefreshTextureCandidates()
 {
     textureCandidates_.clear();

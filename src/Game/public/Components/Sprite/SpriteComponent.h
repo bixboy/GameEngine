@@ -21,7 +21,7 @@ namespace BixEngine::Game
 
     public:
 
-        SpriteComponent() = default; // REQUIRED for reflection/serialization
+        SpriteComponent() = default; 
 
         explicit SpriteComponent(Actor* owner);
 
@@ -34,7 +34,7 @@ namespace BixEngine::Game
         void Render(Graphics::Renderer& renderer) const override;
 
         void Update(float deltaTime) override;
-        // DrawInspectorUI removed
+        
 
         void ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 

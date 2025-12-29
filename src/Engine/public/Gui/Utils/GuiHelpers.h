@@ -42,7 +42,7 @@ namespace BixEngine::Gui::Utils
         }
     };
 
-    /// Gère automatiquement PushID / PopID.
+    
     struct ScopedID
     {
         explicit ScopedID(int id) { ImGui::PushID(id); }
@@ -74,7 +74,7 @@ namespace BixEngine::Gui::Utils
         std::optional<Widgets::ScopedColor> colorScope_{};
     };
 
-    /// Gère automatiquement PushFont / PopFont.
+    
     struct ScopedFont
     {
         explicit ScopedFont(ImFont* font)
@@ -97,9 +97,9 @@ namespace BixEngine::Gui::Utils
         }
     };
 
-    // ────────────────────────────────────────────────────────────────
-    // affichage de sections et messages
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     void DrawSectionHeader(const char* title);
     void DrawErrorMessage(const std::string& message);
@@ -107,9 +107,9 @@ namespace BixEngine::Gui::Utils
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel);
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel, const std::function<void()>& onConfirm, const std::function<void()>& onCancel);
 
-    // ────────────────────────────────────────────────────────────────
-    // Champs texte, étiquettes et infos
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags = ImGuiInputTextFlags_EnterReturnsTrue, bool autoFocus = false);
 
@@ -120,9 +120,9 @@ namespace BixEngine::Gui::Utils
     void DrawLabelValue(const char* label, const std::string& value, const char* emptyFallback = "-");
     void DrawEmptyStateMessage(const char* message);
 
-    // ────────────────────────────────────────────────────────────────
-    // Listes et arbres
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection);
     void DrawScrollableList(const std::vector<std::string>& items, float height,const std::string& selected, std::string& outSelection,
@@ -135,17 +135,17 @@ namespace BixEngine::Gui::Utils
     void DrawScriptHierarchyTree(const std::vector<TreeNodeData>& roots, std::string& selectedNode,
         const TreeNodeCallback& onContextMenu, const char* emptyMessage = "No entries");
 
-    // ────────────────────────────────────────────────────────────────
-    // Sections repliables
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     bool BeginCollapsibleSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
     bool BeginPersistentSection(const char* label, const std::string& contextId, bool defaultOpen = true, ImGuiTreeNodeFlags additionalFlags = 0);
     void EndPersistentSection();
 
-    // ────────────────────────────────────────────────────────────────
-    // Recherche et mini-widgets
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint = "Search...",
                      float width = -1.0f, ImGuiInputTextFlags flags = ImGuiInputTextFlags_None);
@@ -153,9 +153,9 @@ namespace BixEngine::Gui::Utils
     bool IconButton(const char* icon, const char* tooltip = nullptr);
     void DrawHelpMarker(const char* text);
 
-    // ────────────────────────────────────────────────────────────────
-    // Gestion des polices et séparateurs
-    // ────────────────────────────────────────────────────────────────
+    
+    
+    
 
     void PushSmallFont();
     void PopSmallFont();

@@ -1,4 +1,4 @@
-﻿#pragma once
+#pragma once
 #include <functional>
 #include <memory>
 #include <stdexcept>
@@ -13,9 +13,7 @@ namespace BixEngine::Gui
 {
     class GuiPanel;
 
-    /**
-     * @brief Gestion interne des panneaux GUI et de leurs contrôleurs.
-     */
+     
     class GuiPanelRegistry
     {
     public:
@@ -33,31 +31,31 @@ namespace BixEngine::Gui
         ~GuiPanelRegistry() = default;
         
 
-        /** Crée un nouveau panneau ou renvoie celui existant. */
+         
         GuiPanel& AddPanel(String name, String title);
 
         template <typename PanelT, typename... Args>
         PanelT& AddPanelOfType(String name, String title, Args&&... args);
 
-        /** Supprime le panneau et son contrôleur associé. */
+         
         void RemovePanel(const String& name);
 
-        /** Recherche un panneau par nom. */
+         
         [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
 
 
-        /** Retourne l'entrée complète d'un panneau via son nom. */
+         
         [[nodiscard]] PanelEntry* FindPanelEntry(const String& name) noexcept;
 
-        /** Retourne l'entrée complète d'un panneau via sa référence. */
+         
         [[nodiscard]] PanelEntry* FindPanelEntry(GuiPanel& panel) noexcept;
         
 
-        /** Récupère tous les panneaux. */
+         
         [[nodiscard]] std::vector<GuiPanel*> GetAllPanels();
         
 
-        /** Supprime tous les panneaux et vide les index. */
+         
         void Clear();
         
 
@@ -65,13 +63,13 @@ namespace BixEngine::Gui
         Callback OnPanelRemoved = nullptr;
 
     private:
-        MapType panels_; ///< Conteneur principal (nom → entrée)
+        MapType panels_; 
         std::unordered_map<GuiPanel*, String> panelToName_;
 
-        /** Ajoute un panneau à l’index inverse. */
+         
         void RegisterPanelIndex_(GuiPanel& panel, const String& name);
 
-        /** Retire un panneau de l’index inverse. */
+         
         void UnregisterPanelIndex_(GuiPanel& panel);
     };
 }

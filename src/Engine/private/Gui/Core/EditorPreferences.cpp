@@ -18,7 +18,7 @@ namespace BixEngine::Gui
     {
         using namespace Theme;
         ContentBackground = settings.ThemeBackground;
-        ContentTreeBackground = settings.ThemeBackground; // Linked to background for consistency
+        ContentTreeBackground = settings.ThemeBackground; 
         HeaderBackground = settings.ThemeHeaderBackground;
         BreadcrumbHighlight = settings.ThemeAccentColor;
         SelectedFolderText = settings.ThemeAccentColor;
@@ -27,7 +27,7 @@ namespace BixEngine::Gui
         AxisColorY = settings.AxisColorY;
         AxisColorZ = settings.AxisColorZ;
 
-        // Common panel backgrounds
+        
         StatsBackground = settings.ThemeBackground;
         ViewportBackground = settings.ThemeBackground;
         OutlinerBackground = settings.ThemeBackground;
@@ -47,7 +47,7 @@ namespace BixEngine::Gui
         {
             bLoaded = true;
             instance.Load();
-            SyncTheme(instance); // Ensure theme is synced after load
+            SyncTheme(instance); 
         }
         return instance;
     }
@@ -70,7 +70,7 @@ namespace BixEngine::Gui
         
         writer.WriteUint32(kEditorSettingsVersion);
 
-        // Gizmos
+        
         writer.WritePrimitive(EnableSnap);
         writer.WritePrimitive(GizmoSnapTranslation);
         writer.WritePrimitive(GizmoSnapRotation);
@@ -81,25 +81,25 @@ namespace BixEngine::Gui
         writer.WritePrimitive(GizmoLineThickness);
         writer.WritePrimitive(GizmoSensitivity);
 
-        // Camera
+        
         writer.WritePrimitive(CameraSpeed);
         writer.WritePrimitive(CameraBoostMultiplier);
 
-        // Content Browser
+        
         writer.WritePrimitive(ContentThumbnailSize);
         writer.WritePrimitive(ContentThumbnailPadding);
         writer.WritePrimitive(ContentTreeWidth);
 
-        // Inspector
+        
         writer.WritePrimitive(DragSpeedLocation);
         writer.WritePrimitive(DragSpeedRotation);
         writer.WritePrimitive(DragSpeedScale);
 
-        // Stats
+        
         writer.WritePrimitive(StatsSmoothingFactor);
         writer.WritePrimitive(StatsUpdateInterval);
 
-        // Visuals
+        
         writer.WritePrimitive(ShowGrid);
         writer.WritePrimitive(GridSpacing);
         writer.WritePrimitive(GridColor);
@@ -107,7 +107,7 @@ namespace BixEngine::Gui
         writer.WritePrimitive(AxisColorY);
         writer.WritePrimitive(AxisColorZ);
 
-        // Theme
+        
         writer.WritePrimitive(ThemeBackground);
         writer.WritePrimitive(ThemeHeaderBackground);
         writer.WritePrimitive(ThemeSectionBackground);
@@ -116,8 +116,8 @@ namespace BixEngine::Gui
         writer.WritePrimitive(ThemeWarningColor);
         writer.WritePrimitive(ThemeErrorColor);
 
-        // Project
-        // Convert to Bix::String for BinaryWriter
+        
+        
         writer.WriteString(String(DefaultMapPath.c_str())); 
     }
 
@@ -132,7 +132,7 @@ namespace BixEngine::Gui
         std::uint32_t version = 0;
         if (!reader.ReadUint32(version)) return;
 
-        // Gizmos
+        
         reader.ReadPrimitive(EnableSnap);
         reader.ReadPrimitive(GizmoSnapTranslation);
         reader.ReadPrimitive(GizmoSnapRotation);
@@ -143,25 +143,25 @@ namespace BixEngine::Gui
         reader.ReadPrimitive(GizmoLineThickness);
         reader.ReadPrimitive(GizmoSensitivity);
 
-        // Camera
+        
         reader.ReadPrimitive(CameraSpeed);
         reader.ReadPrimitive(CameraBoostMultiplier);
 
-        // Content Browser
+        
         reader.ReadPrimitive(ContentThumbnailSize);
         reader.ReadPrimitive(ContentThumbnailPadding);
         reader.ReadPrimitive(ContentTreeWidth);
 
-        // Inspector
+        
         reader.ReadPrimitive(DragSpeedLocation);
         reader.ReadPrimitive(DragSpeedRotation);
         reader.ReadPrimitive(DragSpeedScale);
 
-        // Stats
+        
         reader.ReadPrimitive(StatsSmoothingFactor);
         reader.ReadPrimitive(StatsUpdateInterval);
 
-        // Visuals
+        
         reader.ReadPrimitive(ShowGrid);
         reader.ReadPrimitive(GridSpacing);
         reader.ReadPrimitive(GridColor);
@@ -169,7 +169,7 @@ namespace BixEngine::Gui
         reader.ReadPrimitive(AxisColorY);
         reader.ReadPrimitive(AxisColorZ);
 
-        // Theme
+        
         reader.ReadPrimitive(ThemeBackground);
         reader.ReadPrimitive(ThemeHeaderBackground);
         reader.ReadPrimitive(ThemeSectionBackground);
@@ -178,7 +178,7 @@ namespace BixEngine::Gui
         reader.ReadPrimitive(ThemeWarningColor);
         reader.ReadPrimitive(ThemeErrorColor);
 
-        // Project
+        
         if (version >= 2)
         {
              String tempPath;
@@ -273,15 +273,15 @@ namespace BixEngine::Gui
 
             if (ImGui::CollapsingHeader("Project", ImGuiTreeNodeFlags_DefaultOpen))
             {
-                // InputText for std::string
-                // Buffer resizing logic or simple static buffer?
-                // imgui_stdlib.h usually provides support for std::string directly.
-                // If not, we use a temp buffer. Assuming stdlib support or basic buffer.
-                // Let's assume user has ImGui STL support or use a char buffer.
-                // Checking previous includes... imgui.h is included.
-                // If imgui_stdlib.h is missing, we must implement a wrapper.
-                // BixEngine ImGui usually has helpers?
-                // Safest is to use a fixed buffer and assign back.
+                
+                
+                
+                
+                
+                
+                
+                
+                
                 
                 static char buffer[256];
                 strncpy_s(buffer, settings.DefaultMapPath.c_str(), _TRUNCATE);
@@ -293,19 +293,19 @@ namespace BixEngine::Gui
                 ImGui::SameLine();
                 if (ImGui::Button("Browse..."))
                 {
-                    // Filter: Display Name \0 Pattern \0 ... \0
+                    
                     const char* filter = "Scene Files (*.bix)\0*.bix\0All Files (*.*)\0*.*\0";
-                    std::string path = BixEngine::Core::OpenFileDialog(filter); // Fixed namespace
+                    std::string path = BixEngine::Core::OpenFileDialog(filter); 
                     if (!path.empty())
                     {
                         settings.DefaultMapPath = path;
                         settings.Save();
-                        // Update buffer for immediate feedback if relying on static buffer
+                        
                         strncpy_s(buffer, path.c_str(), _TRUNCATE);
                     }
                 }
                 ImGui::SameLine();
-                // Simple helper to verify if file exists
+                
                 if (!settings.DefaultMapPath.empty())
                 {
                     if (std::filesystem::exists(settings.DefaultMapPath))

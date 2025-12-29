@@ -9,9 +9,9 @@ namespace
 {
     using namespace BixEngine::Gui::Utils;
 
-    // ─────────────────────────────────────────────
-    // Récupère et met en cache la plus petite police
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     ImFont* GetSmallestFontCached()
     {
@@ -43,9 +43,9 @@ namespace
         return smallest;
     }
 
-    // ─────────────────────────────────────────────
-    // Dessin récursif d'un tree node
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode, const TreeNodeCallback& onContextMenu)
     {
@@ -86,9 +86,9 @@ namespace
 
 namespace BixEngine::Gui::Utils
 {
-    // ─────────────────────────────────────────────
-    // Section / séparateurs
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void DrawSectionHeader(const char* title)
     {
@@ -109,9 +109,9 @@ namespace BixEngine::Gui::Utils
         ImGui::TextWrapped("%s", message.c_str());
     }
 
-    // ─────────────────────────────────────────────
-    // Boutons de confirmation
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel)
     {
@@ -141,9 +141,9 @@ namespace BixEngine::Gui::Utils
         return confirmed;
     }
 
-    // ─────────────────────────────────────────────
-    // Champs texte
-    // ─────────────────────────────────────────────
+    
+    
+    
     bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags,
                             bool autoFocus)
     {
@@ -191,9 +191,9 @@ namespace BixEngine::Gui::Utils
         return edited;
     }
 
-    // ─────────────────────────────────────────────
-    // Texte et labels
-    // ─────────────────────────────────────────────
+    
+    
+    
     void DrawDescriptionText(const char* text)
     {
         if (text && *text)
@@ -211,9 +211,9 @@ namespace BixEngine::Gui::Utils
         ImGui::TextDisabled("%s", message ? message : "");
     }
 
-    // ─────────────────────────────────────────────
-    // Listes et arbres
-    // ─────────────────────────────────────────────
+    
+    
+    
     void DrawScrollableList(const std::vector<std::string>& items, float height, const std::string& selected, std::string& outSelection)
     {
         DrawScrollableList(items, height, selected, outSelection, nullptr);
@@ -272,9 +272,9 @@ namespace BixEngine::Gui::Utils
         DrawTreeRecursive(roots, selectedNode, onContextMenu);
     }
 
-    // ─────────────────────────────────────────────
-    // Sections repliables
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     bool BeginCollapsibleSection(const char* label, bool defaultOpen, ImGuiTreeNodeFlags additionalFlags)
     {
@@ -316,9 +316,9 @@ namespace BixEngine::Gui::Utils
         state.SectionStack.pop_back();
     }
 
-    // ─────────────────────────────────────────────
-    // Recherches / mini widgets
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     bool SearchInput(const char* id, char* buffer, size_t bufferSize, const char* hint, float width, ImGuiInputTextFlags flags)
     {
@@ -339,9 +339,9 @@ namespace BixEngine::Gui::Utils
         return ImGui::InputTextWithHint(label.c_str(), hint ? hint : "Search...", buffer, bufferSize, flags);
     }
 
-    // ─────────────────────────────────────────────
-    // Boutons et marqueurs d’aide
-    // ─────────────────────────────────────────────
+    
+    
+    
     bool IconButton(const char* icon, const char* tooltip)
     {
         const char* label = icon ? icon : "";
@@ -365,9 +365,9 @@ namespace BixEngine::Gui::Utils
             ImGui::SetTooltip("%s", text);
     }
 
-    // ─────────────────────────────────────────────
-    // Polices et styles
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     void PushSmallFont()
     {

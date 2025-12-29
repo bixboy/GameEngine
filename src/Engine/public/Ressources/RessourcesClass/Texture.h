@@ -22,10 +22,10 @@ namespace BixEngine::resources
 
         bool LoadFromFile(const String& path) override;
 
-        // Charge une texture
+        
         bool LoadFromFile(const String& path, SDL_Renderer* renderer);
 
-        // Renvoie la largeur/hauteur en pixels
+        
         [[nodiscard]] float GetWidth() const noexcept { return width_; }
         [[nodiscard]] float GetHeight() const noexcept { return height_; }
 

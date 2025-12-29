@@ -32,7 +32,7 @@ namespace BixEngine::Gui::ActorInspector
         }
     }
 
-    // -------------------------------------------------------------------------
+    
     ActorInspectorState& GetActorState(const Game::Actor& actor)
     {
         auto& states = GetActorStates();

@@ -21,7 +21,7 @@ namespace BixEngine::Gui
         void DrawContent() override;
 
     private:
-        // UI rendering
+        
         void DrawHeader();
         void DrawInputFields();
         void DrawTextureSelector();

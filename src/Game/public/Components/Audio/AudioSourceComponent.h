@@ -21,7 +21,7 @@ namespace BixEngine::Game
 
         void BeginPlay() override;
         void Update(float dt) override;
-        // DrawInspectorUI removed (using auto inspector)
+        
         
         void Play();
         void Stop();
@@ -30,8 +30,8 @@ namespace BixEngine::Game
         [[nodiscard]] String GetTypeName() const override { return "AudioSourceComponent"; }
 
         
-        // --- Properties ---
-        // --- Properties ---
+        
+        
         BPROPERTY(EditAnywhere, Category="Audio Settings")
         std::shared_ptr<resources::AudioClip> AudioClip;
 

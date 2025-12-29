@@ -4,9 +4,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief RAII pour les sections persistantes (état stocké via Gui::Utils::BeginPersistentSection).
-     */
+     
     class PersistentSectionScope
     {
     public:

@@ -3,7 +3,7 @@
 #include "Core/public/Containers/String.h"
 #include "Core/public/Math/Vector3.h"
 
-// Forward declaration of miniaudio engine struct
+
 struct ma_engine;
 
 namespace BixEngine::Systems {
@@ -26,7 +26,7 @@ namespace BixEngine::Systems {
         float GetMusicDuration() const;
         float GetMusicCursor() const;
         void* GetEngineHandle() const;
-        // Expose the miniaudio engine pointer safely
+        
         ma_engine* GetEngine() const;
 
     private:

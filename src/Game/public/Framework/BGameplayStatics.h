@@ -15,9 +15,9 @@ namespace BixEngine::Game
     class BGameplayStatics
     {
     public:
-        // ────────────────────────────────────────────────
-        // 🌍 Gestion des scènes
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         static void OpenScene(void* worldContext, const String& sceneName);
         static void LoadScene(void* worldContext, const String& sceneName);
@@ -27,9 +27,9 @@ namespace BixEngine::Game
         [[nodiscard]] static Scene* GetActiveScene() noexcept;
         [[nodiscard]] static SceneManager* ResolveSceneManager(void* worldContext);
 
-        // ────────────────────────────────────────────────
-        // 🧱 Gestion des acteurs
-        // ────────────────────────────────────────────────
+        
+        
+        
 
         template <typename T, typename... Args>
         static T* SpawnActor(void* worldContext, Args&&... args);
@@ -101,7 +101,7 @@ namespace BixEngine::Game
         if (!casted)
         {
              LOG_ERROR("SpawnActor: Spawned prefab is not of type " + String(typeid(T).name()));
-             // Should we destroy it? Yes.
+             
              scene->RemoveActor(spawned);
              return nullptr;
         }

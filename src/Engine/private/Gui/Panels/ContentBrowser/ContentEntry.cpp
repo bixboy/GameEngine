@@ -8,9 +8,9 @@
 
 namespace BixEngine::Gui
 {
-    // ─────────────────────────────────────────────
-    // Génération de clé unique
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     String ContentEntry::SelectionKey() const
     {
@@ -24,20 +24,20 @@ namespace BixEngine::Gui
         return key.generic_string();
     }
 
-    // ─────────────────────────────────────────────
-    // Table d’icônes FontAwesome par type
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     namespace
     {
         constexpr std::array<const char*, 6> kIcons{
             {
-                "[DIR]", // Folder
-                "[FILE]", // File
-                "[SCRIPT]", // Script
-                "[ACTOR]", // Actor prefab
-                "[COMP]", // Component prefab
-                "[ATLAS]" // Sprite atlas
+                "[DIR]", 
+                "[FILE]", 
+                "[SCRIPT]", 
+                "[ACTOR]", 
+                "[COMP]", 
+                "[ATLAS]" 
             }
         };
     }
@@ -48,9 +48,9 @@ namespace BixEngine::Gui
         return (index < kIcons.size()) ? kIcons[index] : kIcons[1];
     }
 
-    // ─────────────────────────────────────────────
-    // Ordre de tri logique des entrées
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     int GetSortPriority(ContentType type)
     {
@@ -79,9 +79,9 @@ namespace BixEngine::Gui
     }
 
 
-    // ─────────────────────────────────────────────
-    // Draw Entries browser
-    // ─────────────────────────────────────────────
+    
+    
+    
 
     bool DrawEntryButton(const ContentEntry& entry, bool isSelected, ContentBrowserState& state, String& selectedEntry)
     {

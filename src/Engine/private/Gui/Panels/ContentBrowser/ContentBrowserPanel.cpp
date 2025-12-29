@@ -1,7 +1,7 @@
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
-#include "Utils/FileIO/FilesUtils.h" // Restauré
+#include "Utils/FileIO/FilesUtils.h" 
 #include "Debug/Logger.h"
 
 #include <filesystem>
@@ -53,7 +53,7 @@ namespace BixEngine::Gui
         const fs::path targetDirectory = (!state_.current.empty() && fs::exists(state_.current)) ? state_.current : state_.root;
         bool copiedAny = false;
 
-        // 2. Logique d'import propre via FilesUtils
+        
         for (const auto& source : paths)
         {
             if (source.empty()) continue;
@@ -110,9 +110,9 @@ namespace BixEngine::Gui
 
     void ContentBrowserPanel::Draw()
     {
-        // ─────────────────────────────────────────────────────────
-        // REFRESH DÉCALÉ (Safe Refresh)
-        // ─────────────────────────────────────────────────────────
+        
+        
+        
         if (m_PendingRefresh)
         {
             if (m_RefreshCountdown > 0)

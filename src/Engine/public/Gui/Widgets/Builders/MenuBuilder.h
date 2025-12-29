@@ -4,9 +4,7 @@
 
 namespace BixEngine::Gui::Widgets::Builder
 {
-    /**
-     * \brief RAII pour ImGui::BeginMenu/EndMenu avec gestion de l'état ouvert/fermé.
-     */
+     
     class Menu : private Internal::ImGuiScopeBase
     {
     public:

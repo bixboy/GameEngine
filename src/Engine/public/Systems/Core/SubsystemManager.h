@@ -48,27 +48,27 @@ namespace BixEngine::Core
         ~SubsystemManager();
 
 
-        // Initialise tous les sous-systèmes principaux du moteur.
+        
         bool Initialize(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager);
 
 
-        // Ferme proprement tous les sous-systèmes.
+        
         void Shutdown() noexcept;
 
 
-        // Redémarre entièrement les sous-systèmes.
+        
         bool Restart(Graphics::Renderer& renderer, Window& window, Gui::GuiManager* guiManager);
 
 
-        // Reset la valeur des inputs
+        
         void ResetInput() noexcept;
 
 
-        // Distribue un événement SDL à tous les modules concernés.
+        
         void ProcessEvent(const SDL_Event& event);
 
 
-        // Met à jour les entrées et la scène active.
+        
         void UpdateAll(float deltaTime);
 
         void UpdateRuntime(float deltaTime);
@@ -78,11 +78,11 @@ namespace BixEngine::Core
         void NotifyMouseEventDropped() noexcept;
 
 
-        // Retourne true si l’utilisateur demande à quitter (ESC ou close).
+        
         bool ShouldQuit() const noexcept;
 
 
-        // Accès utilitaires
+        
         Timer* GetTimer() noexcept;
         const Timer* GetTimer() const noexcept;
         Input::InputManager* GetInputManager() noexcept;
@@ -94,12 +94,12 @@ namespace BixEngine::Core
         const Game::Scene* GetScene() const noexcept;
 
 
-        // Crée une nouvelle scène active de type TScene.
+        
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args);
 
 
-        // Indique si les sous-systèmes sont initialisés.
+        
         bool IsInitialized() const noexcept { return initialized_; }
 
     private:

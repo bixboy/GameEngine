@@ -4,13 +4,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief Barre d'outils horizontale divisée en zones gauche/droite.
-     *
-     * Chaque zone accepte des callbacks ImGui permettant de composer facilement des boutons,
-     * filtres ou menus contextuels. L'appel à Commit() doit être effectué une seule fois
-     * après avoir enregistré tous les éléments.
-     */
+     
     class PanelToolbar
     {
     public:

@@ -55,7 +55,7 @@ namespace BixEngine::Systems
                 impl_->musicInitialized = false;
             }
             
-            // Cleanup active sounds
+            
             for (auto* sound : impl_->activeSounds)
             {
                 ma_sound_uninit(sound);
@@ -77,7 +77,7 @@ namespace BixEngine::Systems
         ma_engine_listener_set_direction(&impl_->engine, 0, fwd.x, fwd.y, fwd.z);
         ma_engine_listener_set_world_up(&impl_->engine, 0, up.x, up.y, up.z);
 
-        // Cleanup finished sounds
+        
         for (auto it = impl_->activeSounds.begin(); it != impl_->activeSounds.end(); )
         {
             if (!ma_sound_is_playing(*it))

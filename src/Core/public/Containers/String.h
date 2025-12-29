@@ -173,7 +173,7 @@ namespace BixEngine
             return String(lhs ? lhs : "") + rhs;
         }
 
-        // String + std::string
+        
         [[nodiscard]] String operator+(const std::string& other) const
         {
             String result(*this);
@@ -181,13 +181,13 @@ namespace BixEngine
             return result;
         }
 
-        // std::string + String
+        
         friend String operator+(const std::string& lhs, const String& rhs)
         {
             return String(lhs) + rhs;
         }
 
-        // String + const char*
+        
         [[nodiscard]] String operator+(const char* other) const
         {
             String result(*this);
@@ -474,7 +474,7 @@ namespace BixEngine
             if (!format)
                 return {};
 
-            int size = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; // +1 pour '\0'
+            int size = std::snprintf(nullptr, 0, format, std::forward<Args>(args)...) + 1; 
             if (size <= 0)
                 return {};
 

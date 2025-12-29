@@ -166,7 +166,7 @@ namespace BixEngine::Core
                 {
                     const std::string dropString(event.drop.data);
                 
-                    // Conversion UTF-8 vers Path
+                    
                     std::u8string dropUtf8;
                     dropUtf8.reserve(dropString.size());
                     for (const unsigned char ch : dropString) {
@@ -192,8 +192,8 @@ namespace BixEngine::Core
 
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
-            // If we click on UI (and not viewport), we want to consume the event so the game doesn't react.
-            // If we click on Viewport, we DO NOT want to consume it, so the game gets it.
+            
+            
             return io.WantCaptureMouse && !overViewport;
 
         default:
@@ -489,8 +489,8 @@ namespace BixEngine::Core
         if (!activeScene)
             return;
 
-        // Backup
-        m_SceneBackup.str(""); // Clear
+        
+        m_SceneBackup.str(""); 
         m_SceneBackup.clear();
         BixEngine::Serialization::SceneSerializer::SerializeBinary(*activeScene, m_SceneBackup);
 
@@ -510,27 +510,27 @@ namespace BixEngine::Core
         if (!activeScene)
             return;
 
-        // CRITICAL: Reset dangling references BEFORE destroying actors
-        // 1. Clear selected actor to avoid dangling pointer
+        
+        
         selectedActor_ = nullptr;
         
-        // 2. Reset input to clear all bindings (which have actor pointers as callbacks)
+        
         subsystems_->ResetInput();
         
-        // 3. Now it's safe to call OnRuntimeStop which may trigger cleanup
+        
         activeScene->OnRuntimeStop();
 
-        // 4. Restore the scene from backup
-        m_SceneBackup.clear(); // Clear error flags
+        
+        m_SceneBackup.clear(); 
         m_SceneBackup.seekg(0, std::ios::beg);
         
         if (!BixEngine::Serialization::SceneSerializer::DeserializeBinary(*activeScene, m_SceneBackup))
         {
             LOG_ERROR("Failed to restore scene from backup during OnStop()");
-            // Even if restoration fails, we still transition to Edit mode
+            
         }
         
-        // 5. Only change state after scene is restored
+        
         m_EngineState = EngineState::Edit;
     }
 

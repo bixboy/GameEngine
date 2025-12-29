@@ -5,9 +5,9 @@
 
 namespace BixEngine::Gui
 {
-    // --------------------------------------------------------------
-    // RegisterChild
-    // --------------------------------------------------------------
+    
+    
+    
     void ChildPanelManager::RegisterChild(GuiPanelController& parent, String panelName, bool closeWithParent)
     {
         auto& list = children_[&parent];
@@ -27,9 +27,9 @@ namespace BixEngine::Gui
         list.push_back({std::move(panelName), closeWithParent});
     }
 
-    // --------------------------------------------------------------
-    // UnregisterChildByName
-    // --------------------------------------------------------------
+    
+    
+    
     void ChildPanelManager::UnregisterChildByName(const String& panelName)
     {
         for (auto it = children_.begin(); it != children_.end();)
@@ -48,9 +48,9 @@ namespace BixEngine::Gui
         }
     }
 
-    // --------------------------------------------------------------
-    // RemoveChildren
-    // --------------------------------------------------------------
+    
+    
+    
     void ChildPanelManager::RemoveChildren(GuiPanelController& parent, const std::function<void(const String&)>& onClose)
     {
         auto it = children_.find(&parent);
@@ -71,9 +71,9 @@ namespace BixEngine::Gui
         children_.erase(it);
     }
 
-    // --------------------------------------------------------------
-    // GetChildren
-    // --------------------------------------------------------------
+    
+    
+    
     const std::vector<ChildPanelLink>*
     ChildPanelManager::GetChildren(const GuiPanelController& parent) const noexcept
     {
@@ -81,9 +81,9 @@ namespace BixEngine::Gui
         return it != children_.end() ? &it->second : nullptr;
     }
 
-    // --------------------------------------------------------------
-    // Clear
-    // --------------------------------------------------------------
+    
+    
+    
     void ChildPanelManager::Clear() noexcept
     {
         children_.clear();

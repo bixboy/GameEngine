@@ -22,9 +22,9 @@ namespace BixEngine::Gui
         Shutdown();
     }
 
-    // ────────────────────────────────────────────────
-    // Initialisation / Shutdown
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     bool GuiSystem::Initialize(SDL_Window* window, SDL_Renderer* renderer)
     {
@@ -178,9 +178,9 @@ namespace BixEngine::Gui
     }
 
 
-    // ────────────────────────────────────────────────
-    // Cycle de frame ImGui
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::BeginFrame()
     {
@@ -224,9 +224,9 @@ namespace BixEngine::Gui
             DumpGuiState();
     }
 
-    // ────────────────────────────────────────────────
-    // Événements SDL
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::ProcessEvent(const SDL_Event& event)
     {
@@ -234,9 +234,9 @@ namespace BixEngine::Gui
             ImGui_ImplSDL3_ProcessEvent(&event);
     }
 
-    // ────────────────────────────────────────────────
-    // Gestion des panneaux
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::RegisterPanel(GuiPanel& panel)
     {
@@ -262,9 +262,9 @@ namespace BixEngine::Gui
             QueuePanelForDockUpdate_(panel);
     }
 
-    // ────────────────────────────────────────────────
-    // Docking & layout
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::BeginDockspaceLayout_()
     {
@@ -342,9 +342,9 @@ namespace BixEngine::Gui
         LOG_INFO("[GuiSystem] 🧩 Default dock layout built.");
     }
 
-    // ────────────────────────────────────────────────
-    // Debug / état interne
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::DumpGuiState() const
     {
@@ -359,9 +359,9 @@ namespace BixEngine::Gui
         LOG_INFO("───────────────────────────────");
     }
 
-    // ────────────────────────────────────────────────
-    // Fonctions internes
-    // ────────────────────────────────────────────────
+    
+    
+    
 
     void GuiSystem::ApplyDockingPreferences_()
     {

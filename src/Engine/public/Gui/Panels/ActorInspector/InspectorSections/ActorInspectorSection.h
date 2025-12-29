@@ -17,9 +17,9 @@ namespace BixEngine::Gui::ActorInspector
     };
 
     
-    // -------------------------------------------------------------------------
-    // Types utilitaires
-    // -------------------------------------------------------------------------
+    
+    
+    
     
     using ActorInspectorSectionPtr = std::unique_ptr<ActorInspectorSection>;
 
@@ -28,9 +28,9 @@ namespace BixEngine::Gui::ActorInspector
     using ActorInspectorSectionFactory = std::function<ActorInspectorSectionPtr()>;
 
     
-    // -------------------------------------------------------------------------
-    // Fonctions globales du système d’inspection
-    // -------------------------------------------------------------------------
+    
+    
+    
     
     ActorInspectorSectionList BuildActorInspectorSections();
 

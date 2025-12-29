@@ -50,46 +50,46 @@ namespace BixEngine::Gui
     {
     }
 
-    // ────────────────────────────────────────────────
-    // Création du contexte GUI principal
-    // ────────────────────────────────────────────────
+    
+    
+    
     DefaultEngineGuiContext DefaultEngineGuiContextFactory::CreateContext(const DefaultEngineGuiContextArgs& args) const
     {
         DefaultEngineGuiContext context{};
 
-        // ──────────────────────────────
-        // Mode headless
-        // ──────────────────────────────
+        
+        
+        
         if (!args.bEnableGui)
         {
             LOG_INFO("[GuiContextFactory] Mode headless activé : aucun contexte GUI créé.");
             return context;
         }
 
-        // ──────────────────────────────
-        // Timer du moteur
-        // ──────────────────────────────
+        
+        
+        
         context.timer = subsystems_.GetTimer();
 
-        // ──────────────────────────────
-        // Fournisseur SceneManager
-        // ──────────────────────────────
+        
+        
+        
         context.sceneManagerProvider = [manager = &subsystems_]() -> Game::SceneManager*
         {
             return manager ? manager->GetSceneManager() : nullptr;
         };
 
-        // ──────────────────────────────
-        // Référence au deltaTime
-        // ──────────────────────────────
+        
+        
+        
         if (!args.lastDeltaTime)
             LOG_WARNING("[GuiContextFactory] Aucun delta time fourni au contexte GUI.");
 
         context.lastDeltaTime = args.lastDeltaTime;
 
-        // ──────────────────────────────
-        // Acteur sélectionné
-        // ──────────────────────────────
+        
+        
+        
         if (args.selectedActorSlot)
         {
             context.selectedActorGetter = [slot = args.selectedActorSlot]() -> Game::Actor*
@@ -108,9 +108,9 @@ namespace BixEngine::Gui
             LOG_WARNING("[GuiContextFactory] Aucun pointeur d’acteur sélectionné fourni (selectedActorSlot=nullptr).");
         }
 
-        // ──────────────────────────────
-        // Texture du viewport
-        // ──────────────────────────────
+        
+        
+        
         if (args.sceneViewportTexture)
         {
             context.sceneRenderTextureProvider = [texture = args.sceneViewportTexture]() -> SDL_Texture*
@@ -124,14 +124,14 @@ namespace BixEngine::Gui
             context.sceneRenderTextureProvider = []() -> SDL_Texture* { return nullptr; };
         }
 
-        // ──────────────────────────────
-        // Taille viewport
-        // ──────────────────────────────
+        
+        
+        
         context.sceneRenderTextureSizeProvider = args.sceneViewportSizeProvider ? args.sceneViewportSizeProvider : DefaultSizeProvider();
 
-        // ──────────────────────────────
-        // Ouvrerture scripts
-        // ──────────────────────────────
+        
+        
+        
         context.openScriptFilesInEditor = args.openScriptFilesInEditor ? args.openScriptFilesInEditor : DefaultScriptOpener();
         context.openAssetInEditor = args.openAssetInEditor ? args.openAssetInEditor : DefaultAssetOpener();
 

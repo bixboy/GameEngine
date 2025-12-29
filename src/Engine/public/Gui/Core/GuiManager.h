@@ -32,13 +32,7 @@ namespace BixEngine::Gui
         ControllerT& controller;
     };
 
-    /**
-     * @brief Gestionnaire central des panneaux ImGui et de leurs contrôleurs.
-     *
-     * Il orchestre l'ouverture/fermeture des panneaux, assure la liaison avec les
-     * contrôleurs, maintient l'historique de navigation ainsi que les workspaces
-     * et fournit un registre commun pour les éditeurs d'assets.
-     */
+     
     class GuiManager
     {
     public:

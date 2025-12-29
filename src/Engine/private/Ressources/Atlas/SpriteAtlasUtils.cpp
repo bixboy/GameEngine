@@ -15,9 +15,9 @@ namespace BixEngine::resources
 {
     namespace fs = std::filesystem;
 
-    // ──────────────────────────────────────────────
-    // INTERNAL HELPERS
-    // ──────────────────────────────────────────────
+    
+    
+    
 
     namespace
     {
@@ -204,7 +204,7 @@ namespace BixEngine::resources
             if (doc.contains("texture")) 
                 outDefinition.texturePath = String(doc["texture"].get<std::string>());
             
-            // Support both int and float reading
+            
             if (doc.contains("columns")) outDefinition.columns = doc["columns"].get<float>();
             else outDefinition.columns = 1.0f;
 
@@ -252,7 +252,7 @@ namespace BixEngine::resources
         if (texW <= 0.0f || texH <= 0.0f)
             return frames;
 
-        // Calculate cell size using float division
+        
         float cellW = (texW - 2.0f * margin - (columns - 1.0f) * padding) / columns;
         float cellH = (texH - 2.0f * margin - (rows - 1.0f) * padding) / rows;
 
@@ -276,7 +276,7 @@ namespace BixEngine::resources
                 frame.uvRect.Y = posY;
                 frame.uvRect.Width = cellW;
                 frame.uvRect.Height = cellH;
-                frame.texture = &texture; // Ensure texture is set
+                frame.texture = &texture; 
                 
                 frames.push_back(frame);
             }

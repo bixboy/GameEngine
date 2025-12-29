@@ -1,7 +1,7 @@
 #include "Components/Core/CameraComponent.h"
 #include "Framework/Actor.h"
 #include "Framework/Scene.h"
-#include "Systems/Core/Window.h" // Attempt to get window size
+#include "Systems/Core/Window.h" 
 #include <imgui.h>
 
 namespace BixEngine::Game
@@ -107,8 +107,8 @@ namespace BixEngine::Game
         float camX = baseX + Offset.x;
         float camY = baseY + Offset.y;
 
-        // Reverse formula
-        // WorldX = (ScreenX - HalfW) / Zoom + CamX
+        
+        
         float worldX = (screenPos.x - (screenWidth * 0.5f)) / Zoom + camX;
         float worldY = (screenPos.y - (screenHeight * 0.5f)) / Zoom + camY;
 

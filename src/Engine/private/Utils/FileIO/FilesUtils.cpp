@@ -1,4 +1,4 @@
-﻿#include "Utils/FileIO/FilesUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
 #include "Debug/Logger.h"
 #include <algorithm>
 #include <cctype>
@@ -10,9 +10,9 @@ namespace BixEngine::FilesUtils
 {
     namespace fs = std::filesystem;
 
-    // ─────────────────────────────────────────────
-    // Gestion des dossiers
-    // ─────────────────────────────────────────────
+    
+    
+    
     bool Utilities::TryCreateDir(const fs::path& dir, String& outError)
     {
         std::error_code ec;
@@ -51,9 +51,9 @@ namespace BixEngine::FilesUtils
         return true;
     }
 
-    // ─────────────────────────────────────────────
-    // Gestion de fichiers
-    // ─────────────────────────────────────────────
+    
+    
+    
     bool Utilities::TryCopyFile(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
     {
         std::error_code ec;
@@ -265,9 +265,9 @@ namespace BixEngine::FilesUtils
         return results;
     }
 
-    // ─────────────────────────────────────────────
-    // Gestion d’erreurs et comparaison
-    // ─────────────────────────────────────────────
+    
+    
+    
     bool Utilities::LogAndStoreError(String& outError, const String& message, bool alsoLog)
     {
         outError = message;
@@ -285,9 +285,9 @@ namespace BixEngine::FilesUtils
             [](unsigned char x, unsigned char y) { return std::tolower(x) < std::tolower(y); });
     }
 
-    // ─────────────────────────────────────────────
-    // Utilitaires
-    // ─────────────────────────────────────────────
+    
+    
+    
     String Utilities::ExtractDisplayName(const fs::path& path)
     {
         if (path.empty())

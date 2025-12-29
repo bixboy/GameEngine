@@ -27,17 +27,17 @@ namespace BixEngine::Gui
         void Draw() override;
 
     private:
-        // ----------------------------------------------------------------------
-        // Sources de données externes (fournies par l’éditeur)
-        // ----------------------------------------------------------------------
-        std::function<Game::SceneManager*()> sceneManagerProvider_; // Optional fallback
-        std::function<Game::Scene*()>        sceneProvider_;        // Primary source
+        
+        
+        
+        std::function<Game::SceneManager*()> sceneManagerProvider_; 
+        std::function<Game::Scene*()>        sceneProvider_;        
         std::function<Game::Actor*()>        selectedActorGetter_;
         std::function<void(Game::Actor*)>    selectedActorSetter_;
 
-        // ----------------------------------------------------------------------
-        // Sections affichées dans l’inspecteur (Général, Transform, Components, plugins...)
-        // ----------------------------------------------------------------------
+        
+        
+        
         ActorInspector::ActorInspectorSectionList sections_;
         std::size_t registeredFactoryCount_{0};
     };

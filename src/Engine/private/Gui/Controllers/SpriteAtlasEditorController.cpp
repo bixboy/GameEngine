@@ -72,7 +72,7 @@ namespace BixEngine::Gui
             state->animations = std::move(animations);
             const float safeColumns = std::max(0.0f, definition.columns);
             const float safeRows = std::max(0.0f, definition.rows);
-            // Size is total integer cells required
+            
             state->frameSelection.assign(static_cast<size_t>(std::ceil(safeColumns) * std::ceil(safeRows)), false);
             if (!state->animations.empty())
             {
@@ -101,29 +101,29 @@ namespace BixEngine::Gui
             return;
         }
 
-        // ────────────── Global error ──────────────
+        
         if (!state->error.IsEmpty())
             Utils::DrawErrorMessage(std::string(state->error.View()));
 
-        // ────────────── Atlas section ──────────────
+        
         ImGui::TextUnformatted("🧩 Sprite Atlas Overview");
         ImGui::Separator();
 
         DrawAtlasPreview(*state);
 
-        // Affiche dimensions et paramètres du layout
+        
         ImGui::Spacing();
         ImGui::Text("Texture: %s", state->textureAbsolutePath.filename().string().c_str());
         ImGui::Text("Grid: %.2f cols × %.2f rows", state->definition.columns, state->definition.rows);
         ImGui::Text("Margin: %d  |  Padding: %d", state->definition.margin, state->definition.padding);
         ImGui::Separator();
 
-        // ────────────── Animation section ──────────────
+        
         ImGui::TextUnformatted("🎞️ Animations");
         ImGui::Separator();
         DrawAnimationSection(*state);
 
-        // ────────────── Save section ──────────────
+        
         ImGui::Spacing();
         ImGui::Separator();
         DrawSaveSection(*state);
@@ -211,11 +211,11 @@ namespace BixEngine::Gui
 
                 const auto& settings = EditorSettings::Get();
                 const ImU32 accentColor = ImGui::ColorConvertFloat4ToU32(settings.ThemeAccentColor);
-                const ImU32 accentTransparent = (accentColor & 0x00FFFFFF) | 0x46000000; // Alpha 70
+                const ImU32 accentTransparent = (accentColor & 0x00FFFFFF) | 0x46000000; 
                 const ImU32 hoverColor = IM_COL32(255, 255, 255, 25);
                 const ImU32 gridColor = IM_COL32(255, 255, 255, 90);
 
-                // surbrillance sélection / hover
+                
                 if (sel)
                     draw->AddRectFilled(min, max, accentTransparent);
                 else if (ImGui::IsMouseHoveringRect(min, max))
@@ -228,14 +228,14 @@ namespace BixEngine::Gui
             }
         }
 
-        // Gestion clic
+        
         if (hovered >= 0 && ImGui::IsItemHovered())
         {
             const bool append = ImGui::GetIO().KeyShift;
             if (ImGui::IsMouseClicked(ImGuiMouseButton_Left))
                 ToggleFrameSelection(state, hovered, append);
 
-            // infobulle frame
+            
             const int col = hovered % iCols;
             const int row = hovered / iCols;
             ImGui::BeginTooltip();
@@ -273,7 +273,7 @@ namespace BixEngine::Gui
             ImGui::TableSetupColumn("Details", ImGuiTableColumnFlags_WidthStretch, 0.7f);
             ImGui::TableNextColumn();
 
-            // Liste animations
+            
             if (ImGui::BeginChild("AnimList", ImVec2(0, 200), true))
             {
                 for (int i = 0; i < static_cast<int>(state.animations.size()); ++i)
@@ -292,7 +292,7 @@ namespace BixEngine::Gui
             }
             ImGui::EndChild();
 
-            // Détails
+            
             ImGui::TableNextColumn();
             if (!valid)
             {
@@ -350,7 +350,7 @@ namespace BixEngine::Gui
             return;
         }
 
-        // Reset au changement d’animation
+        
         if (state.previewAnimationIndex != state.activeAnimation)
         {
             state.previewAnimationIndex = state.activeAnimation;
@@ -363,7 +363,7 @@ namespace BixEngine::Gui
         float delta = io.DeltaTime;
         if (delta <= 0.f) delta = 1.f / 60.f;
 
-        // Frame stepping
+        
         if (state.previewPlaying && anim.frameRate > 0.f)
         {
             state.previewTimer += delta;
@@ -408,11 +408,11 @@ namespace BixEngine::Gui
 
         ImGui::Image(frameRef, dispSize, uv0, uv1);
 
-        // ───────────── Controls ─────────────
+        
         ImGui::Spacing();
         if (ImGui::Button(state.previewPlaying ? "⏸ Pause" : "▶ Play"))
         {
-            // Si on reprend après pause, reset le timer pour éviter freeze
+            
             if (!state.previewPlaying)
                 state.previewTimer = 0.f;
             state.previewPlaying = !state.previewPlaying;

@@ -1,14 +1,8 @@
--- ╔═════════════════════════════════════════════════════════════════════════════╗
--- ║                                                                             ║
--- ║   🧱  BixEngine — XMake Build Script                                        ║
--- ║                                                                             ║
--- ╚═════════════════════════════════════════════════════════════════════════════╝
-
 set_xmakever("3.0.4")
 add_rules("mode.debug", "mode.release")
 
 -- =============================================================================
--- 🛠️  CONFIGURATION
+-- CONFIGURATION
 -- =============================================================================
 local Config = {
     Name        = "BixEngine",
@@ -26,12 +20,8 @@ set_optimize("faster")
 
 add_requires("box2d")
 
--- Custom xmake directory
 add_moduledirs(path.join(os.projectdir(), Config.Tools, "xmake"))
 
--- =============================================================================
--- 🧩 SDK FINDER
--- =============================================================================
 local function find_sdk(name, default_inc, default_lib)
     local inc = get_config(name .. "_dir") or default_inc
     local lib = get_config(name .. "_lib_dir") or default_lib
@@ -48,9 +38,6 @@ local SDLImage_Include, SDLImage_Lib = find_sdk("sdl3_image",
     path.join(os.projectdir(), Config.ThirdParty, "SDL3_image/lib/x64")
 )
 
--- =============================================================================
--- ⚙️  UTILITIES
--- =============================================================================
 local function get_build_path(...)
     local mode = get_config("mode") or "debug"
     return path.join(Config.BuildRoot, os.host(), os.arch(), mode, ...)
@@ -59,7 +46,7 @@ end
 local Generated_Dir = get_build_path("Intermediate", "GeneratedHeaders")
 
 -- =============================================================================
--- 🔨 BUILD TOOLS
+-- BUILD TOOLS
 -- =============================================================================
 target("BixHeaderTool")
     set_kind("binary")
@@ -82,13 +69,11 @@ target("GenerateHeaders")
 target_end()
 
 -- =============================================================================
--- 📦 MODULE SYSTEM
+--  MODULE SYSTEM
 -- =============================================================================
-
--- 1. Discover Modules
 local Modules = {}
 local Global_Public_Includes = {
-    Config.Source, -- Allows includes like <Module/Public/Header.h> if needed, though specific paths are better
+    Config.Source,
     path.join(Config.ThirdParty),
     path.join(Config.ThirdParty, "ImGui"),
     path.join(Config.ThirdParty, "ImGui/backends"),
@@ -99,7 +84,6 @@ local Global_Public_Includes = {
     SDLImage_Include
 }
 
--- Scan for modules and collect their public folders
 for _, dir in ipairs(os.dirs(path.join(Config.Source, "*"))) do
     local mod_name = path.basename(dir)
     if mod_name ~= "Main" then
@@ -111,31 +95,24 @@ for _, dir in ipairs(os.dirs(path.join(Config.Source, "*"))) do
     end
 end
 
--- 2. Define Module Targets
 local Module_Target_Names = {}
 
 for _, mod in ipairs(Modules) do
     target(mod.name)
         set_kind("object")
         set_default(false)
-        set_group("Engine/Modules")  -- Visual Studio Group
+        set_group("Engine/Modules")
 
         add_deps("GenerateHeaders")
         
-        -- Config
         add_packages("box2d")
         add_includedirs(Global_Public_Includes, {public = true})
-        add_includedirs(path.join(mod.path, "private")) -- Private includes for this module
+        add_includedirs(path.join(mod.path, "private"))
         
-        -- Simplified robust logic: Add everything relative to module root
-        -- This ensures 'public' and 'private' are preserved in the path structure
-        
-        -- Add all C++ files recursively
         if #os.files(path.join(mod.path, "**.cpp")) > 0 then
             add_files(path.join(mod.path, "**.cpp"), {rootdir = mod.path})
         end
         
-        -- Add all Header files recursively
         if #os.files(path.join(mod.path, "**.h")) > 0 then
             add_headerfiles(path.join(mod.path, "**.h"), {rootdir = mod.path})
         end
@@ -145,7 +122,7 @@ for _, mod in ipairs(Modules) do
 end
 
 -- =============================================================================
--- 🏛️  BixEngine - Static Lib Aggregator
+-- BixEngine
 -- =============================================================================
 target("BixEngine")
     set_kind("static")
@@ -154,14 +131,12 @@ target("BixEngine")
 
     add_deps(table.unpack(Module_Target_Names))
     
-    -- Dependencies
     add_packages("box2d")
     add_linkdirs(SDL3_Lib, SDLImage_Lib)
     add_links("SDL3", "SDL3_image")
     
     add_includedirs(Global_Public_Includes, {public = true})
     
-    -- ImGui and other non-module thirdparty sources
     add_files(path.join(Config.ThirdParty, "ImGui/*.cpp"))
     add_files(path.join(Config.ThirdParty, "ImGui/backends/imgui_impl_sdl3.cpp"))
     add_files(path.join(Config.ThirdParty, "ImGui/backends/imgui_impl_sdlrenderer3.cpp"))
@@ -169,7 +144,7 @@ target("BixEngine")
 target_end()
 
 -- =============================================================================
--- 🏁 BixMain - Entry Point Lib
+-- BixMain
 -- =============================================================================
 target("BixMain")
     set_kind("object")
@@ -179,13 +154,12 @@ target("BixMain")
     add_files(path.join(Config.Source, "Main/private/**.cpp"))
     add_includedirs(Global_Public_Includes)
     
-    -- Basic deps
     add_packages("box2d")
     add_includedirs(SDL3_Include, SDLImage_Include)
 target_end()
 
 -- =============================================================================
--- 🚀 BixRun - The Executable
+--  BixRun 
 -- =============================================================================
 target("BixRun")
     set_kind("binary")
@@ -199,15 +173,12 @@ target("BixRun")
     add_linkdirs(SDL3_Lib, SDLImage_Lib)
     add_links("SDL3", "SDL3_image")
 
-    -- 📜 Content Scripts (Game Code)
     local content_src = path.join(get_build_path(), Config.Content)
     if os.isdir(content_src) then
-         -- Add CPP files
          if #os.files(path.join(content_src, "**.cpp")) > 0 then
              add_files(path.join(content_src, "**.cpp")) 
          end
 
-         -- Add Header files for IDE visibility
          if #os.files(path.join(content_src, "**.h")) > 0 then
             add_headerfiles(path.join(content_src, "**.h"))
          end
@@ -216,7 +187,6 @@ target("BixRun")
          print("Found Content Scripts: " .. content_src)
     end
     
-    -- Copy DLLs to output
     after_build(function(t)
         local out_dir = path.directory(t:targetfile())
         os.cp(path.join(SDL3_Lib, "SDL3.dll"), out_dir)
@@ -225,7 +195,7 @@ target("BixRun")
 target_end()
 
 -- =============================================================================
--- 🧹 TASKS
+-- TASKS
 -- =============================================================================
 task("regen")
     on_run(function()

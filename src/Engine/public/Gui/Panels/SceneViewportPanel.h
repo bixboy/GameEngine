@@ -29,7 +29,7 @@ namespace BixEngine::Gui
             ImVec2 DragStartViewportPos{};
             float InitialDragAngle{0.0f};
 
-            // Captured Transform
+            
             struct InitialTransformData
             {
                 float PosX, PosY;
@@ -42,25 +42,25 @@ namespace BixEngine::Gui
         void HandleGizmoInteraction(class Game::Actor* actor, const ImVec2& screenOffset, const ImVec2& viewportMousePos, const ImVec2& viewScale);
         void HandleSelection(const ImVec2& viewportMousePos);
 
-        // --- Helpers ---
-        // Calculates the 4 World Space corners of the Actor's bounding box (OBB)
+        
+        
         void GetActorWorldCorners(class Game::Actor* actor, Math::Vector2<float>* outCorners) const;
         
-        // Projects World Point to Screen Space
+        
         ImVec2 WorldToScreen(const Math::Vector2<float>& worldPos, const ImVec2& screenOffset, float viewScale) const;
         
-        // Rotates a 2D point (x,y) by radians
+        
         static ImVec2 RotateVector(const ImVec2& vec, float radians);
         
-        // Calculates distance from Point P to Line Segment AB
+        
         static float DistanceToSegment(const ImVec2& P, const ImVec2& A, const ImVec2& B);
 
-        // Individual Gizmo Drawers
+        
         void DrawTranslateGizmo(ImDrawList* drawList, const ImVec2& screenCenter, float rotationRad) const;
         void DrawRotateGizmo(ImDrawList* drawList, const ImVec2& screenCenter, float rotationRad) const;
         void DrawScaleGizmo(ImDrawList* drawList, const ImVec2* screenCorners, float rotationRad) const;
 
-        // Hit Testers
+        
         DragType CheckGizmoHit(const ImVec2& mouseScreen, const ImVec2& screenCenter, const ImVec2* screenCorners, float rotationRad) const;
     };
 }

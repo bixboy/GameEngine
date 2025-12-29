@@ -3,9 +3,7 @@
 
 namespace BixEngine::Gui::Widgets
 {
-    /**
-     * \brief Helper RAII pour créer des sections ImGui collapsibles avec une syntaxe fluide.
-     */
+     
     class Section
     {
     public:

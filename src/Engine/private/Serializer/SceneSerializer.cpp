@@ -20,9 +20,9 @@ namespace BixEngine::Serialization
         constexpr std::uint32_t kSceneBinaryVersion = 1;
     }
 
-    // ==============================================================================
-    // SAVE / LOAD
-    // ==============================================================================
+    
+    
+    
 
     bool SceneSerializer::SaveBinary(const Game::Scene& scene, const std::filesystem::path& filePath)
     {
@@ -48,27 +48,27 @@ namespace BixEngine::Serialization
         return DeserializeBinary(scene, file);
     }
 
-    // ==============================================================================
-    // SERIALIZE
-    // ==============================================================================
+    
+    
+    
 
     bool SceneSerializer::SerializeBinary(const Game::Scene& scene, std::ostream& stream)
     {
         BinaryWriter writer(stream);
 
-        // 1. Header
+        
         if (!writer.WriteUint32(kSceneBinaryVersion))
             return false;
         
         if (!writer.WriteString(scene.GetName()))
             return false;
 
-        // 2. Actors Count
+        
         const auto& actors = scene.GetActors();
         if (!writer.WriteUint32(static_cast<uint32_t>(actors.size())))
             return false;
 
-        // 3. Actors Data
+        
         for (const auto& actor : actors)
         {
             if (!writer.WriteString(actor->GetTypeName()))
@@ -86,9 +86,9 @@ namespace BixEngine::Serialization
         return writer.Good();
     }
 
-    // ==============================================================================
-    // DESERIALIZE
-    // ==============================================================================
+    
+    
+    
 
     bool SceneSerializer::DeserializeBinary(Game::Scene& scene, std::istream& stream)
     {
@@ -109,9 +109,9 @@ namespace BixEngine::Serialization
             return false;
         
         scene.Rename(std::move(sceneName));
-        // We do not have the file path passed to DeserializeBinary easily unless we modify signature
-        // But LoadBinary calls DeserializeBinary.
-        // Let's modify LoadBinary to set it.
+        
+        
+        
         scene.ClearActors();
 
         std::uint32_t actorCount = 0;
@@ -131,7 +131,7 @@ namespace BixEngine::Serialization
                 return false;
             }
 
-            // Chargement des données de l'acteur
+            
             try
             {
                 actor->DeserializeBinary(stream);
@@ -144,8 +144,8 @@ namespace BixEngine::Serialization
 
             if (!stream)
             {
-                // Check if it's just EOF (which might be fine if file ended exactly after last actor)
-                // But generally, DeserializeBinary reads components etc, so it should know where it ends.
+                
+                
                 bool eof = stream.eof();
                 bool fail = stream.fail();
                 bool bad = stream.bad();
@@ -156,8 +156,8 @@ namespace BixEngine::Serialization
             scene.AddActor(std::move(actor));
         }
 
-        // 4. Link Hierarchy
-        // We need a lookup map or we can just search linear since we don't have a UUID map yet
+        
+        
         const auto& allActors = scene.GetActors();
         for (const auto& actorPtr : allActors)
         {
@@ -166,7 +166,7 @@ namespace BixEngine::Serialization
             const String& pUUID = actorPtr->GetLoadedParentUUID();
             if (!pUUID.IsEmpty())
             {
-                // Find parent
+                
                 auto it = std::find_if(allActors.begin(), allActors.end(), 
                     [&](const std::unique_ptr<Game::Actor>& other)
                     {
@@ -187,9 +187,9 @@ namespace BixEngine::Serialization
         return reader.Good();
     }
 
-    // ==============================================================================
-    // FACTORY SYSTEM
-    // ==============================================================================
+    
+    
+    
 
     std::unique_ptr<Game::Actor> SceneSerializer::CreateActor(const String& typeName)
     {
@@ -289,7 +289,7 @@ namespace BixEngine::Serialization
             return std::make_unique<Game::Player>(Math::Transform()); 
         });
         
-        // Alias for short name compatibility
+        
         RegisterIfMissing("Player", []
         { 
             return std::make_unique<Game::Player>(Math::Transform()); 

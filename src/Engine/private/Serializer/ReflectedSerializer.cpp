@@ -1,4 +1,4 @@
-﻿#include "Serializer/ReflectedSerializer.h"
+#include "Serializer/ReflectedSerializer.h"
 #include "Core/ClassInfo.h"
 #include "Core/PropertyInfo.h"
 #include "Debug/Logger.h"
@@ -29,19 +29,17 @@ namespace BixEngine::Serialization
     template <typename TResource>
     static String GetResourcePath(const PropertyInfo& prop, const void* instance)
     {
-        // std::shared_ptr<T>
-        if (prop.TypeName.find("shared_ptr") != std::string::npos)
-        {
-            const auto& ptr = prop.Get<std::shared_ptr<TResource>>(instance);
-            return ptr ? ptr->GetPath() : String("");
-        }
-        // T* (Raw Pointer)
+        
         if (prop.TypeName.find("*") != std::string::npos)
         {
             const auto* ptr = prop.Get<TResource*>(instance);
             return ptr ? ptr->GetPath() : String("");
         }
-        return "";
+
+        
+        
+        const auto& ptr = prop.Get<std::shared_ptr<TResource>>(instance);
+        return ptr ? ptr->GetPath() : String("");
     }
 
     template <typename TResource>
@@ -49,30 +47,30 @@ namespace BixEngine::Serialization
     {
         auto resource = ResourceManager::Get().Get<TResource>(path);
 
-        if (prop.TypeName.find("shared_ptr") != std::string::npos)
-        {
-            // const_cast nécessaire car Get() retourne const& par défaut sur PropertyInfo const
-            const_cast<PropertyInfo&>(prop).Get<std::shared_ptr<TResource>>(instance) = resource;
-        }
-        else if (prop.TypeName.find("*") != std::string::npos)
+        if (prop.TypeName.find("*") != std::string::npos)
         {
             const_cast<PropertyInfo&>(prop).Get<TResource*>(instance) = resource.get();
         }
+        else
+        {
+            
+            const_cast<PropertyInfo&>(prop).Get<std::shared_ptr<TResource>>(instance) = resource;
+        }
     }
 
-    // ==============================================================================
-    // SERIALIZE
-    // ==============================================================================
-    // Helper to skip values of unknown properties based on their type
+    
+    
+    
+    
     static bool SkipValue(Utils::BinaryReader& reader, const std::string& type)
     {
-        // Primitives
+        
         if (type.compare("int") == 0 || type.compare("int32_t") == 0) { int v; return reader.ReadPrimitive(v); }
         if (type.compare("float") == 0) { float v; return reader.ReadPrimitive(v); }
         if (type.compare("bool") == 0) { bool v; return reader.ReadPrimitive(v); }
         if (type.compare("SDL_Color") == 0) { SDL_Color v; return reader.ReadPrimitive(v); }
         
-        // Strings & Resources (Saved as Path String)
+        
         if (type.compare("String") == 0 || type.compare("std::string") == 0 || 
             IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || 
             IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
@@ -80,7 +78,7 @@ namespace BixEngine::Serialization
             String v; return reader.ReadString(v);
         }
 
-        // TArray<TSubclassOf<T>>
+        
         if (type.find("TArray<TSubclassOf<") != std::string::npos)
         {
             uint32_t count = 0;
@@ -93,34 +91,34 @@ namespace BixEngine::Serialization
             return true;
         }
 
-        // TSubclassOf<T> - Treated as String
+        
         if (type.find("TSubclassOf<") != std::string::npos)
         {
             String v; return reader.ReadString(v);
         }
 
-        // Math
+        
         if (type.find("Vector3") != std::string::npos) { Math::Vector3 v; return reader.ReadPrimitive(v.x) && reader.ReadPrimitive(v.y) && reader.ReadPrimitive(v.z); }
         if (type.find("Vector2") != std::string::npos) { Math::Vector2<float> v; return reader.ReadPrimitive(v.x) && reader.ReadPrimitive(v.y); }
         if (type.find("Rect") != std::string::npos) { Math::Rect v; return reader.ReadPrimitive(v.X) && reader.ReadPrimitive(v.Y) && reader.ReadPrimitive(v.Width) && reader.ReadPrimitive(v.Height); }
 
-        // Pointers (e.g. Actor*, Component*) 
+        
         return false;
     }
 
-    // ==============================================================================
-    // SERIALIZE
-    // ==============================================================================
+    
+    
+    
     bool ReflectedSerializer::Serialize(const void* instance, const ClassInfo* info, Utils::BinaryWriter& writer, int depth)
     {
         if (!instance || !info) return false;
         if (depth > 20) return false;
 
-        // 1. Parent Class
+        
         if (info->SuperClass && !Serialize(instance, info->SuperClass, writer, depth + 1)) 
             return false;
 
-        // 2. Count Valid Properties FIRST to match header
+        
         uint32_t validPropCount = 0;
         for (const auto& prop : info->Properties)
         {
@@ -139,7 +137,7 @@ namespace BixEngine::Serialization
 
         if (!writer.WriteUint32(validPropCount)) return false;
 
-        // 3. Properties Data
+        
         for (const auto& prop : info->Properties)
         {
             const std::string& type = prop.TypeName;
@@ -158,11 +156,11 @@ namespace BixEngine::Serialization
                 continue;
             }
 
-            // Write Metadata
+            
             if (!writer.WriteString(prop.Name)) return false;
             if (!writer.WriteString(prop.TypeName)) return false;
 
-            // Write Value
+            
             #define SERIALIZE_PRIMITIVE(T, TypeString) \
                 if (type.compare(TypeString) == 0) { if (!writer.WritePrimitive(prop.Get<T>(instance))) return false; continue; }
 
@@ -197,7 +195,7 @@ namespace BixEngine::Serialization
                 continue;
             }
 
-            // Resources
+            
             if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
             {
                 String path = "";
@@ -206,6 +204,7 @@ namespace BixEngine::Serialization
                 else if (IsResourceType(type, "SpriteAtlas")) 
                 {
                     path = GetResourcePath<SpriteAtlas>(prop, instance);
+                    LOG_INFO("SERIALIZER_DEBUG: Writing SpriteAtlas '" + prop.Name + "' Path: '" + path + "'");
                 }
                 else if (IsResourceType(type, "AudioContainer")) path = GetResourcePath<AudioContainer>(prop, instance);
                 
@@ -213,7 +212,7 @@ namespace BixEngine::Serialization
                 continue;
             }
 
-            // TArray Support
+            
             if (prop.ArrayFunctions)
             {
                 std::size_t size = prop.ArrayFunctions->GetSize(instance);
@@ -227,13 +226,13 @@ namespace BixEngine::Serialization
                 continue;
             }
 
-            // TSubclassOf Support
-            // Note: This must come AFTER TArray because TArray also contains "TSubclassOf", but TArray has ArrayFunctions set.
-            // If it's a single TSubclassOf, ArrayFunctions is likely null.
+            
+            
+            
             if (type.find("TSubclassOf<") != std::string::npos)
             {
-                // Unsafe cast to generic TSubclassOf<int> to access the string path
-                // This assumes standard layout where `path_` is the only member.
+                
+                
                 const auto& subclass = prop.Get<TSubclassOf<int>>(instance);
                 if (!writer.WriteString(subclass.GetAssetPath())) return false;
                 continue;
@@ -246,9 +245,9 @@ namespace BixEngine::Serialization
         return true;
     }
 
-    // ==============================================================================
-    // DESERIALIZE
-    // ==============================================================================
+    
+    
+    
     bool ReflectedSerializer::Deserialize(void* instance, const ClassInfo* info, Utils::BinaryReader& reader, int depth)
     {
         if (!instance || !info) return false;
@@ -257,11 +256,11 @@ namespace BixEngine::Serialization
         if (info->SuperClass && !Deserialize(instance, info->SuperClass, reader, depth + 1)) 
             return false;
 
-        // 1. Read Property Count
+        
         uint32_t propCount = 0;
         if (!reader.ReadUint32(propCount)) return false;
 
-        // 3. Properties Data
+        
         for (uint32_t i = 0; i < propCount; ++i)
         {
             String propName;
@@ -284,7 +283,7 @@ namespace BixEngine::Serialization
 
             if (prop)
             {
-                 // Type Safe Check?
+                 
                  if (prop->TypeName != typeName.ToStdString())
                  {
                      LOG_WARNING("ReflectedSerializer: Type Mismatch for '" + propName.ToStdString() + "'. File: " + typeName.ToStdString() + ", Code: " + prop->TypeName + ". Skipping.");
@@ -345,7 +344,11 @@ namespace BixEngine::Serialization
                     {
                         if (IsResourceType(type, "Texture")) SetResourceFromPath<Texture>(*prop, instance, path);
                         else if (IsResourceType(type, "AudioClip")) SetResourceFromPath<AudioClip>(*prop, instance, path);
-                        else if (IsResourceType(type, "SpriteAtlas")) SetResourceFromPath<SpriteAtlas>(*prop, instance, path);
+                        else if (IsResourceType(type, "SpriteAtlas")) 
+                        {
+                            LOG_INFO("SERIALIZER_DEBUG: Reading SpriteAtlas '" + propName + "' Path: '" + path + "'");
+                            SetResourceFromPath<SpriteAtlas>(*prop, instance, path);
+                        }
                         else if (IsResourceType(type, "AudioContainer")) SetResourceFromPath<AudioContainer>(*prop, instance, path);
                     }
                     continue;
@@ -365,18 +368,18 @@ namespace BixEngine::Serialization
                     continue;
                 }
 
-                // TSubclassOf Support (Generic reading via int alias)
+                
                 if (type.find("TSubclassOf<") != std::string::npos)
                 {
                     String path;
                     if (!reader.ReadString(path)) return false;
                     
-                    // Unsafe cast to generic TSubclassOf<int>
+                    
                     const_cast<PropertyInfo*>(prop)->Get<TSubclassOf<int>>(instance).GetAssetPath() = path;
                     continue;
                 }
                 
-                // Fallback catch-all
+                
                  LOG_ERROR("ReflectedSerializer: Matched property '" + propName + "' type='" + type + "' but no logic to read it. Desync imminent.");
                  return false;
 

@@ -28,6 +28,7 @@ namespace BixEngine::Game
                     return info;
             }
             
+            LOG_WARNING("Actor::FindClassInfo: Failed to find class info for '" + typeName + "'");
             return nullptr;
         }
 
@@ -57,9 +58,9 @@ namespace BixEngine::Game
         }
     }
 
-    // ==============================================================================
-    // CONSTRUCTEURS & LIFECYCLE
-    // ==============================================================================
+    
+    
+    
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
     {
@@ -106,9 +107,9 @@ namespace BixEngine::Game
             comp->Render(renderer);
     }
 
-    // ==============================================================================
-    // PARENTS / ENFANTS
-    // ==============================================================================
+    
+    
+    
 
     void Actor::SetParent(Actor* parent)
     {
@@ -157,9 +158,9 @@ namespace BixEngine::Game
         return false;
     }
 
-    // ==============================================================================
-    // COMPOSANTS
-    // ==============================================================================
+    
+    
+    
 
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
@@ -192,9 +193,9 @@ namespace BixEngine::Game
         return false;
     }
 
-    // ==============================================================================
-    // SÉRIALISATION
-    // ==============================================================================
+    
+    
+    
 
     std::unique_ptr<Actor> Actor::ClonePrototype() const
     {
@@ -231,7 +232,14 @@ namespace BixEngine::Game
             writer.WriteString(typeName);
 
             if (const auto* info = FindClassInfo(typeName))
+            {
+                
                 Serialization::ReflectedSerializer::Serialize(comp.get(), info, writer);
+            }
+            else
+            {
+                LOG_ERROR("Actor::SerializeComponents: SKIPPING '" + typeName + "' - No ClassInfo found!");
+            }
         }
     }
 

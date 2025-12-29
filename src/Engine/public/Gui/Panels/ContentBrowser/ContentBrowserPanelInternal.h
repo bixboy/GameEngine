@@ -14,7 +14,7 @@ namespace BixEngine::Gui
 
     void RenderPopups(ContentBrowserState& state, String& selectedEntry, PopupRequestState& requestPopups);
 
-    // Core Logic
+    
     bool RefreshDirectoryCache(ContentBrowserState& state);
     bool DeleteScriptFiles(const ContentEntry& entry, String& error);
 }

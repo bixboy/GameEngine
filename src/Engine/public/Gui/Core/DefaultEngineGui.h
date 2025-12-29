@@ -16,9 +16,9 @@ namespace BixEngine::Gui
 {
     class GuiManager;
 
-    // ==========================================================================
-    //  Contexte global partagé par tous les panneaux
-    // ==========================================================================
+    
+    
+    
 
     struct DefaultEngineGuiContext
     {
@@ -36,9 +36,9 @@ namespace BixEngine::Gui
         bool bEnableGui{true};
     };
 
-    // ==========================================================================
-    //  Tous les panneaux créés
-    // ==========================================================================
+    
+    
+    
 
     struct DefaultEngineGuiPanels
     {
@@ -58,7 +58,7 @@ namespace BixEngine::Gui
     public:
         DefaultEngineGuiPanelManager(GuiManager& guiManager, const DefaultEngineGuiContext& context);
 
-        /** Crée tous les panneaux, les enregistre, les retourne. */
+         
         DefaultEngineGuiPanels CreatePanels();
 
     private:

@@ -49,13 +49,13 @@ namespace BixEngine::Core
 
             bool consumed = false;
 
-            // GUI reçoit l'événement
+            
             if (guiModule_)
             {
                 consumed = guiModule_->ProcessEvent(event);
             }
 
-            // Si non consommé
+            
             if (!consumed && subsystems_)
             {
                 subsystems_->ProcessEvent(event);
@@ -65,7 +65,7 @@ namespace BixEngine::Core
                 subsystems_->ResetInput();
             }
 
-            // Gestion de la fermeture SDL
+            
             if (event.type == SDL_EVENT_QUIT)
                 running = false;
         }

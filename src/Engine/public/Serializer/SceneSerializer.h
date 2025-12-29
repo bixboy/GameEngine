@@ -18,15 +18,15 @@ namespace BixEngine::Serialization
     public:
         using ActorFactory = std::function<std::unique_ptr<BixEngine::Game::Actor>()>;
 
-        // --- File System IO ---
+        
         static bool SaveBinary(const BixEngine::Game::Scene& scene, const std::filesystem::path& filePath);
         static bool LoadBinary(BixEngine::Game::Scene& scene, const std::filesystem::path& filePath);
 
-        // --- Memory Stream IO ---
+        
         static bool SerializeBinary(const BixEngine::Game::Scene& scene, std::ostream& stream);
         static bool DeserializeBinary(BixEngine::Game::Scene& scene, std::istream& stream);
 
-        // --- Factory Management ---
+        
         static void RegisterActorFactory(String typeName, ActorFactory factory);
         static void UnregisterActorFactory(const String& typeName);
         

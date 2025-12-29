@@ -33,8 +33,8 @@ namespace BixEngine::Gui
 
     ActorInspectorPanel::ActorInspectorPanel(const DefaultEngineGuiContext& context)
         : GuiPanelBase("actor_inspector"),
-          sceneManagerProvider_(context.sceneManagerProvider), // Keep reference if provided
-          sceneProvider_(context.sceneProvider),               // Use direct provider if available
+          sceneManagerProvider_(context.sceneManagerProvider), 
+          sceneProvider_(context.sceneProvider),               
           selectedActorGetter_(context.selectedActorGetter),
           selectedActorSetter_(context.selectedActorSetter),
           sections_(ActorInspector::BuildActorInspectorSections()),

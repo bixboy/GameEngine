@@ -23,9 +23,9 @@ using namespace BixEngine::Gui::Utils;
 namespace fs = std::filesystem;
 
 
-// ============================================================================
-// CLASS IMPLEMENTATION
-// ============================================================================
+
+
+
 CreatePrefabDialog::CreatePrefabDialog(ContentBrowserState& state, String& selectedEntry) : ModalDialog(state, selectedEntry, "ContentBrowserCreatePrefab")
 {
     ClearSelection();
@@ -63,7 +63,7 @@ void CreatePrefabDialog::SetSelectedScript(const std::string& className, const s
     selectedIsComponent_ = isComponent;
 }
 
-// ============================================================================
+
 void CreatePrefabDialog::DrawContent()
 {
     ContentBrowserUtils::EnsureScriptsDirectoryExists(state_);
@@ -202,7 +202,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     bool makeComponent = selectedIsComponent_ && !selectedIsActor_;
     const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
-    // const char* type = makeComponent ? "Component" : "Actor"; // Unused warning fix
+    
 
     std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
     if (baseName.empty())
@@ -220,7 +220,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     LOG_INFO("CreatePrefabDialog: Creating Actor instance of type: " + selectedClass_.ToStdString());
     
-    // Create the Actor using the SceneSerializer factory (ensures default components)
+    
     auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(selectedClass_.ToStdString().c_str());
     
     if (!newActor)
@@ -230,7 +230,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     newActor->SetName(baseName);
     
-    // Debug: Log component count
+    
     LOG_INFO("CreatePrefabDialog: Created actor has " + std::to_string(newActor->GetComponents().size()) + " components.");
 
     LOG_INFO("CreatePrefabDialog: Serializing directly to Prefab V2...");

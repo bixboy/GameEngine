@@ -18,13 +18,13 @@ namespace BixEngine::Gui
         void DrawContent() override;
 
     private:
-        // UI helpers
+        
         void DrawSearchBar();
         void DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter);
         void DrawDetailsSectionUI();
         bool DrawActionButtons();
 
-        // Logic helpers
+        
         void ClearSelection();
         void SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath);
 

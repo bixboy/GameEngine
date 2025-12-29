@@ -15,9 +15,7 @@ namespace BixEngine::Gui
     class GuiPanel;
     class GuiPanelController;
 
-    /**
-     * @brief Gestion des éditeurs d'assets ouverts.
-     */
+     
     class AssetEditorRegistry
     {
     public:

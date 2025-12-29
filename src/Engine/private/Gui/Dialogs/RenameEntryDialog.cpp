@@ -7,9 +7,9 @@
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
 
-// ============================================================================
-//  Constructor / Setup
-// ============================================================================
+
+
+
 RenameEntryDialog::RenameEntryDialog(ContentBrowserState& state, String& selectedEntry)
     : ModalDialog(state, selectedEntry, "ContentBrowserRenameEntry"), isScriptGroup_(false)
 {
@@ -39,9 +39,9 @@ void RenameEntryDialog::Open(const path& targetPath, const path& secondaryPath, 
     ModalDialog::Open();
 }
 
-// ============================================================================
-//  Utility Helpers
-// ============================================================================
+
+
+
 void RenameEntryDialog::ResetState()
 {
     renameError_.Clear();
@@ -50,12 +50,12 @@ void RenameEntryDialog::ResetState()
     isScriptGroup_ = false;
 }
 
-// ============================================================================
-//  DrawContent (UI)
-// ============================================================================
+
+
+
 void RenameEntryDialog::DrawContent()
 {
-    // --- Description ---
+    
     if (!targetPath_.empty())
     {
         String label = targetPath_.filename().generic_string().c_str();
@@ -67,13 +67,13 @@ void RenameEntryDialog::DrawContent()
         DrawDescriptionText("Rename the selected entry.");
     }
 
-    // --- Input Field ---
+    
     bool renameTriggered = InputTextWithLabel("New name", renameBuffer_, IM_ARRAYSIZE(renameBuffer_), ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
 
     if (!renameError_.IsEmpty())
         DrawErrorMessage(renameError_.ToStdString());
 
-    // --- Confirm / Cancel Buttons ---
+    
     bool confirm = DrawConfirmButtons("Rename", "Cancel", []{},
         [&]
         {
@@ -84,7 +84,7 @@ void RenameEntryDialog::DrawContent()
     if (confirm) renameTriggered = true;
     if (!renameTriggered) return;
 
-    // --- Validate Input ---
+    
     String newNameStr = renameBuffer_;
     if (newNameStr.IsEmpty())
     {
@@ -104,7 +104,7 @@ void RenameEntryDialog::DrawContent()
         return;
     }
 
-    // --- Execute Rename ---
+    
     const bool success = isScriptGroup_ ? HandleScriptRename(newNameStr) : HandleSingleRename(newNameStr);
 
     if (success)
@@ -114,9 +114,9 @@ void RenameEntryDialog::DrawContent()
     }
 }
 
-// ============================================================================
-//  Handle Script Rename (Header + Source)
-// ============================================================================
+
+
+
 bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
 {
     path headerOld = targetPath_;
@@ -127,7 +127,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
 
     std::string newBaseName = newNameStr.ToStdString();
 
-    // Strip extension if user included it
+    
     auto StripExt = [&](const path& p)
     {
         if (p.empty())
@@ -148,7 +148,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     if (newBaseName == currentBaseName)
         return true;
 
-    // Compute new paths
+    
     path parentDir = !headerOld.empty() ? headerOld.parent_path() : sourceOld.parent_path();
     if (parentDir.empty())
         parentDir = state_.current;
@@ -159,7 +159,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     if ((!newHeader.empty() && fs::exists(newHeader)) || (!newSource.empty() && fs::exists(newSource)))
         return FilesUtils::Utilities::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
 
-    // Rename with rollback on failure
+    
     std::vector<std::pair<path, path>> toRename;
 
     if (!headerOld.empty())
@@ -191,7 +191,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
         renamed.push_back({oldP, newP});
     }
 
-    // Success
+    
     selectedEntry_ = (parentDir / newBaseName).generic_string().c_str();
     renameError_.Clear();
     targetPath_ = newHeader;
@@ -201,9 +201,9 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     return true;
 }
 
-// ============================================================================
-//  Handle Single Rename (File / Directory)
-// ============================================================================
+
+
+
 bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
 {
     path oldPath = targetPath_;
@@ -223,7 +223,7 @@ bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
     if (!FilesUtils::Utilities::TryRename(oldPath, newPath, false, renameError_))
         return false;
 
-    // Success
+    
     if (selectedEntry_.View() == oldPath.generic_string())
         selectedEntry_ = newPath.generic_string().c_str();
 

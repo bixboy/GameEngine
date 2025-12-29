@@ -15,53 +15,36 @@ namespace BixEngine::Core
     class Application
     {
     public:
-        // config de l'application
+        
         using Config = ApplicationConfig;
 
         explicit Application(Config config = {});
         ~Application();
 
-        Application(const Application&) = delete; // constructeur de copie
-        Application& operator=(const Application&) = delete; // opérateur d'affectation par copie
+        Application(const Application&) = delete; 
+        Application& operator=(const Application&) = delete; 
 
-        Application(Application&&) noexcept = delete; // constructeur de move
-        Application& operator=(Application&&) noexcept = delete; // opérateur d'affectation par move
+        Application(Application&&) noexcept = delete; 
+        Application& operator=(Application&&) noexcept = delete; 
 
 
-        /**
-         * Appelle l'initialisation des sous-systèmes via EngineBootstrap si nécessaire.
-         * Idempotent si EngineBootstrap::InitializeAll() est idempotent.
-         * @return true si l'engine est prêt (IsReady()).
-         */
+         
         bool Initialize();
 
-        /**
-         * Indique si une scène est déjà chargée.
-         */
+         
         bool HasActiveScene() const;
 
 
 
-        /**
-         * Exécute la boucle principale (Tick) jusqu'à ce que IsRunning() devienne false.
-         * Assure un ShutdownAll() à la sortie.
-         */
+         
         void Run();
 
 
-        /**
-         * Arrêt explicite.
-         * Idempotent si ShutdownAll() est idempotent.
-         */
+         
         void Shutdown();
 
 
-        /**
-         * Construit/active une scène TScene via le bootstrap.
-         * Crée et initialise le bootstrap en lazy si besoin.
-         * @tparam TScene Doit dériver de Game::Scene.
-         * @return Référence sur la scène créée.
-         */
+         
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args);
 

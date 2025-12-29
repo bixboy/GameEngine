@@ -6,9 +6,9 @@
 using namespace BixEngine::Gui;
 using namespace BixEngine::Gui::Utils;
 
-// ─────────────────────────────────────────────────────────────
-// Constructor
-// ─────────────────────────────────────────────────────────────
+
+
+
 
 CreateFolderDialog::CreateFolderDialog(ContentBrowserState& state, String& selectedEntry)
     : ModalDialog(state, selectedEntry, "ContentBrowserCreateFolder")
@@ -18,9 +18,9 @@ CreateFolderDialog::CreateFolderDialog(ContentBrowserState& state, String& selec
     targetDir_.clear();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Open Dialog
-// ─────────────────────────────────────────────────────────────
+
+
+
 
 void CreateFolderDialog::Open(const path& targetDirectory)
 {
@@ -30,9 +30,9 @@ void CreateFolderDialog::Open(const path& targetDirectory)
     ModalDialog::Open();
 }
 
-// ─────────────────────────────────────────────────────────────
-// Main Draw
-// ─────────────────────────────────────────────────────────────
+
+
+
 
 void CreateFolderDialog::DrawContent()
 {
@@ -42,9 +42,9 @@ void CreateFolderDialog::DrawContent()
     DrawFooter();
 }
 
-// ─────────────────────────────────────────────────────────────
-// UI Elements 
-// ─────────────────────────────────────────────────────────────
+
+
+
 
 void CreateFolderDialog::DrawHeader()
 {
@@ -90,9 +90,9 @@ void CreateFolderDialog::DrawFooter()
     }
 }
 
-// ─────────────────────────────────────────────────────────────
-// Folder Creation Logic
-// ─────────────────────────────────────────────────────────────
+
+
+
 
 bool CreateFolderDialog::TryCreate()
 {
@@ -112,7 +112,7 @@ bool CreateFolderDialog::TryCreate()
     if (!FilesUtils::Utilities::TryCreateDir(newFolderPath, folderError_))
         return false;
 
-    // Success
+    
     selectedEntry_ = newFolderPath.generic_string().c_str();
     folderError_.Clear();
     targetDir_.clear();
