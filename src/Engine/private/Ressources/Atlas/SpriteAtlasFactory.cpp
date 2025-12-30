@@ -4,14 +4,14 @@
 #include "Debug/Logger.h"
 
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     namespace
     {
-        void AppendError(String& storage, std::string_view message)
+        void AppendError(String& storage, const String& message)
         {
-            storage = message;
-            LOG_ERROR(String{"[SpriteAtlasFactory] "} + String(message));
+            storage = message.data();
+            LOG_ERROR(String("[SpriteAtlasFactory] " + String(message.data())));
         }
 
         [[nodiscard]] bool EnsureParentDirectory(const std::filesystem::path& targetPath, String& outError)
@@ -33,7 +33,7 @@ namespace BixEngine::resources
             std::filesystem::create_directories(directory, error);
             if (error)
             {
-                AppendError(outError, std::string{"Failed to create directory: "} + directory.generic_string());
+                AppendError(outError, "Failed to create directory: " + String(directory.generic_string().c_str()));
                 return false;
             }
 
@@ -42,7 +42,7 @@ namespace BixEngine::resources
 
         void SerializeDefinition(nlohmann::json& document, const SpriteAtlasDefinition& definition)
         {
-            document["texture"] = definition.texturePath.Std();
+            document["texture"] = definition.texturePath.c_str(); 
             document["columns"] = definition.columns;
             document["rows"] = definition.rows;
             document["padding"] = definition.padding;
@@ -55,7 +55,7 @@ namespace BixEngine::resources
             for (const auto& animation : animations)
             {
                 nlohmann::json animJson;
-                animJson["name"] = animation.name.Std();
+                animJson["name"] = animation.name.c_str();
                 animJson["frameRate"] = animation.frameRate;
                 animJson["loop"] = animation.loop;
 
@@ -81,7 +81,7 @@ namespace BixEngine::resources
 
         if (!std::filesystem::exists(params.texturePath))
         {
-            AppendError(outError, std::string{"Texture not found: "} + params.texturePath.generic_string());
+            AppendError(outError, "Texture not found: " + String(params.texturePath.generic_string().c_str()));
             return false;
         }
 
@@ -116,16 +116,17 @@ namespace BixEngine::resources
 
         if (std::filesystem::exists(atlasPath))
         {
-            AppendError(outError, std::string{"Atlas already exists: "} + atlasPath.generic_string());
+            AppendError(outError, "Atlas already exists: " + String(atlasPath.generic_string().c_str()));
             return false;
         }
 
         SpriteAtlasDefinition definition{};
-        definition.columns = params.columns;
-        definition.rows = params.rows;
+        definition.columns = static_cast<int>(params.columns);
+        definition.rows = static_cast<int>(params.rows);
         definition.padding = params.padding;
         definition.margin = params.margin;
-        definition.texturePath = params.texturePath.filename().generic_string();
+        
+        definition.texturePath = String(params.texturePath.filename().generic_string().c_str());
 
         nlohmann::json document;
         SerializeDefinition(document, definition);
@@ -134,7 +135,7 @@ namespace BixEngine::resources
         std::ofstream stream(atlasPath, std::ios::trunc);
         if (!stream.is_open())
         {
-            AppendError(outError, std::string{"Unable to create atlas file: "} + atlasPath.generic_string());
+            AppendError(outError, "Unable to create atlas file: " + String(atlasPath.generic_string().c_str()));
             return false;
         }
 
@@ -172,7 +173,7 @@ namespace BixEngine::resources
         std::ofstream stream(atlasPath, std::ios::trunc);
         if (!stream.is_open())
         {
-            AppendError(outError, std::string{"Unable to open atlas for writing: "} + atlasPath.generic_string());
+            AppendError(outError, "Unable to open atlas for writing: " + String(atlasPath.generic_string().c_str()));
             return false;
         }
 

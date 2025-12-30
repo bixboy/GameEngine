@@ -25,76 +25,63 @@ namespace BixEngine::Core
         explicit EngineBootstrap(ApplicationConfig config = {});
         ~EngineBootstrap();
 
-        
         EngineBootstrap(const EngineBootstrap&) = delete;
         EngineBootstrap& operator=(const EngineBootstrap&) = delete;
         EngineBootstrap(EngineBootstrap&&) noexcept = delete;
         EngineBootstrap& operator=(EngineBootstrap&&) noexcept = delete;
-
-
         
         bool InitializeAll();
 
-
+        // --- État ---
         
-        bool IsReady() const noexcept;
+        [[nodiscard]] bool IsReady() const noexcept;
+        [[nodiscard]] bool IsRunning() const noexcept;
+        [[nodiscard]] bool HasActiveScene() const;
 
-
-        
-        bool IsRunning() const noexcept;
-
-
-        
         void Tick();
 
-
-        
         void ShutdownAll() noexcept;
-
-
-        
         bool Restart();
 
-        
-        bool HasActiveScene() const;
-
-        
         template <typename TScene, typename... Args>
         TScene& EmplaceScene(Args&&... args)
         {
             return subsystems_.EmplaceScene<TScene>(std::forward<Args>(args)...);
         }
 
+        // --- Getters ---
+        
         [[nodiscard]] Graphics::Renderer* GetRenderer() const noexcept { return renderer_.get(); }
+        
         [[nodiscard]] EditorSettings& GetEditorSettings() noexcept { return editorSettings_; }
         [[nodiscard]] const EditorSettings& GetEditorSettings() const noexcept { return editorSettings_; }
 
+        void SetFrameLimiterEnabled(bool enabled) noexcept { enableFrameLimiter_ = enabled; }
+        void SetTargetFPS(float fps) noexcept { if (fps > 0.0f) targetFrameRate_ = fps; }
+        
+        [[nodiscard]] bool IsFrameLimiterEnabled() const noexcept { return enableFrameLimiter_; }
+        [[nodiscard]] float GetTargetFPS() const noexcept { return targetFrameRate_; }
+
     private:
-        
         bool CreateWindow();
-
-
-        
         bool CreateRenderer();
 
-
-        ApplicationConfig config_{};
+        ApplicationConfig config_;
         bool initialized_{false};
         bool running_{false};
 
+        bool enableFrameLimiter_{ true };
+        float targetFrameRate_{ 60.0f };
+
         SdlSystem sdlSystem_{};
-
         std::unique_ptr<Window> window_{};
-
         std::unique_ptr<Graphics::Renderer> renderer_{};
 
         GuiModule guiModule_{};
-
         SubsystemManager subsystems_{};
-
         EditorSettings editorSettings_{};
-
-        EventDispatcher eventDispatcher_{};
+        
+        EventDispatcher eventDispatcher_;
 
         RenderLoop renderLoop_{};
 

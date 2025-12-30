@@ -1,7 +1,8 @@
 #pragma once
-#include "SDL3/SDL_render.h"
 
-namespace BixEngine::resources
+struct SDL_Renderer;
+
+namespace BixEngine::Resources
 {
     void RegisterAllResourceLoaders(SDL_Renderer* renderer);
 }

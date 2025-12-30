@@ -5,13 +5,13 @@
 #include "Ressources/Atlas/SpriteAtlasUtils.h"
 
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     struct SpriteAtlasCreationParams
     {
         std::filesystem::path texturePath{};
-        float columns{1.f};
-        float rows{1.f};
+        int columns{1};
+        int rows{1};
         int padding{0};
         int margin{0};
     };

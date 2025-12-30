@@ -15,6 +15,8 @@ namespace BixEngine::Core
 
         bool resizable{true};
 
+        bool useVSync{false};
+
         Math::Color clearColor{0, 0, 0, 255};
     };
 }

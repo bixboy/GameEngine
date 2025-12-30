@@ -2,11 +2,12 @@
 #include <filesystem>
 #include "Debug/Logger.h"
 #include "Ressources/Core/ResourceManager.h"
-#include "Ressources/Atlas/SpriteAtlasUtils.h"
 #include "Ressources/RessourcesClass/Texture.h"
 
+// Tu dois avoir ce fichier quelque part pour parser ton format d'atlas
+#include "Ressources/Atlas/SpriteAtlasUtils.h" 
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     namespace
     {
@@ -14,8 +15,7 @@ namespace BixEngine::resources
         {
             std::filesystem::path atlasFile(atlasPath.c_str());
             std::filesystem::path resolved = atlasFile.parent_path() / relativeTexture.c_str();
-            resolved = resolved.lexically_normal();
-            return resolved.generic_string().c_str();
+            return String(resolved.lexically_normal().generic_string().c_str());
         }
     }
 
@@ -23,6 +23,7 @@ namespace BixEngine::resources
     {
         SpriteAtlasDefinition definition;
         std::vector<SpriteAnimationDefinition> animationDefinitions;
+
         if (!SpriteAtlasUtils::ParseAtlasFile(path, definition, animationDefinitions))
         {
             LOG_ERROR("SpriteAtlas::LoadFromFile: failed to parse atlas " + path);
@@ -34,14 +35,15 @@ namespace BixEngine::resources
 
         auto& resourceManager = ResourceManager::Get();
         texture_ = resourceManager.Get<Texture>(texturePath_);
+        
         if (!texture_)
         {
             LOG_ERROR("SpriteAtlas::LoadFromFile: unable to load texture " + texturePath_);
             return false;
         }
 
-        frames_ = SpriteAtlasUtils::GenerateFrames(*texture_, definition.columns, definition.rows, definition.padding,
-                                                   definition.margin);
+        frames_ = SpriteAtlasUtils::GenerateFrames(*texture_, definition.columns, definition.rows, definition.padding, definition.margin);
+        
         if (frames_.empty())
         {
             LOG_WARNING("SpriteAtlas::LoadFromFile: atlas has no frames: " + path);
@@ -51,13 +53,11 @@ namespace BixEngine::resources
         animations_.reserve(animationDefinitions.size());
 
         const size_t frameCount = frames_.size();
+        
         for (const auto& animDef : animationDefinitions)
         {
-            if (animDef.name.IsEmpty())
-            {
-                LOG_WARNING("SpriteAtlas::LoadFromFile: skipping animation with empty name in " + path);
+            if (animDef.name.empty())
                 continue;
-            }
 
             SpriteAnimation animation;
             animation.name = animDef.name;
@@ -67,10 +67,11 @@ namespace BixEngine::resources
             for (size_t frameIndex : animDef.frames)
             {
                 if (frameIndex < frameCount)
+                {
                     animation.frameIndices.push_back(frameIndex);
+                }
                 else
-                    LOG_WARNING(
-                    "SpriteAtlas::LoadFromFile: frame index out of range in animation '" + animDef.name + "'.");
+                    LOG_WARNING("SpriteAtlas::LoadFromFile: frame index out of range in animation '" + animDef.name + "'.");
             }
 
             if (!animation.frameIndices.empty())
@@ -99,6 +100,7 @@ namespace BixEngine::resources
     {
         if (index >= frames_.size())
             return nullptr;
+        
         return &frames_[index];
     }
 
@@ -121,7 +123,7 @@ namespace BixEngine::resources
         for (size_t index = 0; index < animations_.size(); ++index)
         {
             const auto& animation = animations_[index];
-            if (!animation.name.IsEmpty())
+            if (!animation.name.empty())
             {
                 animationLookup_[animation.name] = index;
             }

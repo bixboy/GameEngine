@@ -7,8 +7,7 @@
 #include "Ressources/Core/IResource.h"
 #include "Containers/String.h"
 
-
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     class ResourceManager
     {
@@ -17,6 +16,9 @@ namespace BixEngine::resources
 
         template <typename T>
         std::shared_ptr<T> Get(const String& path);
+        
+        template <typename T>
+        std::shared_ptr<T> Reload(const String& path);
 
         template <typename T>
         void RegisterLoader(std::function<std::shared_ptr<T>(const String&)> loader);
@@ -46,7 +48,9 @@ namespace BixEngine::resources
         std::shared_ptr<T> GetDefault();
 
         std::unordered_map<std::type_index, std::unordered_map<String, std::shared_ptr<IResource>>> caches_;
+        
         std::unordered_map<std::type_index, std::shared_ptr<IResource>> defaults_;
+        
         std::unordered_map<std::type_index, std::function<std::shared_ptr<IResource>(const String&)>> loaders_;
 
         std::mutex mutex_;

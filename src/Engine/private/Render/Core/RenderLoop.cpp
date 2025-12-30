@@ -51,27 +51,30 @@ namespace BixEngine::Core
         if (!subsystems_)
             return;
 
-        if (guiModule_)
-        {
-            switch (guiModule_->GetEngineState())
-            {
-            case GuiModule::EngineState::Edit:
-                subsystems_->UpdateEditor(deltaTime);
-                break;
-            case GuiModule::EngineState::Play:
-                subsystems_->UpdateRuntime(deltaTime);
-                break;
-            case GuiModule::EngineState::Pause:
-                subsystems_->UpdatePaused(deltaTime);
-                break;
-            case GuiModule::EngineState::Step:
-                subsystems_->UpdateRuntime(deltaTime);
-                break;
-            }
-        }
-        else
+        if (!guiModule_)
         {
             subsystems_->UpdateRuntime(deltaTime);
+            return;
+        }
+
+        switch (guiModule_->GetEngineState())
+        {
+        case GuiModule::EngineState::Edit:
+            subsystems_->UpdateEditor(deltaTime);
+            break;
+            
+        case GuiModule::EngineState::Play:
+            subsystems_->UpdateRuntime(deltaTime);
+            break;
+            
+        case GuiModule::EngineState::Pause:
+            subsystems_->UpdatePaused(deltaTime);
+            break;
+            
+        case GuiModule::EngineState::Step:
+            subsystems_->UpdateRuntime(deltaTime);
+            guiModule_->SetEngineState(GuiModule::EngineState::Pause); 
+            break;
         }
     }
 
@@ -82,6 +85,7 @@ namespace BixEngine::Core
 
         Game::Scene* activeScene = subsystems_ ? subsystems_->GetActiveScene() : nullptr;
         SDL_Renderer* sdlRenderer = renderer_->GetSDLRenderer();
+        
         const bool renderedToTexture = guiModule_ && guiModule_->EnsureSceneViewportTexture(*renderer_);
         SDL_Texture* viewportTexture = guiModule_ ? guiModule_->GetSceneViewportTexture() : nullptr;
 
@@ -91,21 +95,30 @@ namespace BixEngine::Core
             renderer_->Clear(clearColor_);
 
             if (activeScene)
+            {
                 activeScene->Render(*renderer_);
+                activeScene->PostRender(*renderer_);
+            }
 
             SDL_SetRenderTarget(sdlRenderer, nullptr);
-            renderer_->Clear(clearColor_);
+            
+            renderer_->Clear(clearColor_); 
         }
         else
         {
             renderer_->Clear(clearColor_);
 
             if (activeScene)
+            {
                 activeScene->Render(*renderer_);
+                activeScene->PostRender(*renderer_);
+            }
         }
-
+        
         if (guiModule_ && subsystems_)
+        {
             guiModule_->Render(*subsystems_);
+        }
 
         renderer_->Present();
     }

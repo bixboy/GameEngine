@@ -2,13 +2,21 @@
 #include "Framework/Actor.h"
 #include "Debug/Logger.h"
 #include "Gui/Core/GuiManager.h"
+#include "Components/Core/BoxColliderComponent.h"
+#include "Components/Core/CameraComponent.h"
+#include "Framework/CollisionHitResult.h"
 
 namespace BixEngine::Game
 {
-    Scene::Scene(String name)
-        : name_(std::move(name))
+    Scene::Scene(String name) : name_(std::move(name))
     {
         LOG_INFO("Scene created: " + name_);
+    }
+
+    Scene::~Scene()
+    {
+        OnRuntimeStop();
+        ClearActors();
     }
 
     void Scene::SetName(String name)
@@ -21,34 +29,47 @@ namespace BixEngine::Game
         sourcePath_ = path;
     }
 
+    // --- Events Système ---
+
+    void Scene::OnWindowResize(int width, int height)
+    {
+        if (activeCamera_)
+        {
+            activeCamera_->SetAspectRatio(static_cast<float>(width) / static_cast<float>(height));
+        }
+    }
+
+    void Scene::OnFileDrop(const String& filePath)
+    {
+        LOG_INFO("File dropped in scene: {}", filePath);
+        // TODO: Logique pour charger un asset ou spawner un acteur
+    }
+
+    void Scene::HandleEvent(const SDL_Event& event) { }
+
+    // --- Runtime ---
+
     void Scene::OnRuntimeStart()
     {
-        
         if (!b2World_IsValid(physicsWorldId_))
         {
             b2WorldDef worldDef = b2DefaultWorldDef();
-            worldDef.gravity = {0.0f, 10.0f * 3.5f}; 
-            
-            
-            worldDef.gravity = {0.0f, 9.8f}; 
+            worldDef.gravity = {0.0f, 9.81f};
             physicsWorldId_ = b2CreateWorld(&worldDef);
+            
             LOG_INFO("Physics World Created.");
         }
 
-        
-        
-        for (size_t i = 0; i < actors_.size(); ++i)
+        for (auto& actor : actors_)
         {
-            if(actors_[i]) actors_[i]->BeginPlay();
+            if(actor)
+                actor->BeginPlay();
         }
     }
 
     void Scene::OnRuntimeStop()
     {
-        
-        
-        
-        
+        // Appel de EndPlay ?
         
         if (b2World_IsValid(physicsWorldId_))
         {
@@ -60,63 +81,68 @@ namespace BixEngine::Game
 
     void Scene::OnEditorUpdate(float deltaTime)
     {
-        
         (void)deltaTime;
-
-        
-         while (!pendingDestruction_.empty())
-        {
-            std::vector<std::unique_ptr<Actor>> batch = std::move(pendingDestruction_);
-            pendingDestruction_.clear(); 
-            batch.clear(); 
-        }
-
+        // Nettoyage des acteurs détruits
+        pendingDestruction_.clear(); 
         std::erase_if(actors_, [](const std::unique_ptr<Actor>& ptr) { return !ptr; });
     }
 
     void Scene::OnRuntimeUpdate(float deltaTime)
     {
-        
+        // --- Physique Box2D v3 ---
         if (b2World_IsValid(physicsWorldId_))
         {
             constexpr float timeStep = 1.0f / 60.0f;
             constexpr int subStepCount = 4;
             
             physicsAccumulator_ += deltaTime;
-            
-            
-            if (physicsAccumulator_ > 0.2f) physicsAccumulator_ = 0.2f;
+            physicsAccumulator_ = std::min(physicsAccumulator_, 0.2f);
 
             while (physicsAccumulator_ >= timeStep)
             {
                 b2World_Step(physicsWorldId_, timeStep, subStepCount);
                 physicsAccumulator_ -= timeStep;
             }
+
+            b2ContactEvents events = b2World_GetContactEvents(physicsWorldId_);
+            for (int i = 0; i < events.beginCount; ++i)
+            {
+                b2ContactBeginTouchEvent* beginEvent = events.beginEvents + i;
+                
+                b2BodyId bodyA = b2Shape_GetBody(beginEvent->shapeIdA);
+                b2BodyId bodyB = b2Shape_GetBody(beginEvent->shapeIdB);
+
+                auto* colA = static_cast<BoxColliderComponent*>(b2Body_GetUserData(bodyA));
+                auto* colB = static_cast<BoxColliderComponent*>(b2Body_GetUserData(bodyB));
+
+                if (colA && colB)
+                {
+                    CollisionHitResult resultA;
+                    resultA.OtherActor = colB->GetOwner();
+                    colA->DispatchCollisionEnter(resultA.OtherActor, resultA);
+
+                    CollisionHitResult resultB;
+                    resultB.OtherActor = colA->GetOwner();
+                    colB->DispatchCollisionEnter(resultB.OtherActor, resultB);
+                }
+            }
         }
 
-        
-        
-        for (size_t i = 0; i < actors_.size(); ++i)
+        for (auto& actor : actors_)
         {
-            if(actors_[i] && actors_[i]->IsActive()) 
-                actors_[i]->Update(deltaTime);
+            if(actor && actor->IsActive()) 
+                actor->Update(deltaTime);
         }
 
-        
-        
-        
-        while (!pendingDestruction_.empty())
-        {
-            
-            std::vector<std::unique_ptr<Actor>> batch = std::move(pendingDestruction_);
-            pendingDestruction_.clear(); 
-            batch.clear(); 
-        }
-
-        
-        
-        std::erase_if(actors_, [](const std::unique_ptr<Actor>& ptr) { return !ptr; });
+        pendingDestruction_.clear();
+        std::erase_if(actors_,
+            [](const std::unique_ptr<Actor>& ptr)
+            {
+                return !ptr;
+            });
     }
+
+    // --- Gestion Acteurs ---
 
     void Scene::SetContext(SceneContext context) noexcept
     {
@@ -128,41 +154,41 @@ namespace BixEngine::Game
         if (actor)
         {
             actor->SetOwningScene(this);
-            actor->SetParent(nullptr); 
+            actor->SetParent(nullptr);
             actors_.push_back(std::move(actor));
         }
     }
 
     void Scene::RemoveActor(Actor* actor)
     {
-        if (!actor) return;
+        if (!actor)
+            return;
         
+        if (actor->IsPendingKill())
+            return;
         
-        std::vector<Actor*> toRemove;
-        toRemove.push_back(actor);
+        actor->MarkAsPendingKill();
 
+        // Cas 1 : C'est un actor Racine
+        auto it = std::ranges::find(actors_, actor, [](const auto& ptr)
+        { 
+            return ptr.get(); 
+        });
         
-        size_t head = 0;
-        while(head < toRemove.size())
+        if (it != actors_.end())
         {
-            Actor* current = toRemove[head++];
-            for(auto* child : current->GetChildren())
-            {
-                toRemove.push_back(child);
-            }
+            pendingDestruction_.push_back(std::move(*it));
+            return; 
         }
 
-        
-        for(Actor* a : toRemove)
+        // Cas 2 : C'est un enfant
+        Actor* parent = actor->GetParent();
+        if (parent)
         {
-            auto it = std::find_if(actors_.begin(), actors_.end(), 
-                [&](const auto& ptr){ return ptr.get() == a; });
-                
-            if (it != actors_.end())
+            std::unique_ptr<Actor> dyingChild = parent->RemoveChild(actor);
+            if (dyingChild)
             {
-                
-                
-                pendingDestruction_.push_back(std::move(*it));
+                pendingDestruction_.push_back(std::move(dyingChild));
             }
         }
     }
@@ -170,62 +196,22 @@ namespace BixEngine::Game
     void Scene::ClearActors() noexcept
     {
         actors_.clear();
+        pendingDestruction_.clear();
     }
 
-    Actor* Scene::FindActorByName(const String& name) noexcept
-    {
-        for (auto& actor : actors_)
-        {
-            if (actor && actor->GetName() == name)
-                return actor.get();
-        }
-        return nullptr;
-    }
-
-    Actor* Scene::FindActorByPath(const String& path) noexcept
-    {
-         for (auto& actor : actors_)
-        {
-            
-             if (actor && actor->GetName() == path)
-                return actor.get();
-        }
-        return nullptr;
-    }
-
-    void Scene::Rename(String name)
-    {
-        SetName(std::move(name));
-    }
-
-    Core::Window& Scene::GetWindow() const
-    {
-        
-        return *context_.window;
-    }
-
-    Input::InputManager& Scene::GetInputManager() const
-    {
-        return *context_.inputManager;
-    }
-
-    Graphics::Renderer& Scene::GetRenderer() const
-    {
-        return *context_.renderer;
-    }
-
-    Core::Timer& Scene::GetTimer() const
-    {
-        return *context_.timer;
-    }
-
-    Gui::GuiManager& Scene::GetGuiManager() const
-    {
-        return *context_.guiManager;
-    }
+    // --- Rendering ---
 
     void Scene::Render(Graphics::Renderer& renderer)
     {
+        // 1. Setup Camera (View/Projection)
+        /*
+        if (activeCamera_)
+        {
+            activeCamera_->ApplyTransform(renderer);
+        }
+        */
+
+        // 2. Render Actors
         for (auto& actor : actors_)
         {
             if (actor && actor->IsActive())
@@ -237,12 +223,40 @@ namespace BixEngine::Game
 
     void Scene::PostRender(Graphics::Renderer& renderer)
     {
-        
-        
-        
-        
-        
-        
         (void)renderer;
+        // Gizmos, Debug Draw, UI Overlay spécifique à la scène...
     }
+
+    Actor* Scene::FindActorByName(const String& name) noexcept
+    {
+        for (auto& actor : actors_)
+        {
+            if (actor && actor->GetName() == name)
+                return actor.get();
+        }
+        
+        return nullptr;
+    }
+
+    Actor* Scene::FindActorByPath(const String& path) noexcept
+    {
+         for (auto& actor : actors_)
+        {
+             if (actor && actor->GetName() == path)
+                 return actor.get();
+        }
+        
+        return nullptr;
+    }
+
+    void Scene::Rename(String name)
+    {
+        SetName(std::move(name));
+    }
+
+    Core::Window& Scene::GetWindow() const { return *context_.window; }
+    Input::InputManager& Scene::GetInputManager() const { return *context_.inputManager; }
+    Graphics::Renderer& Scene::GetRenderer() const { return *context_.renderer; }
+    Core::Timer& Scene::GetTimer() const { return *context_.timer; }
+    Gui::GuiManager& Scene::GetGuiManager() const { return *context_.guiManager; }
 }

@@ -4,7 +4,7 @@
 #include <vector>
 #include <memory>
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     struct AudioTrack
     {
@@ -30,19 +30,24 @@ namespace BixEngine::resources
     class AudioContainer : public IResource
     {
     public:
+        AudioContainer() = default;
+        ~AudioContainer() override = default;
+
         bool LoadFromFile(const String& path) override;
         bool SaveToFile(const String& path);
 
         ResolvedSound ResolveSound();
 
-        
+        // --- Données ---
         std::vector<AudioTrack> Tracks;
+        
         float VolumeVariance = 0.0f; 
         float PitchVariance = 0.0f;  
+        
         bool Loop = false;
         AudioContainerMode Mode = AudioContainerMode::Random;
 
-        const String& GetPath() const { return path_; }
+        [[nodiscard]] const String& GetPath() const { return path_; }
 
     private:
         int lastPlayedIndex_ = -1;

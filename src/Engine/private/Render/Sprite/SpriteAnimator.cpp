@@ -1,9 +1,10 @@
 #include "Render/Sprite/SpriteAnimator.h"
 #include <algorithm>
+
+#include "Debug/Logger.h"
 #include "Ressources/RessourcesClass/SpriteAtlas.h"
 
-
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     namespace
     {
@@ -36,7 +37,7 @@ namespace BixEngine::resources
                     }
                 }
             }
-
+            
             return currentFrame;
         }
     }
@@ -54,6 +55,7 @@ namespace BixEngine::resources
 
         if (!currentAnimation_ || currentAnimation_->frameIndices.empty())
         {
+            LOG_WARNING("SpriteAnimator: Animation not found or empty: " + animationName);
             Stop();
             return false;
         }
@@ -70,13 +72,12 @@ namespace BixEngine::resources
         accumulatedTime_ = 0.0f;
         currentFrameIndex_ = 0;
         currentAnimation_ = nullptr;
-        currentAnimationName_.Clear();
+        currentAnimationName_.clear();
     }
 
     void SpriteAnimator::Update(float deltaTime) noexcept
     {
-        if (!isPlaying_)
-            return;
+        if (!isPlaying_) return;
 
         currentAnimation_ = ResolveAnimation();
         if (!currentAnimation_ || currentAnimation_->frameIndices.empty())
@@ -86,12 +87,10 @@ namespace BixEngine::resources
         }
 
         currentFrameIndex_ = AdvanceFrame(accumulatedTime_, deltaTime, currentAnimation_->frameRate, currentFrameIndex_,
-                                          currentAnimation_->frameIndices.size(), currentAnimation_->loop);
+        currentAnimation_->frameIndices.size(), currentAnimation_->loop);
 
         if (!currentAnimation_->loop && currentFrameIndex_ + 1 == currentAnimation_->frameIndices.size())
         {
-            
-            
             if (accumulatedTime_ == 0.0f)
                 isPlaying_ = false;
         }
@@ -114,7 +113,7 @@ namespace BixEngine::resources
     const SpriteAnimation* SpriteAnimator::ResolveAnimation() const noexcept
     {
         auto atlas = atlas_.lock();
-        if (!atlas || currentAnimationName_.IsEmpty())
+        if (!atlas || currentAnimationName_.empty())
             return nullptr;
 
         return atlas->GetAnimation(currentAnimationName_);

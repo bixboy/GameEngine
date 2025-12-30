@@ -1,7 +1,7 @@
 #pragma once
 #include "Debug/Logger.h"
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     inline ResourceManager& ResourceManager::Get()
     {
@@ -10,13 +10,14 @@ namespace BixEngine::resources
     }
 
     // ────────────────────────────────────────────────
-    // 📦 Get Resource
+    // Get Resource
     // ────────────────────────────────────────────────
     template <typename T>
     std::shared_ptr<T> ResourceManager::Get(const String& path)
     {
         static_assert(std::is_base_of_v<IResource, T>, "T must derive from IResource");
         const std::type_index typeIndex(typeid(T));
+
         {
             std::scoped_lock lock(mutex_);
             auto cacheIt = caches_.find(typeIndex);
@@ -34,10 +35,11 @@ namespace BixEngine::resources
 
         if (!resource)
         {
-            LOG_WARNING("⚠️ Failed to load resource: " + path + " — using fallback.");
+            LOG_WARNING("Failed to load resource: " + path + " — using fallback.");
             resource = GetDefault<T>();
         }
 
+        if (resource)
         {
             std::scoped_lock lock(mutex_);
             caches_[typeIndex][path] = resource;
@@ -47,7 +49,32 @@ namespace BixEngine::resources
     }
 
     // ────────────────────────────────────────────────
-    // 🧱 Register / Unregister Loaders
+    // Reload
+    // ────────────────────────────────────────────────
+    template <typename T>
+    std::shared_ptr<T> ResourceManager::Reload(const String& path)
+    {
+        static_assert(std::is_base_of_v<IResource, T>, "T must derive from IResource");
+        
+        LOG_INFO("Reloading resource: " + path);
+
+        std::shared_ptr<T> newResource = LoadResource<T>(path);
+
+        if (newResource)
+        {
+            std::scoped_lock lock(mutex_);
+            caches_[std::type_index(typeid(T))][path] = newResource;
+        }
+        else
+        {
+            LOG_ERROR("Failed to reload resource: " + path);
+        }
+
+        return newResource;
+    }
+
+    // ────────────────────────────────────────────────
+    // Register / Unregister Loaders
     // ────────────────────────────────────────────────
     template <typename T>
     void ResourceManager::RegisterLoader(std::function<std::shared_ptr<T>(const String&)> loader)
@@ -70,21 +97,22 @@ namespace BixEngine::resources
     }
 
     // ────────────────────────────────────────────────
-    // ⚙️ Load Resource
+    // Load Resource
     // ────────────────────────────────────────────────
     template <typename T>
     std::shared_ptr<T> ResourceManager::LoadResource(const String& path)
     {
         std::function<std::shared_ptr<IResource>(const String&)> loader;
+        
+        // Récupération du loader
         {
             std::scoped_lock lock(mutex_);
             const auto it = loaders_.find(std::type_index(typeid(T)));
             if (it == loaders_.end())
             {
-                LOG_ERROR("❌ No loader registered for resource type: " + std::string(typeid(T).name()));
+                LOG_ERROR("No loader registered for resource type: " + std::string(typeid(T).name()));
                 return nullptr;
             }
-
             loader = it->second;
         }
 
@@ -95,9 +123,8 @@ namespace BixEngine::resources
         return std::static_pointer_cast<T>(resource);
     }
 
-
     // ────────────────────────────────────────────────
-    // 🔍 Get Loaded Resource Keys
+    // Get Loaded Resource Keys
     // ────────────────────────────────────────────────
     template <typename T>
     std::vector<String> ResourceManager::GetLoadedResourceKeys()
@@ -122,7 +149,7 @@ namespace BixEngine::resources
     }
 
     // ────────────────────────────────────────────────
-    // ⚠️ Default resource handling
+    // Default resource handling
     // ────────────────────────────────────────────────
     template <typename T>
     void ResourceManager::SetDefault(std::shared_ptr<T> defaultResource)
@@ -140,7 +167,7 @@ namespace BixEngine::resources
 
         if (it != defaults_.end())
             return std::static_pointer_cast<T>(it->second);
-
+        
         return nullptr;
     }
 }

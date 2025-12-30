@@ -1,11 +1,10 @@
 #pragma once
-
 #include <memory>
 #include "Containers/String.h"
 
 struct SDL_Renderer;
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     class Texture;
 

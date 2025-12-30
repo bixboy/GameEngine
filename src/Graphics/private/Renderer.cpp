@@ -2,6 +2,7 @@
 #include "Debug/Logger.h"
 #include "Containers/String.h"
 
+
 namespace BixEngine::Graphics
 {
     Renderer::Renderer(SDL_Window* window, const char* driverName, bool useVSync)
@@ -21,19 +22,17 @@ namespace BixEngine::Graphics
 
         instance_ = this;
 
-        if (useVSync)
-            SDL_SetRenderVSync(renderer_, 1);
-        else
-            SDL_SetRenderVSync(renderer_, 0);
-
+        SetVSync(useVSync);
         UpdateViewport();
-
+        
         SDL_SetRenderDrawBlendMode(renderer_, SDL_BLENDMODE_BLEND);
     }
 
     Renderer::~Renderer()
     {
-        instance_ = nullptr;
+        if (instance_ == this)
+            instance_ = nullptr;
+
         if (renderer_)
         {
             SDL_DestroyRenderer(renderer_);
@@ -43,24 +42,49 @@ namespace BixEngine::Graphics
 
     void Renderer::Clear(Math::Color color) const noexcept
     {
-        if (!renderer_) return;
-        SDL_SetRenderDrawColor(renderer_, color.r, color.g, color.b, color.a);
+        if (!renderer_)
+            return;
+        
+        SDL_SetRenderDrawColorFloat(renderer_, color.r, color.g, color.b, color.a);
         SDL_RenderClear(renderer_);
     }
 
     void Renderer::Present() const noexcept
     {
-        if (renderer_) SDL_RenderPresent(renderer_);
+        if (renderer_) 
+            SDL_RenderPresent(renderer_);
     }
 
-    void Renderer::SetColor(Uint8 r, Uint8 g, Uint8 b, Uint8 a) const noexcept
+    void Renderer::SetDrawColor(const Math::Color& color) const noexcept
     {
-        if (renderer_) SDL_SetRenderDrawColor(renderer_, r, g, b, a);
+        if (renderer_)
+            SDL_SetRenderDrawColorFloat(renderer_, color.r, color.g, color.b, color.a);
+    }
+
+    void Renderer::SetDrawColor(float r, float g, float b, float a) const noexcept
+    {
+        if (renderer_)
+            SDL_SetRenderDrawColorFloat(renderer_, r, g, b, a);
+    }
+
+    void Renderer::SetVSync(bool enabled) const noexcept
+    {
+        if (renderer_)
+        {
+            // SDL3: 1 = VSync, 0 = No VSync, 2 = Adaptive
+            SDL_SetRenderVSync(renderer_, enabled ? 1 : 0);
+        }
+    }
+
+    void Renderer::OnResize(int width, int height)
+    {
+        UpdateViewport();
     }
 
     void Renderer::UpdateViewport() const noexcept
     {
-        if (!renderer_) return;
+        if (!renderer_)
+            return;
 
         int width = 0, height = 0;
         if (!SDL_GetCurrentRenderOutputSize(renderer_, &width, &height))
@@ -70,9 +94,20 @@ namespace BixEngine::Graphics
         SDL_SetRenderViewport(renderer_, &viewport);
     }
 
-    void Renderer::SetLogicalSize(int width, int height) const noexcept
+    void Renderer::SetLogicalSize(int width, int height) 
     {
         if (renderer_ && width > 0 && height > 0)
+        {
+            logicalWidth_ = width;
+            logicalHeight_ = height;
             SDL_SetRenderLogicalPresentation(renderer_, width, height, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+        }
+        else
+        {
+            logicalWidth_ = 0;
+            logicalHeight_ = 0;
+            SDL_SetRenderLogicalPresentation(renderer_, 0, 0, SDL_LOGICAL_PRESENTATION_DISABLED);
+            UpdateViewport();
+        }
     }
 }

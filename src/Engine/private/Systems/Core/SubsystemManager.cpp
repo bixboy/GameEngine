@@ -27,6 +27,12 @@ namespace BixEngine::Core
 
         LOG_INFO("Initializing SubsystemManager...");
 
+        // 1. Stockage des références
+        rendererRef_ = &renderer;
+        windowRef_ = &window;
+        guiManagerRef_ = guiManager;
+
+        // 2. Création des sous-systèmes internes
         timer_ = std::make_unique<Timer>();
         input_ = std::make_unique<Input::Input>();
         inputManager_ = std::make_unique<Input::InputManager>();
@@ -43,19 +49,17 @@ namespace BixEngine::Core
             return false;
         }
 
-        if (sceneManager_)
-        {
-            sceneManager_->SetContext({
-                &renderer,
-                inputManager_.get(),
-                &window,
-                timer_.get(),
-                guiManager
-            });
-        }
+        sceneManager_->SetContext({
+            .renderer = &renderer,
+            .inputManager = inputManager_.get(),
+            .window = &window,
+            .timer = timer_.get(),
+            .guiManager = guiManager
+        });
 
         initialized_ = true;
         LOG_INFO("SubsystemManager initialized successfully.");
+        
         return true;
     }
 
@@ -78,6 +82,10 @@ namespace BixEngine::Core
         input_.reset();
         timer_.reset();
 
+        rendererRef_ = nullptr;
+        windowRef_ = nullptr;
+        guiManagerRef_ = nullptr;
+
         initialized_ = false;
         LOG_INFO("SubsystemManager shut down.");
     }
@@ -86,35 +94,103 @@ namespace BixEngine::Core
     {
         LOG_INFO("Restarting SubsystemManager...");
         Shutdown();
+        
         return Initialize(renderer, window, guiManager);
+    }
+
+    // --- Event Handlers ---
+
+    void SubsystemManager::OnWindowResize(int width, int height)
+    {
+        LOG_INFO("Window resized to {}x{}", width, height);
+
+        // 1. Informer le Renderer
+        if (rendererRef_)
+        {
+            rendererRef_->OnResize(width, height); 
+        }
+
+        // 2. Informer l'interface utilisateur
+        /*if (guiManagerRef_)
+        {
+            guiManagerRef_->OnResize(width, height);
+        }*/
+
+        // 3. Informer la Scène active (Recalcul Aspect Ratio caméra)
+        if (sceneManager_)
+        {
+            if (Game::Scene* scene = sceneManager_->GetScene())
+            {
+                scene->OnWindowResize(width, height);
+            }
+        }
+    }
+
+    void SubsystemManager::OnWindowMinimized()
+    {
+        LOG_INFO("Window minimized (Pausing engine).");
+        isPaused_ = true;
+        
+        if (timer_) 
+            timer_->SetTimeScale(0.0f);
+    }
+
+    void SubsystemManager::OnWindowRestored()
+    {
+        LOG_INFO("Window restored (Resuming engine).");
+        isPaused_ = false;
+
+        if (timer_)
+            timer_->SetTimeScale(1.0f);
+    }
+
+    void SubsystemManager::OnFileDrop(const char* filePath)
+    {
+        LOG_INFO("File dropped: {}", filePath);
+        
+        // TODO: Envoyer ça à un AssetManager ou charger la scène si c'est un .scene
     }
 
     void SubsystemManager::ResetInput() noexcept
     {
         if (input_)
             input_->ResetState();
-
+        
         if (inputManager_)
             inputManager_->ResetState();
+    }
+
+    void SubsystemManager::NotifyMouseEventDropped() noexcept
+    {
+        if (input_)
+            input_->NotifyMouseEventDropped();
     }
 
     void SubsystemManager::ProcessEvent(const SDL_Event& event)
     {
         if (input_)
             input_->ProcessEvent(event);
-
+        
         if (inputManager_)
             inputManager_->ProcessEvent(event);
 
         if (sceneManager_)
         {
-            if (Game::Scene* scene = sceneManager_->GetScene())
+            if (auto* scene = sceneManager_->GetScene())
                 scene->HandleEvent(event);
         }
     }
 
+    // --- Updates ---
+
     void SubsystemManager::UpdateAll(float deltaTime)
     {
+        if (isPaused_)
+        {
+            UpdatePaused(deltaTime);
+            return;
+        }
+
         UpdateRuntime(deltaTime);
     }
 
@@ -122,13 +198,13 @@ namespace BixEngine::Core
     {
         if (input_)
             input_->UpdateStatistics(deltaTime);
-
+        
         if (inputManager_)
             inputManager_->Update();
 
         if (sceneManager_)
         {
-            if (Game::Scene* scene = sceneManager_->GetScene())
+            if (auto* scene = sceneManager_->GetScene())
                 scene->OnRuntimeUpdate(deltaTime);
         }
 
@@ -140,13 +216,13 @@ namespace BixEngine::Core
     {
         if (input_)
             input_->UpdateStatistics(deltaTime);
-
+        
         if (inputManager_)
             inputManager_->Update();
 
         if (sceneManager_)
         {
-            if (Game::Scene* scene = sceneManager_->GetScene())
+            if (auto* scene = sceneManager_->GetScene())
                 scene->OnEditorUpdate(deltaTime);
         }
 
@@ -158,10 +234,10 @@ namespace BixEngine::Core
     {
         if (input_)
             input_->UpdateStatistics(deltaTime);
-
+        
         if (inputManager_)
             inputManager_->Update();
-
+        
         if (input_)
             input_->PostUpdate();
     }
@@ -171,54 +247,13 @@ namespace BixEngine::Core
         return input_ && (input_->IsQuitRequested() || input_->IsKeyDown(SDLK_ESCAPE));
     }
 
-    Timer* SubsystemManager::GetTimer() noexcept
-    {
-        return timer_.get();
-    }
-
-    const Timer* SubsystemManager::GetTimer() const noexcept
-    {
-        return timer_.get();
-    }
-
-    Input::InputManager* SubsystemManager::GetInputManager() noexcept
-    {
-        return inputManager_.get();
-    }
-
-    Input::Input* SubsystemManager::GetInputDevice() noexcept
-    {
-        return input_.get();
-    }
-
-    const Input::Input* SubsystemManager::GetInputDevice() const noexcept
-    {
-        return input_.get();
-    }
-
-    Game::SceneManager* SubsystemManager::GetSceneManager() noexcept
-    {
-        return sceneManager_.get();
-    }
-
     Game::Scene* SubsystemManager::GetActiveScene() noexcept
     {
         return sceneManager_ ? sceneManager_->GetScene() : nullptr;
     }
 
-    Game::Scene* SubsystemManager::GetScene() noexcept
-    {
-        return GetActiveScene();
-    }
-
-    const Game::Scene* SubsystemManager::GetScene() const noexcept
+    const Game::Scene* SubsystemManager::GetActiveScene() const noexcept
     {
         return sceneManager_ ? sceneManager_->GetScene() : nullptr;
-    }
-
-    void SubsystemManager::NotifyMouseEventDropped() noexcept
-    {
-        if (input_)
-            input_->NotifyMouseEventDropped();
     }
 }

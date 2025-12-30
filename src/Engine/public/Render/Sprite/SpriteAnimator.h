@@ -2,13 +2,12 @@
 #include <memory>
 #include "Containers/String.h"
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     class SpriteAtlas;
     struct SpriteAnimation;
     struct SpriteFrame;
 
-     
     class SpriteAnimator
     {
     public:
@@ -21,15 +20,19 @@ namespace BixEngine::resources
         void Update(float deltaTime) noexcept;
 
         [[nodiscard]] bool IsPlaying() const noexcept { return isPlaying_; }
+        
         [[nodiscard]] const SpriteFrame* GetCurrentFrame() const noexcept;
+        
         [[nodiscard]] String GetCurrentAnimation() const noexcept { return currentAnimationName_; }
 
     private:
         [[nodiscard]] const SpriteAnimation* ResolveAnimation() const noexcept;
 
         std::weak_ptr<SpriteAtlas> atlas_{};
+        
         String currentAnimationName_{};
         const SpriteAnimation* currentAnimation_{nullptr};
+        
         float accumulatedTime_{0.0f};
         size_t currentFrameIndex_{0};
         bool isPlaying_{false};

@@ -1,12 +1,12 @@
 #include "Ressources/RessourcesClass/AudioContainer.h"
 #include "Ressources/Core/ResourceManager.h"
-#include "Utils/FileIO/FilesUtils.h"
 #include "Debug/Logger.h"
 #include <nlohmann/json.hpp>
 #include <fstream>
 #include <random>
 
-namespace BixEngine::resources
+
+namespace BixEngine::Resources
 {
     using json = nlohmann::json;
 
@@ -14,7 +14,7 @@ namespace BixEngine::resources
     {
         static std::random_device rd;
         static std::mt19937 gen(rd());
-        std::uniform_real_distribution<float> dis(min, max);
+        std::uniform_real_distribution dis(min, max);
         return dis(gen);
     }
 
@@ -40,17 +40,23 @@ namespace BixEngine::resources
 
             if (j.contains("Tracks"))
             {
+                Tracks.clear();
                 for (const auto& trackJson : j["Tracks"])
                 {
                     AudioTrack track;
-                    String clipPath = trackJson.value("ClipPath", "");
+                    
+                    std::string stdPath = trackJson.value("ClipPath", "");
+                    String clipPath = stdPath.c_str();
+
                     if (!clipPath.empty())
                     {
                         track.Clip = ResourceManager::Get().Get<AudioClip>(clipPath);
                     }
+
                     track.Weight = trackJson.value("Weight", 1.0f);
                     track.VolumeMultiplier = trackJson.value("VolumeMultiplier", 1.0f);
                     track.PitchMultiplier = trackJson.value("PitchMultiplier", 1.0f);
+                    
                     Tracks.push_back(track);
                 }
             }
@@ -70,7 +76,7 @@ namespace BixEngine::resources
         j["VolumeVariance"] = VolumeVariance;
         j["PitchVariance"] = PitchVariance;
         j["Loop"] = Loop;
-        j["Mode"] = static_cast<int>(Mode);
+        j["Mode"] = Mode;
 
         json tracksJson = json::array();
         for (const auto& track : Tracks)
@@ -78,7 +84,7 @@ namespace BixEngine::resources
             json trackJ;
             if (track.Clip)
             {
-                trackJ["ClipPath"] = track.Clip->GetPath();
+                trackJ["ClipPath"] = track.Clip->GetPath().c_str();
             }
             else
             {
@@ -108,49 +114,55 @@ namespace BixEngine::resources
         if (Tracks.empty())
             return result;
 
-        
         int selectedIndex = 0;
+        
         if (Mode == AudioContainerMode::Sequence)
         {
-            selectedIndex = (lastPlayedIndex_ + 1) % Tracks.size();
+            selectedIndex = (lastPlayedIndex_ + 1) % static_cast<int>(Tracks.size());
         }
-        else 
+        else
         {
             float totalWeight = 0.0f;
             for (const auto& track : Tracks)
                 totalWeight += track.Weight;
 
-            float randomValue = RandomFloat(0.0f, totalWeight);
-            float currentWeight = 0.0f;
-            for (size_t i = 0; i < Tracks.size(); ++i)
+            if (totalWeight <= 0.0f)
             {
-                currentWeight += Tracks[i].Weight;
-                if (randomValue <= currentWeight)
+                 selectedIndex = 0;
+            }
+            else
+            {
+                float randomValue = RandomFloat(0.0f, totalWeight);
+                float currentWeight = 0.0f;
+                
+                for (size_t i = 0; i < Tracks.size(); ++i)
                 {
-                    selectedIndex = static_cast<int>(i);
-                    break;
+                    currentWeight += Tracks[i].Weight;
+                    if (randomValue <= currentWeight)
+                    {
+                        selectedIndex = static_cast<int>(i);
+                        break;
+                    }
                 }
             }
         }
 
         lastPlayedIndex_ = selectedIndex;
         const auto& selectedTrack = Tracks[selectedIndex];
+        
         result.Clip = selectedTrack.Clip;
 
-        
         result.Volume = selectedTrack.VolumeMultiplier;
         result.Pitch = selectedTrack.PitchMultiplier;
 
-        
         if (VolumeVariance > 0.0f)
             result.Volume += RandomFloat(-VolumeVariance, VolumeVariance);
         
         if (PitchVariance > 0.0f)
             result.Pitch += RandomFloat(-PitchVariance, PitchVariance);
 
-        
         result.Volume = std::max(0.0f, result.Volume);
-        result.Pitch = std::max(0.1f, result.Pitch); 
+        result.Pitch = std::max(0.1f, result.Pitch);
 
         return result;
     }

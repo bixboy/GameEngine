@@ -1,12 +1,10 @@
 #pragma once
 #include "Math/Rect.h"
 
-
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     class Texture;
 
-     
     struct SpriteFrame
     {
         Texture* texture{nullptr};

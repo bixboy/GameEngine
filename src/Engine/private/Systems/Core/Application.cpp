@@ -1,8 +1,6 @@
-
 #include "Systems/Core/Application.h"
 #include "Debug/Logger.h"
 #include <utility>
-
 
 namespace BixEngine::Core
 {
@@ -17,7 +15,10 @@ namespace BixEngine::Core
 
     bool Application::Initialize()
     {
-        return EnsureInitialized() && bootstrap_->IsReady();
+        if (bootstrap_->IsReady())
+            return true;
+
+        return bootstrap_->InitializeAll();
     }
 
     bool Application::HasActiveScene() const
@@ -27,33 +28,23 @@ namespace BixEngine::Core
 
     void Application::Run()
     {
-        if (!EnsureInitialized())
+        if (!Initialize())
+        {
+            LOG_ERROR("Application failed to initialize. Aborting Run.");
             return;
+        }
 
         while (bootstrap_->IsRunning())
         {
-            
             bootstrap_->Tick();
-            
         }
 
-        bootstrap_->ShutdownAll();
+        Shutdown();
     }
 
     void Application::Shutdown()
     {
         if (bootstrap_)
             bootstrap_->ShutdownAll();
-    }
-
-    bool Application::EnsureInitialized()
-    {
-        if (!bootstrap_)
-            bootstrap_ = std::make_unique<EngineBootstrap>(config_);
-
-        if (!bootstrap_->IsReady())
-            return bootstrap_->InitializeAll();
-
-        return true;
     }
 }

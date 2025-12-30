@@ -14,13 +14,13 @@
 namespace
 {
     constexpr auto kDefaultAppName = "BixEngine";
-    constexpr auto kDefaultAppId = "com.Bixboy.CustomEngine";
+    constexpr auto kDefaultAppId = "com.Bixboy.BixEngine";
     constexpr auto kDefaultAppVersion = "1.0";
 }
 
 namespace BixEngine::Core
 {
-    EngineBootstrap::EngineBootstrap(ApplicationConfig config) : config_(std::move(config))
+    EngineBootstrap::EngineBootstrap(ApplicationConfig config) : config_(std::move(config)), eventDispatcher_(nullptr, nullptr) 
     {
     }
 
@@ -30,8 +30,8 @@ namespace BixEngine::Core
             ShutdownAll();
     }
 
-    void ForceLinkPlayer() {
-        
+    void ForceLinkPlayer()
+    {
         const auto& info = Game::Player::StaticClass(); 
         LOG_INFO("ForceLinkPlayer: Linked class " + info.Name);
     }
@@ -47,10 +47,9 @@ namespace BixEngine::Core
         LOG_INFO("=== Initializing EngineBootstrap ===");
 
         Game::RegisterBuiltinComponents();
-
         ForceLinkPlayer();
 
-        
+        // 1. SDL System
         LOG_INFO("Initializing SDL system...");
         if (!sdlSystem_.Initialize(kDefaultAppName, kDefaultAppId, kDefaultAppVersion))
         {
@@ -58,7 +57,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 2. Window
         LOG_INFO("Creating main window...");
         if (!CreateWindow())
         {
@@ -67,7 +66,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 3. Renderer (Dépend de Window)
         LOG_INFO("Creating renderer...");
         if (!CreateRenderer())
         {
@@ -76,12 +75,11 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 4. Resources
         LOG_INFO("Configuring resource loaders...");
-        resources::RegisterAllResourceLoaders(renderer_->GetSDLRenderer());
+        Resources::RegisterAllResourceLoaders(renderer_->GetSDLRenderer());
 
-
-        
+        // 5. GUI (Dépend de Window/Renderer)
         LOG_INFO("Initializing GUI module...");
         if (!guiModule_.Initialize(*window_, *renderer_))
         {
@@ -90,7 +88,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 6. Subsystems (Dépend de Renderer/Window/Gui)
         LOG_INFO("Initializing SubsystemManager...");
         if (!subsystems_.Initialize(*renderer_, *window_, guiModule_.GetGuiManager()))
         {
@@ -99,7 +97,7 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 7. Audio
         LOG_INFO("Initializing AudioSystem...");
         if (!audioSystem_.Initialize())
         {
@@ -108,15 +106,16 @@ namespace BixEngine::Core
             return false;
         }
 
-        
+        // 8. Event Dispatcher & Loop
         LOG_INFO("Configuring event dispatcher and render loop...");
-        eventDispatcher_.Configure(&guiModule_, &subsystems_);
-        eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
+        
+        eventDispatcher_.SetDependencies(&guiModule_, &subsystems_);
+        eventDispatcher_.SetMouseUpdateRate(editorSettings_.MouseEventRateLimit);
+        
         renderLoop_.Configure(&subsystems_, &guiModule_, renderer_.get(), config_.clearColor);
 
-        
-        
-        const auto& defaultMap = BixEngine::Gui::EditorSettings::Get().DefaultMapPath;
+        // 9. Chargement Map par défaut
+        const auto& defaultMap = Gui::EditorSettings::Get().DefaultMapPath;
         LOG_INFO("Bootstrap: Checking default map path: " + (defaultMap.empty() ? "EMPTY" : defaultMap));
 
         if (!defaultMap.empty() && std::filesystem::exists(defaultMap))
@@ -125,7 +124,7 @@ namespace BixEngine::Core
             
             auto newScene = std::make_unique<Game::Scene>("DefaultScene");
             
-            if (BixEngine::Serialization::SceneSerializer::LoadBinary(*newScene, defaultMap))
+            if (Serialization::SceneSerializer::LoadBinary(*newScene, defaultMap))
             {
                 subsystems_.GetSceneManager()->SetScene(std::move(newScene));
                 LOG_INFO("Default map loaded successfully.");
@@ -135,8 +134,12 @@ namespace BixEngine::Core
                 LOG_ERROR("Failed to load default map: " + defaultMap);
             }
         }
+        else 
+        {
+            // Optionnel : Créer une scène vide par défaut si aucune map n'est chargée
+            // subsystems_.EmplaceScene<Game::Scene>("Empty Scene");
+        }
 
-        
         guiModule_.SetupDefaultGuiPanels(subsystems_, renderLoop_.GetLastDeltaTimePointer());
 
         initialized_ = true;
@@ -163,20 +166,27 @@ namespace BixEngine::Core
             return;
 
         const float deltaTime = renderLoop_.CalculateDeltaTime();
-
         
-        eventDispatcher_.SetMouseEventRateLimit(editorSettings_.MouseEventRateLimit);
         eventDispatcher_.PumpEvents(running_);
+        
         if (!running_)
         {
             LOG_INFO("Quit event received. Stopping engine loop.");
             return;
         }
 
-        
         renderLoop_.BeginFrame();
         renderLoop_.Update(deltaTime);
         renderLoop_.Render();
+
+        if (enableFrameLimiter_ && targetFrameRate_ > 0.0f)
+        {
+            if (Timer* timer = subsystems_.GetTimer())
+            {
+                const float targetDelta = 1.0f / targetFrameRate_;
+                timer->SleepUntilNextFrame(targetDelta);
+            }
+        }
     }
 
     void EngineBootstrap::ShutdownAll() noexcept
@@ -189,7 +199,7 @@ namespace BixEngine::Core
         running_ = false;
 
         renderLoop_.Reset();
-        eventDispatcher_.Reset();
+        
         audioSystem_.Shutdown();
         subsystems_.Shutdown();
         guiModule_.Shutdown();
@@ -215,21 +225,14 @@ namespace BixEngine::Core
     bool EngineBootstrap::Restart()
     {
         LOG_INFO("Restarting EngineBootstrap...");
+        
         ShutdownAll();
         return InitializeAll();
     }
 
     bool EngineBootstrap::HasActiveScene() const
     {
-        
-        
-        
-        
-        
-        
-        
-        
-        return subsystems_.GetScene() != nullptr;
+        return subsystems_.GetActiveScene() != nullptr;
     }
 
     bool EngineBootstrap::CreateWindow()
@@ -245,7 +248,6 @@ namespace BixEngine::Core
         {
             LOG_ERROR(String{"Couldn't create window: "} + SDL_GetError());
             window_.reset();
-
             return false;
         }
 
@@ -255,14 +257,13 @@ namespace BixEngine::Core
 
     bool EngineBootstrap::CreateRenderer()
     {
-        renderer_ = std::make_unique<Graphics::Renderer>(window_->GetSDLWindow());
+        renderer_ = std::make_unique<Graphics::Renderer>(window_->GetSDLWindow(), nullptr, config_.useVSync);
+
         if (!renderer_ || !renderer_->IsValid())
         {
             LOG_ERROR(String{"Couldn't create renderer: "} + SDL_GetError());
-
             renderer_.reset();
             window_.reset();
-
             return false;
         }
 

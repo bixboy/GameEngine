@@ -3,7 +3,7 @@
 #include <memory>
 #include "Containers/String.h"
 
-namespace BixEngine::resources
+namespace BixEngine::Resources
 {
     class SpriteAtlas;
 

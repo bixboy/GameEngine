@@ -1,88 +1,169 @@
 #pragma once
 #include "Math/Vector3.h"
 #include "Math/Rotator.h"
-#include "Matrix/Matrix3.h"
-
+#include "Matrix/Matrix4.h"
+#include <vector>
 
 namespace BixEngine::Math
 {
-    constexpr float Deg2Rad(float deg) { return deg * (3.1415926535f / 180.f); }
-    constexpr float Rad2Deg(float rad) { return rad * (180.f / 3.1415926535f); }
-
-    struct Transform
+    class Transform
     {
-        Vector3 position{Vector3::Zero()};
-        Rotator rotation{Rotator::Zero()};
-        Vector3 scale{Vector3::One()};
+    private:
+        Vec3 m_LocalPosition{Vec3::Zero()};
+        Rotator m_LocalRotation{Rotator::Zero()};
+        Vec3 m_LocalScale{Vec3::One()};
 
-        Transform* parent = nullptr;
+        // Cache system
+        mutable Matrix4 m_LocalMatrix;
+        mutable Matrix4 m_WorldMatrix;
+        mutable bool m_IsDirty = true;
 
+        Transform* m_Parent = nullptr;
+        std::vector<Transform*> m_Children;
+
+    public:
         Transform() = default;
-
-        Transform(const Vector3& pos, const Rotator& rot, const Vector3& scl) : position(pos), rotation(rot), scale(scl)
-        {
+        
+        void SetPosition(const Vec3& pos)
+        { 
+            m_LocalPosition = pos; 
+            SetDirty(); 
         }
 
-        
-        
-        
-        void Translate(const Vector3& delta) { position += delta; }
+        void SetRotation(const Rotator& rot)
+        { 
+            m_LocalRotation = rot; 
+            SetDirty(); 
+        }
 
-        Vector3 GetLocalPosition() const { return position; }
+        void SetScale(const Vec3& scale)
+        { 
+            m_LocalScale = scale; 
+            SetDirty(); 
+        }
+
+        // --- Hiérarchie ---
         
-        Vector3 GetWorldPosition() const
+        void SetParent(Transform* newParent, bool keepWorldTransform = true)
         {
-            if (parent)
+            if (m_Parent == newParent)
+                return;
+
+            Vec3 worldPos = GetWorldPosition();
+            Rotator worldRot = GetWorldRotation();
+            Vec3 worldScale = GetWorldScale();
+
+            if (m_Parent)
             {
-                return TransformPoint(Vector3::Zero());
+                m_Parent->RemoveChild(this);
             }
-            return position;
+
+            m_Parent = newParent;
+
+            if (m_Parent)
+            {
+                m_Parent->AddChild(this);
+            }
+
+            if (keepWorldTransform)
+            {
+                if (m_Parent)
+                {
+                    Matrix4 parentInverse = m_Parent->GetWorldMatrix().Inverse();
+                    m_LocalPosition = parentInverse.MultiplyPoint(worldPos);
+
+                    m_LocalRotation = worldRot - m_Parent->GetWorldRotation();
+                    
+                    Vec3 parentScale = m_Parent->GetWorldScale();
+                    m_LocalScale.x = (parentScale.x != 0) ? worldScale.x / parentScale.x : 1.0f;
+                    m_LocalScale.y = (parentScale.y != 0) ? worldScale.y / parentScale.y : 1.0f;
+                    m_LocalScale.z = (parentScale.z != 0) ? worldScale.z / parentScale.z : 1.0f;
+                }
+                else
+                {
+                    m_LocalPosition = worldPos;
+                    m_LocalRotation = worldRot;
+                    m_LocalScale = worldScale;
+                }
+            }
+            
+            SetDirty();
         }
-
-        Vector3 GetPosition() { return GetWorldPosition(); } 
-
-
-        void SetPosition(const Vector3 NewPosition) { position = NewPosition; } 
-
-        void Rotate(const Rotator& delta)
-        {
-            rotation.pitch += delta.pitch;
-            rotation.yaw += delta.yaw;
-            rotation.roll += delta.roll;
-        }
-
-        void ScaleBy(const Vector3& factor)
-        {
-            scale.x *= factor.x;
-            scale.y *= factor.y;
-            scale.z *= factor.z;
-        }
-
-        void SetParent(Transform* newParent) { parent = newParent; }
-
-        [[nodiscard]] Matrix3 ToMatrix3() const noexcept
-        {
-            Matrix3 translation = Matrix3::Translation(position.x, position.y);
-            Matrix3 rotationM = Matrix3::Rotation(rotation.yaw);
-            Matrix3 scaleM = Matrix3::Scale(scale.x, scale.y);
-
-            Matrix3 local = translation * rotationM * scaleM;
-
-            if (parent)
-                local = parent->ToMatrix3() * local;
-
-            return local;
-        }
-
         
-        
-        
-        [[nodiscard]] Vector3 TransformPoint(const Vector3& localPoint) const noexcept
+        const Matrix4& GetLocalMatrix() const
         {
-            Vector3 input(localPoint.x, localPoint.y, 1.0f);
-            Vector3 result = ToMatrix3() * input;
+            if (m_IsDirty)
+            {
+                m_LocalMatrix = Matrix4::TRS(m_LocalPosition, m_LocalRotation, m_LocalScale);
+                m_IsDirty = false;
+            }
+            
+            return m_LocalMatrix;
+        }
 
-            return {result.x, result.y, 0.0f};
+        const Matrix4& GetWorldMatrix() const
+        {
+            const Matrix4& local = GetLocalMatrix();
+            
+            if (m_Parent)
+            {
+                m_WorldMatrix = m_Parent->GetWorldMatrix() * local;
+            }
+            else
+            {
+                m_WorldMatrix = local;
+            }
+            return m_WorldMatrix;
+        }
+
+        Vec3 GetWorldPosition() const
+        {
+            return GetWorldMatrix().GetTranslation(); 
+        }
+
+        Rotator GetWorldRotation() const
+        {
+            if (m_Parent)
+                return m_Parent->GetWorldRotation() + m_LocalRotation;
+            
+            return m_LocalRotation;
+        }
+
+        Vec3 GetWorldScale() const
+        {
+            if (m_Parent)
+                return m_Parent->GetWorldScale() * m_LocalScale;
+            
+            return m_LocalScale;
+        }
+
+    private:
+        void SetDirty()
+        {
+            if (m_IsDirty)
+                return;
+            
+            m_IsDirty = true;
+            
+            for (auto* child : m_Children)
+            {
+                child->SetDirty();
+            }
+        }
+
+        void AddChild(Transform* child)
+        {
+            m_Children.push_back(child);
+        }
+
+        void RemoveChild(Transform* child)
+        {
+            auto it = std::ranges::remove(m_Children, child).begin();
+            
+            if (it != m_Children.end())
+            {
+                m_Children.erase(it, m_Children.end());
+            }
         }
     };
 }

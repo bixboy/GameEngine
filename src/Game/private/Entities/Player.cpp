@@ -6,6 +6,7 @@
 #include "Components/Audio/AudioSourceComponent.h"
 #include "Components/Sprite/SpriteAnimatorComponent.h"
 #include "Ressources/Core/ResourceManager.h"
+#include "Framework/BGameplayStatics.h"
 
 
 
@@ -98,6 +99,8 @@ namespace BixEngine::Game
             physicsComponent_->SetMass(50.0f);
             physicsComponent_->SetAirResistance(1.0f);
             physicsComponent_->SetMaxFallSpeed(1500.0f);
+
+            physicsComponent_->BindOnCollisionEnter(this, &Player::OnCollisionEnter);
         }
 
         audioSrc_ = AddComponent<AudioSourceComponent>();
@@ -122,6 +125,22 @@ namespace BixEngine::Game
         if (audioSrc_)
         {
             audioSrc_->Play();
+        }
+    }
+
+    void Player::OnCollisionEnter(Actor* other, const CollisionHitResult& result)
+    {
+        if (other)
+        {
+            LOG_INFO("Player collided with: " + other->GetTypeName());
+            if (other->GetTypeName() == "Zapper")
+            {
+                 LOG_INFO("Player hit Zapper! Restarting scene...");
+                 if (const auto* scene = GetOwningScene())
+                 {
+                     BGameplayStatics::LoadScene(GetOwningScene(), scene->GetName());
+                 }
+            }
         }
     }
 }

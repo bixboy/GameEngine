@@ -6,6 +6,7 @@
 #include "Math/Vector2.h"
 #include "Components/Audio/AudioSourceComponent.h"
 #include "Ressources/RessourcesClass/AudioClip.h"
+#include "Framework/CollisionHitResult.h"
 #include "Player.generated.h"
 
 
@@ -56,6 +57,8 @@ namespace BixEngine::Game
         void RefreshSpriteComponent();
 
         void StarTestMusic();
+
+        void OnCollisionEnter(Actor* other, const CollisionHitResult& result);
 
         Math::Vector2<float> pendingInput_{};
 
