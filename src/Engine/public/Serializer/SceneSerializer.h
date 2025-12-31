@@ -11,31 +11,29 @@ namespace BixEngine::Game
     class Scene;
 }
 
+
 namespace BixEngine::Serialization
 {
     class SceneSerializer
     {
     public:
-        using ActorFactory = std::function<std::unique_ptr<BixEngine::Game::Actor>()>;
+        using ActorFactory = std::function<std::unique_ptr<Game::Actor>()>;
 
-        
-        static bool SaveBinary(const BixEngine::Game::Scene& scene, const std::filesystem::path& filePath);
-        static bool LoadBinary(BixEngine::Game::Scene& scene, const std::filesystem::path& filePath);
+        static bool SaveBinary(const Game::Scene& scene, const std::filesystem::path& filePath);
+        static bool LoadBinary(Game::Scene& scene, const std::filesystem::path& filePath);
 
-        
-        static bool SerializeBinary(const BixEngine::Game::Scene& scene, std::ostream& stream);
-        static bool DeserializeBinary(BixEngine::Game::Scene& scene, std::istream& stream);
+        static bool SerializeBinary(const Game::Scene& scene, std::ostream& stream);
+        static bool DeserializeBinary(Game::Scene& scene, std::istream& stream);
 
-        
         static void RegisterActorFactory(String typeName, ActorFactory factory);
         static void UnregisterActorFactory(const String& typeName);
         
-        static void EnsureActorFactory(const BixEngine::Game::Actor& actor);
+        static void EnsureActorFactory(const Game::Actor& actor);
         
         [[nodiscard]] static bool HasActorFactory(const String& typeName);
         static void ClearActorFactories();
         
-        static std::unique_ptr<BixEngine::Game::Actor> CreateActor(const String& typeName);
+        static std::unique_ptr<Game::Actor> CreateActor(const String& typeName);
 
     private:
         static std::unordered_map<String, ActorFactory>& GetFactories();

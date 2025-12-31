@@ -289,12 +289,26 @@ namespace BixEngine::Resources
 
             if (doc.contains("texture")) 
                 outDefinition.texturePath = String(doc["texture"].get<std::string>().c_str());
-            
-            if (doc.contains("columns")) outDefinition.columns = doc["columns"].get<int>();
-            else outDefinition.columns = 1;
 
-            if (doc.contains("rows")) outDefinition.rows = doc["rows"].get<int>();
-            else outDefinition.rows = 1;
+            // Columns
+            if (doc.contains("columns"))
+            {
+                outDefinition.columns = doc["columns"].get<int>();
+            }
+            else
+            {
+                outDefinition.columns = 1;
+            }
+
+            // Rows
+            if (doc.contains("rows"))
+            {
+                outDefinition.rows = doc["rows"].get<int>();
+            }
+            else
+            {
+                outDefinition.rows = 1;
+            }
 
             outDefinition.padding = doc.value("padding", 0);
             outDefinition.margin = doc.value("margin", 0);

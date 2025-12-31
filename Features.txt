@@ -1,2 +1,7 @@
 BIX_ENGINE_FEATURES
 
+1- Physique
+2- Audio
+3- éditeur amélioré
+
+Pour joué au jeu juste appuie sur play et appuie sur espace pour esquivé les zappers

@@ -12,7 +12,7 @@
 #include "Components/Core/CameraComponent.h"
 #include "Serializer/SceneSerializer.h"
 #include "Utils/FileIO/BinaryUtils.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Serializer/PrefabSerializer.h"
 #include "Debug/Logger.h"
 #include <filesystem>
 #include <fstream>
@@ -161,7 +161,7 @@ namespace BixEngine::Gui
                 if (path.extension() == ".bixactor")
                 {
                     
-                    auto root = PrefabUtils::PrefabSerializer::LoadPrefab(path);
+                    auto root = BixEngine::Serialization::PrefabSerializer::LoadPrefab(path);
                     if (root)
                     {
                         Game::Scene* scene = nullptr;

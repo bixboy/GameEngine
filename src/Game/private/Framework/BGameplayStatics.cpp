@@ -3,7 +3,7 @@
 #include "Framework/Actor.h"
 #include "Framework/Scene.h"
 #include "Framework/SceneManager.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Serializer/PrefabSerializer.h"
 #include <filesystem>
 #include <vector>
 #include <functional>
@@ -127,7 +127,7 @@ namespace BixEngine::Game
          std::filesystem::path prefabPath = path.ToStdString();
                 
         
-        auto actorUnique = BixEngine::PrefabUtils::PrefabSerializer::LoadPrefab(prefabPath);
+        auto actorUnique = BixEngine::Serialization::PrefabSerializer::LoadPrefab(prefabPath);
         
         if (!actorUnique)
         {

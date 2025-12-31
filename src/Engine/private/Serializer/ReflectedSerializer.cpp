@@ -6,80 +6,259 @@
 #include "Math/Vector2.h"
 #include "Math/Rect.h"
 #include <SDL3/SDL_pixels.h>
-#include "Ressources/Core/ResourceManager.h"
+#include "Containers/SubclassOf.h"
+#include "Utils/ReflectionUtils.h"
+
+#include <unordered_map>
+#include <functional>
+
 #include "Ressources/RessourcesClass/AudioClip.h"
-#include "Ressources/RessourcesClass/Texture.h"
-#include "Ressources/RessourcesClass/SpriteAtlas.h"
 #include "Ressources/RessourcesClass/AudioContainer.h"
-
-
-#include "Templates/SubclassOf.h"
-#include "Containers/Array.h"
+#include "Ressources/RessourcesClass/SpriteAtlas.h"
+#include "Ressources/RessourcesClass/Texture.h"
 
 namespace BixEngine::Serialization
 {
     using namespace Bix::Reflection;
-    using namespace BixEngine::resources;
 
-    static bool IsResourceType(const std::string& typeName, const std::string& resourceName)
+    // --- TypeHandler Structure ---
+    struct TypeHandler
     {
-        return typeName.find(resourceName) != std::string::npos;
-    }
+        std::function<bool(const PropertyInfo&, const void*, Utils::BinaryWriter&)> Serialize;
+        std::function<bool(const PropertyInfo&, void*, Utils::BinaryReader&)> Deserialize;
+        std::function<bool(Utils::BinaryReader&)> Skip;
+    };
 
-    template <typename TResource>
-    static String GetResourcePath(const PropertyInfo& prop, const void* instance)
+    // --- Handler Registry ---
+    static const std::unordered_map<std::string, TypeHandler>& GetHandlers()
     {
-        
-        if (prop.TypeName.find("*") != std::string::npos)
+        static std::unordered_map<std::string, TypeHandler> handlers;
+        if (handlers.empty())
         {
-            const auto* ptr = prop.Get<TResource*>(instance);
-            return ptr ? ptr->GetPath() : String("");
-        }
+            #define REGISTER_PRIMITIVE(Type, Name) \
+            { \
+                TypeHandler h; \
+                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool { return w.WritePrimitive(p.Get<Type>(i)); }; \
+                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool { Type v; if(!r.ReadPrimitive(v)) return false; const_cast<PropertyInfo&>(p).Get<Type>(i) = v; return true; }; \
+                h.Skip = [](Utils::BinaryReader& r) -> bool { Type v; return r.ReadPrimitive(v); }; \
+                handlers[Name] = h; \
+            }
 
-        
-        
-        const auto& ptr = prop.Get<std::shared_ptr<TResource>>(instance);
-        return ptr ? ptr->GetPath() : String("");
-    }
+            REGISTER_PRIMITIVE(int, "int")
+            REGISTER_PRIMITIVE(int, "int32_t")
+            REGISTER_PRIMITIVE(float, "float")
+            REGISTER_PRIMITIVE(bool, "bool")
+            REGISTER_PRIMITIVE(SDL_Color, "SDL_Color")
 
-    template <typename TResource>
-    static void SetResourceFromPath(const PropertyInfo& prop, void* instance, const String& path)
-    {
-        auto resource = ResourceManager::Get().Get<TResource>(path);
-
-        if (prop.TypeName.find("*") != std::string::npos)
-        {
-            const_cast<PropertyInfo&>(prop).Get<TResource*>(instance) = resource.get();
-        }
-        else
-        {
+            // --- Strings ---
+            TypeHandler stringHandler;
+            stringHandler.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+            { 
+                return w.WriteString(p.Get<String>(i)); 
+            };
             
-            const_cast<PropertyInfo&>(prop).Get<std::shared_ptr<TResource>>(instance) = resource;
+            stringHandler.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+            { 
+                String v; if(!r.ReadString(v))
+                    return false;
+                
+                p.Get<String>(i) = v;
+                
+                return true; 
+            };
+            
+            stringHandler.Skip = [](Utils::BinaryReader& r) -> bool
+            { 
+                String v;
+                return r.ReadString(v); 
+            };
+            
+            handlers["String"] = stringHandler;
+            handlers["std::string"] = stringHandler; 
+
+            // --- Math::Vector2<T> ---
+            auto RegisterVec2 = [&]<typename T>(const std::string& name)
+            {
+                TypeHandler h;
+                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool { 
+                    const auto& v = p.Get<Math::TVector2<T>>(i); 
+                    return w.WritePrimitive(v.x) && w.WritePrimitive(v.y); 
+                };
+                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool { 
+                    Math::TVector2<T> v; 
+                    if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y)) return false;
+                    const_cast<PropertyInfo&>(p).Get<Math::TVector2<T>>(i) = v; 
+                    return true; 
+                };
+                h.Skip = [](Utils::BinaryReader& r) -> bool { 
+                    T temp; return r.ReadPrimitive(temp) && r.ReadPrimitive(temp); 
+                };
+                handlers[name] = h;
+            };
+
+            // Math::Vector3<T>
+            auto RegisterVec3 = [&]<typename T>(const std::string& name)
+            {
+                TypeHandler h;
+                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+                { 
+                    const auto& v = p.Get<Math::TVector3<T>>(i); 
+                    return w.WritePrimitive(v.x) && w.WritePrimitive(v.y) && w.WritePrimitive(v.z); 
+                };
+                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+                { 
+                    Math::TVector3<T> v; 
+                    if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y) || !r.ReadPrimitive(v.z))
+                        return false;
+                    
+                    const_cast<PropertyInfo&>(p).Get<Math::TVector3<T>>(i) = v; 
+                    return true; 
+                };
+                h.Skip = [](Utils::BinaryReader& r) -> bool
+                { 
+                    T temp;
+                    return r.ReadPrimitive(temp) && r.ReadPrimitive(temp) && r.ReadPrimitive(temp); 
+                };
+                handlers[name] = h;
+            };
+
+            // --- Enregistrement des types ---
+
+            // Vector2 Float
+            RegisterVec2.operator()<float>("Math::Vector2");
+            RegisterVec2.operator()<float>("Math::Vector2<float>");
+
+            // Vector2 Int
+            RegisterVec2.operator()<int>("Math::Vector2<int>");
+            RegisterVec2.operator()<int>("Math::Vec2i");
+
+            // Vector3 Float
+            RegisterVec3.operator()<float>("Math::Vector3");
+            RegisterVec3.operator()<float>("Math::Vector3<float>");
+
+            // Vector3 Int
+            RegisterVec3.operator()<int>("Math::Vector3<int>");
+            RegisterVec3.operator()<int>("Math::Vec3i");
+
+            // TArray<T>
+            auto RegisterArray = [&]<typename T>(const std::string& name)
+            {
+                TypeHandler h;
+                
+                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+                { 
+                    const auto& arr = p.Get<TArray<T>>(i);
+                    if (!w.WriteUint32(static_cast<uint32_t>(arr.size())))
+                        return false;
+                    
+                    for (const auto& val : arr)
+                    {
+                        if (!w.WritePrimitive(val))
+                            return false;
+                    }
+                    
+                    return true;
+                };
+
+                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+                { 
+                    TArray<T>& arr = const_cast<PropertyInfo&>(p).Get<TArray<T>>(i);
+                    uint32_t count = 0;
+                    if (!r.ReadUint32(count))
+                        return false;
+                    
+                    arr.resize(count);
+                    for (uint32_t k = 0; k < count; ++k)
+                    {
+                        if (!r.ReadPrimitive(arr[k]))
+                            return false;
+                    }
+                    
+                    return true; 
+                };
+
+                h.Skip = [](Utils::BinaryReader& r) -> bool
+                { 
+                    uint32_t count = 0;
+                    if (!r.ReadUint32(count))
+                        return false;
+                    
+                    for (uint32_t k = 0; k < count; ++k)
+                    {
+                        T temp; 
+                        if (!r.ReadPrimitive(temp))
+                            return false;
+                    }
+                    
+                    return true;
+                };
+
+                handlers[name] = h;
+            };
+
+            // --- Enregistrement des Tableaux ---
+            RegisterArray.operator()<int>("TArray<int>");
+            RegisterArray.operator()<float>("TArray<float>");
+            RegisterArray.operator()<bool>("TArray<bool>");
+            RegisterArray.operator()<Math::Vector3>("TArray<Math::Vector3>");
+
+            // --- Math::Rect ---
+            TypeHandler rectHandler;
+            rectHandler.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+            { 
+                const auto& v = p.Get<Math::Rect>(i); 
+                return w.WritePrimitive(v.x) && w.WritePrimitive(v.y) && w.WritePrimitive(v.width) && w.WritePrimitive(v.height);
+            };
+            
+            rectHandler.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+            { 
+                Math::Rect v; 
+                if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y) || !r.ReadPrimitive(v.width) || !r.ReadPrimitive(v.height))
+                    return false;
+                
+                p.Get<Math::Rect>(i) = v; 
+                return true; 
+            };
+            
+            rectHandler.Skip = [](Utils::BinaryReader& r) -> bool
+            {
+                float f;
+                return r.ReadPrimitive(f) && r.ReadPrimitive(f) && r.ReadPrimitive(f) && r.ReadPrimitive(f);
+            };
+
+            handlers["Math::Rect"] = rectHandler;
         }
+        return handlers;
     }
 
-    
-    
-    
-    
+    // --- Skip Logic ---
     static bool SkipValue(Utils::BinaryReader& reader, const std::string& type)
     {
-        
-        if (type.compare("int") == 0 || type.compare("int32_t") == 0) { int v; return reader.ReadPrimitive(v); }
-        if (type.compare("float") == 0) { float v; return reader.ReadPrimitive(v); }
-        if (type.compare("bool") == 0) { bool v; return reader.ReadPrimitive(v); }
-        if (type.compare("SDL_Color") == 0) { SDL_Color v; return reader.ReadPrimitive(v); }
-        
-        
-        if (type.compare("String") == 0 || type.compare("std::string") == 0 || 
-            IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || 
-            IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
+        // 1. Try Map
+        const auto& handlers = GetHandlers();
+        if (auto it = handlers.find(type); it != handlers.end())
+        {
+            return it->second.Skip(reader);
+        }
+
+        // 2. Fallbacks
+        // Resources -> String
+        if (Utils::IsResourceType(type, "Texture") ||
+            Utils::IsResourceType(type, "AudioClip") || 
+            Utils::IsResourceType(type, "SpriteAtlas") ||
+            Utils::IsResourceType(type, "AudioContainer"))
         {
             String v; return reader.ReadString(v);
         }
 
-        
-        if (type.find("TArray<TSubclassOf<") != std::string::npos)
+        // TSubclassOf -> String
+        if (type.find("TSubclassOf<") != std::string::npos && type.find("TArray") == std::string::npos)
+        {
+            String v; return reader.ReadString(v);
+        }
+
+        // TArray<T> -> Read N Strings
+        if (type.find("TArray<") != std::string::npos)
         {
             uint32_t count = 0;
             if (!reader.ReadUint32(count)) return false;
@@ -91,305 +270,275 @@ namespace BixEngine::Serialization
             return true;
         }
 
-        
-        if (type.find("TSubclassOf<") != std::string::npos)
-        {
-            String v; return reader.ReadString(v);
-        }
-
-        
-        if (type.find("Vector3") != std::string::npos) { Math::Vector3 v; return reader.ReadPrimitive(v.x) && reader.ReadPrimitive(v.y) && reader.ReadPrimitive(v.z); }
-        if (type.find("Vector2") != std::string::npos) { Math::Vector2<float> v; return reader.ReadPrimitive(v.x) && reader.ReadPrimitive(v.y); }
-        if (type.find("Rect") != std::string::npos) { Math::Rect v; return reader.ReadPrimitive(v.X) && reader.ReadPrimitive(v.Y) && reader.ReadPrimitive(v.Width) && reader.ReadPrimitive(v.Height); }
-
-        
         return false;
     }
 
-    
-    
-    
+    // --- ReflectedSerializer Implementation ---
+
     bool ReflectedSerializer::Serialize(const void* instance, const ClassInfo* info, Utils::BinaryWriter& writer, int depth)
     {
-        if (!instance || !info) return false;
-        if (depth > 20) return false;
-
+        if (!instance || !info)
+            return false;
         
+        if (depth > 20)
+            return false;
+
+        // 1. Parent
         if (info->SuperClass && !Serialize(instance, info->SuperClass, writer, depth + 1)) 
             return false;
 
-        
+        const auto& handlers = GetHandlers();
+
+        // 2. Count Valid Properties
         uint32_t validPropCount = 0;
         for (const auto& prop : info->Properties)
         {
             const std::string& type = prop.TypeName;
-            bool isSupported = 
-                type == "int" || type == "int32_t" || type == "float" || type == "bool" || type == "SDL_Color" ||
-                type == "String" || type == "std::string" ||
-                type.find("Vector3") != std::string::npos || type.find("Vector2") != std::string::npos || type.find("Rect") != std::string::npos ||
-                IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer") ||
-                type.find("TSubclassOf<") != std::string::npos ||
-                (prop.ArrayFunctions != nullptr);
-
-            if (isSupported)
+            if (handlers.contains(type) || 
+                Utils::IsResourceType(type, "Texture") ||
+                Utils::IsResourceType(type, "AudioClip") || 
+                Utils::IsResourceType(type, "SpriteAtlas") ||
+                Utils::IsResourceType(type, "AudioContainer") ||
+                type.find("TSubclassOf<") != std::string::npos || prop.ArrayFunctions != nullptr)
+            {
                 validPropCount++;
+            }
         }
 
-        if (!writer.WriteUint32(validPropCount)) return false;
+        if (!writer.WriteUint32(validPropCount))
+            return false;
 
-        
+        // 3. Serialize Properties
         for (const auto& prop : info->Properties)
         {
             const std::string& type = prop.TypeName;
-            
-            bool isSupported = 
-                type == "int" || type == "int32_t" || type == "float" || type == "bool" || type == "SDL_Color" ||
-                type == "String" || type == "std::string" ||
-                type.find("Vector3") != std::string::npos || type.find("Vector2") != std::string::npos || type.find("Rect") != std::string::npos ||
-                IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer") ||
-                type.find("TSubclassOf<") != std::string::npos ||
-                (prop.ArrayFunctions != nullptr);
 
-            if (!isSupported)
+            // Map Handler
+            if (auto it = handlers.find(type); it != handlers.end())
             {
-                LOG_WARNING("ReflectedSerializer: Skipping unsupported property '" + prop.Name + "' of type '" + type + "'");
-                continue;
-            }
-
-            
-            if (!writer.WriteString(prop.Name)) return false;
-            if (!writer.WriteString(prop.TypeName)) return false;
-
-            
-            #define SERIALIZE_PRIMITIVE(T, TypeString) \
-                if (type.compare(TypeString) == 0) { if (!writer.WritePrimitive(prop.Get<T>(instance))) return false; continue; }
-
-            SERIALIZE_PRIMITIVE(int, "int");
-            SERIALIZE_PRIMITIVE(int, "int32_t");
-            SERIALIZE_PRIMITIVE(float, "float");
-            SERIALIZE_PRIMITIVE(bool, "bool");
-            SERIALIZE_PRIMITIVE(SDL_Color, "SDL_Color");
-
-            if (type.compare("String") == 0 || type.compare("std::string") == 0)
-            {
-                if (!writer.WriteString(prop.Get<String>(instance))) return false;
-                continue;
-            }
-
-            if (type.find("Vector3") != std::string::npos)
-            {
-                const auto& v = prop.Get<Math::Vector3>(instance);
-                if (!writer.WritePrimitive(v.x) || !writer.WritePrimitive(v.y) || !writer.WritePrimitive(v.z)) return false;
-                continue;
-            }
-            if (type.find("Vector2") != std::string::npos)
-            {
-                const auto& v = prop.Get<Math::Vector2<float>>(instance);
-                if (!writer.WritePrimitive(v.x) || !writer.WritePrimitive(v.y)) return false;
-                continue;
-            }
-            if (type.find("Rect") != std::string::npos)
-            {
-                const auto& r = prop.Get<Math::Rect>(instance);
-                if (!writer.WritePrimitive(r.X) || !writer.WritePrimitive(r.Y) || !writer.WritePrimitive(r.Width) || !writer.WritePrimitive(r.Height)) return false;
-                continue;
-            }
-
-            
-            if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
-            {
-                String path = "";
-                if (IsResourceType(type, "Texture")) path = GetResourcePath<Texture>(prop, instance);
-                else if (IsResourceType(type, "AudioClip")) path = GetResourcePath<AudioClip>(prop, instance);
-                else if (IsResourceType(type, "SpriteAtlas")) 
-                {
-                    path = GetResourcePath<SpriteAtlas>(prop, instance);
-                    LOG_INFO("SERIALIZER_DEBUG: Writing SpriteAtlas '" + prop.Name + "' Path: '" + path + "'");
-                }
-                else if (IsResourceType(type, "AudioContainer")) path = GetResourcePath<AudioContainer>(prop, instance);
+                if (!writer.WriteString(prop.Name))
+                    return false;
                 
-                if (!writer.WriteString(path)) return false;
+                if (!writer.WriteString(prop.TypeName))
+                    return false;
+                
+                if (!it->second.Serialize(prop, instance, writer))
+                    return false;
+                
                 continue;
             }
 
-            
+            // Fallback: Resources
+            if (Utils::IsResourceType(type, "Texture") ||
+                Utils::IsResourceType(type, "AudioClip") || 
+                Utils::IsResourceType(type, "SpriteAtlas") ||
+                Utils::IsResourceType(type, "AudioContainer"))
+            {
+                if (!writer.WriteString(prop.Name))
+                    return false;
+                
+                if (!writer.WriteString(prop.TypeName))
+                    return false;
+
+                String path = "";
+                if (Utils::IsResourceType(type, "Texture"))
+                {
+                    path = Utils::GetResourcePath<Resources::Texture>(prop, instance);
+                }
+                else if (Utils::IsResourceType(type, "AudioClip"))
+                {
+                    path = Utils::GetResourcePath<Resources::AudioClip>(prop, instance);
+                }
+                else if (Utils::IsResourceType(type, "SpriteAtlas"))
+                {
+                    path = Utils::GetResourcePath<Resources::SpriteAtlas>(prop, instance);
+                }
+                else if (Utils::IsResourceType(type, "AudioContainer"))
+                {
+                    path = Utils::GetResourcePath<Resources::AudioContainer>(prop, instance);
+                }
+                
+                if (!writer.WriteString(path))
+                    return false;
+                
+                continue;
+            }
+
+            // Fallback: TArray
             if (prop.ArrayFunctions)
             {
+                if (!writer.WriteString(prop.Name))
+                    return false;
+                
+                if (!writer.WriteString(prop.TypeName))
+                    return false;
+
                 std::size_t size = prop.ArrayFunctions->GetSize(instance);
-                if (!writer.WriteUint32(static_cast<uint32_t>(size))) return false;
+                if (!writer.WriteUint32(static_cast<uint32_t>(size)))
+                    return false;
                 
                 for (std::size_t i = 0; i < size; ++i)
                 {
                     std::string path = prop.ArrayFunctions->GetStringAt(instance, i);
-                    if (!writer.WriteString(String(path.c_str()))) return false;
+                    if (!writer.WriteString(String(path.c_str())))
+                        return false;
                 }
+                
                 continue;
             }
 
-            
-            
-            
+            // Fallback: TSubclassOf
             if (type.find("TSubclassOf<") != std::string::npos)
             {
+                if (!writer.WriteString(prop.Name))
+                    return false;
                 
-                
-                const auto& subclass = prop.Get<TSubclassOf<int>>(instance);
-                if (!writer.WriteString(subclass.GetAssetPath())) return false;
-                continue;
-            }
+                if (!writer.WriteString(prop.TypeName))
+                    return false;
 
-            return false;
+                const auto& subclass = prop.Get<TSubclassOf<Utils::GenericSubclassType>>(instance);
+                if (!writer.WriteString(subclass.GetAssetPath()))
+                    return false;
+            }
         }
         
-        #undef SERIALIZE_PRIMITIVE
         return true;
     }
 
-    
-    
-    
     bool ReflectedSerializer::Deserialize(void* instance, const ClassInfo* info, Utils::BinaryReader& reader, int depth)
     {
         if (!instance || !info) return false;
         if (depth > 20) return false;
 
+        // 1. Parent
         if (info->SuperClass && !Deserialize(instance, info->SuperClass, reader, depth + 1)) 
             return false;
 
-        
-        uint32_t propCount = 0;
-        if (!reader.ReadUint32(propCount)) return false;
+        const auto& handlers = GetHandlers();
 
-        
+        // 2. Count
+        uint32_t propCount = 0;
+        if (!reader.ReadUint32(propCount))
+            return false;
+
+        // 3. Properties
         for (uint32_t i = 0; i < propCount; ++i)
         {
             String propName;
             String typeName;
+            
             if (!reader.ReadString(propName) || !reader.ReadString(typeName)) 
             {
-                LOG_ERROR("ReflectedSerializer: Failed to read Property Metadata at index " + std::to_string(i));
+                LOG_ERROR("ReflectedSerializer: Failed to read metadata at " + std::to_string(i));
                 return false;
             }
 
+            // Find Property
             const PropertyInfo* prop = nullptr;
             for (const auto& p : info->Properties)
             {
-                if (p.Name == propName.ToStdString())
+                if (p.Name == propName.Std())
                 {
                     prop = &p;
                     break;
                 }
             }
 
-            if (prop)
+            if (!prop)
             {
-                 
-                 if (prop->TypeName != typeName.ToStdString())
-                 {
-                     LOG_WARNING("ReflectedSerializer: Type Mismatch for '" + propName.ToStdString() + "'. File: " + typeName.ToStdString() + ", Code: " + prop->TypeName + ". Skipping.");
-                     if (!SkipValue(reader, typeName.ToStdString())) return false;
-                     continue;
-                 }
+                if (!SkipValue(reader, typeName.Std()))
+                    return false;
+                
+                continue;
+            }
 
-                 const std::string& type = prop->TypeName;
+            if (prop->TypeName != typeName.Std())
+            {
+                LOG_WARNING("ReflectedSerializer: Type mismatch for " + propName.Std() + ". Skipping.");
+                if (!SkipValue(reader, typeName.Std()))
+                    return false;
+                
+                continue;
+            }
 
-                #define DESERIALIZE_PRIMITIVE(T, TypeString) \
-                    if (type.compare(TypeString) == 0) { \
-                        T val{}; if (!reader.ReadPrimitive(val)) return false; \
-                        const_cast<PropertyInfo*>(prop)->Get<T>(instance) = val; \
-                         goto continue_loop; \
-                    }
+            const std::string& type = prop->TypeName;
 
-                DESERIALIZE_PRIMITIVE(int, "int");
-                DESERIALIZE_PRIMITIVE(int, "int32_t");
-                DESERIALIZE_PRIMITIVE(float, "float");
-                DESERIALIZE_PRIMITIVE(bool, "bool");
-                DESERIALIZE_PRIMITIVE(SDL_Color, "SDL_Color");
+            // Map Handler
+            if (auto it = handlers.find(type); it != handlers.end())
+            {
+                if (!it->second.Deserialize(*prop, instance, reader))
+                    return false;
+                
+                continue;
+            }
 
-                if (type.compare("String") == 0 || type.compare("std::string") == 0)
+            // Fallback: Resources
+            if (Utils::IsResourceType(type, "Texture") || Utils::IsResourceType(type, "AudioClip") || 
+                Utils::IsResourceType(type, "SpriteAtlas") || Utils::IsResourceType(type, "AudioContainer"))
+            {
+                String path;
+                if (!reader.ReadString(path))
+                    return false;
+                
+                if (!path.empty())
                 {
-                    String val; 
-                    if (!reader.ReadString(val)) return false;
-                    prop->Get<String>(instance) = val;
-                    continue;
+                     if (Utils::IsResourceType(type, "Texture"))
+                     {
+                         Utils::SetResourceFromPath<Resources::Texture>(*prop, instance, path);
+                     }
+                     else if (Utils::IsResourceType(type, "AudioClip"))
+                     {
+                         Utils::SetResourceFromPath<Resources::AudioClip>(*prop, instance, path);
+                     }
+                     else if (Utils::IsResourceType(type, "SpriteAtlas"))
+                     {
+                         Utils::SetResourceFromPath<Resources::SpriteAtlas>(*prop, instance, path);
+                     }
+                     else if (Utils::IsResourceType(type, "AudioContainer"))
+                     {
+                         Utils::SetResourceFromPath<Resources::AudioContainer>(*prop, instance, path);
+                     }
                 }
+                
+                continue;
+            }
 
-                if (type.find("Vector3") != std::string::npos)
-                {
-                    Math::Vector3 v;
-                    if (!reader.ReadPrimitive(v.x) || !reader.ReadPrimitive(v.y) || !reader.ReadPrimitive(v.z)) return false;
-                    prop->Get<Math::Vector3>(instance) = v;
-                    continue;
-                }
-                if (type.find("Vector2") != std::string::npos)
-                {
-                    Math::Vector2<float> v;
-                    if (!reader.ReadPrimitive(v.x) || !reader.ReadPrimitive(v.y)) return false;
-                    prop->Get<Math::Vector2<float>>(instance) = v;
-                    continue;
-                }
-                if (type.find("Rect") != std::string::npos)
-                {
-                    Math::Rect r;
-                    if (!reader.ReadPrimitive(r.X) || !reader.ReadPrimitive(r.Y) || !reader.ReadPrimitive(r.Width) || !reader.ReadPrimitive(r.Height)) return false;
-                    prop->Get<Math::Rect>(instance) = r;
-                    continue;
-                }
-
-                if (IsResourceType(type, "Texture") || IsResourceType(type, "AudioClip") || IsResourceType(type, "SpriteAtlas") || IsResourceType(type, "AudioContainer"))
+            // Fallback: TArray
+            if (prop->ArrayFunctions)
+            {
+                uint32_t count = 0;
+                if (!reader.ReadUint32(count))
+                    return false;
+                
+                prop->ArrayFunctions->Clear(instance);
+                for (uint32_t k = 0; k < count; ++k)
                 {
                     String path;
-                    if (!reader.ReadString(path)) return false;
-                    if (!path.IsEmpty())
-                    {
-                        if (IsResourceType(type, "Texture")) SetResourceFromPath<Texture>(*prop, instance, path);
-                        else if (IsResourceType(type, "AudioClip")) SetResourceFromPath<AudioClip>(*prop, instance, path);
-                        else if (IsResourceType(type, "SpriteAtlas")) 
-                        {
-                            LOG_INFO("SERIALIZER_DEBUG: Reading SpriteAtlas '" + propName + "' Path: '" + path + "'");
-                            SetResourceFromPath<SpriteAtlas>(*prop, instance, path);
-                        }
-                        else if (IsResourceType(type, "AudioContainer")) SetResourceFromPath<AudioContainer>(*prop, instance, path);
-                    }
-                    continue;
-                }
-
-                if (prop->ArrayFunctions)
-                {
-                    uint32_t count = 0;
-                    if (!reader.ReadUint32(count)) return false;
-                    prop->ArrayFunctions->Clear(instance);
-                    for (uint32_t k = 0; k < count; ++k)
-                    {
-                        String path;
-                        if (!reader.ReadString(path)) return false;
-                        prop->ArrayFunctions->AddString(instance, path.ToStdString());
-                    }
-                    continue;
-                }
-
-                
-                if (type.find("TSubclassOf<") != std::string::npos)
-                {
-                    String path;
-                    if (!reader.ReadString(path)) return false;
+                    if (!reader.ReadString(path))
+                        return false;
                     
-                    
-                    const_cast<PropertyInfo*>(prop)->Get<TSubclassOf<int>>(instance).GetAssetPath() = path;
-                    continue;
+                    prop->ArrayFunctions->AddString(instance, path.Std());
                 }
                 
-                
-                 LOG_ERROR("ReflectedSerializer: Matched property '" + propName + "' type='" + type + "' but no logic to read it. Desync imminent.");
-                 return false;
-
-                continue_loop:; 
+                continue;
             }
-            else
+
+            // Fallback: TSubclassOf
+            if (type.find("TSubclassOf<") != std::string::npos)
             {
-                if (!SkipValue(reader, typeName.ToStdString())) return false;
+                String path;
+                if (!reader.ReadString(path))
+                    return false;
+                
+                auto& subclassObj = prop->Get<TSubclassOf<Utils::GenericSubclassType>>(instance);
+                const_cast<String&>(subclassObj.GetAssetPath()) = path;
+                continue;
             }
+
+            LOG_ERROR("ReflectedSerializer: No handler for property " + propName.Std() + " (" + type + ")");
+            return false;
         }
+
         return true;
     }
 }

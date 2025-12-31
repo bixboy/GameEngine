@@ -6,9 +6,7 @@
 #include "Core/ClassInfo.h"
 #include "Debug/Logger.h"
 #include <fstream>
-
-#include "Entities/Player.h"
-#include "Components/Sprite/SpriteComponent.h"
+#include <unordered_map>
 
 
 namespace BixEngine::Serialization
@@ -20,10 +18,6 @@ namespace BixEngine::Serialization
         constexpr std::uint32_t kSceneBinaryVersion = 1;
     }
 
-    
-    
-    
-
     bool SceneSerializer::SaveBinary(const Game::Scene& scene, const std::filesystem::path& filePath)
     {
         std::ofstream file(filePath, std::ios::binary);
@@ -32,6 +26,7 @@ namespace BixEngine::Serialization
             LOG_ERROR("Failed to open binary scene file for writing: " + filePath.string());
             return false;
         }
+        
         return SerializeBinary(scene, file);
     }
 
@@ -48,27 +43,20 @@ namespace BixEngine::Serialization
         return DeserializeBinary(scene, file);
     }
 
-    
-    
-    
-
     bool SceneSerializer::SerializeBinary(const Game::Scene& scene, std::ostream& stream)
     {
         BinaryWriter writer(stream);
 
-        
         if (!writer.WriteUint32(kSceneBinaryVersion))
             return false;
         
         if (!writer.WriteString(scene.GetName()))
             return false;
 
-        
         const auto& actors = scene.GetActors();
         if (!writer.WriteUint32(static_cast<uint32_t>(actors.size())))
             return false;
 
-        
         for (const auto& actor : actors)
         {
             if (!writer.WriteString(actor->GetTypeName()))
@@ -85,10 +73,6 @@ namespace BixEngine::Serialization
 
         return writer.Good();
     }
-
-    
-    
-    
 
     bool SceneSerializer::DeserializeBinary(Game::Scene& scene, std::istream& stream)
     {
@@ -109,14 +93,20 @@ namespace BixEngine::Serialization
             return false;
         
         scene.Rename(std::move(sceneName));
-        
-        
-        
         scene.ClearActors();
 
         std::uint32_t actorCount = 0;
         if (!reader.ReadUint32(actorCount))
             return false;
+
+        if (actorCount > 1000000) 
+        {
+            LOG_ERROR("SceneSerializer: Actor count too high (" + std::to_string(actorCount) + "). File corrupted?");
+            return false;
+        }
+        
+        std::unordered_map<std::string, Game::Actor*> uuidToActorMap;
+        uuidToActorMap.reserve(actorCount);
 
         for (std::uint32_t i = 0; i < actorCount; ++i)
         {
@@ -131,7 +121,6 @@ namespace BixEngine::Serialization
                 return false;
             }
 
-            
             try
             {
                 actor->DeserializeBinary(stream);
@@ -144,52 +133,40 @@ namespace BixEngine::Serialization
 
             if (!stream)
             {
-                
-                
-                bool eof = stream.eof();
-                bool fail = stream.fail();
-                bool bad = stream.bad();
-                LOG_ERROR("SceneSerializer: Stream corrupted after actor '" + typeName + "'. States - EOF: " + (eof?"1":"0") + ", FAIL: " + (fail?"1":"0") + ", BAD: " + (bad?"1":"0"));
+                LOG_ERROR("SceneSerializer: Stream corrupted after actor '" + typeName + "'.");
                 return false;
             }
+
+            Game::Actor* rawPtr = actor.get();
+            uuidToActorMap[rawPtr->GetUUID().Std()] = rawPtr;
 
             scene.AddActor(std::move(actor));
         }
 
-        
-        
+        // RECONSTRUCTION DE LA HIÉRARCHIE
         const auto& allActors = scene.GetActors();
         for (const auto& actorPtr : allActors)
         {
-            if (!actorPtr) continue;
+            if (!actorPtr)
+                continue;
 
             const String& pUUID = actorPtr->GetLoadedParentUUID();
-            if (!pUUID.IsEmpty())
+            if (!pUUID.empty())
             {
-                
-                auto it = std::find_if(allActors.begin(), allActors.end(), 
-                    [&](const std::unique_ptr<Game::Actor>& other)
-                    {
-                        return other && other->GetUUID() == pUUID;
-                    });
-
-                if (it != allActors.end())
+                auto it = uuidToActorMap.find(pUUID.Std());
+                if (it != uuidToActorMap.end())
                 {
-                    actorPtr->SetParent(it->get());
+                    actorPtr->SetParent(it->second);
                 }
                 else
                 {
-                    LOG_WARNING("Deserialize: Could not find parent with UUID: " + pUUID + " for actor: " + actorPtr->GetName());
+                    LOG_WARNING("Deserialize: Parent not found (UUID: " + pUUID + ") for actor: " + actorPtr->GetName());
                 }
             }
         }
 
         return reader.Good();
     }
-
-    
-    
-    
 
     std::unique_ptr<Game::Actor> SceneSerializer::CreateActor(const String& typeName)
     {
@@ -232,7 +209,11 @@ namespace BixEngine::Serialization
     void SceneSerializer::EnsureActorFactory(const Game::Actor& actor)
     {
         String typeName = actor.GetTypeName();
-        if (typeName.empty() || HasActorFactory(typeName)) return;
+        if (typeName.empty() || HasActorFactory(typeName))
+            return;
+
+        if (Bix::Reflection::Registry::Get().Find(typeName.c_str()) != nullptr)
+            return;
 
         std::unique_ptr<Game::Actor> prototype = actor.ClonePrototype();
         if (!prototype)
@@ -242,7 +223,10 @@ namespace BixEngine::Serialization
         }
 
         std::shared_ptr sharedProto = std::move(prototype);
-        RegisterActorFactory(typeName, [sharedProto] { return sharedProto->ClonePrototype(); });
+        RegisterActorFactory(typeName, [sharedProto]
+        {
+            return sharedProto->ClonePrototype();
+        });
     }
 
     bool SceneSerializer::HasActorFactory(const String& typeName)
@@ -280,19 +264,14 @@ namespace BixEngine::Serialization
                 f[name] = creator;
         };
 
-        RegisterIfMissing("Actor", [] { return std::make_unique<Game::Actor>(); });
-        RegisterIfMissing("BixEngine::Game::Actor", [] { return std::make_unique<Game::Actor>(); });
-        
-
-        RegisterIfMissing("BixEngine::Game::Player", []
-        { 
-            return std::make_unique<Game::Player>(Math::Transform()); 
+        RegisterIfMissing("Actor", []
+        {
+            return std::make_unique<Game::Actor>();
         });
         
-        
-        RegisterIfMissing("Player", []
-        { 
-            return std::make_unique<Game::Player>(Math::Transform()); 
+        RegisterIfMissing("BixEngine::Game::Actor", []
+        {
+            return std::make_unique<Game::Actor>();
         });
     }
 }

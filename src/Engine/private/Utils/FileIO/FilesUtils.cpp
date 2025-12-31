@@ -3,76 +3,83 @@
 #include <algorithm>
 #include <cctype>
 #include <fstream>
+#include <sstream>
 #include <imgui.h>
 
-
-namespace BixEngine::FilesUtils
+namespace BixEngine::Utils
 {
-    namespace fs = std::filesystem;
+    // --- Gestion Dossiers ---
 
-    
-    
-    
-    bool Utilities::TryCreateDir(const fs::path& dir, String& outError)
+    bool FileUtils::TryCreateDir(const fs::path& dir, String& outError)
     {
         std::error_code ec;
         if (dir.empty())
         {
-            outError = "Invalid directory path.";
-            return false;
+            return LogAndStoreError(outError, "Invalid directory path.");
         }
+
+        if (fs::exists(dir))
+            return true;
 
         fs::create_directories(dir, ec);
         if (ec)
         {
-            outError = String("Failed to create directory: ") + dir.string() + " (" + ec.message() + ")";
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Failed to create directory: ") + dir.string() + " (" + ec.message() + ")");
         }
 
         return true;
     }
 
-    bool Utilities::TryRemove(const fs::path& path, bool recursive, String& outError)
+    bool FileUtils::EnsureDirectory(const fs::path& dir)
+    {
+        String dummyError;
+        return TryCreateDir(dir, dummyError);
+    }
+
+    bool FileUtils::EnsureParentDirectory(const fs::path& filePath)
+    {
+        if (filePath.empty())
+            return false;
+        
+        return EnsureDirectory(filePath.parent_path());
+    }
+
+    // --- Manipulation ---
+
+    bool FileUtils::TryRemove(const fs::path& path, bool recursive, String& outError)
     {
         std::error_code ec;
         if (recursive)
+        {
             fs::remove_all(path, ec);
+        }
         else
+        {
             fs::remove(path, ec);
+        }
 
         if (ec)
         {
-            outError = String("Failed to remove: ") + path.string() + " (" + ec.message() + ")";
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Failed to remove: ") + path.string() + " (" + ec.message() + ")");
         }
-
+        
         return true;
     }
 
-    
-    
-    
-    bool Utilities::TryCopyFile(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
+    bool FileUtils::TryCopyFile(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
     {
         std::error_code ec;
 
         if (!fs::exists(source))
         {
-            outError = String("Source file not found: ") + source.string();
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Source file not found: ") + source.string());
         }
 
         if (destination.has_parent_path())
         {
-            fs::create_directories(destination.parent_path(), ec);
-            if (ec)
+            if (!EnsureDirectory(destination.parent_path()))
             {
-                outError = String("Failed to create destination directory: ") + destination.parent_path().string() + " (" + ec.message() + ")";
-                LOG_ERROR(outError);
-                return false;
+                 return LogAndStoreError(outError, "Failed to create parent directory for copy.");
             }
         }
 
@@ -87,141 +94,115 @@ namespace BixEngine::FilesUtils
 
         if (ec)
         {
-            outError = String("Failed to copy file: ") + source.string() + " → " + destination.string() + " (" + ec.message() + ")";
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Failed to copy file: ") + source.string() + " -> " + destination.string());
         }
 
         return true;
     }
 
-    bool Utilities::TryRename(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
+    bool FileUtils::TryRename(const fs::path& source, const fs::path& destination, bool overwrite, String& outError)
     {
         std::error_code ec;
 
         if (source.empty() || destination.empty())
         {
-            outError = "Invalid source or destination path.";
-            return false;
+            return LogAndStoreError(outError, "Invalid source or destination path.");
         }
 
         if (!fs::exists(source))
         {
-            outError = String("Source not found: ") + source.string();
-            LOG_WARNING(outError);
-            return false;
+            return LogAndStoreError(outError, String("Source not found: ") + source.string());
         }
 
         if (fs::exists(destination))
         {
             if (!overwrite)
             {
-                outError = String("Destination already exists: ") + destination.string();
-                LOG_WARNING(outError);
-                return false;
+                return LogAndStoreError(outError, String("Destination already exists: ") + destination.string());
             }
-
-            fs::remove(destination, ec);
-            if (ec)
-            {
-                outError = String("Failed to remove existing destination before rename: ") + destination.string() + " (" + ec.message() + ")";
-                LOG_ERROR(outError);
-                return false;
-            }
+            
+            fs::remove(destination, ec); 
         }
 
         if (destination.has_parent_path())
         {
-            fs::create_directories(destination.parent_path(), ec);
-            if (ec)
-            {
-                outError = String("Failed to create destination directory: ") + destination.parent_path().string() + " (" + ec.message() + ")";
-                LOG_ERROR(outError);
-                return false;
-            }
+            EnsureDirectory(destination.parent_path());
         }
 
         fs::rename(source, destination, ec);
         if (ec)
         {
-            outError = String("Failed to rename: ") + source.string() + " → " + destination.string() + " (" + ec.message() + ")";
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Failed to rename: ") + ec.message());
         }
 
         return true;
     }
 
-    bool Utilities::TryWriteFile(const fs::path& path, const std::string& content, String& outError)
+    // --- Lecture / Écriture ---
+
+    bool FileUtils::TryWriteFile(const fs::path& path, const std::string& content, String& outError)
     {
-        std::error_code ec;
-
         if (path.empty())
-        {
-            outError = "Invalid file path.";
-            return false;
-        }
+            return LogAndStoreError(outError, "Invalid file path.");
 
-        if (path.has_parent_path())
-        {
-            fs::create_directories(path.parent_path(), ec);
-            if (ec)
-            {
-                outError = String("Failed to create target directory: ") + path.parent_path().string() + " (" + ec.message() + ")";
-                LOG_ERROR(outError);
-                return false;
-            }
-        }
+        EnsureParentDirectory(path);
 
         std::ofstream file(path, std::ios::out | std::ios::trunc);
         if (!file.is_open())
         {
-            outError = String("Failed to open file for writing: ") + path.string();
-            LOG_ERROR(outError);
-            return false;
+            return LogAndStoreError(outError, String("Failed to open file for writing: ") + path.string());
         }
 
         file << content;
         file.flush();
-
-        if (!file.good())
-        {
-            outError = String("Failed to write file: ") + path.string();
-            LOG_ERROR(outError);
-            file.close();
-            return false;
-        }
-
         file.close();
+
         return true;
     }
 
-    std::vector<std::filesystem::path> Utilities::ScanDirectory(const std::filesystem::path& directory, const std::vector<std::string>& extensions, bool recursive)
+    bool FileUtils::ReadFile(const fs::path& path, String& outContent)
     {
-        std::vector<std::filesystem::path> results;
-        std::filesystem::path finalPath = directory;
+        std::ifstream file(path);
+        if (!file.is_open())
+            return false;
 
-        if (!std::filesystem::exists(finalPath))
+        std::stringstream buffer;
+        buffer << file.rdbuf();
+        outContent = buffer.str().c_str();
+        return true;
+    }
+
+    // --- Scan ---
+
+    std::vector<fs::path> FileUtils::ScanDirectory(const fs::path& directory, const std::vector<std::string>& extensions, bool recursive)
+    {
+        std::vector<fs::path> results;
+        fs::path finalPath = directory;
+
+        if (!fs::exists(finalPath))
         {
-            std::filesystem::path contentPath = "Content" / finalPath;
-            if (std::filesystem::exists(contentPath))
-            {
+            fs::path contentPath = "Content" / finalPath;
+            if (fs::exists(contentPath))
                 finalPath = contentPath;
-            }
-            else
-            {
-                return results; 
-            }
+            
+            else return results; 
         }
 
         std::vector<std::string> lowerExts;
         lowerExts.reserve(extensions.size());
         for (const auto& ext : extensions)
         {
-            lowerExts.push_back(String(ext).ToLower().Std());   
+            std::string lower = ext;
+            std::ranges::transform(lower, lower.begin(),
+               [](unsigned char c)
+               {
+                   return std::tolower(c);
+               });
+            
+            lowerExts.push_back(lower);
         }
 
-        auto ProcessEntry = [&](const std::filesystem::directory_entry& entry)
+        auto ProcessEntry = [&](const fs::directory_entry& entry)
         {
             if (!entry.is_regular_file())
                 return;
@@ -232,7 +213,12 @@ namespace BixEngine::FilesUtils
                 return;
             }
 
-            std::string fileExt = String(entry.path().extension().string()).ToLower();
+            std::string fileExt = entry.path().extension().string();
+            std::ranges::transform(fileExt, fileExt.begin(),
+               [](unsigned char c)
+               {
+                   return std::tolower(c);
+               });
             
             for (const auto& allowedExt : lowerExts)
             {
@@ -248,83 +234,83 @@ namespace BixEngine::FilesUtils
         {
             if (recursive)
             {
-                for (const auto& entry : std::filesystem::recursive_directory_iterator(finalPath))
+                for (const auto& entry : fs::recursive_directory_iterator(finalPath))
                     ProcessEntry(entry);
             }
             else
             {
-                for (const auto& entry : std::filesystem::directory_iterator(finalPath))
+                for (const auto& entry : fs::directory_iterator(finalPath))
                     ProcessEntry(entry);
             }
         }
-        catch (const std::filesystem::filesystem_error& e)
+        catch (const fs::filesystem_error& e)
         {
-            LOG_ERROR("Error scanning directory");
+            LOG_ERROR("Error scanning directory: " + String(e.what()));
         }
 
         return results;
     }
 
-    
-    
-    
-    bool Utilities::LogAndStoreError(String& outError, const String& message, bool alsoLog)
+    // --- Utilitaires ---
+
+    bool FileUtils::IsExtension(const fs::path& path, const std::string& extension)
+    {
+        if (!path.has_extension())
+            return false;
+        
+        std::string ext = path.extension().string();
+        
+        return CaseInsensitiveLess(ext, extension) || CaseInsensitiveLess(extension, ext) || ext == extension;
+    }
+
+    bool FileUtils::LogAndStoreError(String& outError, const String& message, bool alsoLog)
     {
         outError = message;
         if (alsoLog)
             LOG_ERROR(message);
-
+        
         return false;
     }
 
-    bool Utilities::CaseInsensitiveLess(const std::string& a, const std::string& b)
+    bool FileUtils::CaseInsensitiveLess(const std::string& a, const std::string& b)
     {
-        return std::lexicographical_compare(
-            a.begin(), a.end(),
-            b.begin(), b.end(),
-            [](unsigned char x, unsigned char y) { return std::tolower(x) < std::tolower(y); });
+        return std::lexicographical_compare(a.begin(), a.end(), b.begin(), b.end(),
+            [](unsigned char x, unsigned char y)
+            {
+                return std::tolower(x) < std::tolower(y);
+            });
     }
 
-    
-    
-    
-    String Utilities::ExtractDisplayName(const fs::path& path)
+    String FileUtils::ExtractDisplayName(const fs::path& path)
     {
         if (path.empty())
             return "Asset";
-
-        const auto filename = path.filename().generic_string();
-        if (!filename.empty())
-            return String{filename};
-
-        const auto stem = path.stem().generic_string();
-        if (!stem.empty())
-            return String{stem};
-
-        return String{path.generic_string()};
+        
+        if (path.has_stem())
+            return String(path.stem().generic_string().c_str());
+        
+        return String(path.generic_string().c_str());
     }
 
-    fs::path Utilities::NormalizePath(const fs::path& path)
+    fs::path FileUtils::NormalizePath(const fs::path& path)
     {
         if (path.empty())
             return {};
-
-        fs::path p = path;
-        p = p.make_preferred();
-        return p.lexically_normal();
+        
+        return path.lexically_normal().make_preferred();
     }
 
-    fs::path Utilities::ResolveUserConfigPath(const char* fileName)
+    fs::path FileUtils::ResolveUserConfigPath(const char* fileName)
     {
         const ImGuiIO& io = ImGui::GetIO();
         fs::path base;
-
+        
         if (io.IniFilename && io.IniFilename[0] != '\0')
             base = fs::path(io.IniFilename).parent_path();
-
+        
         if (base.empty())
             base = fs::current_path();
-
+        
         return base / fileName;
     }
 }

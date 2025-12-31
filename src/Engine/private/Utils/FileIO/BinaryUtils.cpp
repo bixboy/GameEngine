@@ -1,13 +1,12 @@
 #include "Utils/FileIO/BinaryUtils.h"
 
-
 namespace BixEngine::Utils
 {
-    
-    
-    
-    
-    BinaryWriter::BinaryWriter(std::ostream& stream) : stream_(stream)
+    // ==============================================================================
+    // BinaryWriter
+    // ==============================================================================
+
+    BinaryWriter::BinaryWriter(std::ostream& stream) : stream_(&stream)
     {}
 
     bool BinaryWriter::Good() const noexcept
@@ -18,7 +17,7 @@ namespace BixEngine::Utils
     bool BinaryWriter::WriteBytes(const char* data, std::size_t length)
     {
         if (length > 0)
-            stream_.write(data, static_cast<std::streamsize>(length));
+            stream_->write(data, static_cast<std::streamsize>(length));
         
         return Good();
     }
@@ -34,12 +33,11 @@ namespace BixEngine::Utils
         return WriteUint32(len) && WriteBytes(value.c_str(), len);
     }
     
+    // ==============================================================================
+    // BinaryReader
+    // ==============================================================================
 
-    
-    
-    
-    
-    BinaryReader::BinaryReader(std::istream& stream) : stream_(stream)
+    BinaryReader::BinaryReader(std::istream& stream) : stream_(&stream)
     {}
 
     bool BinaryReader::Good() const noexcept
@@ -50,7 +48,7 @@ namespace BixEngine::Utils
     bool BinaryReader::ReadBytes(char* data, std::size_t length)
     {
         if (length > 0)
-            stream_.read(data, static_cast<std::streamsize>(length));
+            stream_->read(data, static_cast<std::streamsize>(length));
         
         return Good();
     }
@@ -65,10 +63,16 @@ namespace BixEngine::Utils
         std::uint32_t len = 0;
         if (!ReadUint32(len))
             return false;
+        
+        if (len > 64 * 1024 * 1024) 
+        {
+            return false;
+        }
 
         if (len > 0)
         {
             value.resize(len);
+            
             if (!ReadBytes(value.data(), len))
                 return false;
         }
@@ -76,6 +80,7 @@ namespace BixEngine::Utils
         {
             value.clear();
         }
+        
         return true;
     }
 }

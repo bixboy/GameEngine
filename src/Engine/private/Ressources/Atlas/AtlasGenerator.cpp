@@ -6,29 +6,18 @@
 #include <string>
 #include <vector>
 #include "Debug/Logger.h"
+#include "Utils/FileIO/FilesUtils.h"
 
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb/stb_image.h>
 #define STB_IMAGE_WRITE_IMPLEMENTATION
 #include <stb/stb_image_write.h>
 
+
 namespace BixEngine::Resources
 {
     namespace
     {
-        [[nodiscard]] bool IsPng(const std::filesystem::path& path)
-        {
-            const auto ext = path.extension().string();
-            return ext == ".png" || ext == ".PNG";
-        }
-
-        [[nodiscard]] bool EnsureFolder(const std::filesystem::path& folder)
-        {
-            if (std::filesystem::exists(folder))
-                return true;
-            return std::filesystem::create_directories(folder);
-        }
-
         [[nodiscard]] std::string BuildTextureFileName(const std::filesystem::path& folder)
         {
             const std::string animationName = folder.filename().string();
@@ -97,7 +86,7 @@ namespace BixEngine::Resources
         std::vector<std::filesystem::path> frameFiles;
         for (const auto& entry : std::filesystem::directory_iterator(frameDirectory))
         {
-            if (entry.is_regular_file() && IsPng(entry.path()))
+            if (entry.is_regular_file() && Utils::FileUtils::IsPng(entry.path()))
                 frameFiles.push_back(entry.path());
         }
         
@@ -163,7 +152,7 @@ namespace BixEngine::Resources
             }
 
             std::vector<uint8_t> buffer(static_cast<size_t>(width * height * 4));
-            std::copy(pixels, pixels + buffer.size(), buffer.begin());
+            std::copy_n(pixels, buffer.size(), buffer.begin());
             
             stbi_image_free(pixels);
             loadedFrames.push_back(std::move(buffer));
@@ -175,7 +164,7 @@ namespace BixEngine::Resources
 
         std::vector<uint8_t> atlasPixels(static_cast<size_t>(atlasWidth * atlasHeight * 4), 0);
 
-        // 6. Blit (Copie) des frames dans l'atlas
+        // 6. Copie des frames dans l'atlas
         for (size_t index = 0; index < loadedFrames.size(); ++index)
         {
             const int column = static_cast<int>(index % columns);
@@ -197,7 +186,7 @@ namespace BixEngine::Resources
 
         // 7. Écriture des fichiers de sortie
         const std::filesystem::path outputDirectory = frameDirectory.parent_path();
-        if (!outputDirectory.empty() && !EnsureFolder(outputDirectory))
+        if (!outputDirectory.empty() && !Utils::FileUtils::EnsureDirectory(outputDirectory))
         {
             LOG_ERROR("AtlasGenerator: Impossible de créer le dossier de sortie.");
             return false;

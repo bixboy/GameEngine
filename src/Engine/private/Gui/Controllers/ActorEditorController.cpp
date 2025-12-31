@@ -17,7 +17,7 @@
 #include "Framework/Actor.h"
 #include "Serializer/SceneSerializer.h"
 #include "Utils/FileIO/BinaryUtils.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Serializer/PrefabSerializer.h"
 #include <SDL3/SDL.h>
 
 
@@ -66,7 +66,7 @@ namespace BixEngine::Gui
         
         std::unique_ptr<Game::Actor> LoadActorBinary(const std::filesystem::path& path)
         {
-            auto root = BixEngine::PrefabUtils::PrefabSerializer::LoadPrefab(path);
+            auto root = BixEngine::Serialization::PrefabSerializer::LoadPrefab(path);
             if (!root)
             {
                 LOG_ERROR("LoadActorBinary: Failed to load prefab from " + path.string());
@@ -359,7 +359,7 @@ namespace BixEngine::Gui
         {
             if (state->previewActor)
             {
-                if (BixEngine::PrefabUtils::PrefabSerializer::SavePrefab(state->previewActor, state->assetPath))
+                if (BixEngine::Serialization::PrefabSerializer::SavePrefab(state->previewActor, state->assetPath))
                 {
                     LOG_INFO("Saved Actor Prefab: " + state->assetDisplayName);
                 }

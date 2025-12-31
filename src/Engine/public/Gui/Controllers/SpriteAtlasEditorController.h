@@ -8,11 +8,6 @@
 #include "Ressources/Atlas/SpriteAtlasUtils.h"
 
 
-namespace BixEngine::resources
-{
-    class Texture;
-}
-
 namespace BixEngine::Gui
 {
     class SpriteAtlasEditorController final : public BaseAssetEditorController
@@ -20,12 +15,12 @@ namespace BixEngine::Gui
     public:
         struct SharedState : BaseAssetEditorController::SharedState
         {
-            resources::SpriteAtlasDefinition definition{};
-            std::vector<resources::SpriteAnimationDefinition> animations{};
+            Resources::SpriteAtlasDefinition definition{};
+            std::vector<Resources::SpriteAnimationDefinition> animations{};
             std::filesystem::path atlasPath{};
             std::filesystem::path textureAbsolutePath{};
-            std::shared_ptr<resources::Texture> texture{};
-            std::vector<resources::SpriteFrame> frames{};
+            std::shared_ptr<Resources::Texture> texture{};
+            std::vector<Resources::SpriteFrame> frames{};
             std::vector<bool> frameSelection{};
             bool dirty{false};
             int hoveredFrame{-1};
@@ -54,13 +49,13 @@ namespace BixEngine::Gui
     private:
         void DrawAtlasPreview(SharedState& state);
         void DrawAnimationSection(SharedState& state);
-        void DrawAnimationPreview(SharedState& state, resources::SpriteAnimationDefinition& animation);
+        void DrawAnimationPreview(SharedState& state, Resources::SpriteAnimationDefinition& animation);
         void DrawSaveSection(SharedState& state);
         void RefreshTexture(SharedState& state);
         void EnsureFramesGenerated(SharedState& state);
         void EnsureSelectionSize(SharedState& state);
         void ToggleFrameSelection(SharedState& state, int frameIndex, bool appendToSelection);
-        void AssignSelectionToAnimation(SharedState& state, resources::SpriteAnimationDefinition& animation);
+        void AssignSelectionToAnimation(SharedState& state, Resources::SpriteAnimationDefinition& animation);
         [[nodiscard]] bool SaveAtlas(SharedState& state);
         [[nodiscard]] int FrameCount(const SharedState& state) const noexcept;
         void RemoveSelectedAnimation(SharedState& state, int index);

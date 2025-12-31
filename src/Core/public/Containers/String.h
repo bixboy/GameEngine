@@ -119,9 +119,51 @@ namespace BixEngine
         
         // --- Opérateurs + (Concaténation) ---
         
-        [[nodiscard]] friend String operator + (String lhs, std::string_view rhs) { lhs += rhs; return lhs; }
-        [[nodiscard]] friend String operator + (std::string_view lhs, const String& rhs) { String s(lhs); s += rhs; return s; }
-        [[nodiscard]] friend String operator + (String lhs, char rhs) { lhs += rhs; return lhs; }
+        // 1. String + String
+        [[nodiscard]] friend String operator+(const String& lhs, const String& rhs)
+        {
+            String result = lhs;
+            result += rhs;
+            return result;
+        }
+
+        // 2. String + string_view
+        [[nodiscard]] friend String operator+(String lhs, std::string_view rhs)
+        {
+            lhs += rhs;
+            return lhs;
+        }
+
+        // 3. string_view + String
+        [[nodiscard]] friend String operator+(std::string_view lhs, const String& rhs)
+        {
+            String s(lhs);
+            s += rhs;
+            return s;
+        }
+
+        // 4. const char* + String 
+        [[nodiscard]] friend String operator+(const char* lhs, const String& rhs)
+        {
+            String result(lhs);
+            result += rhs;
+            return result;
+        }
+
+        // 5. String + const char*
+        [[nodiscard]] friend String operator+(const String& lhs, const char* rhs)
+        {
+            String result = lhs;
+            result += std::string_view(rhs); 
+            return result;
+        }
+
+        // 6. String + char
+        [[nodiscard]] friend String operator+(String lhs, char rhs)
+        {
+            lhs += rhs;
+            return lhs;
+        }
         
         // --- Comparaisons ---
         

@@ -11,7 +11,6 @@ namespace BixEngine::Core
         void Tick();
 
         void Reset();
-
         
         // Temps écoulé entre la frame précédente et l'actuelle (Secondes)
         [[nodiscard]] float GetDeltaTime() const noexcept { return deltaTime_ * timeScale_; }
@@ -35,7 +34,7 @@ namespace BixEngine::Core
         // FPS moyen sur la dernière seconde
         [[nodiscard]] float GetFPS() const noexcept { return fps_; }
 
-        // Dors le temps nécessaire pour atteindre le targetDeltaTime (ex: 16.6ms pour 60fps)
+        // Dors pour atteindre le targetDeltaTime (ex: 16.6ms pour 60fps)
         void SleepUntilNextFrame(float targetDeltaTime);
 
     private:

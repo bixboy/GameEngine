@@ -1,4 +1,4 @@
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptIntrospector.h"
 #include "Containers/String.h"
 #include <algorithm>
 #include <cctype>
@@ -6,17 +6,10 @@
 #include <sstream>
 #include <functional>
 #include "Utils/FileIO/FilesUtils.h"
-#include "Serializer/SceneSerializer.h"
-#include "Utils/FileIO/BinaryUtils.h"
-#include "Framework/Actor.h"
 
-
-namespace BixEngine::PrefabUtils
+namespace BixEngine::Editor
 {
-    
-    
-    
-    const std::vector<ScriptUtils::ParentScriptInfo>& Utilities::GetBaseClasses()
+    const std::vector<ScriptUtils::ParentScriptInfo>& ScriptIntrospector::GetBaseClasses()
     {
         static const std::vector<ScriptUtils::ParentScriptInfo> BaseClasses = {
             {
@@ -68,10 +61,7 @@ namespace BixEngine::PrefabUtils
         return BaseClasses;
     }
 
-    
-    
-    
-    std::string Utilities::SanitizeAssetName(std::string name)
+    std::string ScriptIntrospector::SanitizeAssetName(std::string name)
     {
         std::replace_if(name.begin(), name.end(),
             [](unsigned char ch)
@@ -92,26 +82,29 @@ namespace BixEngine::PrefabUtils
         return name.empty() ? "Prefab" : name;
     }
 
-    bool Utilities::ValidateMetadata(const std::string& className, const std::string& includePath, String& error)
+    bool ScriptIntrospector::ValidateMetadata(const std::string& className, const std::string& includePath, String& error)
     {
-        auto hasIllegal = [](const std::string& s) { return s.find_first_of("\r\n\"") != std::string::npos; };
+        auto hasIllegal = [](const std::string& s)
+        {
+            return s.find_first_of("\r\n\"") != std::string::npos;
+        };
 
         if (hasIllegal(className))
         {
-            FilesUtils::Utilities::LogAndStoreError(error, "Invalid characters in script class name.", false);
+            Utils::FileUtils::LogAndStoreError(error, "Invalid characters in script class name.", false);
             return false;
         }
 
         if (hasIllegal(includePath))
         {
-            FilesUtils::Utilities::LogAndStoreError(error, "Invalid characters in include path.", false);
+            Utils::FileUtils::LogAndStoreError(error, "Invalid characters in include path.", false);
             return false;
         }
 
         return true;
     }
 
-    std::string Utilities::EscapeJson(const std::string& value)
+    std::string ScriptIntrospector::EscapeJson(const std::string& value)
     {
         std::ostringstream escaped;
         for (char ch : value)
@@ -125,8 +118,8 @@ namespace BixEngine::PrefabUtils
                 break;
                 
             case '\n': escaped << "\\n";
-                
                 break;
+                
             case '\r': escaped << "\\r";
                 break;
                 
@@ -144,9 +137,6 @@ namespace BixEngine::PrefabUtils
         return escaped.str();
     }
 
-    
-    
-    
     namespace
     {
         std::string Trim(std::string_view input)
@@ -188,7 +178,7 @@ namespace BixEngine::PrefabUtils
         }
     }
 
-    std::vector<Utilities::ExposedVariableMetadata> Utilities::ExtractExposedVariables(const std::filesystem::path& headerPath, const std::string& includePath, const std::filesystem::path& scriptsDir)
+    std::vector<ScriptIntrospector::ExposedVariableMetadata> ScriptIntrospector::ExtractExposedVariables(const std::filesystem::path& headerPath, const std::string& includePath, const std::filesystem::path& scriptsDir)
     {
         std::vector<ExposedVariableMetadata> variables;
 
@@ -202,65 +192,76 @@ namespace BixEngine::PrefabUtils
 
         std::string line;
         bool pendingProperty = false;
+
         while (std::getline(stream, line))
         {
-            if (line.find("BPROPERTY") != std::string::npos)
-            {
-                pendingProperty = true; continue;
-            }
-            
-            if (!pendingProperty)
-                continue;
-
-            pendingProperty = false;
             std::string trimmed = Trim(line);
-            
             if (trimmed.empty())
                 continue;
-            
+
+            if (trimmed.rfind("//", 0) == 0)
+                continue; 
+
+            if (trimmed.find("BPROPERTY") != std::string::npos)
+            {
+                pendingProperty = true;
+                
+                if (trimmed.length() <= 15)
+                    continue; 
+                
+                size_t macroEnd = trimmed.find(')');
+                if (macroEnd != std::string::npos && macroEnd + 1 < trimmed.size())
+                {
+                    trimmed = Trim(trimmed.substr(macroEnd + 1));
+                }
+            }
+
+            if (!pendingProperty) continue;
+
+            // --- Parsing de la variable ---
+
             if (trimmed.back() == ';')
                 trimmed.pop_back();
 
             size_t eqPos = trimmed.find('=');
-            std::string declaration = eqPos == std::string::npos ? trimmed : trimmed.substr(0, eqPos);
-            std::string defaultPart = eqPos == std::string::npos ? "" : Trim(trimmed.substr(eqPos + 1));
+            std::string declaration = (eqPos == std::string::npos) ? trimmed : trimmed.substr(0, eqPos);
+            std::string defaultPart = (eqPos == std::string::npos) ? "" : Trim(trimmed.substr(eqPos + 1));
 
             size_t bracePos = declaration.find('{');
-            
-            if (defaultPart.empty() && bracePos != std::string::npos)
-                defaultPart = Trim(declaration.substr(bracePos));
-            
             if (bracePos != std::string::npos)
+            {
+                if (defaultPart.empty())
+                    defaultPart = Trim(declaration.substr(bracePos));
+                
                 declaration = declaration.substr(0, bracePos);
+            }
 
             declaration = Trim(declaration);
             size_t spacePos = declaration.find_last_of(" \t");
-            
-            if (spacePos == std::string::npos || spacePos + 1 >= declaration.size())
-                continue;
 
-            ExposedVariableMetadata meta;
-            meta.type = Trim(declaration.substr(0, spacePos));
-            meta.name = Trim(declaration.substr(spacePos + 1));
-            meta.defaultValue = std::move(defaultPart);
+            if (spacePos != std::string::npos && spacePos + 1 < declaration.size())
+            {
+                ExposedVariableMetadata meta;
+                meta.type = Trim(declaration.substr(0, spacePos));
+                meta.name = Trim(declaration.substr(spacePos + 1));
+                meta.defaultValue = std::move(defaultPart);
 
-            variables.push_back(std::move(meta));
+                variables.push_back(std::move(meta));
+                pendingProperty = false;
+            }
         }
 
         return variables;
     }
 
-    
-    
-    
-    std::vector<Utilities::PrefabScriptCandidate> Utilities::GatherPrefabCandidates(
+    std::vector<ScriptIntrospector::PrefabScriptCandidate> ScriptIntrospector::GatherPrefabCandidates(
         const std::vector<ScriptUtils::ScriptNode>& roots,
         const std::vector<ScriptUtils::ParentScriptInfo>& baseClasses)
     {
         std::vector<PrefabScriptCandidate> candidates;
         candidates.reserve(roots.size() + baseClasses.size());
 
-        
+        // Add base classes
         for (const auto& base : baseClasses)
         {
             candidates.push_back({
@@ -275,7 +276,6 @@ namespace BixEngine::PrefabUtils
             });
         }
 
-        
         std::function<void(const ScriptUtils::ScriptNode&)> collect = [&](const ScriptUtils::ScriptNode& node)
         {
             if (node.inheritsActor || node.inheritsComponent || node.hasBlueprintMacro)
@@ -298,201 +298,17 @@ namespace BixEngine::PrefabUtils
 
         for (const auto& root : roots) collect(root);
 
-        
         std::sort(candidates.begin(), candidates.end(), [](const auto& a, const auto& b)
         {
             std::string al = a.displayName;
             std::string bl = b.displayName;
             
-            std::transform(
-                al.begin(),
-                al.end(),
-                al.begin(), tolower
-                );
-            
-            std::transform(
-                bl.begin(),
-                bl.end(),
-                bl.begin(), tolower
-                );
+            std::transform(al.begin(), al.end(), al.begin(), tolower);
+            std::transform(bl.begin(), bl.end(), bl.begin(), tolower);
             
             return al < bl;
         });
 
         return candidates;
-    }
-
-    
-    
-    
-
-    
-    static void CollectDescendants(const BixEngine::Game::Actor* actor, std::vector<const BixEngine::Game::Actor*>& outList)
-    {
-        if (!actor) return;
-        for (auto* child : actor->GetChildren())
-        {
-            outList.push_back(child);
-            CollectDescendants(child, outList);
-        }
-    }
-
-    bool PrefabSerializer::SavePrefab(const BixEngine::Game::Actor* rootActor, const std::filesystem::path& path)
-    {
-        if (!rootActor) return false;
-
-        std::ofstream file(path, std::ios::binary);
-        if (!file.is_open())
-        {
-            LOG_ERROR("Failed to open file for writing prefab: " + path.string());
-            return false;
-        }
-
-        BixEngine::Utils::BinaryWriter writer(file);
-        
-        
-        writer.WriteString("PREFAB_V2");
-        
-        
-        writer.WriteString(rootActor->GetTypeName());
-        rootActor->SerializeBinary(file);
-
-        
-        std::vector<const BixEngine::Game::Actor*> descendants;
-        CollectDescendants(rootActor, descendants);
-
-        writer.WriteUint32(static_cast<uint32_t>(descendants.size()));
-        
-        for (const auto* child : descendants)
-        {
-            writer.WriteString(child->GetTypeName());
-            child->SerializeBinary(file);
-        }
-
-        return true;
-    }
-
-    std::unique_ptr<BixEngine::Game::Actor> PrefabSerializer::LoadPrefab(const std::filesystem::path& path)
-    {
-        std::ifstream file(path, std::ios::binary);
-        if (!file.is_open())
-        {
-             LOG_ERROR("Failed to open file for reading prefab: " + path.string());
-             return nullptr;
-        }
-
-        BixEngine::Utils::BinaryReader reader(file);
-        
-        
-        String header;
-        long long startPos = file.tellg();
-        
-        bool isV2 = false;
-        if (reader.ReadString(header))
-        {
-            if (header == "PREFAB_V2")
-            {
-                isV2 = true;
-            }
-            else
-            {
-                isV2 = false;
-            }
-        }
-        else
-        {
-             return nullptr;
-        }
-
-        std::unique_ptr<BixEngine::Game::Actor> root = nullptr;
-
-        if (isV2)
-        {
-            
-            String typeName;
-            if (!reader.ReadString(typeName)) return nullptr;
-            
-            root = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
-            if (!root) root = std::make_unique<BixEngine::Game::Actor>("Root(Fallback)");
-            
-            root->DeserializeBinary(file);
-
-            
-            uint32_t count = 0;
-            if (reader.ReadUint32(count))
-            {
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                std::vector<BixEngine::Game::Actor*> loadedRawActors;
-                loadedRawActors.reserve(count);
-
-                for (uint32_t i = 0; i < count; ++i)
-                {
-                    String childType;
-                    reader.ReadString(childType);
-                    auto child = BixEngine::Serialization::SceneSerializer::CreateActor(childType);
-                    if (!child) child = std::make_unique<BixEngine::Game::Actor>("Child(Fallback)");
-                    
-                    child->DeserializeBinary(file);
-                    
-                    
-                    loadedRawActors.push_back(child.release());
-                }
-
-                
-                auto FindActorByUUID = [&](const String& uuid) -> BixEngine::Game::Actor*
-                {
-                    if (root->GetUUID() == uuid) return root.get();
-                    for (auto* a : loadedRawActors)
-                        if (a->GetUUID() == uuid) return a;
-                    return nullptr;
-                };
-
-                for (auto* child : loadedRawActors)
-                {
-                    String pUUID = child->GetLoadedParentUUID();
-                    if (!pUUID.IsEmpty())
-                    {
-                        if (auto* parent = FindActorByUUID(pUUID))
-                        {
-                            child->SetParent(parent);
-                        }
-                    }
-                    else
-                    {
-                         child->SetParent(root.get());
-                    }
-                }
-            }
-            return root;
-        }
-        else
-        {
-            file.clear();
-            file.seekg(startPos, std::ios::beg);
-            
-             String typeName;
-             if (!reader.ReadString(typeName)) return nullptr;
-             
-             auto actor = BixEngine::Serialization::SceneSerializer::CreateActor(typeName);
-             if (!actor) return nullptr;
-             actor->DeserializeBinary(file);
-             return actor;
-        }
     }
 }

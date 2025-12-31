@@ -7,7 +7,7 @@
 #include <vector>
 #include "IO/FileUtils.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptIntrospector.h"
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/Editor/HeaderGeneratorUtils.h"
 #include "Utils/Editor/ScriptUtils.h"
@@ -146,7 +146,7 @@ void CreateScriptDialog::DrawContent()
         ImGui::TableSetColumnIndex(0);
         if (ImGui::BeginChild("BaseClassList", ImVec2(0.0f, listHeight), true))
         {
-            const auto& baseParents = BixEngine::PrefabUtils::Utilities::GetBaseClasses();
+            const auto& baseParents = BixEngine::Editor::ScriptIntrospector::GetBaseClasses();
             for (const auto& base : baseParents)
             {
                 const bool isSelected = selectedParentIsBase_ && !selectedParentClass_.IsEmpty() && selectedParentClass_.View() == base.className;

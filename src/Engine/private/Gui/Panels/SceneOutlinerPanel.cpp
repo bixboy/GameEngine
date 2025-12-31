@@ -8,7 +8,8 @@
 #include "imgui.h"
 #include "Serializer/SceneSerializer.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptIntrospector.h"
+#include "Serializer/PrefabSerializer.h"
 #include "Utils/Editor/ScriptUtils.h"
 #include "Debug/Logger.h"
 #include "Utils/FileIO/BinaryUtils.h"
@@ -74,26 +75,23 @@ namespace BixEngine::Gui
                 
                 
                 
-                static std::vector<PrefabUtils::Utilities::PrefabScriptCandidate> candidates;
+                static std::vector<BixEngine::Editor::ScriptIntrospector::PrefabScriptCandidate> candidates;
                 if (ImGui::IsWindowAppearing())
                 {
                     candidates.clear();
-                    auto bases = PrefabUtils::Utilities::GetBaseClasses();
+                    auto bases = BixEngine::Editor::ScriptIntrospector::GetBaseClasses();
                     
-                    
-                     
                     auto* contentBrowser = ContentBrowserPanel::GetActiveInstance();
                     if (contentBrowser) {
-                         
                          std::filesystem::path contentRoot = std::filesystem::current_path() / "Content";
                          std::filesystem::path scriptsDir = contentRoot / "Scripts";
                          std::vector<ScriptUtils::ScriptNode> scriptRoots;
                          if (std::filesystem::exists(scriptsDir)) scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, contentRoot);
-                         candidates = PrefabUtils::Utilities::GatherPrefabCandidates(scriptRoots, bases);
+                         candidates = BixEngine::Editor::ScriptIntrospector::GatherPrefabCandidates(scriptRoots, bases);
                          if (std::filesystem::exists(contentRoot)) {
                             for (const auto& entry : std::filesystem::recursive_directory_iterator(contentRoot)) {
                                 if (entry.is_regular_file() && entry.path().extension() == ".bixactor") {
-                                    PrefabUtils::Utilities::PrefabScriptCandidate prefabCandidate;
+                                    BixEngine::Editor::ScriptIntrospector::PrefabScriptCandidate prefabCandidate;
                                     prefabCandidate.displayName = entry.path().stem().string();
                                     prefabCandidate.className = entry.path().string(); 
                                     prefabCandidate.isActor = true;
@@ -104,7 +102,7 @@ namespace BixEngine::Gui
                             }
                         }
                     } else {
-                        candidates = PrefabUtils::Utilities::GatherPrefabCandidates({}, bases);
+                        candidates = BixEngine::Editor::ScriptIntrospector::GatherPrefabCandidates({}, bases);
                     }
                 }
 

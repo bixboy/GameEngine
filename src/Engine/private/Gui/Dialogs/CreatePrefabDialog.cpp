@@ -13,7 +13,8 @@
 
 #include "Gui/Utils/ContentBrowserUtils.h"
 #include "Utils/FileIO/FilesUtils.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptIntrospector.h"
+#include "Serializer/PrefabSerializer.h"
 #include "Serializer/SceneSerializer.h"
 #include "Utils/FileIO/BinaryUtils.h"
 #include "Framework/Actor.h"
@@ -49,173 +50,7 @@ void CreatePrefabDialog::ClearSelection()
     selectedIsComponent_ = false;
 }
 
-void CreatePrefabDialog::SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath)
-{
-    selectedClass_ = className.c_str();
-    selectedInclude_ = includePath.c_str();
-    selectedAssetBaseName_ = assetBaseName.c_str();
-    selectedHeaderPath_ = headerPath;
-    std::string sanitized = PrefabUtils::Utilities::SanitizeAssetName(assetBaseName);
-    if (sanitized.empty())
-        sanitized = PrefabUtils::Utilities::SanitizeAssetName(className);
-    std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", sanitized.c_str());
-    selectedIsActor_ = isActor || (!isComponent);
-    selectedIsComponent_ = isComponent;
-}
-
-
-void CreatePrefabDialog::DrawContent()
-{
-    ContentBrowserUtils::EnsureScriptsDirectoryExists(state_);
-
-    const path scriptsDir = state_.root / "Scripts";
-    auto scripts = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, state_.root);
-    auto bases = PrefabUtils::Utilities::GetBaseClasses();
-    std::vector<PrefabUtils::Utilities::PrefabScriptCandidate> candidates = PrefabUtils::Utilities::GatherPrefabCandidates(scripts, bases);
-
-    DrawDescriptionText("Create a prefab asset linked to an existing gameplay script.");
-    ImGui::Spacing();
-
-    DrawSearchBar();
-    std::string filter = searchBuffer_;
-    std::transform(filter.begin(), filter.end(), filter.begin(), tolower);
-
-    DrawCandidateListUI(candidates, filter);
-
-    if (!prefabError_.IsEmpty())
-        DrawErrorMessage(std::string(prefabError_.View()));
-
-    DrawDetailsSectionUI();
-    DrawActionButtons();
-}
-
-void CreatePrefabDialog::DrawSearchBar()
-{
-    ImGui::InputTextWithHint("##PrefabSearch", "Search scripts...", searchBuffer_, IM_ARRAYSIZE(searchBuffer_));
-}
-
-void CreatePrefabDialog::DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter)
-{
-    float listHeight = ImGui::GetTextLineHeightWithSpacing() * 12.0f;
-    if (ImGui::BeginChild("PrefabCandidateList", ImVec2(420, listHeight), true))
-    {
-        if (candidates.empty())
-        {
-            ImGui::TextDisabled("No eligible scripts were found.");
-        }
-        else
-        {
-            for (const auto& candidate : candidates)
-            {
-                std::string nameLower = candidate.displayName;
-                std::transform(nameLower.begin(), nameLower.end(), nameLower.begin(), tolower);
-
-                if (!filter.empty() && nameLower.find(filter) == std::string::npos)
-                    continue;
-
-                std::string label = candidate.displayName;
-
-                if (candidate.isActor && candidate.isComponent)
-                    label += " [Actor/Component]";
-
-                else if (candidate.isActor)
-                    label += " [Actor]";
-
-                else if (candidate.isComponent)
-                    label += " [Component]";
-
-                else if (candidate.hasBlueprintMacro)
-                    label += " [Blueprint]";
-
-                bool isSelected = (!selectedClass_.IsEmpty() && selectedClass_.View() == candidate.className);
-                if (ImGui::Selectable(label.c_str(), isSelected))
-                {
-                    SetSelectedScript(candidate.className, candidate.includePath, candidate.assetBaseName, candidate.isActor,
-                                      candidate.isComponent, candidate.headerPath);
-                    prefabError_.Clear();
-                }
-
-                if (ImGui::IsItemHovered(ImGuiHoveredFlags_DelayShort))
-                {
-                    ImGui::BeginTooltip();
-                    ImGui::Text("Class: %s", candidate.className.c_str());
-
-                    if (!candidate.includePath.empty())
-                        ImGui::Text("Include: %s", candidate.includePath.c_str());
-
-                    if (!candidate.headerPath.empty())
-                        ImGui::Text("Header: %s", candidate.headerPath.generic_string().c_str());
-
-                    ImGui::EndTooltip();
-                }
-            }
-        }
-    }
-    ImGui::EndChild();
-}
-
-void CreatePrefabDialog::DrawDetailsSectionUI()
-{
-    DrawSeparatorText("Prefab details");
-
-    bool makeComponent = selectedIsComponent_ && !selectedIsActor_;
-    const char* typeLabel = makeComponent ? "Component" : "Actor";
-    const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
-
-    DrawLabelValue("Script", selectedClass_.IsEmpty() ? "None" : selectedClass_.View().data(), "None");
-    DrawLabelValue("Type", typeLabel, "Actor");
-
-    InputTextWithLabel("Prefab name", assetNameBuffer_, IM_ARRAYSIZE(assetNameBuffer_),
-        ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
-
-    std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
-    if (baseName.empty())
-    {
-        baseName = selectedAssetBaseName_.IsEmpty() ? (selectedClass_.IsEmpty() ? "Prefab"
-            : PrefabUtils::Utilities::SanitizeAssetName(selectedClass_.View().data()))
-            : PrefabUtils::Utilities::SanitizeAssetName(selectedAssetBaseName_.ToStdString());
-    }
-
-    path relDir = state_.current.lexically_relative(state_.root);
-
-    std::string location = relDir.empty() || relDir.generic_string() == "." ? "Content" : "Content/" + relDir.generic_string();
-
-    DrawLabelValue("Location", location, "Content");
-    DrawLabelValue("File", baseName + ext, "Prefab.bixactor");
-}
-
-bool CreatePrefabDialog::DrawActionButtons()
-{
-    bool confirm = DrawConfirmButtons("Create", "Cancel", []{},
-        [&]
-        {
-          Close();
-          ClearSelection();
-          prefabError_.Clear();
-        });
-
-    if (!confirm)
-        return false;
-
-    if (selectedClass_.IsEmpty())
-        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "Please select a script to instantiate.", false);
-
-    bool makeComponent = selectedIsComponent_ && !selectedIsActor_;
-    const char* ext = makeComponent ? ".bixcomponent" : ".bixactor";
-    
-
-    std::string baseName = PrefabUtils::Utilities::SanitizeAssetName(assetNameBuffer_);
-    if (baseName.empty())
-    {
-        baseName = selectedAssetBaseName_.IsEmpty() ? selectedClass_.View().data() : selectedAssetBaseName_.View().data();
-        baseName = PrefabUtils::Utilities::SanitizeAssetName(baseName);
-    }
-
-    path target = state_.current / (baseName + ext);
-    if (fs::exists(target))
-        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "An asset with this name already exists.", false);
-
-    if (!PrefabUtils::Utilities::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
+    if (!BixEngine::Editor::ScriptIntrospector::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
         return false;
 
     LOG_INFO("CreatePrefabDialog: Creating Actor instance of type: " + selectedClass_.ToStdString());
@@ -235,7 +70,7 @@ bool CreatePrefabDialog::DrawActionButtons()
 
     LOG_INFO("CreatePrefabDialog: Serializing directly to Prefab V2...");
 
-    if (PrefabUtils::PrefabSerializer::SavePrefab(newActor.get(), target))
+    if (BixEngine::Serialization::PrefabSerializer::SavePrefab(newActor.get(), target))
     {
         LOG_INFO("CreatePrefabDialog: File written successfully. Closing.");
         Close();

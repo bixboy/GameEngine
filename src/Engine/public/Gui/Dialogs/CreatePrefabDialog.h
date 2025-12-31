@@ -3,7 +3,7 @@
 #include "Gui/Dialogs/ModalDialog.h"
 #include "Containers/String.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
-#include "Utils/FileIO/PrefabUtils.h"
+#include "Utils/Editor/ScriptIntrospector.h"
 
 namespace BixEngine::Gui
 {
@@ -20,7 +20,7 @@ namespace BixEngine::Gui
     private:
         
         void DrawSearchBar();
-        void DrawCandidateListUI(const std::vector<PrefabUtils::Utilities::PrefabScriptCandidate>& candidates, const std::string& filter);
+        void DrawCandidateListUI(const std::vector<BixEngine::Editor::ScriptIntrospector::PrefabScriptCandidate>& candidates, const std::string& filter);
         void DrawDetailsSectionUI();
         bool DrawActionButtons();
 
