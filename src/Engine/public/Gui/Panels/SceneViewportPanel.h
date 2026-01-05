@@ -13,20 +13,47 @@ namespace BixEngine::Gui
         explicit SceneViewportPanel(const DefaultEngineGuiContext& context);
         ~SceneViewportPanel() override = default;
 
+        SceneViewportPanel(const SceneViewportPanel&) = delete;
+        SceneViewportPanel& operator=(const SceneViewportPanel&) = delete;
+        SceneViewportPanel(SceneViewportPanel&&) = delete;
+        SceneViewportPanel& operator=(SceneViewportPanel&&) = delete;
+
         void DrawBody() override;
 
     private:
         DefaultEngineGuiContext context_;
 
-        enum class GizmoMode { None, Translate, Rotate, Scale };
-        enum class DragType { None, Center, XAxis, YAxis, Rotate, ScaleTopLeft, ScaleTopRight, ScaleBottomLeft, ScaleBottomRight };
+        enum class GizmoMode : std::uint8_t
+        {
+            None,
+            Translate,
+            Rotate,
+            Scale
+        };
+        
+        enum class DragType : std::uint8_t
+        {
+            None,
+            Center,
+            XAxis,
+            YAxis,
+            Rotate,
+            ScaleTopLeft,
+            ScaleTopRight,
+            ScaleBottomLeft,
+            ScaleBottomRight
+        };
 
         struct GizmoState
         {
             GizmoMode Mode{GizmoMode::Translate};
+            
             DragType DraggingType{DragType::None};
+            
             bool IsDragging{false};
+            
             ImVec2 DragStartViewportPos{};
+            
             float InitialDragAngle{0.0f};
 
             struct InitialTransformData
@@ -37,7 +64,10 @@ namespace BixEngine::Gui
             }
             InitialTransform{};
         }
+        
         gizmoState_;
+
+        [[nodiscard]] Game::Scene* GetScene() const;
 
         void DrawGizmo(Game::Actor* actor, const ImVec2& screenOffset, float viewScale);
         void HandleGizmoInteraction(Game::Actor* actor, const ImVec2& screenOffset, const ImVec2& viewportMousePos, const ImVec2& viewScale);

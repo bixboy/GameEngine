@@ -1,52 +1,78 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/ActorInspectorSection.h"
-
 #include "Gui/Panels/ActorInspector/InspectorSections/GeneralInspectorSection.h"
-#include "Gui/Panels/ActorInspector/InspectorSections/TransformInspectorSection.h"
 #include "Gui/Panels/ActorInspector/InspectorSections/ComponentInspectorSection.h"
-
 #include <utility>
+#include <algorithm>
 
 
 namespace BixEngine::Gui::ActorInspector
 {
     namespace
     {
-        std::vector<ActorInspectorSectionFactory>& GetRegisteredFactories()
+        struct RegisteredFactory
         {
-            static std::vector<ActorInspectorSectionFactory> factories;
+            ActorInspectorSectionFactory factory;
+            int priority;
+        };
+
+        std::vector<RegisteredFactory>& GetRegisteredFactories()
+        {
+            static std::vector<RegisteredFactory> factories;
             return factories;
         }
     }
 
-    
     ActorInspectorSectionList BuildActorInspectorSections()
     {
-        ActorInspectorSectionList sections;
-
-        auto& factories = GetRegisteredFactories();
-        sections.reserve(3 + factories.size());
-
-        sections.emplace_back(std::make_unique<GeneralInspectorSection>());
-        sections.emplace_back(std::make_unique<TransformInspectorSection>());
-        sections.emplace_back(std::make_unique<ComponentInspectorSection>());
-
-        for (auto& factory : factories)
+        struct SectionEntry
         {
-            if (!factory)
+            ActorInspectorSectionPtr instance;
+            int priority;
+        };
+        
+        std::vector<SectionEntry> entries;
+        entries.reserve(3 + GetRegisteredFactories().size());
+
+        if (auto p = std::make_unique<GeneralInspectorSection>())
+            entries.push_back({ std::move(p), SectionPriority::Core });
+
+        if (auto p = std::make_unique<ComponentInspectorSection>())
+            entries.push_back({ std::move(p), SectionPriority::Components });
+
+        for (const auto& reg : GetRegisteredFactories())
+        {
+            if (!reg.factory)
                 continue;
 
-            ActorInspectorSectionPtr section = factory();
-            if (section)
-                sections.emplace_back(std::move(section));
+            if (auto section = reg.factory())
+            {
+                entries.push_back({ std::move(section), reg.priority });
+            }
+        }
+
+        std::stable_sort(entries.begin(), entries.end(), 
+            [](const SectionEntry& a, const SectionEntry& b)
+            {
+                return a.priority < b.priority;
+            });
+
+        ActorInspectorSectionList sections;
+        sections.reserve(entries.size());
+        
+        for (auto& entry : entries)
+        {
+            sections.push_back(std::move(entry.instance));
         }
 
         return sections;
     }
 
-    void RegisterActorInspectorSectionFactory(ActorInspectorSectionFactory factory)
+    void RegisterActorInspectorSectionFactory(ActorInspectorSectionFactory factory, int priority)
     {
         if (factory)
-            GetRegisteredFactories().emplace_back(std::move(factory));
+        {
+            GetRegisteredFactories().push_back({ std::move(factory), priority });
+        }
     }
 
     std::size_t GetRegisteredActorInspectorFactoryCount()

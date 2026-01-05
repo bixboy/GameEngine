@@ -1,12 +1,4 @@
-
-
-
-
-
 #define MA_NO_SSE2
-#define MA_NO_AVX2
-#define MA_NO_AVX512
-
 
 #pragma warning(push)
 #pragma warning(disable: 4456) 

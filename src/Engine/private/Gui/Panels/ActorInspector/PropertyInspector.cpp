@@ -1,15 +1,16 @@
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
 #include "Gui/Utils/GuiHelpers.h"
-
 #include <map>
 #include <vector>
 #include <string>
+#include <unordered_set>
 #include "Gui/Widgets/Controls/PropertyDrawer.h"
+#include "imgui.h"
 
 
 namespace BixEngine::Gui::ActorInspector
 {
-    using namespace Bix::Reflection;
+    using namespace Reflection;
 
     static bool IsPropertyVisible(const PropertyInfo& p)
     {
@@ -23,9 +24,9 @@ namespace BixEngine::Gui::ActorInspector
         return hasEditAnywhere;
     }
 
-    bool PropertyInspector::DrawClassProperties(const ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage)
+    bool PropertyInspector::DrawClassProperties(const Reflection::ClassInfo& classInfo, void* instance, bool includeHeader, const char* headerLabel, bool showEmptyMessage)
     {
-        // 1. Collecte
+        // 1. Collecte (Récursive pour l'héritage)
         std::vector<const PropertyInfo*> props;
         auto Gather = [&](const ClassInfo& c, auto& refGather) -> void
         {
@@ -40,7 +41,8 @@ namespace BixEngine::Gui::ActorInspector
         // 2. Filtrage & Catégorisation
         std::map<std::string, std::vector<const PropertyInfo*>> categories;
         std::vector<const PropertyInfo*> uncategorized;
-        std::vector<std::string> processedNames;
+        
+        std::unordered_set<std::string> processedNames; 
 
         bool hasAnyVisible = false;
 
@@ -49,12 +51,10 @@ namespace BixEngine::Gui::ActorInspector
             if (!IsPropertyVisible(*p))
                 continue;
             
-            bool exists = false;
-            for(const auto& n : processedNames) if(n == p->Name) { exists = true; break; }
-            if(exists)
+            if (processedNames.contains(p->Name))
                 continue;
             
-            processedNames.push_back(p->Name);
+            processedNames.insert(p->Name);
 
             hasAnyVisible = true;
             std::string cat = p->GetMetadata("Category");
@@ -71,13 +71,13 @@ namespace BixEngine::Gui::ActorInspector
         if (!hasAnyVisible)
         {
             if (showEmptyMessage)
-                Utils::DrawEmptyStateMessage("No editable properties.");
+                GuiUtils::DrawEmptyStateMessage("No editable properties.");
             
             return false;
         }
 
         if (includeHeader && headerLabel)
-            Utils::DrawSeparatorText(headerLabel);
+            GuiUtils::DrawSeparatorText(headerLabel);
 
         bool changed = false;
 
@@ -92,15 +92,18 @@ namespace BixEngine::Gui::ActorInspector
 
                 for (const auto* p : list)
                 {
+                    ImGui::PushID(p);
+                    
                     if (PropertyDrawer::DrawPropertyRow(*p, instance))
                         changed = true;
+                    
+                    ImGui::PopID();
                 }
                 ImGui::EndTable();
             }
         };
 
-        // 3. Rendu
-        
+        // 3. Rendu Final
         if (!uncategorized.empty())
         {
             if (!categories.empty())

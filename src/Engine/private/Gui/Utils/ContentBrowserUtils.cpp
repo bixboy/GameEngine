@@ -1,34 +1,55 @@
 #include "Gui/Utils/ContentBrowserUtils.h"
 #include "Debug/Logger.h"
-#include <ranges>
 #include <unordered_map>
-
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/String/StringUtils.h"
+#include <algorithm>
 
 namespace BixEngine::Gui::ContentBrowserUtils
 {
     using namespace std;
     using namespace std::filesystem;
 
+    namespace
+    {
+        int GetContentSortPriority(ContentType type)
+        {
+            switch (type)
+            {
+            case ContentType::Directory:
+                return 0;
+            case ContentType::Script:
+                return 1;
+            case ContentType::ActorPrefab:
+                return 2;
+            case ContentType::ComponentPrefab:
+                return 3;
+            case ContentType::SpriteAtlas:
+                return 4;
+            case ContentType::Audio:
+                return 5;
+            default:
+                return 10;
+            }
+        }
+    }
+
     ContentType DetectContentType(const path& path)
     {
-        if (path.empty()) return ContentType::File;
+        if (path.empty())
+            return ContentType::File;
 
         const String ext = StringUtils::Utilities::ToLowerCopy(path.extension().generic_string());
 
         if (ext == ".bixactor")
             return ContentType::ActorPrefab;
-
+        
         if (ext == ".bixcomponent")
             return ContentType::ComponentPrefab;
-
+        
         if (ext == ".atlas")
             return ContentType::SpriteAtlas;
-
-        if (ext == ".atlas")
-            return ContentType::SpriteAtlas;
-
+        
         if (ext == ".mp3" || ext == ".wav" || ext == ".ogg")
             return ContentType::Audio;
 
@@ -37,8 +58,6 @@ namespace BixEngine::Gui::ContentBrowserUtils
 
     bool RefreshDirectoryCache(ContentBrowserState& state)
     {
-        namespace fs = std::filesystem;
-
         const bool needsRefresh = state.cache.dirty || state.cache.directory != state.current;
         if (!needsRefresh)
             return true;
@@ -49,24 +68,25 @@ namespace BixEngine::Gui::ContentBrowserUtils
 
         LOG_INFO("RefreshDirectoryCache: Enumerating " + state.current.generic_string());
 
-        vector<directory_entry> entries;
+        vector<directory_entry> fsEntries;
         std::error_code err;
+        
         for (const auto& e : directory_iterator(state.current, err))
-            entries.emplace_back(e);
+            fsEntries.emplace_back(e);
 
         if (err)
         {
-            String message = String("Failed to enumerate content: ") + err.message();
-            FilesUtils::Utilities::LogAndStoreError(state.error, message);
+            String message = String("Failed to enumerate content: " + err.message());
+            Utils::FileUtils::LogAndStoreError(state.error, message);
             return false;
         }
 
-        state.error.Clear();
-        state.cache.entries.reserve(entries.size());
+        state.error.clear();
+        state.cache.entries.reserve(fsEntries.size());
 
         unordered_map<String, ContentEntry> scriptGroups;
 
-        for (const auto& entry : entries)
+        for (const auto& entry : fsEntries)
         {
             const path& entryPath = entry.path();
 
@@ -76,13 +96,15 @@ namespace BixEngine::Gui::ContentBrowserUtils
                 d.type = ContentType::Directory;
                 d.path = entryPath;
                 d.name = entryPath.filename().generic_string();
+                
                 state.cache.entries.push_back(std::move(d));
+                
                 continue;
             }
 
             const auto ext = entryPath.extension();
-            const bool isHeader = ext == ".h";
-            const bool isSource = ext == ".cpp";
+            const bool isHeader = (ext == ".h" || ext == ".hpp"); 
+            const bool isSource = (ext == ".cpp" || ext == ".cxx");
 
             if (isHeader || isSource)
             {
@@ -104,50 +126,40 @@ namespace BixEngine::Gui::ContentBrowserUtils
                 continue;
             }
 
-            const ContentType prefabType = DetectContentType(entryPath);
-
+            const ContentType detectedType = DetectContentType(entryPath);
+            
             ContentEntry e;
-            e.type = prefabType;
+            e.type = detectedType;
             e.path = entryPath;
             e.name = entryPath.filename().generic_string();
 
             state.cache.entries.push_back(std::move(e));
         }
 
-        for (auto& [_, s] : scriptGroups)
+        for (auto& [key, entry] : scriptGroups)
         {
-            state.cache.entries.push_back(std::move(s));
+            state.cache.entries.push_back(std::move(entry));
         }
 
         std::ranges::sort(state.cache.entries, [](const ContentEntry& a, const ContentEntry& b)
         {
-            int pa = GetSortPriority(a.type), pb = GetSortPriority(b.type);
-            return pa == pb ? FilesUtils::Utilities::CaseInsensitiveLess(a.name, b.name) : pa < pb;
+            int pa = GetContentSortPriority(a.type);
+            int pb = GetContentSortPriority(b.type);
+    
+            if (pa != pb)
+                return pa < pb;
+        
+            return Utils::FileUtils::CaseInsensitiveLess(a.name.c_str(), b.name.c_str());
         });
 
-        LOG_INFO("RefreshDirectoryCache: Done. Found " + std::to_string(state.cache.entries.size()) + " entries.");
         return true;
-    }
-
-    int GetSortPriority(ContentType type)
-    {
-        switch (type)
-        {
-        case ContentType::Directory: return 0;
-        case ContentType::Script: return 1;
-        case ContentType::ActorPrefab: return 2;
-        case ContentType::ComponentPrefab: return 3;
-        case ContentType::SpriteAtlas: return 4;
-        case ContentType::Audio: return 5;
-        default: return 10;
-        }
     }
 
     void ClearSelectedParent(PopupRequestState& r)
     {
-        r.selectedParentClass.Clear();
-        r.selectedParentInclude.Clear();
-        r.selectedParentDisplay.Clear();
+        r.selectedParentClass.clear();
+        r.selectedParentInclude.clear();
+        r.selectedParentDisplay.clear();
         r.selectedParentIsBase = false;
         r.selectedParentIsActor = false;
         r.selectedParentIsComponent = false;
@@ -155,9 +167,9 @@ namespace BixEngine::Gui::ContentBrowserUtils
 
     void ClearSelectedPrefab(PopupRequestState& r)
     {
-        r.selectedPrefabClass.Clear();
-        r.selectedPrefabInclude.Clear();
-        r.selectedPrefabAssetBase.Clear();
+        r.selectedPrefabClass.clear();
+        r.selectedPrefabInclude.clear();
+        r.selectedPrefabAssetBase.clear();
         r.selectedPrefabScript.clear();
         r.selectedPrefabIsActor = false;
         r.selectedPrefabIsComponent = false;
@@ -171,31 +183,28 @@ namespace BixEngine::Gui::ContentBrowserUtils
         const path dir = state.root / "Scripts";
         String err;
 
-        if (!FilesUtils::Utilities::TryCreateDir(dir, err))
-            LOG_ERROR(String("Failed to create scripts directory: ") + dir.string() + " (" + err + ")");
+        if (!Utils::FileUtils::TryCreateDir(dir, err))
+            LOG_ERROR(String("Failed to create scripts directory: " + dir.string() ) + " (" + err + ")");
     }
 
     path GetContentRoot()
     {
-        namespace fs = std::filesystem;
-
         std::error_code cwdError;
         const path basePath = current_path(cwdError);
 
         if (cwdError)
         {
             auto message = String("Failed to determine working directory: ");
-            message += cwdError.message();
+            message += cwdError.message().c_str();
             LOG_ERROR(message);
-
             return {};
         }
 
-        const path contentPath = basePath / "Content";
+        path contentPath = basePath / "Content";
         if (exists(contentPath))
             return contentPath;
 
-        const path resourcesPath = basePath / "Resources";
+        path resourcesPath = basePath / "Resources";
         if (exists(resourcesPath))
             return resourcesPath;
 
@@ -204,24 +213,23 @@ namespace BixEngine::Gui::ContentBrowserUtils
 
     bool EnsureContentBrowserInitialized(ContentBrowserState& state)
     {
-        namespace fs = std::filesystem;
-
         if (state.initialized)
-            return state.error.IsEmpty();
+            return state.error.empty();
 
         state.root = GetContentRoot();
+        
         if (state.root.empty())
         {
-            FilesUtils::Utilities::LogAndStoreError(state.error, "Unable to determine the Content directory root.");
+            Utils::FileUtils::LogAndStoreError(state.error, "Unable to determine the Content directory root.");
         }
-        else if (!FilesUtils::Utilities::TryCreateDir(state.root, state.error))
+        else if (!Utils::FileUtils::TryCreateDir(state.root, state.error))
         {
-            
+            // Rien
         }
         else if (!exists(state.root))
         {
-            String message = String("Content directory is not available: ") + state.root.string();
-            FilesUtils::Utilities::LogAndStoreError(state.error, std::move(message));
+            String message = String("Content directory is not available: " + state.root.string());
+            Utils::FileUtils::LogAndStoreError(state.error, std::move(message));
         }
         else
         {
@@ -229,10 +237,10 @@ namespace BixEngine::Gui::ContentBrowserUtils
             state.cache.directory.clear();
             state.cache.entries.clear();
             state.cache.dirty = true;
-            state.error.Clear();
+            state.error.clear();
         }
 
         state.initialized = true;
-        return state.error.IsEmpty();
+        return state.error.empty();
     }
 }

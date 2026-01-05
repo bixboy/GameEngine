@@ -4,6 +4,7 @@
 #include "Framework/Scene.h"
 #include <algorithm>
 #include <string>
+#include "Gui/Utils/GuiHelpers.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -37,4 +38,26 @@ namespace BixEngine::Gui::ActorInspector
             return candidate.get() == actor;
         });
     }
+
+    class PersistentSectionScope
+    {
+    public:
+        PersistentSectionScope(const char* label, const std::string& contextId)
+        {
+            isOpen_ = GuiUtils::BeginPersistentSection(label, contextId);
+        }
+
+        ~PersistentSectionScope()
+        {
+            if (isOpen_)
+            {
+                GuiUtils::EndPersistentSection();
+            }
+        }
+
+        [[nodiscard]] bool IsOpen() const { return isOpen_; }
+
+    private:
+        bool isOpen_{false};
+    };
 }

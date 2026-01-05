@@ -63,4 +63,16 @@ namespace BixEngine::Gui::Widgets
         
         Draw(label, buffer, color, tooltip);
     }
+
+    void MetricsTable::DrawMetricsTable(std::span<const MetricDisplay> metrics, float labelColumnWidth)
+    {
+        if (Begin("MetricsTable", labelColumnWidth))
+        {
+            for (const auto& metric : metrics)
+            {
+                Draw(metric.label.c_str(), metric.value.c_str(), metric.color, metric.tooltip.empty() ? nullptr : metric.tooltip.c_str());
+            }
+            End();
+        }
+    }
 }

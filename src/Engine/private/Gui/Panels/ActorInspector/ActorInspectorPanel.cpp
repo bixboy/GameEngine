@@ -5,6 +5,7 @@
 #include "Framework/SceneManager.h"
 #include "Framework/Scene.h"
 #include "Gui/Panels/ActorInspector/InspectorSections/ActorInspectorSection.h"
+#include "Gui/Utils/GuiHelpers.h"
 
 
 namespace BixEngine::Gui

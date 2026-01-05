@@ -1,7 +1,6 @@
 #pragma once
 #include "Core/PropertyInfo.h"
 
-
 namespace BixEngine::Gui::ActorInspector
 {
     class PropertyInspector
@@ -10,7 +9,6 @@ namespace BixEngine::Gui::ActorInspector
         PropertyInspector() = default;
         ~PropertyInspector() = default;
         
-        static bool DrawClassProperties(const Bix::Reflection::ClassInfo& classInfo, void* instance,
-            bool includeHeader = true, const char* headerLabel = "Properties", bool showEmptyMessage = true);
+        static bool DrawClassProperties(const Reflection::ClassInfo& classInfo, void* instance, bool includeHeader = true, const char* headerLabel = "Properties", bool showEmptyMessage = true);
     };
 }

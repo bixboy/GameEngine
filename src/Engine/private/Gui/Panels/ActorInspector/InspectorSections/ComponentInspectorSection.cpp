@@ -1,5 +1,4 @@
 #include "Gui/Panels/ActorInspector/InspectorSections/ComponentInspectorSection.h"
-#include "Gui/Widgets/Widgets.h"
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/ContentBrowserUtils.h"
@@ -15,7 +14,7 @@
 #include <imgui.h>
 #include "Utils/ReflectionHelpers.h"
 #include "Gui/Panels/ActorInspector/PropertyInspector.h"
-#include "Utils/Editor/ScriptUtils.h"
+#include "Gui/Widgets/Layout/SectionContainer.h"
 
 
 namespace BixEngine::Gui::ActorInspector
@@ -28,19 +27,16 @@ namespace BixEngine::Gui::ActorInspector
     {
         struct ComponentClassEntry
         {
-            const Bix::Reflection::ClassInfo* info{nullptr};
+            const Reflection::ClassInfo* info{nullptr};
             std::string label;
         };
 
         std::vector<ComponentClassEntry> BuildComponentEntries()
         {
             const auto& componentClass = Game::Component::StaticClass();
+            
+            std::vector<Reflection::ClassInfo*> allClasses = Reflection::GetAllClasses();
 
-            
-            std::vector<Bix::Reflection::ClassInfo*> allClasses = Bix::Reflection::GetAllClasses();
-
-            
-            
             const std::filesystem::path contentRoot = ContentBrowserUtils::GetContentRoot();
             const std::filesystem::path scriptsDir = contentRoot / "Scripts";
             
@@ -48,142 +44,57 @@ namespace BixEngine::Gui::ActorInspector
             {
                 auto scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, contentRoot);
                 
-                
                 std::function<void(const std::vector<ScriptUtils::ScriptNode>&)> processNodes;
                 processNodes = [&](const std::vector<ScriptUtils::ScriptNode>& nodes)
                 {
                     for (const auto& node : nodes)
                     {
-                        
                         if (node.inheritsComponent)
                         {
-                            
-                            if (auto* info = Bix::Reflection::FindClass(node.name))
+                            if (auto* info = Reflection::FindClass(node.name))
                             {
                                 allClasses.push_back(info);
                             }
-                            else if (auto* infoQ = Bix::Reflection::FindClassByQualifiedName(node.name))
+                            else if (auto* infoQ = Reflection::FindClassByQualifiedName(node.name))
                             {
                                 allClasses.push_back(infoQ);
                             }
-                            
                         }
-                        
                         processNodes(node.children);
                     }
                 };
-                
                 processNodes(scriptRoots);
             }
 
-            
             std::vector<ComponentClassEntry> entries;
             entries.reserve(allClasses.size());
 
-            
-            std::vector<Bix::Reflection::ClassInfo*> processed;
+            std::vector<Reflection::ClassInfo*> processed;
             processed.reserve(allClasses.size());
 
             for (auto* classInfo : allClasses)
             {
                 if (!classInfo || classInfo == &componentClass)
-                {
                     continue;
-                }
-
                 
-                if (std::find(processed.begin(), processed.end(), classInfo) != processed.end())
-                {
-                    continue;
-                }
-
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                bool isComponent = false;
-                if (ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
-                {
-                    isComponent = true;
-                }
-                else
-                {
-                    
-                    
-                    
-                }
-                
-                if (ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
-                {
-                    isComponent = true;
-                }
-                
-                if (!isComponent)
-                {
-                     
-                     
-                     
-                     continue;
-                }
-
                 if (classInfo->IsAbstract || !classInfo->CanConstruct())
-                {
                     continue;
-                }
+
+                if (std::find(processed.begin(), processed.end(), classInfo) != processed.end())
+                    continue;
+
+                if (!ScriptUtils::Utilities::IsSubclassOf(*classInfo, componentClass))
+                    continue;
 
                 ComponentClassEntry entry{};
                 entry.info = classInfo;
                 entry.label = !classInfo->Name.empty() ? classInfo->Name : classInfo->QualifiedName;
+                
                 if (entry.label.empty())
-                {
-                    entry.label = "Component";
-                }
+                    entry.label = "Component (Unknown)";
 
                 entries.push_back(std::move(entry));
                 processed.push_back(classInfo);
-            }
-            
-            
-            
-            if (std::filesystem::exists(scriptsDir))
-            {
-                 auto scriptRoots = ScriptUtils::Utilities::BuildScriptTree(scriptsDir, contentRoot);
-                 std::function<void(const std::vector<ScriptUtils::ScriptNode>&)> processNodes;
-                 processNodes = [&](const std::vector<ScriptUtils::ScriptNode>& nodes)
-                 {
-                     for (const auto& node : nodes)
-                     {
-                         if (node.inheritsComponent)
-                         {
-                             Bix::Reflection::ClassInfo* info = Bix::Reflection::FindClass(node.name);
-                             if (!info) info = Bix::Reflection::FindClassByQualifiedName(node.name);
-                             
-                             if (info && info != &componentClass)
-                             {
-                                 
-                                 if (std::find(processed.begin(), processed.end(), info) == processed.end())
-                                 {
-                                     
-                                     if (!info->IsAbstract && info->CanConstruct())
-                                     {
-                                         ComponentClassEntry entry{};
-                                         entry.info = info;
-                                         entry.label = !info->Name.empty() ? info->Name : info->QualifiedName;
-                                         entries.push_back(std::move(entry));
-                                         processed.push_back(info);
-                                     }
-                                 }
-                             }
-                         }
-                         processNodes(node.children);
-                     }
-                 };
-                 processNodes(scriptRoots);
             }
 
             std::sort(entries.begin(), entries.end(), [](const ComponentClassEntry& lhs, const ComponentClassEntry& rhs)
@@ -199,42 +110,67 @@ namespace BixEngine::Gui::ActorInspector
     {
         if (!ImGui::BeginPopup("AddComponentPopup"))
             return;
-
+        
+        static std::vector<ComponentClassEntry> cachedEntries;
+        if (ImGui::IsWindowAppearing())
+        {
+            cachedEntries = BuildComponentEntries();
+        }
+        
         ImGui::TextUnformatted("Add Component");
         ImGui::Separator();
 
-        const std::vector<ComponentClassEntry> entries = BuildComponentEntries();
-        if (entries.empty())
+        static char searchBuffer[64] = "";
+        if (ImGui::IsWindowAppearing()) 
+            std::memset(searchBuffer, 0, sizeof(searchBuffer));
+            
+        ImGui::InputTextWithHint("##SearchComp", "Search...", searchBuffer, sizeof(searchBuffer));
+        std::string searchKey = searchBuffer;
+        std::transform(searchKey.begin(), searchKey.end(), searchKey.begin(), ::tolower);
+
+        if (cachedEntries.empty())
         {
-            DrawEmptyStateMessage("No components available.");
+            GuiUtils::DrawEmptyStateMessage("No components available.");
         }
         else
         {
-            for (const ComponentClassEntry& entry : entries)
+            if (ImGui::BeginChild("ComponentList", ImVec2(0, 250), false, ImGuiWindowFlags_HorizontalScrollbar)) 
             {
-                if (!entry.info)
+                for (const ComponentClassEntry& entry : cachedEntries)
                 {
-                    continue;
-                }
+                    if (!entry.info)
+                        continue;
 
-                if (ImGui::MenuItem(entry.label.c_str()))
-                {
-                    std::unique_ptr<Game::Component> ownedComponent;
-                    if (void* instance = entry.info->Construct(&actor))
+                    if (!searchKey.empty())
                     {
-                        ownedComponent.reset(static_cast<Game::Component*>(instance));
+                         std::string labelLower = entry.label;
+                         std::transform(labelLower.begin(), labelLower.end(), labelLower.begin(), tolower);
+                         if (labelLower.find(searchKey) == std::string::npos)
+                             continue;
                     }
 
-                    if (ownedComponent)
+                    if (ImGui::Selectable(entry.label.c_str()))
                     {
-                        actor.AddComponent(std::move(ownedComponent));
-                        ImGui::CloseCurrentPopup();
-                    }
-                }
+                        std::unique_ptr<Game::Component> ownedComponent;
+                        
+                        if (void* instance = entry.info->Construct(&actor))
+                        {
+                            ownedComponent.reset(static_cast<Game::Component*>(instance));
+                        }
 
-                const std::string& tooltip = !entry.info->QualifiedName.empty() ? entry.info->QualifiedName : entry.label;
-                ShowTooltip(tooltip.c_str(), ImGuiHoveredFlags_DelayShort);
+                        if (ownedComponent)
+                        {
+                            actor.AddComponent(std::move(ownedComponent));
+                            ImGui::CloseCurrentPopup();
+                        }
+                    }
+
+                    const std::string& tooltip = !entry.info->QualifiedName.empty() ? entry.info->QualifiedName : entry.label;
+                    if (ImGui::IsItemHovered())
+                         ImGui::SetTooltip("%s", tooltip.c_str());
+                }
             }
+            ImGui::EndChild();
         }
 
         ImGui::EndPopup();
@@ -244,95 +180,78 @@ namespace BixEngine::Gui::ActorInspector
     {
         const std::string contextId = BuildActorContextId(actor);
         PersistentSectionScope section("Components", contextId);
+        
         if (!section.IsOpen())
-        {
             return;
-        }
 
-        SectionContainer container("ComponentsSection");
+        Layout::SectionContainer container("ComponentsSection");
         if (!container.IsVisible())
-        {
             return;
-        }
 
-        DrawSeparatorText("Components");
+        GuiUtils::DrawSeparatorText("Components");
 
-        if (ImGui::Button("+ Add Component"))
+        if (ImGui::Button("+ Add Component", ImVec2(-1, 0))) 
         {
             ImGui::OpenPopup("AddComponentPopup");
         }
-
-        ImGui::SameLine();
-        DrawHelpMarker("Attach new behaviours to this actor.");
+        
         DrawAddComponentPopup(actor);
 
         auto& components = actor.GetComponents();
         if (components.empty())
         {
-            DrawEmptyStateMessage("Actor has no components.");
+            GuiUtils::DrawEmptyStateMessage("Actor has no components.");
             return;
         }
 
-        ScopedID componentsId("ActorComponents");
-        ScopedColor headerColor(ImGuiCol_Header, ImVec4(0.25f, 0.33f, 0.45f, 0.65f));
-        ScopedColor headerHoverColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.55f, 0.75f));
-        ScopedColor headerActiveColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.32f, 0.52f, 0.85f));
-        ScopedStyle framePadding(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 6.0f));
+        GuiUtils::ScopedID componentsId("ActorComponents");
+        
+        // Styles des headers
+        GuiUtils::ScopedColor headerColor(ImGuiCol_Header, ImVec4(0.25f, 0.33f, 0.45f, 0.65f));
+        GuiUtils::ScopedColor headerHoverColor(ImGuiCol_HeaderHovered, ImVec4(0.30f, 0.40f, 0.55f, 0.75f));
+        GuiUtils::ScopedColor headerActiveColor(ImGuiCol_HeaderActive, ImVec4(0.20f, 0.32f, 0.52f, 0.85f));
+        GuiUtils::ScopedStyle framePadding(ImGuiStyleVar_FramePadding, ImVec2(10.0f, 6.0f));
 
         static Game::Component* componentPendingRemoval = nullptr;
+
         for (std::size_t index = 0; index < components.size(); ++index)
         {
             auto& component = components[index];
             if (!component)
-            {
                 continue;
-            }
 
-            ScopedID componentId(static_cast<int>(index));
+            GuiUtils::ScopedID componentId(static_cast<int>(index));
 
             std::string typeLabel;
-
-            const Bix::Reflection::ClassInfo& classInfo = component->GetClass();
-            if (!classInfo.Name.empty())
-            {
-                typeLabel = classInfo.Name;
-            }
-            else if (!classInfo.QualifiedName.empty())
-            {
-                typeLabel = classInfo.QualifiedName;
-            }
-
+            const Reflection::ClassInfo& classInfo = component->GetClass();
+            
+            typeLabel = !classInfo.Name.empty() ? classInfo.Name : (!classInfo.QualifiedName.empty() ? classInfo.QualifiedName : "");
+            
             if (typeLabel.empty())
-            {
                 typeLabel = ToStdString(component->GetTypeName());
-            }
+            
             const std::string treeLabel = "🧩 " + typeLabel;
 
-            
             ImGui::PushStyleVar(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 6.0f));
             bool open = ImGui::CollapsingHeader(treeLabel.c_str(), ImGuiTreeNodeFlags_DefaultOpen | ImGuiTreeNodeFlags_AllowItemOverlap);
             ImGui::PopStyleVar();
 
-            
+            // --- Bouton Supprimer---
             {
                 const float buttonSize = ImGui::GetFrameHeight();
                 const float availableWidth = ImGui::GetContentRegionAvail().x;
                 const float buttonX = ImGui::GetCursorPosX() + availableWidth - buttonSize - 5.0f;
                 const float buttonY = ImGui::GetItemRectMin().y; 
 
-                
                 ImVec2 backupCursor = ImGui::GetCursorPos();
-                
-                
                 ImGui::SetCursorScreenPos(ImVec2(ImGui::GetWindowPos().x + buttonX, buttonY));
                 
                 ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0,0,0,0));
-                if (IconButton("🗑", "Remove this component"))
+                if (GuiUtils::IconButton("🗑", "Remove this component"))
                 {
                     componentPendingRemoval = component.get();
                 }
                 ImGui::PopStyleColor();
-
                 ImGui::SetCursorPos(backupCursor);
             }
 
@@ -343,15 +262,16 @@ namespace BixEngine::Gui::ActorInspector
                 ImGui::Spacing();
 
                 const float cursorBefore = ImGui::GetCursorPosY();
+                
                 const bool drewReflected = PropertyInspector::DrawClassProperties(component->GetClass(), component.get(), false, nullptr, false);
                 const float cursorAfterReflected = ImGui::GetCursorPosY();
-
+                
                 component->DrawInspectorUI();
                 const float cursorAfterCustom = ImGui::GetCursorPosY();
 
                 if (!drewReflected && cursorAfterCustom <= cursorBefore + 0.5f && cursorAfterReflected <= cursorBefore + 0.5f)
                 {
-                    DrawEmptyStateMessage("No editable properties.");
+                    GuiUtils::DrawEmptyStateMessage("No editable properties.");
                 }
 
                 ImGui::Unindent(10.0f);
@@ -359,7 +279,6 @@ namespace BixEngine::Gui::ActorInspector
                 ImGui::Spacing();
             }
 
-            
             ImGui::Separator();
             ImGui::Spacing();
         }
@@ -371,19 +290,20 @@ namespace BixEngine::Gui::ActorInspector
 
         if (ImGui::BeginPopupModal("ConfirmRemoveComponent", nullptr, ImGuiWindowFlags_AlwaysAutoResize))
         {
-            ImGui::TextUnformatted("Are you sure you want to remove this component?");
+            ImGui::Text("Remove component '%s'?", componentPendingRemoval->GetClass().Name.c_str());
             ImGui::Separator();
 
-            if (ImGui::Button("Remove"))
+            if (ImGui::Button("Remove", ImVec2(120, 0)))
             {
                 actor.RemoveComponent(componentPendingRemoval);
                 componentPendingRemoval = nullptr;
                 ImGui::CloseCurrentPopup();
             }
+            ImGui::SetItemDefaultFocus();
 
             ImGui::SameLine();
 
-            if (ImGui::Button("Cancel"))
+            if (ImGui::Button("Cancel", ImVec2(120, 0)))
             {
                 componentPendingRemoval = nullptr;
                 ImGui::CloseCurrentPopup();

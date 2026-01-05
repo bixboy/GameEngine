@@ -2,6 +2,7 @@
 #include "Math/Vector3.h"
 #include "Math/Rotator.h"
 #include "Matrix/Matrix4.h"
+#include "Matrix/Matrix3.h"
 #include <vector>
 
 namespace BixEngine::Math
@@ -87,6 +88,17 @@ namespace BixEngine::Math
                 m_LocalRotation = worldRot;
             }
             SetDirty();
+        }
+
+        [[nodiscard]] Matrix3 ToMatrix3() const
+        {
+            Vec3 pos = GetWorldPosition();
+            Rotator rot = GetWorldRotation();
+            Vec3 scale = GetWorldScale();
+            
+            return Matrix3::Translation(pos.x, pos.y) * 
+                   Matrix3::Rotation(rot.yaw) * 
+                   Matrix3::Scale(scale.x, scale.y);
         }
 
         // --- Hiérarchie ---

@@ -19,33 +19,42 @@ namespace BixEngine::Gui::ActorInspector
         
         void SynchronizeNameBuffer(const Game::Actor& actor, ActorInspectorState& state)
         {
-            const auto nameView = actor.GetName().View();
-            const std::size_t maxCopy = state.nameBuffer.size() - 1;
-            const std::size_t copyLength = std::min<std::size_t>(nameView.size(), maxCopy);
-
-            if (std::strncmp(state.nameBuffer.data(), nameView.data(), copyLength) != 0 ||
-                state.nameBuffer[copyLength] != '\0')
+            const std::string& currentActorName = actor.GetName().c_str();
+            
+            if (currentActorName != state.cachedName)
             {
+                const auto nameView = actor.GetName().View();
+                const std::size_t maxCopy = state.nameBuffer.size() - 1;
+                const std::size_t copyLength = std::min<std::size_t>(nameView.size(), maxCopy);
+
                 std::memcpy(state.nameBuffer.data(), nameView.data(), copyLength);
                 state.nameBuffer[copyLength] = '\0';
+
+                state.cachedName = currentActorName;
             }
         }
     }
 
-    
     ActorInspectorState& GetActorState(const Game::Actor& actor)
     {
         auto& states = GetActorStates();
-        const std::string key = BuildActorStateKey(actor);
+        const std::string key = BuildActorStateKey(actor); 
+        
         auto [it, inserted] = states.try_emplace(key);
-
         ActorInspectorState& state = it->second;
+
         if (inserted)
         {
             state.nameBuffer.fill('\0');
+            state.cachedName.clear(); 
         }
 
         SynchronizeNameBuffer(actor, state);
         return state;
+    }
+
+    void ClearActorInspectorCache()
+    {
+        GetActorStates().clear();
     }
 }

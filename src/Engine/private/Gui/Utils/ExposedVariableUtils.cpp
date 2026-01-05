@@ -18,7 +18,7 @@ namespace BixEngine::Gui
             return true;
 
         char preceding = typeName[offset - 1];
-        return !std::isalnum((unsigned char)preceding) && preceding != '_';
+        return !std::isalnum(static_cast<unsigned char>(preceding)) && preceding != '_';
     }
 
     std::string ExposedVariableUtils::TrimBraces(std::string_view input)
@@ -52,7 +52,7 @@ namespace BixEngine::Gui
 
         for (char c : input)
         {
-            if (std::isdigit((unsigned char)c) || c=='+' || c=='-' || c=='.' || c=='e' || c=='E')
+            if (std::isdigit(static_cast<unsigned char>(c)) || c=='+' || c=='-' || c=='.' || c=='e' || c=='E')
                 current.push_back(c);
             else
                 flush();
@@ -97,8 +97,8 @@ namespace BixEngine::Gui
                 continue;
             }
 
-            bool isUpper = std::isupper((unsigned char)c);
-            bool prevLower = std::islower((unsigned char)prev);
+            bool isUpper = std::isupper(static_cast<unsigned char>(c));
+            bool prevLower = std::islower(static_cast<unsigned char>(prev));
 
             if (!result.empty() && isUpper && prevLower)
                 result.push_back(' ');

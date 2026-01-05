@@ -1,8 +1,8 @@
 #pragma once
 #include <functional>
 
+#include "GuiPanelBase.h"
 #include "Gui/Core/DefaultEngineGui.h"
-#include "Gui/Base/GuiPanelBase.h"
 
 
 namespace BixEngine::Gui
@@ -13,7 +13,7 @@ namespace BixEngine::Gui
         StatsPanel(Core::Timer* timer, const float* lastDeltaTime, std::function<Game::SceneManager*()> sceneProvider, std::function<const Input::MouseStatistics*()> mouseStatsProvider);
         explicit StatsPanel(const DefaultEngineGuiContext& context);
 
-        void Draw() override;
+        void DrawBody() override;
 
     private:
         Core::Timer* timer_{nullptr};
