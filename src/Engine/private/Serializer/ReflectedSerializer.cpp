@@ -19,13 +19,12 @@
 
 namespace BixEngine::Serialization
 {
-    using namespace Bix::Reflection;
-
+    
     // --- TypeHandler Structure ---
     struct TypeHandler
     {
-        std::function<bool(const PropertyInfo&, const void*, Utils::BinaryWriter&)> Serialize;
-        std::function<bool(const PropertyInfo&, void*, Utils::BinaryReader&)> Deserialize;
+        std::function<bool(const Reflection::PropertyInfo&, const void*, Utils::BinaryWriter&)> Serialize;
+        std::function<bool(const Reflection::PropertyInfo&, void*, Utils::BinaryReader&)> Deserialize;
         std::function<bool(Utils::BinaryReader&)> Skip;
     };
 
@@ -38,8 +37,8 @@ namespace BixEngine::Serialization
             #define REGISTER_PRIMITIVE(Type, Name) \
             { \
                 TypeHandler h; \
-                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool { return w.WritePrimitive(p.Get<Type>(i)); }; \
-                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool { Type v; if(!r.ReadPrimitive(v)) return false; const_cast<PropertyInfo&>(p).Get<Type>(i) = v; return true; }; \
+                h.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool { return w.WritePrimitive(p.Get<Type>(i)); }; \
+                h.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool { Type v; if(!r.ReadPrimitive(v)) return false; const_cast<Reflection::PropertyInfo&>(p).Get<Type>(i) = v; return true; }; \
                 h.Skip = [](Utils::BinaryReader& r) -> bool { Type v; return r.ReadPrimitive(v); }; \
                 handlers[Name] = h; \
             }
@@ -52,12 +51,12 @@ namespace BixEngine::Serialization
 
             // --- Strings ---
             TypeHandler stringHandler;
-            stringHandler.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+            stringHandler.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
             { 
                 return w.WriteString(p.Get<String>(i)); 
             };
             
-            stringHandler.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+            stringHandler.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
             { 
                 String v; if(!r.ReadString(v))
                     return false;
@@ -80,19 +79,27 @@ namespace BixEngine::Serialization
             auto RegisterVec2 = [&]<typename T>(const std::string& name)
             {
                 TypeHandler h;
-                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool { 
+                h.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+                { 
                     const auto& v = p.Get<Math::TVector2<T>>(i); 
                     return w.WritePrimitive(v.x) && w.WritePrimitive(v.y); 
                 };
-                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool { 
+                
+                h.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+                { 
                     Math::TVector2<T> v; 
-                    if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y)) return false;
-                    const_cast<PropertyInfo&>(p).Get<Math::TVector2<T>>(i) = v; 
+                    if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y))
+                        return false;
+                    
+                    const_cast<Reflection::PropertyInfo&>(p).Get<Math::TVector2<T>>(i) = v; 
                     return true; 
                 };
-                h.Skip = [](Utils::BinaryReader& r) -> bool { 
+                
+                h.Skip = [](Utils::BinaryReader& r) -> bool
+                { 
                     T temp; return r.ReadPrimitive(temp) && r.ReadPrimitive(temp); 
                 };
+                
                 handlers[name] = h;
             };
 
@@ -100,25 +107,28 @@ namespace BixEngine::Serialization
             auto RegisterVec3 = [&]<typename T>(const std::string& name)
             {
                 TypeHandler h;
-                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+                h.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
                 { 
                     const auto& v = p.Get<Math::TVector3<T>>(i); 
                     return w.WritePrimitive(v.x) && w.WritePrimitive(v.y) && w.WritePrimitive(v.z); 
                 };
-                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+                
+                h.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
                 { 
                     Math::TVector3<T> v; 
                     if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y) || !r.ReadPrimitive(v.z))
                         return false;
                     
-                    const_cast<PropertyInfo&>(p).Get<Math::TVector3<T>>(i) = v; 
+                    const_cast<Reflection::PropertyInfo&>(p).Get<Math::TVector3<T>>(i) = v; 
                     return true; 
                 };
+                
                 h.Skip = [](Utils::BinaryReader& r) -> bool
                 { 
                     T temp;
                     return r.ReadPrimitive(temp) && r.ReadPrimitive(temp) && r.ReadPrimitive(temp); 
                 };
+                
                 handlers[name] = h;
             };
 
@@ -145,7 +155,7 @@ namespace BixEngine::Serialization
             {
                 TypeHandler h;
                 
-                h.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+                h.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
                 { 
                     const auto& arr = p.Get<TArray<T>>(i);
                     if (!w.WriteUint32(static_cast<uint32_t>(arr.size())))
@@ -160,9 +170,9 @@ namespace BixEngine::Serialization
                     return true;
                 };
 
-                h.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+                h.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
                 { 
-                    TArray<T>& arr = const_cast<PropertyInfo&>(p).Get<TArray<T>>(i);
+                    TArray<T>& arr = const_cast<Reflection::PropertyInfo&>(p).Get<TArray<T>>(i);
                     uint32_t count = 0;
                     if (!r.ReadUint32(count))
                         return false;
@@ -204,13 +214,13 @@ namespace BixEngine::Serialization
 
             // --- Math::Rect ---
             TypeHandler rectHandler;
-            rectHandler.Serialize = [](const PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
+            rectHandler.Serialize = [](const Reflection::PropertyInfo& p, const void* i, Utils::BinaryWriter& w) -> bool
             { 
                 const auto& v = p.Get<Math::Rect>(i); 
                 return w.WritePrimitive(v.x) && w.WritePrimitive(v.y) && w.WritePrimitive(v.width) && w.WritePrimitive(v.height);
             };
             
-            rectHandler.Deserialize = [](const PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
+            rectHandler.Deserialize = [](const Reflection::PropertyInfo& p, void* i, Utils::BinaryReader& r) -> bool
             { 
                 Math::Rect v; 
                 if(!r.ReadPrimitive(v.x) || !r.ReadPrimitive(v.y) || !r.ReadPrimitive(v.width) || !r.ReadPrimitive(v.height))
@@ -275,7 +285,7 @@ namespace BixEngine::Serialization
 
     // --- ReflectedSerializer Implementation ---
 
-    bool ReflectedSerializer::Serialize(const void* instance, const ClassInfo* info, Utils::BinaryWriter& writer, int depth)
+    bool ReflectedSerializer::Serialize(const void* instance, const Reflection::ClassInfo* info, Utils::BinaryWriter& writer, int depth)
     {
         if (!instance || !info)
             return false;
@@ -405,7 +415,7 @@ namespace BixEngine::Serialization
         return true;
     }
 
-    bool ReflectedSerializer::Deserialize(void* instance, const ClassInfo* info, Utils::BinaryReader& reader, int depth)
+    bool ReflectedSerializer::Deserialize(void* instance, const Reflection::ClassInfo* info, Utils::BinaryReader& reader, int depth)
     {
         if (!instance || !info) return false;
         if (depth > 20) return false;
@@ -434,7 +444,7 @@ namespace BixEngine::Serialization
             }
 
             // Find Property
-            const PropertyInfo* prop = nullptr;
+            const Reflection::PropertyInfo* prop = nullptr;
             for (const auto& p : info->Properties)
             {
                 if (p.Name == propName.Std())

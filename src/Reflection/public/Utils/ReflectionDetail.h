@@ -9,7 +9,7 @@
 #include <utility>
 
 
-namespace Bix::Reflection::detail
+namespace BixEngine::Reflection
 {
     template <typename Base, typename Derived, typename = void>
     struct SafeIsBaseOf : std::false_type
@@ -53,8 +53,7 @@ namespace Bix::Reflection::detail
     };
 
     template <typename T, std::size_t Index>
-    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag && RootTagTraits<std::remove_cv_t<
-        T>>::Index == Index;
+    inline constexpr bool HasRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag && RootTagTraits<std::remove_cv_t<T>>::Index == Index;
 
     template <typename T>
     inline constexpr bool HasAnyRootTag_v = RootTagTraits<std::remove_cv_t<T>>::HasTag;
@@ -93,8 +92,7 @@ namespace Bix::Reflection::detail
     }
 
     template <typename ClassType, typename Populator>
-    ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass,
-                                      Populator&& populator)
+    ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
     {
         return RegisterClass<ClassType, Populator>(
             name,
@@ -140,10 +138,9 @@ namespace Bix::Reflection::detail
 
 
     template <typename ClassType, typename PropertyType>
-    PropertyInfo& RegisterProperty(ClassInfo& classInfo, const char* name, PropertyType ClassType::* member,
-                                   const char* displayTypeName, const char* metadata = nullptr)
+    BixEngine::Reflection::PropertyInfo& RegisterProperty(ClassInfo& classInfo, const char* name, PropertyType ClassType::* member, const char* displayTypeName, const char* metadata = nullptr)
     {
-        PropertyInfo& info = classInfo.Properties.emplace_back();
+        BixEngine::Reflection::PropertyInfo& info = classInfo.Properties.emplace_back();
 
         if (name)
             info.Name = name;
@@ -176,7 +173,7 @@ namespace Bix::Reflection::detail
             Storage storage{};
             ClassType* instance = new(&storage) ClassType();
 
-            auto* base = reinterpret_cast<std::byte*>(static_cast<void*>(instance));
+            auto* base = static_cast<std::byte*>(static_cast<void*>(instance));
             auto* memberPtr = reinterpret_cast<std::byte*>(&(instance->*member));
 
             info.Offset = static_cast<std::size_t>(memberPtr - base);

@@ -18,6 +18,7 @@ namespace BixEngine::Gui
         {
             return !entries_.empty() && currentIndex_ + 1 < entries_.size();
         }
+        
         [[nodiscard]] bool IsEmpty() const noexcept { return entries_.empty(); }
 
         [[nodiscard]] const String* NavigateBack();

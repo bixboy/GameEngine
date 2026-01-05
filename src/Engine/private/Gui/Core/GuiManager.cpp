@@ -124,7 +124,7 @@ namespace BixEngine::Gui
         return registry_.GetAllPanels();
     }
 
-    GuiPanelController& GuiManager::AttachController(const String& name, std::unique_ptr<GuiPanelController> controller)
+    GuiPanelWindow& GuiManager::AttachController(const String& name, std::unique_ptr<GuiPanelWindow> controller)
     {
         auto* entry = registry_.FindPanelEntry(name);
         if (!entry || !entry->panel)
@@ -133,7 +133,7 @@ namespace BixEngine::Gui
         return AttachController(*entry->panel, std::move(controller));
     }
 
-    GuiPanelController& GuiManager::AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelController> controller)
+    GuiPanelWindow& GuiManager::AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelWindow> controller)
     {
         auto* entry = registry_.FindPanelEntry(panel);
         if (!entry || !controller)
@@ -152,7 +152,7 @@ namespace BixEngine::Gui
         controller->BindManager(*this);
         controller->AttachToPanel(*entry->panel);
 
-        GuiPanelController& ref = *controller;
+        GuiPanelWindow& ref = *controller;
         entry->controller = std::move(controller);
 
         AttachDrawFunction_(*entry);
@@ -197,7 +197,7 @@ namespace BixEngine::Gui
         }
     }
 
-    GuiPanelController* GuiManager::GetController(const String& name) noexcept
+    GuiPanelWindow* GuiManager::GetController(const String& name) noexcept
     {
         if (auto* entry = registry_.FindPanelEntry(name))
             return entry->controller.get();
@@ -205,17 +205,17 @@ namespace BixEngine::Gui
         return nullptr;
     }
 
-    GuiPanel& GuiManager::OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config)
+    GuiPanel& GuiManager::OpenChildPanel(GuiPanelWindow& parent, const GuiPanelWindow::ChildPanelConfig& config)
     {
         String finalName = config.name;
-        if (finalName.IsEmpty())
+        if (finalName.empty())
         {
             finalName = parent.GetPanel()->GetName();
             finalName += "::Child";
             finalName += std::to_string(childCounter_++).c_str();
         }
 
-        String finalTitle = config.title.IsEmpty() ? String{"Child Panel"} : config.title;
+        String finalTitle = config.title.empty() ? String{"Child Panel"} : config.title;
         GuiPanel& panel = CreatePanel(finalName, finalTitle);
 
         panel.SetWindowFlags(config.windowFlags);
@@ -224,15 +224,15 @@ namespace BixEngine::Gui
 
         switch (config.kind)
         {
-        case GuiPanelController::ChildPanelKind::FloatingWindow:
+        case GuiPanelWindow::ChildPanelKind::FloatingWindow:
             panel.ResetDockingPreference();
             break;
             
-        case GuiPanelController::ChildPanelKind::SecondaryDocked:
+        case GuiPanelWindow::ChildPanelKind::SecondaryDocked:
             panel.SetDockingPreference(config.dockRegion, config.dockCondition);
             break;
             
-        case GuiPanelController::ChildPanelKind::PersistentPopup:
+        case GuiPanelWindow::ChildPanelKind::PersistentPopup:
             panel.ResetDockingPreference();
             panel.AddWindowFlags(ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoDocking);
             break;
@@ -245,7 +245,7 @@ namespace BixEngine::Gui
         return panel;
     }
 
-    void GuiManager::CloseChildPanels(GuiPanelController& parent)
+    void GuiManager::CloseChildPanels(GuiPanelWindow& parent)
     {
         childPanels_.RemoveChildren(parent, [this](const String& childName)
         {
@@ -283,6 +283,7 @@ namespace BixEngine::Gui
             panel->RequestFocus();
             return true;
         }
+        
         return false;
     }
 
@@ -307,13 +308,19 @@ namespace BixEngine::Gui
         workspaces_.SetLayoutManager(&layoutManager);
     }
 
+    void GuiManager::OnResize(int width, int height)
+    {
+        if (guiSystem_)
+            guiSystem_->OnResize(width, height);
+    }
+
     void GuiManager::AttachDrawFunction_(GuiPanelRegistry::PanelEntry& entry)
     {
         if (!entry.panel || !entry.controller)
             return;
 
         GuiPanel* panel = entry.panel.get();
-        GuiPanelController* controller = entry.controller.get();
+        GuiPanelWindow* controller = entry.controller.get();
 
         panel->SetDrawFunction([this, controller, panel]()
         {
@@ -349,9 +356,13 @@ namespace BixEngine::Gui
         panel.SetVisible(descriptor.startVisible);
 
         if (descriptor.applyDocking)
+        {
             SetPanelDockingArea(panel, descriptor.dockRegion, descriptor.dockCondition);
+        }
         else
+        {
             panel.ResetDockingPreference();
+        }
 
         if (descriptor.onInitialize)
             descriptor.onInitialize(panel);

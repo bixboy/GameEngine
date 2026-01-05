@@ -1,13 +1,11 @@
 #include "Gui/Internal/NavBar/GuiNavigationBar.h"
 #include "Systems/Audio/AudioSystem.h"
-
 #include <string_view>
-
 #include "Gui/Internal/GuiModule.h"
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "Gui/Internal/GuiLayoutManager.h"
-#include "Gui/Panels/GuiPanel.h"
+#include "Utils/FileIO/FilesUtils.h"
 #include "imgui.h"
 #include <filesystem>
 #include <vector>
@@ -17,7 +15,8 @@
 #include "Ressources/RessourcesClass/AudioClip.h"
 #include "Ressources/Core/ResourceManager.h"
 
-namespace BixEngine::Core
+
+namespace BixEngine::Gui
 {
     namespace
     {
@@ -28,13 +27,16 @@ namespace BixEngine::Core
         {
             std::error_code ec;
             const std::filesystem::path base = std::filesystem::current_path(ec);
-            if (ec) return {};
+            if (ec)
+                return {};
 
             const std::filesystem::path content = base / "Content";
-            if (std::filesystem::exists(content)) return content;
+            if (std::filesystem::exists(content))
+                return content;
 
             const std::filesystem::path resources = base / "Resources";
-            if (std::filesystem::exists(resources)) return resources;
+            if (std::filesystem::exists(resources))
+                return resources;
 
             return {};
         }
@@ -42,22 +44,14 @@ namespace BixEngine::Core
         void CollectAudioFiles(std::vector<std::filesystem::path>& outFiles)
         {
             const std::filesystem::path root = DetermineAudioRoot();
-            if (root.empty()) return;
+            if (root.empty())
+                return;
 
-            std::error_code ec;
-            for (std::filesystem::recursive_directory_iterator it(root, ec), end; it != end; it.increment(ec))
-            {
-                if (ec) break;
-                if (!it->is_regular_file()) continue;
+            const std::vector<std::string> audioExtensions = { ".mp3", ".wav", ".ogg", ".bixaudio" };
+            outFiles = Utils::FileUtils::ScanDirectory(root, audioExtensions, true);
 
-                std::string extension = it->path().extension().generic_string();
-                std::transform(extension.begin(), extension.end(), extension.begin(), [](unsigned char c){ return std::tolower(c); });
-                
-                if (extension == ".mp3" || extension == ".wav" || extension == ".ogg" || extension == ".bixaudio")
-                    outFiles.push_back(it->path());
-            }
-
-            std::sort(outFiles.begin(), outFiles.end(),
+            // ScanDirectory doesn't guarantee order, and we might want to sort by generic string as before
+             std::sort(outFiles.begin(), outFiles.end(),
               [](const std::filesystem::path& a, const std::filesystem::path& b)
               {
                   return a.generic_string() < b.generic_string();
@@ -132,7 +126,7 @@ namespace BixEngine::Core
             bool showPlayControls = false;
             if (auto* manager = owner_->GetAssetEditorManager())
             {
-                showPlayControls = (manager->GetActiveLayout() == EditorLayoutType::Scene);
+                showPlayControls = (manager->GetActiveLayout() == DefaultLayouts::Scene);
             }
 
             float tabsEndX = windowWidth - 460.0f; 
@@ -251,7 +245,9 @@ namespace BixEngine::Core
                         entry->buttonLabel = displayName;
                 }
 
-                if (!first) ImGui::SameLine();
+                if (!first)
+                    ImGui::SameLine();
+                
                 first = false;
 
                 const bool isActive = manager->GetActiveNavigationId() == entry->navigationId;
@@ -301,6 +297,7 @@ namespace BixEngine::Core
         
         
         
+        
         ImGui::SameLine();
         ImGui::SetCursorPosX((width - controlsWidth) * 0.5f);
 
@@ -315,6 +312,7 @@ namespace BixEngine::Core
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.2f, 0.8f, 0.2f, 1.0f));
             if (ImGui::Button("Play", ImVec2(50, buttonHeight)))
                 owner_->OnPlay();
+            
             ImGui::PopStyleColor();
         }
         else
@@ -323,6 +321,7 @@ namespace BixEngine::Core
             ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.8f, 0.2f, 0.2f, 1.0f));
             if (ImGui::Button("Stop", ImVec2(50, buttonHeight)))
                 owner_->OnStop();
+            
             ImGui::PopStyleColor();
         }
 
@@ -338,7 +337,13 @@ namespace BixEngine::Core
 
     void GuiNavigationBar::DrawAudioPlayer(float buttonHeight)
     {
-        
+        // Update audio list periodically
+        m_AudioScanTimer += ImGui::GetIO().DeltaTime;
+        if (m_AudioListDirty || (m_AudioScanTimer > 2.0f && !ImGui::IsPopupOpen("##AudioSelect")))
+        {
+            UpdateAudioFileList();
+        }
+
         constexpr float kComboWidth = 120.0f; 
         constexpr float kButtonSize = 18.0f;  
         constexpr float kProgressWidth = 80.0f; 
@@ -347,32 +352,23 @@ namespace BixEngine::Core
         constexpr float kPaddingX = 8.0f;       
         constexpr float kPaddingY = 6.0f;
         
-        
-        
-        
-        const float totalContentWidth = kComboWidth + kItemSpacing + 
-                                      kButtonSize + kItemSpacing + 
-                                      kButtonSize + kItemSpacing + 
-                                      kProgressWidth + kItemSpacing + 
-                                      kVolumeWidth;
+        const float totalContentWidth = kComboWidth + kItemSpacing + kButtonSize + kItemSpacing + kButtonSize +
+            kItemSpacing + kProgressWidth + kItemSpacing + kVolumeWidth;
         
         const float totalRectWidth = totalContentWidth + (kPaddingX * 2.0f) + 20.0f; 
         const float rectHeight = 32.0f; 
 
-        
         ImGui::SameLine();
+        
         const float startX = ImGui::GetWindowWidth() - totalRectWidth - 10.0f;
+        
         ImGui::SetCursorPosX(startX);
-        
-        
-        
         
         const float windowHeight = ImGui::GetWindowHeight();
         const float containerY = (windowHeight - rectHeight) * 0.5f;
         
         ImGui::SetCursorPosY(containerY);
 
-        
         ImDrawList* drawList = ImGui::GetWindowDrawList();
         ImVec2 pMin = ImGui::GetCursorScreenPos();
         ImVec2 pMax = ImVec2(pMin.x + totalRectWidth, pMin.y + rectHeight);
@@ -380,44 +376,27 @@ namespace BixEngine::Core
         drawList->AddRectFilled(pMin, pMax, IM_COL32(30, 30, 35, 255), 6.0f);
         drawList->AddRect(pMin, pMax, IM_COL32(60, 60, 65, 255), 6.0f);
 
-        
-        
-        
-        
-        
         const float contentHeight = ImGui::GetFrameHeight(); 
         const float contentY = containerY + (rectHeight - contentHeight) * 0.5f;
         
         ImGui::SetCursorPosX(startX + kPaddingX);
         ImGui::SetCursorPosY(contentY);
 
-        
-        
-        std::vector<std::filesystem::path> audioFiles;
-        CollectAudioFiles(audioFiles);
-        const std::filesystem::path root = DetermineAudioRoot();
-
-        std::vector<std::string> audioPaths;
-        std::vector<std::string> audioLabels;
-        audioPaths.reserve(audioFiles.size());
-        audioLabels.reserve(audioFiles.size());
-
         int currentAudioIndex = -1;
-        for (size_t index = 0; index < audioFiles.size(); ++index)
+        for (size_t index = 0; index < m_CachedAudioPaths.size(); ++index)
         {
-            const std::string pathString = audioFiles[index].generic_string();
-            audioPaths.push_back(pathString);
-            audioLabels.push_back(MakeDisplayName(audioFiles[index], root));
-
-            if (m_CurrentSongName == pathString)
+            if (m_CurrentSongName == m_CachedAudioPaths[index])
+            {
                 currentAudioIndex = static_cast<int>(index);
+                break;
+            }
         }
 
         ImGui::PushStyleVar(ImGuiStyleVar_FrameRounding, 4.0f);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.15f, 0.15f, 0.17f, 1.0f));
         
         ImGui::SetNextItemWidth(kComboWidth);
-        const char* previewValue = currentAudioIndex >= 0 ? audioLabels[currentAudioIndex].c_str() : (m_CurrentSongName == "No Audio" ? "Select Audio..." : "Unknown");
+        const char* previewValue = currentAudioIndex >= 0 ? m_CachedAudioLabels[currentAudioIndex].c_str() : (m_CurrentSongName == "No Audio" ? "Select Audio..." : "Unknown");
         
         std::string previewStr = previewValue;
         if (previewStr.size() > 20) previewStr = previewStr.substr(0, 17) + "...";
@@ -425,17 +404,17 @@ namespace BixEngine::Core
         ImGui::SetCursorPosY(contentY); 
         if (ImGui::BeginCombo("##AudioSelect", previewStr.c_str(), ImGuiComboFlags_HeightLarge))
         {
-            for (int i = 0; i < static_cast<int>(audioPaths.size()); ++i)
+            for (int i = 0; i < static_cast<int>(m_CachedAudioPaths.size()); ++i)
             {
                 const bool isSelected = (currentAudioIndex == i);
-                if (ImGui::Selectable(audioLabels[i].c_str(), isSelected))
+                if (ImGui::Selectable(m_CachedAudioLabels[i].c_str(), isSelected))
                 {
-                    m_CurrentSongName = audioPaths[i];
+                    m_CurrentSongName = m_CachedAudioPaths[i];
                     
                     std::string playPath = m_CurrentSongName;
                     if (std::filesystem::path(playPath).extension() == ".bixaudio")
                     {
-                        if (auto container = BixEngine::resources::ResourceManager::Get().Get<BixEngine::resources::AudioContainer>(playPath.c_str()))
+                        if (auto container = Resources::ResourceManager::Get().Get<Resources::AudioContainer>(playPath.c_str()))
                         {
                             auto resolved = container->ResolveSound();
                             if (resolved.Clip)
@@ -457,7 +436,6 @@ namespace BixEngine::Core
 
         ImGui::SameLine(0, kItemSpacing);
         ImGui::SetCursorPosY(contentY); 
-
         
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f)); 
         if (!m_IsPlaying)
@@ -467,7 +445,7 @@ namespace BixEngine::Core
                 std::string playPath = m_CurrentSongName;
                 if (std::filesystem::path(playPath).extension() == ".bixaudio")
                 {
-                    if (auto container = BixEngine::resources::ResourceManager::Get().Get<BixEngine::resources::AudioContainer>(playPath.c_str()))
+                    if (auto container = Resources::ResourceManager::Get().Get<Resources::AudioContainer>(playPath.c_str()))
                     {
                         auto resolved = container->ResolveSound();
                         if (resolved.Clip)
@@ -492,20 +470,20 @@ namespace BixEngine::Core
 
         ImGui::SameLine(0, kItemSpacing);
         ImGui::SetCursorPosY(contentY); 
-
         
         ImGui::PushStyleColor(ImGuiCol_Button, ImVec4(0.0f, 0.0f, 0.0f, 0.0f));
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.3f, 0.3f, 1.0f)); 
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.9f, 0.3f, 0.3f, 1.0f));
+        
         if (ImGui::Button("[]", ImVec2(kButtonSize, 0)))
         {
             Systems::AudioSystem::Get().Stop();
             m_IsPlaying = false;
         }
+        
         ImGui::PopStyleColor(2);
 
         ImGui::SameLine(0, kItemSpacing);
         ImGui::SetCursorPosY(contentY); 
-
         
         float duration = Systems::AudioSystem::Get().GetMusicDuration();
         float cursor = Systems::AudioSystem::Get().GetMusicCursor();
@@ -522,18 +500,43 @@ namespace BixEngine::Core
 
         ImGui::SameLine(0, kItemSpacing);
         ImGui::SetCursorPosY(contentY); 
-
         
         ImGui::SetNextItemWidth(kVolumeWidth);
         ImGui::PushStyleColor(ImGuiCol_FrameBg, ImVec4(0.1f, 0.1f, 0.1f, 1.0f));
         ImGui::PushStyleColor(ImGuiCol_SliderGrab, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+        
         if (ImGui::SliderFloat("##Vol", &m_MasterVolume, 0.0f, 1.0f, ""))
         {
             Systems::AudioSystem::Get().SetGlobalVolume(m_MasterVolume);
         }
+        
         ImGui::PopStyleColor(2);
-        if (ImGui::IsItemHovered()) ImGui::SetTooltip("Volume: %.0f%%", m_MasterVolume * 100.0f);
+        if (ImGui::IsItemHovered())
+            ImGui::SetTooltip("Volume: %.0f%%", m_MasterVolume * 100.0f);
 
         ImGui::PopStyleVar(); 
+    }
+
+    void GuiNavigationBar::UpdateAudioFileList()
+    {
+        m_CachedAudioFiles.clear();
+        m_CachedAudioLabels.clear();
+        m_CachedAudioPaths.clear();
+
+        CollectAudioFiles(m_CachedAudioFiles);
+        const std::filesystem::path root = DetermineAudioRoot();
+
+        m_CachedAudioFiles.reserve(m_CachedAudioFiles.size());
+        m_CachedAudioLabels.reserve(m_CachedAudioFiles.size());
+        m_CachedAudioPaths.reserve(m_CachedAudioFiles.size());
+
+        for (const auto& file : m_CachedAudioFiles)
+        {
+            m_CachedAudioPaths.push_back(file.generic_string());
+            m_CachedAudioLabels.push_back(MakeDisplayName(file, root));
+        }
+
+        m_AudioListDirty = false;
+        m_AudioScanTimer = 0.0f;
     }
 }

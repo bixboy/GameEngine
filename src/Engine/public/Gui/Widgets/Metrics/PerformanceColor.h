@@ -17,8 +17,10 @@ namespace BixEngine::Gui::Widgets::Metrics
     {
         if (fps < criticalThreshold)
             return CriticalColor();
+        
         if (fps < warningThreshold)
             return WarningColor();
+        
         return GoodColor();
     }
 }

@@ -1,12 +1,11 @@
 #pragma once
 #include <functional>
-
 #include <string>
 #include <unordered_map>
 #include <memory>
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     struct ClassInfo;
 

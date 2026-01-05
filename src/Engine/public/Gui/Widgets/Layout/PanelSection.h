@@ -1,13 +1,12 @@
 #pragma once
-#include "imgui.h"
 
-namespace BixEngine::Gui::Widgets
+
+namespace BixEngine::Gui::Widgets::Layout
 {
-     
     class PanelSection
     {
     public:
-        PanelSection(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags flags = 0);
+        PanelSection(const char* label, bool defaultOpen = true);
         ~PanelSection();
 
         PanelSection(const PanelSection&) = delete;

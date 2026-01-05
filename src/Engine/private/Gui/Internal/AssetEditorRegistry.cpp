@@ -2,17 +2,14 @@
 #include "Gui/Core/GuiManager.h"
 #include "Gui/Panels/GuiPanel.h"
 #include <algorithm>
-#include "Utils/FileIO/FilesUtils.h"
 
 
 namespace BixEngine::Gui
 {
-    
-    
-    
-    void AssetEditorRegistry::Register(const std::filesystem::path& assetPath, GuiPanel& panel, GuiPanelController& controller, std::weak_ptr<BaseAssetEditorController::SharedState> sharedState)
+    void AssetEditorRegistry::Register(const std::filesystem::path& assetPath, GuiPanel& panel,
+        GuiPanelWindow& controller, std::weak_ptr<BaseAssetEditorWindow::SharedState> sharedState)
     {
-        const auto normalized = BixEngine::FilesUtils::Utilities::NormalizePath(assetPath);
+        const auto normalized = Utils::FileUtils::NormalizePath(assetPath);
 
         editors_[normalized] = EditorEntry{
             .assetPath = normalized,
@@ -22,9 +19,6 @@ namespace BixEngine::Gui
             .sharedState = std::move(sharedState)
         };
     }
-
-    
-    
     
     void AssetEditorRegistry::UnregisterPanel(const String& panelName)
     {
@@ -33,9 +27,6 @@ namespace BixEngine::Gui
             return kvp.second.panelName == panelName;
         });
     }
-
-    
-    
     
     bool AssetEditorRegistry::CloseEditor(const std::filesystem::path& assetPath)
     {
@@ -44,7 +35,7 @@ namespace BixEngine::Gui
             return false;
 
         EditorEntry localCopy = *entry;
-        editors_.erase(BixEngine::FilesUtils::Utilities::NormalizePath(assetPath));
+        editors_.erase(Utils::FileUtils::NormalizePath(assetPath));
 
         if (auto state = localCopy.sharedState.lock())
             state->onCloseRequest = nullptr;
@@ -59,11 +50,8 @@ namespace BixEngine::Gui
 
         return true;
     }
-
     
-    
-    
-    GuiPanelController* AssetEditorRegistry::FindController(const std::filesystem::path& assetPath) noexcept
+    GuiPanelWindow* AssetEditorRegistry::FindController(const std::filesystem::path& assetPath) noexcept
     {
         if (auto* entry = GetEntry(assetPath))
             return entry->controller;
@@ -80,13 +68,10 @@ namespace BixEngine::Gui
     {
         return GetEntry(assetPath) != nullptr;
     }
-
-    
-    
     
     AssetEditorRegistry::EditorEntry* AssetEditorRegistry::GetEntry(const std::filesystem::path& assetPath) noexcept
     {
-        if (auto it = editors_.find(BixEngine::FilesUtils::Utilities::NormalizePath(assetPath)); it != editors_.end())
+        if (auto it = editors_.find(Utils::FileUtils::NormalizePath(assetPath)); it != editors_.end())
             return &it->second;
         
         return nullptr;

@@ -10,6 +10,7 @@
 #include <utility>
 #include <vector>
 
+
 namespace BixEngine
 {
     class String
@@ -113,9 +114,26 @@ namespace BixEngine
 
         operator std::string_view() const { return std::string_view(c_str(), length()); }
         
-        String& operator += (const String& other) { return Append(other.View()); }
-        String& operator += (std::string_view other) { return Append(other); }
-        String& operator += (char ch) { data_.push_back(ch); return *this; }
+        String& operator += (const String& other)
+        {
+            return Append(other.View());
+        }
+        
+        String& operator += (std::string_view other)
+        {
+            return Append(other);
+        }
+        
+        String& operator += (char ch)
+        {
+            data_.push_back(ch);
+            return *this;
+        }
+        
+        String& operator+=(const char* other)
+        {
+            return operator+=(std::string_view(other));
+        }
         
         // --- Opérateurs + (Concaténation) ---
         

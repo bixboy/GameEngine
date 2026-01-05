@@ -4,15 +4,14 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-
-#include "Gui/Core/GuiCommon.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"
-#include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"
+#include "Gui/Core/GuiTheme.h"
+#include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "Utils/Editor/ScriptUtils.h"
 
 
-namespace BixEngine::Gui::Utils
+namespace BixEngine::Gui::GuiUtils
 {
     using ScriptUtils::TreeNodeData;
 
@@ -51,8 +50,8 @@ namespace BixEngine::Gui::Utils
         ~ScopedID() { ImGui::PopID(); }
     };
 
-    using ScopedStyle = Widgets::ScopedStyle;
-    using ScopedColor = Widgets::ScopedColor;
+    using ScopedStyle = Widgets::Styling::ScopedStyle;
+    using ScopedColor = Widgets::Styling::ScopedColor;
 
     class ScopedStyleColor
     {
@@ -71,7 +70,7 @@ namespace BixEngine::Gui::Utils
         }
 
     private:
-        std::optional<Widgets::ScopedColor> colorScope_{};
+        std::optional<Widgets::Styling::ScopedColor> colorScope_{};
     };
 
     

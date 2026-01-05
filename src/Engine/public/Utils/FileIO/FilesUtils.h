@@ -33,6 +33,7 @@ namespace BixEngine::Utils
 
         static String ExtractDisplayName(const fs::path& path);
         static fs::path NormalizePath(const fs::path& path);
+        static String NormalizePath(const String& path);
         static fs::path ResolveUserConfigPath(const char* fileName);
 
         static bool LogAndStoreError(String& outError, const String& message, bool alsoLog = true);

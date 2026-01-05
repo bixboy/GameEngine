@@ -1,6 +1,6 @@
 #include "Core/PropertyInfo.h"
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     bool PropertyInfo::IsValid() const noexcept
     {

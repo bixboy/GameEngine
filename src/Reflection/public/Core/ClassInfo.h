@@ -1,12 +1,11 @@
 #pragma once
-#include <functional>
 #include <string>
 #include <string_view>
 #include <vector>
 #include "Core/PropertyInfo.h"
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     struct ClassInfo
     {

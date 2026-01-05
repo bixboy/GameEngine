@@ -1,19 +1,16 @@
 #include "Gui/Internal/GuiSystem.h"
-
 #include <algorithm>
 #include <filesystem>
 #include <fstream>
 #include <string>
 #include <system_error>
-
 #include <SDL3/SDL.h>
-
 #include "Debug/Logger.h"
 #include "Gui/Panels/GuiPanel.h"
 #include "imgui_impl_sdl3.h"
 #include "imgui_impl_sdlrenderer3.h"
 #include "imgui_internal.h"
-#include "Gui/Core/GuiCommon.h"
+
 
 namespace BixEngine::Gui
 {
@@ -22,9 +19,7 @@ namespace BixEngine::Gui
         Shutdown();
     }
 
-    
-    
-    
+    // --- Initialization & Shutdown ---
 
     bool GuiSystem::Initialize(SDL_Window* window, SDL_Renderer* renderer)
     {
@@ -40,17 +35,21 @@ namespace BixEngine::Gui
         window_ = window;
         renderer_ = renderer;
 
+        // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
         ImGuiIO& io = ImGui::GetIO();
-        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard | ImGuiConfigFlags_DockingEnable;
+        io.ConfigFlags |= ImGuiConfigFlags_NavEnableKeyboard;
+        io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;
 
         dockingEnabled_ = (io.ConfigFlags & ImGuiConfigFlags_DockingEnable) != 0;
+        
         useSavedDockLayout_ = dockingEnabled_ && HasSavedDockLayout_();
 
         ImGui::StyleColorsDark();
 
+        // Setup Platform/Renderer backends
         if (!ImGui_ImplSDL3_InitForSDLRenderer(window_, renderer_) ||
             !ImGui_ImplSDLRenderer3_Init(renderer_))
         {
@@ -60,38 +59,37 @@ namespace BixEngine::Gui
         }
 
         initialized_ = true;
+        
+        // Si on a une save, on ne rebuilder pas le layout par défaut
         dockLayoutBuilt_ = useSavedDockLayout_;
         rebuildDockLayout_ = !useSavedDockLayout_;
+        
         dockRegionIds_.fill(0);
         pendingDockUpdates_.clear();
 
-        LOG_INFO("[GuiSystem] ✅ Initialized successfully.");
+        LOG_INFO("[GuiSystem] Initialized successfully.");
         return true;
     }
 
     void GuiSystem::Shutdown() noexcept
     {
-        if (!initialized_)
-            return;
+        if (!initialized_) return;
 
-        LOG_INFO("[GuiSystem] 🧹 Shutdown requested...");
+        LOG_INFO("[GuiSystem] Shutdown requested...");
 
         panels_.clear();
         pendingDockUpdates_.clear();
 
+        // Save Ini manually if context exists
         if (ImGuiContext* context = ImGui::GetCurrentContext())
         {
             ImGui::SetCurrentContext(context);
-
             ImGuiIO& io = ImGui::GetIO();
             if (io.IniFilename && *io.IniFilename)
             {
-                LOG_INFO("[GuiSystem] 💾 Saving ImGui layout...");
+                LOG_INFO("[GuiSystem] Saving ImGui layout...");
                 ImGui::SaveIniSettingsToDisk(io.IniFilename);
             }
-
-            LOG_INFO("[GuiSystem] 🪟 Destroying ImGui platform windows...");
-            ImGui::DestroyPlatformWindows();
         }
 
         ImGui_ImplSDLRenderer3_Shutdown();
@@ -99,24 +97,19 @@ namespace BixEngine::Gui
 
         if (ImGui::GetCurrentContext())
         {
-            LOG_INFO("[GuiSystem] 🧠 Destroying ImGui context...");
             ImGui::DestroyContext();
         }
 
         initialized_ = false;
         frameBegun_ = false;
-        dockingEnabled_ = false;
         dockLayoutBuilt_ = false;
-        rebuildDockLayout_ = true;
-        dockspaceId_ = 0;
-        dockRegionIds_.fill(0);
         window_ = nullptr;
         renderer_ = nullptr;
-        useSavedDockLayout_ = false;
 
-        LOG_INFO("[GuiSystem] ✅ Shutdown completed cleanly.");
+        LOG_INFO("[GuiSystem] Shutdown completed cleanly.");
     }
 
+    // --- Layout Management ---
 
     void GuiSystem::SetDockspaceIdentifiers(std::string windowName, std::string dockspaceLabel)
     {
@@ -144,13 +137,11 @@ namespace BixEngine::Gui
     {
         if (!ImGui::GetCurrentContext())
             return {};
-
+        
         size_t dataSize = 0;
         const char* iniData = ImGui::SaveIniSettingsToMemory(&dataSize);
-        if (!iniData || dataSize == 0)
-            return {};
-
-        return std::string(iniData, dataSize);
+        
+        return (iniData && dataSize > 0) ? std::string(iniData, dataSize) : std::string{};
     }
 
     void GuiSystem::LoadLayoutFromMemory(const std::string& data)
@@ -177,10 +168,7 @@ namespace BixEngine::Gui
         }
     }
 
-
-    
-    
-    
+    // --- Main Loop ---
 
     void GuiSystem::BeginFrame()
     {
@@ -224,47 +212,22 @@ namespace BixEngine::Gui
             DumpGuiState();
     }
 
-    
-    
-    
-
     void GuiSystem::ProcessEvent(const SDL_Event& event)
     {
         if (initialized_)
             ImGui_ImplSDL3_ProcessEvent(&event);
     }
 
-    
-    
-    
-
-    void GuiSystem::RegisterPanel(GuiPanel& panel)
+    void GuiSystem::OnResize(int width, int height)
     {
-        if (std::find(panels_.begin(), panels_.end(), &panel) == panels_.end())
-        {
-            panels_.push_back(&panel);
-            panel.ResetDockId();
+        if (!initialized_)
+            return;
 
-            if (dockingEnabled_ && !useSavedDockLayout_)
-                QueuePanelForDockUpdate_(panel);
-        }
+        ImGuiIO& io = ImGui::GetIO();
+        io.DisplaySize = ImVec2(static_cast<float>(width), static_cast<float>(height));
     }
 
-    void GuiSystem::UnregisterPanel(GuiPanel& panel)
-    {
-        std::erase(panels_, &panel);
-        RemovePanelFromDockQueue_(panel);
-    }
-
-    void GuiSystem::EnqueueDockUpdate(GuiPanel& panel)
-    {
-        if (dockingEnabled_)
-            QueuePanelForDockUpdate_(panel);
-    }
-
-    
-    
-    
+    // --- Docking Internals ---
 
     void GuiSystem::BeginDockspaceLayout_()
     {
@@ -273,13 +236,20 @@ namespace BixEngine::Gui
             return;
 
         constexpr ImGuiDockNodeFlags dockFlags = ImGuiDockNodeFlags_PassthruCentralNode | ImGuiDockNodeFlags_AutoHideTabBar;
+        
         constexpr ImGuiWindowFlags winFlags =
-            ImGuiWindowFlags_NoDocking | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoCollapse |
-            ImGuiWindowFlags_NoResize | ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoBringToFrontOnFocus |
-            ImGuiWindowFlags_NoNavFocus | ImGuiWindowFlags_NoBackground;
+            ImGuiWindowFlags_NoDocking |
+            ImGuiWindowFlags_NoTitleBar |
+            ImGuiWindowFlags_NoCollapse |
+            ImGuiWindowFlags_NoResize |
+            ImGuiWindowFlags_NoMove |
+            ImGuiWindowFlags_NoBringToFrontOnFocus |
+            ImGuiWindowFlags_NoNavFocus |
+            ImGuiWindowFlags_NoBackground;
 
         ImVec2 dockspacePos = viewport->WorkPos;
         ImVec2 dockspaceSize = viewport->WorkSize;
+
         if (dockspaceTopPadding_ > 0.0f)
         {
             dockspacePos.y += dockspaceTopPadding_;
@@ -316,7 +286,7 @@ namespace BixEngine::Gui
 
     void GuiSystem::BuildDefaultDockLayout_(ImGuiViewport& viewport, ImGuiID dockspaceId, ImGuiDockNodeFlags flags, const ImVec2& dockspacePos, const ImVec2& dockspaceSize)
     {
-        static_cast<void>(viewport);
+        (void)viewport;
         if (dockspaceId == 0)
             return;
 
@@ -339,29 +309,8 @@ namespace BixEngine::Gui
         dockLayoutBuilt_ = true;
 
         QueueAllPanelsForDockUpdate_();
-        LOG_INFO("[GuiSystem] 🧩 Default dock layout built.");
+        LOG_INFO("[GuiSystem] Default dock layout built.");
     }
-
-    
-    
-    
-
-    void GuiSystem::DumpGuiState() const
-    {
-        LOG_INFO("───────────────────────────────");
-        LOG_INFO("[GuiSystem] State dump:");
-        LOG_INFO("Panels: " + std::to_string(panels_.size()));
-        LOG_INFO("Pending docks: " + std::to_string(pendingDockUpdates_.size()));
-        LOG_INFO("Dockspace ID: " + std::to_string(dockspaceId_));
-        for (size_t i = 0; i < dockRegionIds_.size(); ++i)
-            LOG_INFO("Region[" + std::to_string(i) + "] ID: " + std::to_string(dockRegionIds_[i]));
-        
-        LOG_INFO("───────────────────────────────");
-    }
-
-    
-    
-    
 
     void GuiSystem::ApplyDockingPreferences_()
     {
@@ -370,38 +319,31 @@ namespace BixEngine::Gui
 
         std::vector<GuiPanel*> panelsToProcess;
         panelsToProcess.reserve(pendingDockUpdates_.size());
-
-        if (useSavedDockLayout_)
+        
+        for (GuiPanel* panel : pendingDockUpdates_)
         {
-            for (GuiPanel* panel : pendingDockUpdates_)
-            {
-                if (!panel)
-                    continue;
+            if (!panel)
+                continue;
 
+            if (useSavedDockLayout_)
+            {
                 const auto& title = panel->GetTitle();
                 const auto& name = panel->GetName();
 
                 ImGuiWindowSettings* settings = nullptr;
-                if (!title.IsEmpty())
+                if (!title.empty())
                 {
-                    const ImGuiID seed = name.IsEmpty() ? 0 : ImHashStr(name.c_str());
+                    const ImGuiID seed = name.empty() ? 0 : ImHashStr(name.c_str());
                     const ImGuiID windowId = ImHashStr(title.c_str(), 0, seed);
+                    
                     settings = ImGui::FindWindowSettingsByID(windowId);
                 }
 
                 if (settings && settings->DockId != 0)
-                    continue;
+                    continue; 
+            }
 
-                panelsToProcess.push_back(panel);
-            }
-        }
-        else
-        {
-            for (GuiPanel* panel : pendingDockUpdates_)
-            {
-                if (panel)
-                    panelsToProcess.push_back(panel);
-            }
+            panelsToProcess.push_back(panel);
         }
 
         if (panelsToProcess.empty())
@@ -415,9 +357,6 @@ namespace BixEngine::Gui
 
         for (GuiPanel* panel : panelsToProcess)
         {
-            if (!panel)
-                continue;
-
             DockSpaceRegion region = panel->HasDockingPreference() ? panel->GetDockingPreference() : DockSpaceRegion::Center;
 
             std::size_t index = static_cast<std::size_t>(region);
@@ -425,8 +364,10 @@ namespace BixEngine::Gui
                 index = static_cast<std::size_t>(DockSpaceRegion::Center);
 
             ImGuiID dockId = dockRegionIds_[index];
+            
             if (dockId == 0)
                 dockId = dockRegionIds_[static_cast<std::size_t>(DockSpaceRegion::Center)];
+            
             if (dockId == 0)
                 dockId = dockspaceId_;
 
@@ -445,6 +386,31 @@ namespace BixEngine::Gui
         pendingDockUpdates_ = std::move(remaining);
     }
 
+    // --- Panel Update Queue ---
+
+    void GuiSystem::RegisterPanel(GuiPanel& panel)
+    {
+        if (std::find(panels_.begin(), panels_.end(), &panel) == panels_.end())
+        {
+            panels_.push_back(&panel);
+            panel.ResetDockId();
+            if (dockingEnabled_ && !useSavedDockLayout_)
+                QueuePanelForDockUpdate_(panel);
+        }
+    }
+
+    void GuiSystem::UnregisterPanel(GuiPanel& panel)
+    {
+        std::erase(panels_, &panel);
+        RemovePanelFromDockQueue_(panel);
+    }
+
+    void GuiSystem::EnqueueDockUpdate(GuiPanel& panel)
+    {
+        if (dockingEnabled_)
+            QueuePanelForDockUpdate_(panel);
+    }
+
     void GuiSystem::QueuePanelForDockUpdate_(GuiPanel& panel)
     {
         if (std::find(pendingDockUpdates_.begin(), pendingDockUpdates_.end(), &panel) == pendingDockUpdates_.end())
@@ -453,22 +419,22 @@ namespace BixEngine::Gui
 
     void GuiSystem::RemovePanelFromDockQueue_(GuiPanel& panel)
     {
-        auto it = std::find(pendingDockUpdates_.begin(), pendingDockUpdates_.end(), &panel);
-        if (it != pendingDockUpdates_.end())
-            pendingDockUpdates_.erase(it);
+        std::erase(pendingDockUpdates_, &panel);
     }
 
     void GuiSystem::QueueAllPanelsForDockUpdate_()
     {
         if (useSavedDockLayout_)
             return;
-
+        
         for (GuiPanel* panel : panels_)
         {
             if (panel)
                 QueuePanelForDockUpdate_(*panel);
         }
     }
+
+    // --- Helpers ---
 
     bool GuiSystem::HasSavedDockLayout_() const
     {
@@ -496,17 +462,30 @@ namespace BixEngine::Gui
                 inDockingSection = true;
                 continue;
             }
-
             if (!inDockingSection)
                 continue;
-
+            
             if (!line.empty() && line.front() == '[')
                 break;
-
+            
             if (line.find("DockSpace") != std::string::npos)
                 return true;
         }
 
         return false;
+    }
+
+    void GuiSystem::DumpGuiState() const
+    {
+        LOG_INFO("───────────────────────────────");
+        LOG_INFO("[GuiSystem] State dump:");
+        LOG_INFO("Panels: " + std::to_string(panels_.size()));
+        LOG_INFO("Pending docks: " + std::to_string(pendingDockUpdates_.size()));
+        LOG_INFO("Dockspace ID: " + std::to_string(dockspaceId_));
+        
+        for (size_t i = 0; i < dockRegionIds_.size(); ++i)
+            LOG_INFO("Region[" + std::to_string(i) + "] ID: " + std::to_string(dockRegionIds_[i]));
+        
+        LOG_INFO("───────────────────────────────");
     }
 }

@@ -300,6 +300,14 @@ namespace BixEngine::Utils
         return path.lexically_normal().make_preferred();
     }
 
+    String FileUtils::NormalizePath(const String& path)
+    {
+        if (path.empty())
+            return "";
+
+        return String(NormalizePath(fs::path(path.c_str())).string());
+    }
+
     fs::path FileUtils::ResolveUserConfigPath(const char* fileName)
     {
         const ImGuiIO& io = ImGui::GetIO();

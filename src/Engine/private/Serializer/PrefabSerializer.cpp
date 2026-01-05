@@ -5,10 +5,14 @@
 #include "Serializer/SceneSerializer.h"
 #include "Utils/FileIO/BinaryUtils.h"
 #include "Debug/Logger.h"
+#include "Serializer/ReflectedSerializer.h"
+#include "Core/Registry.h"
+#include <array>
 
 
 namespace BixEngine::Serialization
 {
+    
     static void CollectDescendants(const Game::Actor* actor, std::vector<const Game::Actor*>& outList)
     {
         if (!actor)
@@ -145,5 +149,73 @@ namespace BixEngine::Serialization
             }
         }
         return root;
+    }
+
+    bool PrefabSerializer::SaveComponent(Game::Component* component, const std::filesystem::path& path)
+    {
+         if (!component)
+            return false;
+
+        std::ofstream file(path, std::ios::binary);
+        if (!file.is_open())
+        {
+            LOG_ERROR("Failed to open file for writing component: " + path.string());
+            return false;
+        }
+
+        Utils::BinaryWriter writer(file);
+        writer.WriteString("COMPONENT_V1");
+
+        String typeName = component->GetTypeName();
+        writer.WriteString(typeName);
+
+        if (const Reflection::ClassInfo* info = Reflection::FindClass(typeName))
+        {
+            ReflectedSerializer::Serialize(component, info, writer);
+            return true;
+        }
+
+        LOG_ERROR("SaveComponent: Missing ClassInfo for " + typeName);
+        return false;
+    }
+
+    std::unique_ptr<Game::Component> PrefabSerializer::LoadComponent(const std::filesystem::path& path)
+    {
+        std::ifstream file(path, std::ios::binary);
+        if (!file.is_open())
+        {
+             LOG_ERROR("Failed to open file for reading component: " + path.string());
+             return nullptr;
+        }
+
+        Utils::BinaryReader reader(file);
+        
+        String header;
+        if (!reader.ReadString(header) || header != "COMPONENT_V1")
+        {
+             LOG_ERROR("Invalid component format or version mismatch: " + path.string());
+             return nullptr;
+        }
+
+        String typeName;
+        if (!reader.ReadString(typeName))
+            return nullptr;
+
+        const Reflection::ClassInfo* info = Reflection::FindClass(typeName);
+        if (!info || !info->CanConstruct())
+        {
+            LOG_ERROR("LoadComponent: Failed to find class info or constructor for " + typeName);
+            return nullptr;
+        }
+
+        auto componentPtr = std::unique_ptr<Game::Component>(info->ConstructTyped<Game::Component>());
+        if (!componentPtr)
+        {
+             LOG_ERROR("LoadComponent: Failed to construct " + typeName);
+             return nullptr;
+        }
+
+        ReflectedSerializer::Deserialize(componentPtr.get(), info, reader);
+        return componentPtr;
     }
 }

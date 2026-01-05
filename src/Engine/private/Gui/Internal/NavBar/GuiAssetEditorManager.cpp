@@ -1,28 +1,23 @@
 #include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
-
 #include <algorithm>
 #include <array>
 #include <filesystem>
 #include <format>
 #include <fstream>
-#include <iterator>
-#include <ranges>
-#include <string_view>
-#include <Gui/Internal/GuiLayoutManager.h>
 #include <nlohmann/json.hpp>
-
-#include "Debug/Logger.h"
 #include "Gui/Core/GuiManager.h"
-#include "Gui/Controllers/ActorEditorController.h"
-#include "Gui/Controllers/ComponentEditorController.h"
-#include "Gui/Controllers/SpriteAtlasEditorController.h"
-#include "Gui/Controllers/AudioContainerEditorController.h"
 #include "Gui/Panels/GuiPanel.h"
-#include "Utils/Editor/EditorUtils.h"
 #include "Utils/String/StringUtils.h"
+#include "Debug/Logger.h"
+#include "Gui/Controllers/Windows/ActorEditorWindow.h"
+#include "Gui/Controllers/Windows/AudioContainerEditorWindow.h"
+#include "Gui/Controllers/Windows/ComponentEditorWindow.h"
+#include "Gui/Controllers/Windows/SpriteAtlasEditorWindow.h"
+#include "Utils/Editor/EditorUtils.h"
+#include "Utils/FileIO/FilesUtils.h"
 
 
-namespace BixEngine::Core
+namespace BixEngine::Gui
 {
     namespace
     {
@@ -48,8 +43,7 @@ namespace BixEngine::Core
             return String(value.dump());
         }
 
-        void PopulateVariablesMetadata(const nlohmann::json& document,
-                                       Gui::BaseAssetEditorController::SharedState& state)
+        void PopulateVariablesMetadata(const nlohmann::json& document, BaseAssetEditorWindow::SharedState& state)
         {
             state.exposedVariables.clear();
 
@@ -62,24 +56,33 @@ namespace BixEngine::Core
                 if (!entry.is_object())
                     continue;
 
-                Gui::BaseAssetEditorController::SharedState::VariableMetadata metadata;
+                BaseAssetEditorWindow::SharedState::VariableMetadata metadata;
 
                 if (const auto nameIt = entry.find("name"); nameIt != entry.end() && nameIt->is_string())
                     metadata.name = nameIt->get<std::string>();
 
                 if (const auto typeIt = entry.find("type"); typeIt != entry.end() && typeIt->is_string())
+                {
                     metadata.type = typeIt->get<std::string>();
-                else if (const auto valueTypeIt = entry.find("valueType");
-                         valueTypeIt != entry.end() && valueTypeIt->is_string())
+                }
+                else if (const auto valueTypeIt = entry.find("valueType"); valueTypeIt != entry.end() && valueTypeIt->is_string())
+                {
                     metadata.type = valueTypeIt->get<std::string>();
+                }
 
                 const nlohmann::json* defaultCandidate = nullptr;
                 if (const auto defaultIt = entry.find("default"); defaultIt != entry.end())
+                {
                     defaultCandidate = &(*defaultIt);
+                }
                 else if (const auto valueIt = entry.find("value"); valueIt != entry.end())
+                {
                     defaultCandidate = &(*valueIt);
+                }
                 else if (const auto initialIt = entry.find("initial"); initialIt != entry.end())
+                {
                     defaultCandidate = &(*initialIt);
+                }
 
                 if (defaultCandidate)
                     metadata.value = JsonValueToString(*defaultCandidate);
@@ -96,6 +99,7 @@ namespace BixEngine::Core
         {
             if (!panel || index >= buffer.size())
                 return;
+            
             buffer[index++] = panel;
         };
 
@@ -107,27 +111,24 @@ namespace BixEngine::Core
         return buffer.first(index);
     }
 
-    GuiAssetEditorManager::GuiAssetEditorManager(Gui::GuiManager& guiManager, Gui::GuiLayoutManager* layoutManager,
-                                                 FocusRequestCallback focusRequestCallback,
-                                                 FocusSceneCallback focusSceneCallback)
-        : guiManager_(&guiManager), layoutManager_(layoutManager),
-          focusRequestCallback_(std::move(focusRequestCallback)), focusSceneCallback_(std::move(focusSceneCallback))
+    GuiAssetEditorManager::GuiAssetEditorManager(GuiManager& guiManager, GuiLayoutManager* layoutManager,
+        FocusRequestCallback focusRequestCallback, FocusSceneCallback focusSceneCallback) : guiManager_(&guiManager),
+        layoutManager_(layoutManager), focusRequestCallback_(std::move(focusRequestCallback)), focusSceneCallback_(std::move(focusSceneCallback))
     {
     }
 
-    void GuiAssetEditorManager::SetLayoutManager(Gui::GuiLayoutManager* layoutManager) noexcept
+    void GuiAssetEditorManager::SetLayoutManager(GuiLayoutManager* layoutManager) noexcept
     {
         layoutManager_ = layoutManager;
     }
 
-    void GuiAssetEditorManager::SetFocusCallbacks(FocusRequestCallback focusRequestCallback,
-                                                  FocusSceneCallback focusSceneCallback)
+    void GuiAssetEditorManager::SetFocusCallbacks(FocusRequestCallback focusRequestCallback, FocusSceneCallback focusSceneCallback)
     {
         focusRequestCallback_ = std::move(focusRequestCallback);
         focusSceneCallback_ = std::move(focusSceneCallback);
     }
 
-    void GuiAssetEditorManager::SwitchToLayout(EditorLayoutType layout, std::string_view navId, GuiPanel* panelToFocus)
+    void GuiAssetEditorManager::SwitchToLayout(const LayoutID& layout, std::string_view navId, GuiPanel* panelToFocus)
     {
         activeNavigationId_ = std::string(navId);
         activeLayout_ = layout;
@@ -136,19 +137,14 @@ namespace BixEngine::Core
         {
             layoutManager_->Switch(layout);
 
-            if (layout == EditorLayoutType::Scene)
+            if (layout == DefaultLayouts::Scene)
             {
                 
                 layoutManager_->SetMenuPanelFilter(nullptr);
             }
-            else if (layout == EditorLayoutType::ActorEditor)
+            else if (layout == DefaultLayouts::ActorEditor)
             {
-                
-                
-                
-                
-                
-                layoutManager_->SetMenuPanelFilter([this, currentNavId = std::string(navId)](Gui::GuiPanel* panel) -> bool
+                layoutManager_->SetMenuPanelFilter([this, currentNavId = std::string(navId)](GuiPanel* panel) -> bool
                 {
                     auto it = assetEditors_.find(currentNavId);
                     if (it == assetEditors_.end()) return false;
@@ -166,10 +162,10 @@ namespace BixEngine::Core
 
         RefreshAssetPanelsVisibility();
 
-        if (layout == EditorLayoutType::ActorEditor)
+        if (layout == DefaultLayouts::ActorEditor)
             FocusPanel(panelToFocus);
 
-        else if (layout == EditorLayoutType::Scene)
+        else if (layout == DefaultLayouts::Scene)
             RequestSceneFocus();
     }
 
@@ -203,7 +199,7 @@ namespace BixEngine::Core
         if (!focusPanel)
             focusPanel = storedEntry.panels.toolbar;
 
-        SwitchToLayout(EditorLayoutType::ActorEditor, storedEntry.navigationId, focusPanel);
+        SwitchToLayout(DefaultLayouts::ActorEditor, storedEntry.navigationId, focusPanel);
     }
 
     void GuiAssetEditorManager::CloseAssetEditor(const std::string& navigationId)
@@ -226,9 +222,9 @@ namespace BixEngine::Core
         if (assetEditors_.empty())
         {
             if (layoutManager_)
-                layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
+                layoutManager_->ResetLayout(DefaultLayouts::ActorEditor);
 
-            SwitchToLayout(Gui::EditorLayoutType::Scene, kSceneNavigationId);
+            SwitchToLayout(DefaultLayouts::Scene, kSceneNavigationId);
         }
         else
         {
@@ -249,23 +245,23 @@ namespace BixEngine::Core
         if (!focusPanel)
             focusPanel = entry->panels.toolbar;
 
-        SwitchToLayout(EditorLayoutType::ActorEditor, navigationId, requestFocus ? focusPanel : nullptr);
+        SwitchToLayout(DefaultLayouts::ActorEditor, navigationId, requestFocus ? focusPanel : nullptr);
     }
 
     void GuiAssetEditorManager::ActivateScene(bool requestFocus)
     {
-        SwitchToLayout(EditorLayoutType::Scene, kSceneNavigationId, requestFocus ? nullptr : nullptr);
+        SwitchToLayout(DefaultLayouts::Scene, kSceneNavigationId, requestFocus ? nullptr : nullptr);
     }
 
     void GuiAssetEditorManager::RefreshAssetPanelsVisibility()
     {
-        const bool assetLayoutActive = (layoutManager_ && layoutManager_->GetCurrentLayout() ==
-            EditorLayoutType::ActorEditor) || activeLayout_ == EditorLayoutType::ActorEditor;
+        const bool assetLayoutActive = (layoutManager_ && layoutManager_->GetCurrentLayout() == DefaultLayouts::ActorEditor) ||
+            activeLayout_ == DefaultLayouts::ActorEditor;
 
         for (auto& [navId, entry] : assetEditors_)
         {
             const bool visible = assetLayoutActive && activeNavigationId_ == navId;
-            entry.panels.ForEachPanel([visible](Gui::GuiPanel* panel)
+            entry.panels.ForEachPanel([visible](GuiPanel* panel)
             {
                 if (panel)
                     panel->SetVisible(visible);
@@ -286,12 +282,12 @@ namespace BixEngine::Core
         assetEditorOrder_.clear();
 
         if (layoutManager_)
-            layoutManager_->ResetLayout(Gui::EditorLayoutType::ActorEditor);
+            layoutManager_->ResetLayout(DefaultLayouts::ActorEditor);
 
-        SwitchToLayout(Gui::EditorLayoutType::Scene, kSceneNavigationId);
+        SwitchToLayout(DefaultLayouts::Scene, kSceneNavigationId);
     }
 
-    void GuiAssetEditorManager::OnLayoutChanged(Gui::EditorLayoutType layout) noexcept
+    void GuiAssetEditorManager::OnLayoutChanged(const LayoutID& layout) noexcept
     {
         activeLayout_ = layout;
     }
@@ -311,12 +307,10 @@ namespace BixEngine::Core
 
         PanelBuffer buffer{};
         const auto span = CollectPanels(entry.panels, buffer);
-        layoutManager_->RegisterPanels(Gui::EditorLayoutType::ActorEditor, span,
-                                       Gui::GuiLayoutManager::LayoutRegistrationMode::LoadIfUninitialized);
+        layoutManager_->RegisterPanels(DefaultLayouts::ActorEditor, span, GuiLayoutManager::LayoutRegistrationMode::LoadIfUninitialized);
     }
 
-    std::span<Gui::GuiPanel*> GuiAssetEditorManager::CollectPanels(const PanelSet& panels,
-                                                                   PanelBuffer& buffer) const noexcept
+    std::span<GuiPanel*> GuiAssetEditorManager::CollectPanels(const PanelSet& panels, PanelBuffer& buffer) const noexcept
     {
         std::span spanBuffer{buffer};
         return panels.CopyTo(spanBuffer);
@@ -378,20 +372,27 @@ namespace BixEngine::Core
         }
 
         const std::string navigationId = MakeNavigationId(path, typeTag);
-        auto onClose = [this, navigationId]() { CloseAssetEditor(navigationId); };
+        auto onClose = [this, navigationId]()
+        {
+            CloseAssetEditor(navigationId);
+        };
 
-        std::shared_ptr<Gui::BaseAssetEditorController::SharedState> sharedState;
+        std::shared_ptr<BaseAssetEditorWindow::SharedState> sharedState;
         if (assetType == "Actor Prefab")
-            sharedState = Gui::ActorEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        {
+            sharedState = ActorEditorWindow::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        }
         else if (assetType == "Component Prefab")
-            sharedState =
-                Gui::ComponentEditorController::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        {
+            sharedState = ComponentEditorWindow::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        }
         else if (assetType == "Sprite Atlas")
-            sharedState = Gui::SpriteAtlasEditorController::CreateSharedState(
-                path, String(navigationId.c_str()), onClose);
+        {
+            sharedState =SpriteAtlasEditorWindow::CreateSharedState(path, String(navigationId.c_str()), onClose);
+        }
         else if (assetType == "Audio Container")
         {
-            sharedState = std::make_shared<Gui::BaseAssetEditorController::SharedState>();
+            sharedState = std::make_shared<BaseAssetEditorWindow::SharedState>();
             sharedState->assetPath = path;
             sharedState->assetDisplayName = String(path.stem().generic_string().c_str());
             sharedState->stableIdRoot = String(navigationId.c_str());
@@ -418,13 +419,21 @@ namespace BixEngine::Core
 
         bool created = false;
         if (assetType == "Actor Prefab")
+        {
             created = CreateActorPrefabEditor(path, entry, navigationId);
+        }
         else if (assetType == "Component Prefab")
+        {
             created = CreateComponentPrefabEditor(path, entry, navigationId);
+        }
         else if (assetType == "Sprite Atlas")
+        {
             created = CreateSpriteAtlasEditor(path, entry, navigationId);
+        }
         else if (assetType == "Audio Container")
+        {
             created = CreateAudioContainerEditor(path, entry, navigationId);
+        }
 
         if (!created)
             return false;
@@ -433,27 +442,27 @@ namespace BixEngine::Core
         return true;
     }
 
-    bool GuiAssetEditorManager::CreateActorPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& entry,
-                                                        const std::string& navigationId)
+    bool GuiAssetEditorManager::CreateActorPrefabEditor(const std::filesystem::path& path, AssetEditorEntry& entry, const std::string& navigationId)
     {
         static_cast<void>(path);
         if (!guiManager_)
             return false;
 
-        auto makePanel = [&](std::string_view suffix, Gui::ActorEditorController::Section section) -> Gui::GuiPanel*
+        auto makePanel = [&](std::string_view suffix, ActorEditorWindow::Section section) -> GuiPanel*
         {
             const std::string panelId = std::format("{}_{}", navigationId, suffix);
-            Gui::GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Actor Prefab"});
+            
+            GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Actor Prefab"});
             panel.SetVisible(false);
-            guiManager_->AttachController(
-                panel, std::make_unique<Gui::ActorEditorController>(entry.sharedState, section));
+            
+            guiManager_->AttachController(panel, std::make_unique<ActorEditorWindow>(entry.sharedState, section));
             return &panel;
         };
 
-        entry.panels.toolbar = makePanel("toolbar", Gui::ActorEditorController::Section::Toolbar);
-        entry.panels.viewport = makePanel("viewport", Gui::ActorEditorController::Section::Viewport);
-        entry.panels.outline = makePanel("outline", Gui::ActorEditorController::Section::Outline);
-        entry.panels.inspector = makePanel("inspector", Gui::ActorEditorController::Section::Inspector);
+        entry.panels.toolbar = makePanel("toolbar", ActorEditorWindow::Section::Toolbar);
+        entry.panels.viewport = makePanel("viewport", ActorEditorWindow::Section::Viewport);
+        entry.panels.outline = makePanel("outline", ActorEditorWindow::Section::Outline);
+        entry.panels.inspector = makePanel("inspector", ActorEditorWindow::Section::Inspector);
 
         return true;
     }
@@ -465,18 +474,18 @@ namespace BixEngine::Core
         if (!guiManager_)
             return false;
 
-        auto makePanel = [&](std::string_view suffix, ComponentEditorController::Section section) -> GuiPanel*
+        auto makePanel = [&](std::string_view suffix, ComponentEditorWindow::Section section) -> GuiPanel*
         {
             const std::string panelId = std::format("{}_{}", navigationId, suffix);
             GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Component Prefab"});
             panel.SetVisible(false);
             
-            guiManager_->AttachController(panel, std::make_unique<ComponentEditorController>(entry.sharedState, section));
+            guiManager_->AttachController(panel, std::make_unique<ComponentEditorWindow>(entry.sharedState, section));
             return &panel;
         };
 
-        entry.panels.toolbar = makePanel("toolbar", ComponentEditorController::Section::Toolbar);
-        entry.panels.inspector = makePanel("inspector", ComponentEditorController::Section::Inspector);
+        entry.panels.toolbar = makePanel("toolbar", ComponentEditorWindow::Section::Toolbar);
+        entry.panels.inspector = makePanel("inspector", ComponentEditorWindow::Section::Inspector);
         entry.panels.viewport = nullptr;
         entry.panels.outline = nullptr;
 
@@ -489,14 +498,14 @@ namespace BixEngine::Core
         if (!guiManager_)
             return false;
 
-        auto atlasState = std::static_pointer_cast<SpriteAtlasEditorController::SharedState>(entry.sharedState);
+        auto atlasState = std::static_pointer_cast<SpriteAtlasEditorWindow::SharedState>(entry.sharedState);
         if (!atlasState)
             return false;
 
         const std::string panelId = std::format("{}_atlas", navigationId);
         GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Sprite Atlas"});
         panel.SetVisible(false);
-        guiManager_->AttachController(panel, std::make_unique<SpriteAtlasEditorController>(atlasState));
+        guiManager_->AttachController(panel, std::make_unique<SpriteAtlasEditorWindow>(atlasState));
         entry.panels.viewport = &panel;
         entry.panels.toolbar = nullptr;
         entry.panels.outline = nullptr;
@@ -513,7 +522,7 @@ namespace BixEngine::Core
         const std::string panelId = std::format("{}_audiocontainer", navigationId);
         GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Audio Container"});
         panel.SetVisible(false);
-        guiManager_->AttachController(panel, std::make_unique<AudioContainerEditorController>(entry.sharedState));
+        guiManager_->AttachController(panel, std::make_unique<AudioContainerEditorWindow>(entry.sharedState));
         entry.panels.viewport = &panel; 
         entry.panels.toolbar = nullptr;
         entry.panels.outline = nullptr;
@@ -521,7 +530,7 @@ namespace BixEngine::Core
         return true;
     }
 
-    void GuiAssetEditorManager::PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorController::SharedState& state)
+    void GuiAssetEditorManager::PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorWindow::SharedState& state)
     {
         if (path.extension() == ".bixactor")
         {
@@ -529,14 +538,14 @@ namespace BixEngine::Core
             return;
         }
 
-        std::ifstream file(path);
-        if (!file.is_open())
+        String content;
+        if (!Utils::FileUtils::ReadFile(path, content))
         {
             LOG_WARNING("[GuiAssetEditorManager] Unable to open asset file: " + path.generic_string());
             return;
         }
 
-        std::string contents((std::istreambuf_iterator(file)), std::istreambuf_iterator<char>());
+        std::string contents = content.Std();
 
         nlohmann::json document = nlohmann::json::parse(contents, nullptr, false);
         if (document.is_discarded() || !document.is_object())
@@ -546,14 +555,22 @@ namespace BixEngine::Core
         }
 
         if (const auto classIt = document.find("class"); classIt != document.end() && classIt->is_string())
+        {
             state.primaryClassName = classIt->get<std::string>();
+        }
         else
+        {
             state.primaryClassName.clear();
+        }
 
         if (const auto includeIt = document.find("include"); includeIt != document.end() && includeIt->is_string())
+        {
             state.includePath = includeIt->get<std::string>();
+        }
         else
+        {
             state.includePath.clear();
+        }
 
         PopulateVariablesMetadata(document, state);
     }

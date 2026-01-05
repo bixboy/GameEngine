@@ -1,9 +1,9 @@
 #include "Gui/Widgets/Layout/PanelToolbar.h"
-
 #include "Gui/Widgets/Styling/ScopedStyle.h"
 #include "imgui.h"
 
-namespace BixEngine::Gui::Widgets
+
+namespace BixEngine::Gui::Widgets::Layout
 {
     namespace
     {
@@ -13,57 +13,67 @@ namespace BixEngine::Gui::Widgets
 
     void PanelToolbar::AddLeft(const std::function<void()>& drawCallback)
     {
-        leftElements_.push_back(drawCallback);
+        if (drawCallback)
+            leftElements_.push_back(drawCallback);
     }
 
     void PanelToolbar::AddRight(const std::function<void()>& drawCallback)
     {
-        rightElements_.push_back(drawCallback);
+        if (drawCallback)
+            rightElements_.push_back(drawCallback);
     }
 
     void PanelToolbar::Commit()
     {
         if (committed_)
             return;
+        
         committed_ = true;
 
+        if (leftElements_.empty() && rightElements_.empty())
+            return;
+
         ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, kItemSpacingY));
+        ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 
-        bool firstInRow = true;
-        bool drewAny = false;
+        ImGui::AlignTextToFramePadding();
 
-        ImGui::BeginGroup();
-        for (const auto& draw : leftElements_)
+        // --- GAUCHE ---
+        if (!leftElements_.empty())
         {
-            if (!draw)
-                continue;
+            ImGui::BeginGroup();
+            for (size_t i = 0; i < leftElements_.size(); ++i)
+            {
+                if (i > 0)
+                    ImGui::SameLine();
+                
+                leftElements_[i]();
+            }
+            
+            ImGui::EndGroup();
+        }
 
-            if (!firstInRow)
+        // --- DROITE ---
+        if (!rightElements_.empty())
+        {
+            if (!leftElements_.empty())
+            {
                 ImGui::SameLine();
+            }
 
-            draw();
-            firstInRow = false;
-            drewAny = true;
-        }
-        ImGui::EndGroup();
-
-        for (const auto& draw : rightElements_)
-        {
-            if (!draw)
-                continue;
-
-            if (!firstInRow)
-                ImGui::SameLine();
-
-            draw();
-            firstInRow = false;
-            drewAny = true;
+            ImGui::BeginGroup();
+            for (size_t i = 0; i < rightElements_.size(); ++i)
+            {
+                if (i > 0)
+                    ImGui::SameLine();
+                
+                rightElements_[i]();
+            }
+            
+            ImGui::EndGroup();
         }
 
-        if (drewAny)
-        {
-            ImGui::NewLine();
-            ImGui::Separator();
-        }
+        ImGui::NewLine();
+        ImGui::Separator();
     }
 }

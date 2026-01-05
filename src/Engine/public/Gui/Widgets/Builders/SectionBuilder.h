@@ -1,13 +1,14 @@
 #pragma once
+#include "Gui/Widgets/ImGuiScopeBase.h"
 #include "Gui/Widgets/Layout/PanelSection.h"
 
 namespace BixEngine::Gui::Widgets
 {
      
-    class Section
+    class Section : public ImGuiScopeBase
     {
     public:
-        Section(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags flags = 0);
+        Section(const char* label, bool defaultOpen = true, ImGuiTreeNodeFlags flags = 0) noexcept;
         ~Section();
 
         Section(const Section&) = delete;
@@ -15,10 +16,7 @@ namespace BixEngine::Gui::Widgets
         
         Section(Section&&) = delete;
         Section& operator=(Section&&) = delete;
-
-        [[nodiscard]] bool IsOpen() const noexcept { return section_.IsOpen(); }
-
-    private:
-        PanelSection section_;
+        
+        operator bool() const { return IsActive(); }
     };
 }

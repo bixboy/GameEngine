@@ -11,19 +11,14 @@
 #include <vector>
 
 #include "Containers/String.h"
-#include "Gui/Controllers/BaseAssetEditorController.h"
+#include "Gui/Controllers/BaseAssetEditorWindow.h"
 #include "Gui/Internal/GuiLayoutManager.h"
 
 namespace BixEngine::Gui
 {
     class GuiManager;
     class GuiPanel;
-}
 
-namespace BixEngine::Core
-{
-    using namespace BixEngine::Gui;
-    
     class GuiAssetEditorManager
     {
     public:
@@ -44,13 +39,18 @@ namespace BixEngine::Core
         void RefreshAssetPanelsVisibility();
         void RemoveAllEditors();
 
-        void OnLayoutChanged(EditorLayoutType layout) noexcept;
+        void OnLayoutChanged(const LayoutID& layout) noexcept;
 
         [[nodiscard]] bool HasEditors() const noexcept { return !assetEditors_.empty(); }
         [[nodiscard]] const std::string& GetActiveNavigationId() const noexcept { return activeNavigationId_; }
-        [[nodiscard]] EditorLayoutType GetActiveLayout() const noexcept { return activeLayout_; }
+        [[nodiscard]] LayoutID GetActiveLayout() const noexcept { return activeLayout_; }
         [[nodiscard]] const std::vector<std::string>& GetEditorOrder() const noexcept { return assetEditorOrder_; }
 
+        // Forward declaration not needed as struct is defined within class later, but to use it in FindEditor signature before definition, 
+        // we normally need it. However, currently FindEditor returns AssetEditorEntry* and the struct is defined *after* FindEditor declaration in the class?
+        // Wait, line 54 `struct AssetEditorEntry;` allows line 55 `FindEditor` to return `AssetEditorEntry*`.
+        // Then line 84 defines it. This IS required if defined later. 
+        // Let's keep it but formatted nicer.
         struct AssetEditorEntry;
         [[nodiscard]] AssetEditorEntry* FindEditor(std::string_view navigationId) noexcept;
 
@@ -88,7 +88,7 @@ namespace BixEngine::Core
             std::string buttonLabel;
             AssetMetadata metadata;
             PanelSet panels{};
-            std::shared_ptr<BaseAssetEditorController::SharedState> sharedState;
+            std::shared_ptr<BaseAssetEditorWindow::SharedState> sharedState;
         };
 
     private:
@@ -102,7 +102,7 @@ namespace BixEngine::Core
 
         using PanelBuffer = std::array<GuiPanel*, 4>;
 
-        void SwitchToLayout(EditorLayoutType layout, std::string_view navId, GuiPanel* panelToFocus = nullptr);
+        void SwitchToLayout(const LayoutID& layout, std::string_view navId, GuiPanel* panelToFocus = nullptr);
         void ApplyPanels(AssetEditorEntry& entry);
         
         [[nodiscard]] std::span<GuiPanel*> CollectPanels(const PanelSet& panels, PanelBuffer& buffer) const noexcept;
@@ -117,7 +117,7 @@ namespace BixEngine::Core
         bool CreateSpriteAtlasEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const String& navigationId);
         bool CreateAudioContainerEditor(const std::filesystem::path& path, AssetEditorEntry& outEntry, const String& navigationId);
         
-        void PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorController::SharedState& state);
+        void PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorWindow::SharedState& state);
         
         std::string MakeNavigationId(const std::filesystem::path& path, std::string_view typeTag) const;
 
@@ -131,6 +131,6 @@ namespace BixEngine::Core
         std::vector<std::string> assetEditorOrder_{};
 
         std::string activeNavigationId_{"scene"};
-        EditorLayoutType activeLayout_{EditorLayoutType::Scene};
+        LayoutID activeLayout_{DefaultLayouts::Scene};
     };
 }

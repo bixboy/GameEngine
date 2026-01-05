@@ -4,17 +4,16 @@
 #include "Utils/FileIO/FilesUtils.h"
 
 using namespace BixEngine::Gui;
-using namespace BixEngine::Gui::Utils;
 
 
 
 
 
-CreateFolderDialog::CreateFolderDialog(ContentBrowserState& state, String& selectedEntry)
-    : ModalDialog(state, selectedEntry, "ContentBrowserCreateFolder")
+CreateFolderDialog::CreateFolderDialog(ContentBrowserState& state, String& selectedEntry) : ModalDialog(state, selectedEntry,
+    "ContentBrowserCreateFolder")
 {
     std::snprintf(folderName_, sizeof(folderName_), "%s", "NewFolder");
-    folderError_.Clear();
+    folderError_.clear();
     targetDir_.clear();
 }
 
@@ -25,7 +24,7 @@ CreateFolderDialog::CreateFolderDialog(ContentBrowserState& state, String& selec
 void CreateFolderDialog::Open(const path& targetDirectory)
 {
     std::snprintf(folderName_, sizeof(folderName_), "%s", "NewFolder");
-    folderError_.Clear();
+    folderError_.clear();
     targetDir_ = targetDirectory;
     ModalDialog::Open();
 }
@@ -59,29 +58,29 @@ void CreateFolderDialog::DrawHeader()
         description += relString.c_str();
     }
 
-    DrawDescriptionText(description.c_str());
+    GuiUtils::DrawDescriptionText(description.c_str());
 }
 
 void CreateFolderDialog::DrawInputField()
 {
-    InputTextWithLabel("Folder name", folderName_, IM_ARRAYSIZE(folderName_), ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
+    GuiUtils::InputTextWithLabel("Folder name", folderName_, IM_ARRAYSIZE(folderName_), ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
 }
 
 void CreateFolderDialog::DrawError()
 {
-    if (!folderError_.IsEmpty())
-        DrawErrorMessage(std::string(folderError_.View()));
+    if (!folderError_.empty())
+        GuiUtils::DrawErrorMessage(std::string(folderError_.View()));
 }
 
 void CreateFolderDialog::DrawFooter()
 {
-    const bool confirmed = DrawConfirmButtons("Create", "Cancel", []{},
-    [&]
-    {
-        Close();
-        folderError_.Clear();
-        targetDir_.clear();
-    });
+    const bool confirmed = GuiUtils::DrawConfirmButtons("Create", "Cancel", []{},
+        [&]
+        {
+            Close();
+            folderError_.clear();
+            targetDir_.clear();
+        });
 
     if (confirmed || ImGui::IsKeyPressed(ImGuiKey_Enter))
     {
@@ -97,24 +96,24 @@ void CreateFolderDialog::DrawFooter()
 bool CreateFolderDialog::TryCreate()
 {
     String nameStr = String(folderName_).Trim();
-    if (nameStr.IsEmpty())
-        return FilesUtils::Utilities::LogAndStoreError(folderError_, "Folder name cannot be empty.", false);
+    if (nameStr.empty())
+        return Utils::FileUtils::LogAndStoreError(folderError_, "Folder name cannot be empty.", false);
 
     if (nameStr.Contains("/") || nameStr.Contains("\\"))
-        return FilesUtils::Utilities::LogAndStoreError(folderError_, "Folder name cannot contain path separators.", false);
+        return Utils::FileUtils::LogAndStoreError(folderError_, "Folder name cannot contain path separators.", false);
 
     const path baseDir = targetDir_.empty() ? state_.current : targetDir_;
     const path newFolderPath = baseDir / path(nameStr.View());
 
     if (fs::exists(newFolderPath))
-        return FilesUtils::Utilities::LogAndStoreError(folderError_, "A folder with this name already exists.", false);
+        return Utils::FileUtils::LogAndStoreError(folderError_, "A folder with this name already exists.", false);
 
-    if (!FilesUtils::Utilities::TryCreateDir(newFolderPath, folderError_))
+    if (!Utils::FileUtils::TryCreateDir(newFolderPath, folderError_))
         return false;
 
     
     selectedEntry_ = newFolderPath.generic_string().c_str();
-    folderError_.Clear();
+    folderError_.clear();
     targetDir_.clear();
     state_.cache.dirty = true;
 

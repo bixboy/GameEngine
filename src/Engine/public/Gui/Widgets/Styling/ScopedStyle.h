@@ -1,14 +1,15 @@
 #pragma once
-#include "Gui/Widgets/Internal/ImGuiScopeBase.h"
 #include "imgui.h"
 
-namespace BixEngine::Gui::Widgets
+
+namespace BixEngine::Gui::Widgets::Styling
 {
-    class ScopedStyle : Internal::ImGuiScopeBase
+    class ScopedStyle
     {
     public:
         ScopedStyle(ImGuiStyleVar variable, float value) noexcept;
         ScopedStyle(ImGuiStyleVar variable, const ImVec2& value) noexcept;
+
         ~ScopedStyle();
 
         ScopedStyle(const ScopedStyle&) = delete;
@@ -16,5 +17,7 @@ namespace BixEngine::Gui::Widgets
         ScopedStyle(ScopedStyle&&) = delete;
         ScopedStyle& operator=(ScopedStyle&&) = delete;
 
+    private:
+        bool active_{false};
     };
 }

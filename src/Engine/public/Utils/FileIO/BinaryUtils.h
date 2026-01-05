@@ -7,12 +7,6 @@
 #include "Containers/Array.h"
 #include "Containers/String.h"
 
-
-namespace Bix::Reflection
-{
-    struct ClassInfo;
-}
-
 namespace BixEngine::Utils
 {
     // ======= Binary Writer =======

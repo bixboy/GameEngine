@@ -119,7 +119,7 @@ namespace BixEngine::Math
 
         [[nodiscard]] String ToString() const
         {
-            return String("Color(") + std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", " + std::to_string(a) + ")";
+            return String("Color(") + String(std::to_string(r) + ", " + std::to_string(g) + ", " + std::to_string(b) + ", " + std::to_string(a) + ")");
         }
     };
 }

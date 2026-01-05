@@ -7,12 +7,8 @@
 
 namespace
 {
-    using namespace BixEngine::Gui::Utils;
-
+    using namespace BixEngine::Gui::GuiUtils;
     
-    
-    
-
     ImFont* GetSmallestFontCached()
     {
         auto& state = GuiStateManager::Get();
@@ -42,11 +38,7 @@ namespace
         state.CachedSmallestFont = smallest;
         return smallest;
     }
-
     
-    
-    
-
     void DrawTreeNodeRecursive(const TreeNodeData& node, std::string& selectedNode, const TreeNodeCallback& onContextMenu)
     {
         ImGuiTreeNodeFlags flags = ImGuiTreeNodeFlags_OpenOnArrow | ImGuiTreeNodeFlags_OpenOnDoubleClick;
@@ -84,12 +76,9 @@ namespace
     }
 }
 
-namespace BixEngine::Gui::Utils
+namespace BixEngine::Gui::GuiUtils
 {
     
-    
-    
-
     void DrawSectionHeader(const char* title)
     {
         ImGui::Spacing();
@@ -108,10 +97,6 @@ namespace BixEngine::Gui::Utils
         ScopedColor color(ImGuiCol_Text, ImVec4(1.f, 0.4f, 0.4f, 1.f));
         ImGui::TextWrapped("%s", message.c_str());
     }
-
-    
-    
-    
 
     bool DrawConfirmButtons(const char* okLabel, const char* cancelLabel)
     {
@@ -140,9 +125,6 @@ namespace BixEngine::Gui::Utils
 
         return confirmed;
     }
-
-    
-    
     
     bool InputTextWithLabel(const char* label, char* buffer, size_t bufferSize, ImGuiInputTextFlags flags,
                             bool autoFocus)

@@ -1,23 +1,16 @@
 #include "Gui/Internal/ChildPanelManager.h"
 #include <algorithm>
-#include <utility>
-#include "Gui/Controllers/GuiPanelController.h"
 
 namespace BixEngine::Gui
 {
-    
-    
-    
-    void ChildPanelManager::RegisterChild(GuiPanelController& parent, String panelName, bool closeWithParent)
+    void ChildPanelManager::RegisterChild(GuiPanelWindow& parent, String panelName, bool closeWithParent)
     {
         auto& list = children_[&parent];
-
-        if (auto it = std::find_if(list.begin(), list.end(),
-            [&](const ChildPanelLink& link)
+            
+        if (auto it = std::find_if(list.begin(), list.end(), [&](const ChildPanelLink& link)
             {
                 return link.panelName == panelName;
             });
-            
             it != list.end())
         {
             it->closeWithParent = closeWithParent;
@@ -27,9 +20,6 @@ namespace BixEngine::Gui
         list.push_back({std::move(panelName), closeWithParent});
     }
 
-    
-    
-    
     void ChildPanelManager::UnregisterChildByName(const String& panelName)
     {
         for (auto it = children_.begin(); it != children_.end();)
@@ -42,16 +32,17 @@ namespace BixEngine::Gui
             });
 
             if (list.empty())
+            {
                 it = children_.erase(it);
+            }
             else
+            {
                 ++it;
+            }
         }
     }
 
-    
-    
-    
-    void ChildPanelManager::RemoveChildren(GuiPanelController& parent, const std::function<void(const String&)>& onClose)
+    void ChildPanelManager::RemoveChildren(GuiPanelWindow& parent, const std::function<void(const String&)>& onClose)
     {
         auto it = children_.find(&parent);
         if (it == children_.end())
@@ -71,19 +62,12 @@ namespace BixEngine::Gui
         children_.erase(it);
     }
 
-    
-    
-    
-    const std::vector<ChildPanelLink>*
-    ChildPanelManager::GetChildren(const GuiPanelController& parent) const noexcept
+    const ChildPanelManager::ChildList* ChildPanelManager::GetChildren(const GuiPanelWindow& parent) const noexcept
     {
-        auto it = children_.find(const_cast<GuiPanelController*>(&parent));
+        auto it = children_.find(const_cast<GuiPanelWindow*>(&parent));
         return it != children_.end() ? &it->second : nullptr;
     }
 
-    
-    
-    
     void ChildPanelManager::Clear() noexcept
     {
         children_.clear();

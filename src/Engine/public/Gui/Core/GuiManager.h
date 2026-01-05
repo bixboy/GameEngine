@@ -1,19 +1,18 @@
 #pragma once
-
-#include <cstdint>
 #include <filesystem>
 #include <functional>
 #include <memory>
 #include <span>
 #include <vector>
+
+#include "GuiData.h"
 #include "Containers/String.h"
-#include "Gui/Controllers/BaseAssetEditorController.h"
-#include "Gui/Controllers/GuiPanelController.h"
-#include "Gui/Core/GuiCommon.h"
+#include "Gui/Controllers/GuiPanelWindow.h"
 #include "Gui/Internal/AssetEditorRegistry.h"
 #include "Gui/Internal/ChildPanelManager.h"
 #include "Gui/Internal/GuiPanelRegistry.h"
 #include "Gui/Internal/PanelHistory.h"
+#include "Gui/Panels/ActorInspectorPanel.h"
 #include "Gui/Internal/WorkspaceRegistry.h"
 #include "imgui.h"
 
@@ -32,7 +31,6 @@ namespace BixEngine::Gui
         ControllerT& controller;
     };
 
-     
     class GuiManager
     {
     public:
@@ -52,9 +50,9 @@ namespace BixEngine::Gui
 
         template <typename ControllerT, typename... Args>
         ControllerT& OpenPanel(String name, String title, Args&&... args);
-
+        
         template <typename ControllerT, typename... Args>
-        ControllerT& OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args);
+        ControllerT& OpenAssetEditor(const std::filesystem::path& assetPath, Args&&... args);
 
         struct PanelDescriptor
         {
@@ -87,19 +85,19 @@ namespace BixEngine::Gui
         void DrawAll();
         [[nodiscard]] std::vector<GuiPanel*> GetPanels();
 
-        GuiPanelController& AttachController(const String& name, std::unique_ptr<GuiPanelController> controller);
-        GuiPanelController& AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelController> controller);
+        GuiPanelWindow& AttachController(const String& name, std::unique_ptr<GuiPanelWindow> controller);
+        GuiPanelWindow& AttachController(GuiPanel& panel, std::unique_ptr<GuiPanelWindow> controller);
         
         void DetachController(const String& name);
         void DetachController(GuiPanel& panel);
 
-        [[nodiscard]] GuiPanelController* GetController(const String& name) noexcept;
+        [[nodiscard]] GuiPanelWindow* GetController(const String& name) noexcept;
 
         template <typename T>
         T* GetControllerAs(const String& name) noexcept;
 
-        GuiPanel& OpenChildPanel(GuiPanelController& parent, const GuiPanelController::ChildPanelConfig& config);
-        void CloseChildPanels(GuiPanelController& parent);
+        GuiPanel& OpenChildPanel(GuiPanelWindow& parent, const GuiPanelWindow::ChildPanelConfig& config);
+        void CloseChildPanels(GuiPanelWindow& parent);
 
         bool NavigateBack();
         bool NavigateForward();
@@ -114,6 +112,8 @@ namespace BixEngine::Gui
         [[nodiscard]] const WorkspaceRegistry::Workspace* GetActiveWorkspace() const noexcept;
 
         void RegisterLayoutManager(GuiLayoutManager& layoutManager) noexcept;
+
+        void OnResize(int width, int height);
 
         [[nodiscard]] AssetEditorRegistry& GetAssetEditorRegistry() noexcept { return assetEditors_; }
         [[nodiscard]] const AssetEditorRegistry& GetAssetEditorRegistry() const noexcept { return assetEditors_; }
@@ -138,4 +138,3 @@ namespace BixEngine::Gui
 }
 
 #include "Gui/Core/GuiManager.inl"
-

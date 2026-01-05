@@ -1,19 +1,20 @@
 #include "Gui/Core/GuiContextFactory.h"
+#include <filesystem>
 #include "Debug/Logger.h"
 #include "Containers/String.h"
-#include "Systems/Core/SubsystemManager.h"
-#include "Gui/Core/DefaultEngineGui.h"
 #include "Framework/SceneManager.h"
-#include <filesystem>
-
 #include "Input.h"
+#include "Gui/Core/DefaultEngineGui.h"
 
 
 namespace BixEngine::Gui
 {
     std::function<std::pair<int, int>()> DefaultEngineGuiContextFactory::DefaultSizeProvider()
     {
-        return []() -> std::pair<int, int> { return {0, 0}; };
+        return []() -> std::pair<int, int>
+        {
+            return {0, 0};
+        };
     }
 
     std::function<void(const std::vector<std::filesystem::path>&)> DefaultEngineGuiContextFactory::DefaultScriptOpener()
@@ -27,9 +28,9 @@ namespace BixEngine::Gui
             for (const auto& path : paths)
             {
                 message += "\n - ";
-                message += path.generic_string();
+                message += String(path.generic_string());
             }
-
+            
             LOG_INFO(message);
         };
     }
@@ -40,56 +41,43 @@ namespace BixEngine::Gui
         {
             if (path.empty())
                 return;
-
-            LOG_INFO("Requested to open asset in editor: " + path.generic_string());
+            
+            LOG_INFO("Requested to open asset in editor: " + std::string(path.generic_string()));
         };
     }
-
-    DefaultEngineGuiContextFactory::DefaultEngineGuiContextFactory(Core::SubsystemManager& subsystems) : subsystems_(
-        subsystems)
+    
+    DefaultEngineGuiContextFactory::DefaultEngineGuiContextFactory(Core::SubsystemManager& subsystems) : subsystems_(&subsystems)
     {
     }
-
-    
-    
     
     DefaultEngineGuiContext DefaultEngineGuiContextFactory::CreateContext(const DefaultEngineGuiContextArgs& args) const
     {
         DefaultEngineGuiContext context{};
 
-        
-        
-        
         if (!args.bEnableGui)
         {
-            LOG_INFO("[GuiContextFactory] Mode headless activé : aucun contexte GUI créé.");
+            LOG_INFO("[GuiContextFactory] Headless mode enabled: skipping GUI context creation.");
             return context;
         }
 
-        
-        
-        
-        context.timer = subsystems_.GetTimer();
+        context.bEnableGui = true;
 
+        context.timer = subsystems_->GetTimer();
         
+        if (args.lastDeltaTime)
+        {
+            context.lastDeltaTime = args.lastDeltaTime;
+        }
+        else
+        {
+            LOG_WARNING("[GuiContextFactory] No delta time pointer provided.");
+        }
         
-        
-        context.sceneManagerProvider = [manager = &subsystems_]() -> Game::SceneManager*
+        context.sceneManagerProvider = [manager = subsystems_]() -> Game::SceneManager*
         {
             return manager ? manager->GetSceneManager() : nullptr;
         };
 
-        
-        
-        
-        if (!args.lastDeltaTime)
-            LOG_WARNING("[GuiContextFactory] Aucun delta time fourni au contexte GUI.");
-
-        context.lastDeltaTime = args.lastDeltaTime;
-
-        
-        
-        
         if (args.selectedActorSlot)
         {
             context.selectedActorGetter = [slot = args.selectedActorSlot]() -> Game::Actor*
@@ -99,54 +87,47 @@ namespace BixEngine::Gui
 
             context.selectedActorSetter = [slot = args.selectedActorSlot](Game::Actor* actor)
             {
-                if (slot)
-                    *slot = actor;
+                if (slot) *slot = actor;
             };
         }
         else
         {
-            LOG_WARNING("[GuiContextFactory] Aucun pointeur d’acteur sélectionné fourni (selectedActorSlot=nullptr).");
+            LOG_WARNING("[GuiContextFactory] No selectedActorSlot provided. Inspector will not function correctly.");
         }
 
-        
-        
-        
         if (args.sceneViewportTexture)
         {
             context.sceneRenderTextureProvider = [texture = args.sceneViewportTexture]() -> SDL_Texture*
             {
-                return texture ? *texture : nullptr;
+                return (texture) ? *texture : nullptr;
             };
         }
         else
         {
-            LOG_WARNING("[GuiContextFactory] Aucun viewport texture fourni.");
+            LOG_WARNING("[GuiContextFactory] No viewport texture slot provided.");
             context.sceneRenderTextureProvider = []() -> SDL_Texture* { return nullptr; };
         }
 
-        
-        
-        
         context.sceneRenderTextureSizeProvider = args.sceneViewportSizeProvider ? args.sceneViewportSizeProvider : DefaultSizeProvider();
 
-        
-        
-        
         context.openScriptFilesInEditor = args.openScriptFilesInEditor ? args.openScriptFilesInEditor : DefaultScriptOpener();
+
         context.openAssetInEditor = args.openAssetInEditor ? args.openAssetInEditor : DefaultAssetOpener();
 
-        context.mouseStatsProvider = [manager = &subsystems_]() -> const Input::MouseStatistics*
+        context.mouseStatsProvider = [manager = subsystems_]() -> const Input::MouseStatistics*
         {
             if (!manager)
                 return nullptr;
-
+            
             if (Input::Input* input = manager->GetInputDevice())
+            {
                 return &input->GetMouseStatistics();
-
+            }
+            
             return nullptr;
         };
 
-        LOG_INFO("[GuiContextFactory] ✅ Contexte GUI créé avec succès.");
+        LOG_INFO("[GuiContextFactory] GUI Context created successfully.");
         return context;
     }
 }

@@ -104,19 +104,16 @@ namespace BixEngine::Core
     {
         LOG_INFO("Window resized to {}x{}", width, height);
 
-        // 1. Informer le Renderer
         if (rendererRef_)
         {
             rendererRef_->OnResize(width, height); 
         }
 
-        // 2. Informer l'interface utilisateur
-        /*if (guiManagerRef_)
+        if (guiManagerRef_)
         {
             guiManagerRef_->OnResize(width, height);
-        }*/
+        }
 
-        // 3. Informer la Scène active (Recalcul Aspect Ratio caméra)
         if (sceneManager_)
         {
             if (Game::Scene* scene = sceneManager_->GetScene())

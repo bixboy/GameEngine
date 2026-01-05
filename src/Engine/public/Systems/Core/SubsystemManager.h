@@ -98,12 +98,10 @@ namespace BixEngine::Core
         bool initialized_{false};
         bool isPaused_{false};
 
-        // Réff vers les systèmes externes (Non possédés)
         Graphics::Renderer* rendererRef_{nullptr};
         Window* windowRef_{nullptr};
         Gui::GuiManager* guiManagerRef_{nullptr};
 
-        // Systèmes possédés (Owned)
         std::unique_ptr<Timer> timer_{};
         std::unique_ptr<Input::Input> input_{};
         std::unique_ptr<Input::InputManager> inputManager_{};

@@ -61,6 +61,7 @@ namespace BixEngine::Game
     
     
     
+    
 
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
     {
@@ -107,6 +108,7 @@ namespace BixEngine::Game
             comp->Render(renderer);
     }
 
+    
     
     
     
@@ -161,6 +163,7 @@ namespace BixEngine::Game
     
     
     
+    
 
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
@@ -193,6 +196,7 @@ namespace BixEngine::Game
         return false;
     }
 
+    
     
     
     
@@ -280,5 +284,15 @@ namespace BixEngine::Game
                 LOG_ERROR("Deserialize: Failed to resolve component: " + typeName);
             }
         }
+    }
+
+    Math::Transform Actor::ComputeWorldTransform() const
+    {
+        Math::Transform t;
+        const auto& selfT = GetTransformRef();
+        t.SetPosition(selfT.GetWorldPosition());
+        t.SetRotation(selfT.GetWorldRotation());
+        t.SetScale(selfT.GetWorldScale());
+        return t;
     }
 }

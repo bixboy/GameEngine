@@ -19,7 +19,7 @@ namespace BixEngine::Gui
             String name{};
             std::function<void(GuiManager&)> onActivate{};
             std::function<void(GuiManager&)> onDeactivate{};
-            std::optional<EditorLayoutType> layout{};
+            std::optional<LayoutID> layout{};
             String homePanel{};
         };
 

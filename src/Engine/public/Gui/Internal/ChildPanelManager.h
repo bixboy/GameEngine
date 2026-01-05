@@ -7,32 +7,33 @@
 
 namespace BixEngine::Gui
 {
-    class GuiPanelController;
+    class GuiPanel;
+    class GuiPanelWindow;
 
-    struct ChildPanelLink
-    {
-        String panelName;
-        bool closeWithParent = true;
-    };
-
-     
     class ChildPanelManager
     {
     public:
-        void RegisterChild(GuiPanelController& parent, String panelName, bool closeWithParent);
+
+        struct ChildPanelLink
+        {
+            String panelName;
+            bool closeWithParent;
+        };
+
+        using ChildList = std::vector<ChildPanelLink>;
+
+        void RegisterChild(GuiPanelWindow& parent, String panelName, bool closeWithParent);
 
         void UnregisterChildByName(const String& panelName);
 
-        void RemoveChildren(GuiPanelController& parent, const std::function<void(const String&)>& onClose);
+        void RemoveChildren(GuiPanelWindow& parent, const std::function<void(const String&)>& onClose);
 
-        [[nodiscard]] const std::vector<ChildPanelLink>*
-        GetChildren(const GuiPanelController& parent) const noexcept;
-
+        [[nodiscard]] const ChildList* GetChildren(const GuiPanelWindow& parent) const noexcept;
+    
         void Clear() noexcept;
 
     private:
-        using ChildList = std::vector<ChildPanelLink>;
-        using MapType = std::unordered_map<GuiPanelController*, ChildList>;
+        using MapType = std::unordered_map<GuiPanelWindow*, ChildList>;
 
         MapType children_{};
     };

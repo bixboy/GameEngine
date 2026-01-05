@@ -31,6 +31,8 @@ namespace BixEngine::Game
         
         [[nodiscard]] bool IsChildOf(const Actor* potentialParent) const;
 
+        Math::Transform ComputeWorldTransform() const;
+
         void AddComponent(std::unique_ptr<Component> component);
         bool RemoveComponent(const Component* component);
 

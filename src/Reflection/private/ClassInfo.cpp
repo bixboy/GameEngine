@@ -2,7 +2,7 @@
 #include "Core/PropertyInfo.h"
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     const PropertyInfo* ClassInfo::FindProperty(std::string_view name) const
     {

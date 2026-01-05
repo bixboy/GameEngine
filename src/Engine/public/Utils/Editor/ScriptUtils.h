@@ -47,11 +47,9 @@ namespace BixEngine::ScriptUtils
         
         static bool IsActorType(std::string_view name);
         static bool IsComponentType(std::string_view name);
-
         
-        static bool AreEquivalent(const Bix::Reflection::ClassInfo& lhs, const Bix::Reflection::ClassInfo& rhs);
-        static bool IsSubclassOf(const Bix::Reflection::ClassInfo& type, const Bix::Reflection::ClassInfo& base);
-
+        static bool AreEquivalent(const Reflection::ClassInfo& lhs, const Reflection::ClassInfo& rhs);
+        static bool IsSubclassOf(const Reflection::ClassInfo& type, const Reflection::ClassInfo& base);
         
         static std::vector<ScriptNode> BuildScriptTree(const std::filesystem::path& scriptsDir, const std::filesystem::path& contentRoot);
         static std::vector<TreeNodeData> BuildGuiTree(const std::vector<ScriptNode>& nodes, std::unordered_map<std::string, ParentScriptInfo>& outInfo);

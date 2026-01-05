@@ -1,13 +1,13 @@
 #pragma once
-
 #include <functional>
+#include <cfloat>
 #include "Containers/String.h"
-#include "Gui/Core/GuiCommon.h"
 #include "imgui.h"
+#include "Gui/Core/GuiData.h"
+
 
 namespace BixEngine::Gui
 {
-     
     class GuiPanel
     {
     public:
@@ -15,9 +15,7 @@ namespace BixEngine::Gui
 
         GuiPanel(String name, String title);
 
-        
-        
-        
+        // --- Titre & Identifiant ---
 
         void SetTitle(String title);
         [[nodiscard]] const String& GetTitle() const noexcept { return title_; }
@@ -26,22 +24,20 @@ namespace BixEngine::Gui
         void SetVisible(bool visible) noexcept { visible_ = visible; }
         [[nodiscard]] bool IsVisible() const noexcept { return visible_; }
 
-        
-        
-        
+        // --- Position & Taille ---
 
         void SetPosition(float x, float y, ImGuiCond condition = ImGuiCond_Always) noexcept;
         void ResetPosition() noexcept { usePosition_ = false; }
 
         void SetSize(float width, float height, ImGuiCond condition = ImGuiCond_Always) noexcept;
         void ResetSize() noexcept { useSize_ = false; }
+        
+        void SetSizeConstraints(const ImVec2& minSize, const ImVec2& maxSize) noexcept;
 
         [[nodiscard]] ImVec2 GetPosition() const noexcept { return windowPos_; }
         [[nodiscard]] ImVec2 GetSize() const noexcept { return windowSize_; }
 
-        
-        
-        
+        // --- Flags & Comportement ---
 
         void SetResizable(bool resizable) noexcept { resizable_ = resizable; }
         void SetMovable(bool movable) noexcept { movable_ = movable; }
@@ -53,9 +49,7 @@ namespace BixEngine::Gui
         void RemoveWindowFlags(ImGuiWindowFlags flags) noexcept { windowFlags_ &= ~flags; }
         [[nodiscard]] ImGuiWindowFlags GetWindowFlags() const noexcept { return windowFlags_; }
 
-        
-        
-        
+        // --- Style & Apparence ---
 
         struct PanelStyle
         {
@@ -71,9 +65,7 @@ namespace BixEngine::Gui
         void SetBackgroundColor(const ImVec4& color) noexcept;
         void ResetBackgroundColor() noexcept { useBackgroundColor_ = false; }
 
-        
-        
-        
+        // --- Docking ---
 
         void SetDockingPreference(DockSpaceRegion area, ImGuiCond condition = ImGuiCond_FirstUseEver) noexcept;
         void ResetDockingPreference() noexcept;
@@ -84,19 +76,12 @@ namespace BixEngine::Gui
         void SetDockId(ImGuiID dockId, ImGuiCond condition, ImGuiCond fallbackCondition) noexcept;
         void ResetDockId() noexcept;
 
-        
-        
-        
+        // --- Rendu & Callbacks ---
 
         void SetDrawFunction(DrawFunction drawFunction);
         void Draw();
 
-         
         void RequestFocus() noexcept { requestFocus_ = true; }
-
-        
-        
-        
 
         std::function<void()> OnOpen;
         std::function<void()> OnClose;
@@ -105,18 +90,9 @@ namespace BixEngine::Gui
 
         void SetContextMenu(std::function<void()> fn) noexcept { contextMenu_ = std::move(fn); }
 
-        
-        
-        
-
         enum class GuiPanelMode { EditorOnly, RuntimeOnly, Both };
-
         void SetMode(GuiPanelMode mode) noexcept { mode_ = mode; }
         [[nodiscard]] GuiPanelMode GetMode() const noexcept { return mode_; }
-
-        
-        
-        
 
         [[nodiscard]] bool IsFocused() const noexcept;
         [[nodiscard]] bool IsHovered() const noexcept;
@@ -126,7 +102,7 @@ namespace BixEngine::Gui
         String title_;
         bool visible_{true};
 
-        
+        // Geo
         bool usePosition_{false};
         ImVec2 position_{0.0f, 0.0f};
         ImGuiCond positionCondition_{ImGuiCond_Always};
@@ -135,19 +111,27 @@ namespace BixEngine::Gui
         ImVec2 size_{0.0f, 0.0f};
         ImGuiCond sizeCondition_{ImGuiCond_Always};
 
-        
+        // Constraints
+        bool useConstraints_{false};
+        ImVec2 minSize_{0.0f, 0.0f};
+        ImVec2 maxSize_{FLT_MAX, FLT_MAX};
+
+        // Flags
         bool resizable_{true};
         bool movable_{true};
         bool closable_{false};
         bool collapsable_{false};
         ImGuiWindowFlags windowFlags_{ImGuiWindowFlags_None};
 
+        // Style
         bool useBackgroundColor_{false};
         ImVec4 backgroundColor_{1.f, 1.f, 1.f, 1.f};
-
         PanelStyle style_{};
 
-        
+        bool stylePushedInCurrentFrame_{false};
+        bool colorPushedInCurrentFrame_{false};
+
+        // Docking
         bool dockPreferenceSet_{true};
         DockSpaceRegion dockPreference_{DockSpaceRegion::Center};
         ImGuiCond dockPreferenceCondition_{ImGuiCond_FirstUseEver};
@@ -158,11 +142,9 @@ namespace BixEngine::Gui
         ImGuiCond dockCondition_{ImGuiCond_FirstUseEver};
         ImGuiCond dockFallbackCondition_{ImGuiCond_FirstUseEver};
 
-        
         DrawFunction drawFunction_{};
         std::function<void()> contextMenu_;
 
-        
         ImVec2 windowPos_{0.0f, 0.0f};
         ImVec2 windowSize_{0.0f, 0.0f};
         GuiPanelMode mode_{GuiPanelMode::Both};

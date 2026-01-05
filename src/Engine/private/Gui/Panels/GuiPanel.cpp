@@ -1,6 +1,8 @@
 #include "Gui/Panels/GuiPanel.h"
 #include "Debug/Logger.h"
 #include <utility>
+#include "Gui/Core/GuiData.h"
+
 
 namespace BixEngine::Gui
 {
@@ -25,6 +27,13 @@ namespace BixEngine::Gui
         useSize_ = true;
         size_ = ImVec2{width, height};
         sizeCondition_ = condition;
+    }
+
+    void GuiPanel::SetSizeConstraints(const ImVec2& minSize, const ImVec2& maxSize) noexcept
+    {
+        minSize_ = minSize;
+        maxSize_ = maxSize;
+        useConstraints_ = true;
     }
 
     void GuiPanel::SetBackgroundColor(const ImVec4& color) noexcept
@@ -60,8 +69,7 @@ namespace BixEngine::Gui
         dockCondition_ = condition;
         dockFallbackCondition_ = fallbackCondition;
         useDockId_ = dockId_ != 0;
-        applyDockFallback_ = useDockId_ && dockCondition_ == ImGuiCond_Always && dockCondition_ !=
-            dockFallbackCondition_;
+        applyDockFallback_ = useDockId_ && dockCondition_ == ImGuiCond_Always && dockCondition_ != dockFallbackCondition_;
     }
 
     void GuiPanel::ResetDockId() noexcept
@@ -94,25 +102,27 @@ namespace BixEngine::Gui
 
         if (!resizable_)
             finalFlags |= ImGuiWindowFlags_NoResize;
-
+        
         if (!movable_)
             finalFlags |= ImGuiWindowFlags_NoMove;
 
         if (!collapsable_)
+        {
             finalFlags |= ImGuiWindowFlags_NoCollapse;
-
-        else finalFlags &= ~ImGuiWindowFlags_NoCollapse;
+        }
+        else
+        {
+            finalFlags &= ~ImGuiWindowFlags_NoCollapse;
+        }
 
         bool wasVisible = visible_;
         bool open = visible_;
 
-        bool shouldShow = closable_
-                              ? ImGui::Begin(title_.c_str(), &open, finalFlags)
-                              : ImGui::Begin(title_.c_str(), nullptr, finalFlags);
+        bool shouldShow = closable_ ? ImGui::Begin(title_.c_str(), &open, finalFlags) : ImGui::Begin(title_.c_str(), nullptr, finalFlags);
 
         if (!wasVisible && open && OnOpen)
             OnOpen();
-
+        
         if (wasVisible && !open && OnClose)
             OnClose();
 
@@ -120,11 +130,13 @@ namespace BixEngine::Gui
 
         if (ImGui::IsWindowFocused(ImGuiFocusedFlags_RootAndChildWindows))
         {
-            if (OnFocus) OnFocus();
+            if (OnFocus)
+                OnFocus();
         }
         else
         {
-            if (OnUnfocus) OnUnfocus();
+            if (OnUnfocus)
+                OnUnfocus();
         }
 
         windowPos_ = ImGui::GetWindowPos();
@@ -161,6 +173,11 @@ namespace BixEngine::Gui
             requestFocus_ = false;
         }
 
+        if (useConstraints_)
+        {
+            ImGui::SetNextWindowSizeConstraints(minSize_, maxSize_);
+        }
+
         if (usePosition_)
             ImGui::SetNextWindowPos(position_, positionCondition_);
 
@@ -180,13 +197,16 @@ namespace BixEngine::Gui
             }
         }
 
-        if (style_.override)
+        stylePushedInCurrentFrame_ = style_.override;
+        colorPushedInCurrentFrame_ = useBackgroundColor_ && !style_.override;
+
+        if (stylePushedInCurrentFrame_)
         {
             ImGui::PushStyleVar(ImGuiStyleVar_WindowRounding, style_.rounding);
             ImGui::PushStyleVar(ImGuiStyleVar_WindowBorderSize, style_.border);
             ImGui::PushStyleColor(ImGuiCol_WindowBg, style_.bgColor);
         }
-        else if (useBackgroundColor_)
+        else if (colorPushedInCurrentFrame_)
         {
             ImGui::PushStyleColor(ImGuiCol_WindowBg, backgroundColor_);
         }
@@ -194,15 +214,18 @@ namespace BixEngine::Gui
 
     void GuiPanel::TeardownWindow()
     {
-        if (style_.override)
+        if (stylePushedInCurrentFrame_)
         {
             ImGui::PopStyleColor();
             ImGui::PopStyleVar(2);
         }
-        else if (useBackgroundColor_)
+        else if (colorPushedInCurrentFrame_)
         {
             ImGui::PopStyleColor();
         }
+
+        stylePushedInCurrentFrame_ = false;
+        colorPushedInCurrentFrame_ = false;
 
         ImGui::PopID();
     }

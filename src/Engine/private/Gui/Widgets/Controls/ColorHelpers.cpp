@@ -2,6 +2,7 @@
 
 #include "Gui/Widgets/Styling/ThemeHelpers.h"
 
+
 namespace BixEngine::Gui::Widgets::Controls::ColorHelpers
 {
     ImVec4 ComputeHoveredColor(const ImVec4& baseColor) noexcept

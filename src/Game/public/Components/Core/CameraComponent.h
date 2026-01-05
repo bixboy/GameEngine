@@ -25,19 +25,14 @@ namespace BixEngine::Game
 
         [[nodiscard]] String GetTypeName() const override { return "CameraComponent"; }
 
-        
-        
-        
-        
         void SetAsMainCamera();
+        void LookAt(const Math::Vector3& target);
 
         [[nodiscard]] Math::Vector2<float> WorldToScreen(const Math::Vector3& worldPos) const;
         [[nodiscard]] Math::Vector2<float> ScreenToWorld(const Math::Vector2<float>& screenPos) const;
 
         static CameraComponent* GetMainCamera();
 
-        
-        
         
         
         BPROPERTY()

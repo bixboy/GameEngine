@@ -4,7 +4,7 @@
 #include <vector>
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     inline ClassInfo* FindClass(std::string_view name)
     {

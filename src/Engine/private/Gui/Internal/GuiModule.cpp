@@ -7,31 +7,29 @@
 #include <functional>
 #include <span>
 #include <string>
-#include <utility>
 #include <vector>
 #include <imgui_internal.h>
 
 #include "Debug/Logger.h"
 #include "Containers/String.h"
-#include "Systems/Core/SubsystemManager.h"
-#include "Systems/Core/Window.h"
+#include "Framework/Actor.h"
+#include "Renderer.h"
+#include "Serializer/SceneSerializer.h"
+#include "Framework/Scene.h"
+
 #include "Gui/Core/DefaultEngineGui.h"
 #include "Gui/Core/GuiContextFactory.h"
 #include "Gui/Core/GuiManager.h"
 #include "Gui/Internal/GuiLayoutManager.h"
 #include "Gui/Internal/GuiSystem.h"
 #include "Gui/Internal/NavBar/GuiNavigationBar.h"
+#include "Gui/Internal/EditorSceneManager.h"
+#include "Gui/Internal/MainMenuBar.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserPanel.h"
-#include "Input.h"
-
-#include "Framework/Actor.h"
-#include "Renderer.h"
-#include "Gui/Internal/NavBar/GuiAssetEditorManager.h"
 #include "Gui/Panels/GuiPanel.h"
-#include "Serializer/SceneSerializer.h"
-#include "Framework/Scene.h"
 
-namespace BixEngine::Core
+
+namespace BixEngine::Gui
 {
     namespace
     {
@@ -45,49 +43,43 @@ namespace BixEngine::Core
         Shutdown();
     }
 
-    bool GuiModule::Initialize(Window& window, Graphics::Renderer& renderer)
+    // --- Initialization ---
+
+    bool GuiModule::Initialize(Core::Window& window, Graphics::Renderer& renderer)
     {
         if (bInitialized_)
             return true;
 
         if (!guiSystem_)
-            guiSystem_ = std::make_unique<GuiSystem>();
-
+            guiSystem_ = std::make_unique<Gui::GuiSystem>();
+        
         if (!guiSystem_->Initialize(window.GetSDLWindow(), renderer.GetSDLRenderer()))
         {
             guiSystem_->Shutdown();
             guiSystem_.reset();
-            guiManager_.reset();
-            layoutManager_.reset();
-            bInitialized_ = false;
             return false;
         }
 
         guiManager_ = std::make_unique<GuiManager>(*guiSystem_);
         layoutManager_ = std::make_unique<GuiLayoutManager>(*guiSystem_, *guiManager_);
+        editorSceneManager_ = std::make_unique<EditorSceneManager>();
+        mainMenuBar_ = std::make_unique<MainMenuBar>(*guiManager_, *layoutManager_, *editorSceneManager_);
         navigationBar_ = std::make_unique<GuiNavigationBar>(*guiSystem_, *layoutManager_, *this);
+        
         DestroySceneViewportTexture();
 
         auto focusWindow = [this](const std::string& windowName)
         {
             focusRequests_.push_back(windowName);
         };
-
+        
         auto focusScene = [this]()
         {
             FocusSceneViewport();
         };
 
-        if (!assetEditorManager_)
-        {
-            assetEditorManager_ = std::make_unique<GuiAssetEditorManager>(*guiManager_, layoutManager_.get(), focusWindow, focusScene);
-        }
-        else
-        {
-            assetEditorManager_->SetLayoutManager(layoutManager_.get());
-            assetEditorManager_->SetFocusCallbacks(focusWindow, focusScene);
-        }
-
+        assetEditorManager_ = std::make_unique<GuiAssetEditorManager>(*guiManager_, layoutManager_.get(), focusWindow, focusScene);
+        
         if (assetEditorManager_)
             assetEditorManager_->ActivateScene(false);
 
@@ -98,13 +90,8 @@ namespace BixEngine::Core
 
     void GuiModule::Shutdown() noexcept
     {
-        if (!bInitialized_ && !guiSystem_ && !guiManager_ && !layoutManager_)
-            return;
+        if (!bInitialized_ && !guiSystem_) return;
 
-        statsPanel_ = nullptr;
-        outlinerPanel_ = nullptr;
-        contentBrowserPanel_ = nullptr;
-        inspectorPanel_ = nullptr;
         viewportPanel_ = nullptr;
         selectedActor_ = nullptr;
         lastDeltaTime_ = nullptr;
@@ -118,6 +105,7 @@ namespace BixEngine::Core
         if (assetEditorManager_)
         {
             assetEditorManager_->RemoveAllEditors();
+            assetEditorManager_.reset();
         }
 
         focusRequests_.clear();
@@ -125,12 +113,12 @@ namespace BixEngine::Core
 
         DestroySceneViewportTexture();
         navigationBar_.reset();
-        assetEditorManager_.reset();
         
         if (layoutManager_)
             layoutManager_.reset();
         
-        guiManager_.reset();
+        if (guiManager_)
+            guiManager_.reset();
 
         if (guiSystem_)
         {
@@ -146,10 +134,11 @@ namespace BixEngine::Core
         return bInitialized_ && guiSystem_ && guiSystem_->IsInitialized();
     }
 
+    // --- Events & Frame ---
+
     bool GuiModule::ProcessEvent(const SDL_Event& event)
     {
-        if (!IsInitialized() || !guiSystem_)
-            return false;
+        if (!IsInitialized() || !guiSystem_) return false;
 
         guiSystem_->ProcessEvent(event);
 
@@ -158,20 +147,20 @@ namespace BixEngine::Core
 
         switch (event.type)
         {
-            
         case SDL_EVENT_DROP_FILE:
             {
                 std::filesystem::path droppedFile{};
                 if (event.drop.data && *event.drop.data)
                 {
                     const std::string dropString(event.drop.data);
-                
-                    
                     std::u8string dropUtf8;
                     dropUtf8.reserve(dropString.size());
-                    for (const unsigned char ch : dropString) {
-                        dropUtf8.push_back(static_cast<char8_t>(ch));    
+                    
+                    for (const unsigned char ch : dropString)
+                    {
+                        dropUtf8.push_back(static_cast<char8_t>(ch));
                     }
+                    
                     droppedFile = std::filesystem::path(dropUtf8);
                 }
 
@@ -180,21 +169,15 @@ namespace BixEngine::Core
 
                 return true;
             }
-            
-        case SDL_EVENT_DROP_POSITION:
-            return false;
-
         case SDL_EVENT_MOUSE_WHEEL:
-            return io.WantCaptureMouse && !overViewport;
-
-        case SDL_EVENT_TEXT_INPUT:
-            return io.WantCaptureKeyboard && !overViewport;
-
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
         case SDL_EVENT_MOUSE_BUTTON_UP:
-            
-            
             return io.WantCaptureMouse && !overViewport;
+            
+        case SDL_EVENT_TEXT_INPUT:
+        case SDL_EVENT_KEY_DOWN:
+        case SDL_EVENT_KEY_UP:
+            return io.WantCaptureKeyboard && !overViewport;
 
         default:
             return false;
@@ -220,23 +203,30 @@ namespace BixEngine::Core
 
         if (guiSystem_)
             guiSystem_->SetDockspaceTopPadding(kNavigationBarHeight);
-
+        
         if (layoutManager_)
             layoutManager_->Update();
 
         guiSystem_->BeginFrame();
-
+        
+        if (mainMenuBar_)
+            mainMenuBar_->Draw();
+            
         if (layoutManager_)
             layoutManager_->Render();
+            
+        if (editorSceneManager_)
+            editorSceneManager_->DrawDialogs();
     }
 
-    void GuiModule::Render(SubsystemManager& subsystems)
+    void GuiModule::Render(Core::SubsystemManager& subsystems)
     {
         if (!IsInitialized())
             return;
 
         subsystems_ = &subsystems;
         DispatchPendingFileDrops();
+
         if (navigationBar_)
             navigationBar_->Render();
 
@@ -250,21 +240,18 @@ namespace BixEngine::Core
         guiSystem_->Render();
     }
 
-    void GuiModule::SetupDefaultGuiPanels(SubsystemManager& subsystems, const float* lastDeltaTimePointer)
+    // --- SETUP PRINCIPAL (Updated) ---
+
+    void GuiModule::SetupDefaultGuiPanels(Core::SubsystemManager& subsystems, const float* lastDeltaTimePointer)
     {
         lastDeltaTime_ = lastDeltaTimePointer;
         subsystems_ = &subsystems;
+
         if (assetEditorManager_)
-        {
             assetEditorManager_->RemoveAllEditors();
-        }
 
         if (!guiManager_)
         {
-            statsPanel_ = nullptr;
-            outlinerPanel_ = nullptr;
-            contentBrowserPanel_ = nullptr;
-            inspectorPanel_ = nullptr;
             viewportPanel_ = nullptr;
             selectedActor_ = nullptr;
             focusRequests_.clear();
@@ -273,47 +260,26 @@ namespace BixEngine::Core
 
         focusRequests_.clear();
         selectedActor_ = nullptr;
+        
+        DefaultEngineGuiContextArgs contextArgs{};
+        
+        contextArgs.lastDeltaTime = lastDeltaTime_;
+        contextArgs.selectedActorSlot = &selectedActor_;
+        contextArgs.sceneViewportTexture = &sceneViewportTexture_;
+        
+        contextArgs.sceneViewportSizeProvider = [this]() -> std::pair<int, int>
+        {
+            return {sceneViewportWidth_, sceneViewportHeight_};
+        };
 
         DefaultEngineGuiContextFactory contextFactory(subsystems);
+        DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
+        
+        SetupDefaultEditorBehaviors(*guiManager_, context);
 
-        DefaultEngineGuiContextArgs contextArgs{
-            subsystems,
-            lastDeltaTime_,
-            &selectedActor_,
-            &sceneViewportTexture_,
-            [this]() -> std::pair<int, int>
-            {
-                return {sceneViewportWidth_, sceneViewportHeight_};
-            }
-        };
-
-        contextArgs.openScriptFilesInEditor = [](const std::vector<std::filesystem::path>& paths)
-        {
-            if (paths.empty())
-                return;
-
-            String message = "Requested to open script files in code editor:";
-            for (const auto& path : paths)
-            {
-                message += "- ";
-                message += path.generic_string();
-            }
-
-            LOG_INFO(message);
-        };
-
-        contextArgs.openAssetInEditor = [this](const std::filesystem::path& assetPath)
-        {
-            OpenAssetEditor(assetPath);
-        };
-
-        const DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
-        const DefaultEngineGuiPanels panels = Gui::CreateDefaultEngineGui(*guiManager_, context);
+        const DefaultEngineGuiPanels panels = CreateDefaultEngineGui(*guiManager_, context);
+        
         viewportPanel_ = panels.sceneViewportPanel;
-        statsPanel_ = panels.statsPanel;
-        outlinerPanel_ = panels.sceneOutlinerPanel;
-        contentBrowserPanel_ = panels.contentBrowserPanel;
-        inspectorPanel_ = panels.actorInspectorPanel;
 
         if (layoutManager_)
         {
@@ -326,13 +292,13 @@ namespace BixEngine::Core
             };
 
             pushScenePanel(viewportPanel_);
-            pushScenePanel(outlinerPanel_);
-            pushScenePanel(contentBrowserPanel_);
-            pushScenePanel(inspectorPanel_);
-            pushScenePanel(statsPanel_);
+            pushScenePanel(panels.sceneOutlinerPanel);
+            pushScenePanel(panels.contentBrowserPanel);
+            pushScenePanel(panels.actorInspectorPanel);
+            pushScenePanel(panels.statsPanel);
 
             const std::span panelsSpan(scenePanelBuffer.data(), count);
-            layoutManager_->RegisterPanels(EditorLayoutType::Scene, panelsSpan, GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
+            layoutManager_->RegisterPanels(DefaultLayouts::Scene, panelsSpan, GuiLayoutManager::LayoutRegistrationMode::ForceLoad);
         }
 
         if (assetEditorManager_)
@@ -342,68 +308,19 @@ namespace BixEngine::Core
         }
     }
 
+    // --- Viewport Utilities ---
+
     bool GuiModule::IsMouseOverViewport() const noexcept
     {
         if (!viewportPanel_)
             return false;
 
         const ImVec2 mousePos = ImGui::GetMousePos();
-
         const ImVec2 windowPos = viewportPanel_->GetPosition();
         const ImVec2 windowSize = viewportPanel_->GetSize();
 
-        return (
-            mousePos.x >= windowPos.x && mousePos.x <= windowPos.x + windowSize.x &&
-            mousePos.y >= windowPos.y && mousePos.y <= windowPos.y + windowSize.y
-        );
-    }
-
-    void GuiModule::OpenAssetEditor(const std::filesystem::path& path)
-    {
-        if (!assetEditorManager_)
-            return;
-
-        assetEditorManager_->OpenAssetEditor(path);
-    }
-
-    void GuiModule::CloseAssetEditor(const std::string& navigationId)
-    {
-        if (!assetEditorManager_)
-            return;
-
-        assetEditorManager_->CloseAssetEditor(navigationId);
-    }
-
-    void GuiModule::ProcessFocusRequests()
-    {
-        if (focusRequests_.empty())
-            return;
-
-        std::vector<std::string> remainingRequests;
-        remainingRequests.reserve(focusRequests_.size());
-
-        for (const std::string& windowName : focusRequests_)
-        {
-            ImGuiWindow* window = ImGui::FindWindowByName(windowName.c_str());
-            if (!window || !window->Active)
-            {
-                remainingRequests.push_back(windowName);
-                continue;
-            }
-
-            ImGui::SetWindowFocus(windowName.c_str());
-        }
-
-        focusRequests_ = std::move(remainingRequests);
-    }
-
-    void GuiModule::FocusSceneViewport()
-    {
-        if (!viewportPanel_)
-            return;
-
-        viewportPanel_->SetVisible(true);
-        focusRequests_.push_back(viewportPanel_->GetTitle().Std());
+        return (mousePos.x >= windowPos.x && mousePos.x <= windowPos.x + windowSize.x &&
+            mousePos.y >= windowPos.y && mousePos.y <= windowPos.y + windowSize.y);
     }
 
     bool GuiModule::EnsureSceneViewportTexture(Graphics::Renderer& renderer)
@@ -421,10 +338,8 @@ namespace BixEngine::Core
             return false;
         }
 
-        int outputWidth = 0;
-        int outputHeight = 0;
-        if (!SDL_GetCurrentRenderOutputSize(sdlRenderer, &outputWidth, &outputHeight) || outputWidth <= 0 ||
-            outputHeight <= 0)
+        int outputWidth = 0, outputHeight = 0;
+        if (!SDL_GetCurrentRenderOutputSize(sdlRenderer, &outputWidth, &outputHeight) || outputWidth <= 0 || outputHeight <= 0)
         {
             DestroySceneViewportTexture();
             return false;
@@ -435,12 +350,7 @@ namespace BixEngine::Core
 
         if (!sceneViewportTexture_)
         {
-            sceneViewportTexture_ = SDL_CreateTexture(
-                sdlRenderer,
-                SDL_PIXELFORMAT_RGBA32,
-                SDL_TEXTUREACCESS_TARGET,
-                outputWidth,
-                outputHeight);
+            sceneViewportTexture_ = SDL_CreateTexture(sdlRenderer, SDL_PIXELFORMAT_RGBA32, SDL_TEXTUREACCESS_TARGET, outputWidth, outputHeight);
 
             if (!sceneViewportTexture_)
             {
@@ -449,7 +359,7 @@ namespace BixEngine::Core
                     LOG_ERROR(String{"Failed to create scene viewport texture: "} + SDL_GetError());
                     sceneViewportTextureErrorLogged_ = true;
                 }
-
+                
                 sceneViewportWidth_ = 0;
                 sceneViewportHeight_ = 0;
                 return false;
@@ -471,28 +381,79 @@ namespace BixEngine::Core
             SDL_DestroyTexture(sceneViewportTexture_);
             sceneViewportTexture_ = nullptr;
         }
-
+        
         sceneViewportWidth_ = 0;
         sceneViewportHeight_ = 0;
         sceneViewportTextureErrorLogged_ = false;
     }
 
+    // --- Helpers ---
+
+    void GuiModule::OpenAssetEditor(const std::filesystem::path& path)
+    {
+        if (!assetEditorManager_)
+            return;
+        
+        assetEditorManager_->OpenAssetEditor(path);
+    }
+
+    void GuiModule::CloseAssetEditor(const std::string& navigationId)
+    {
+        if (!assetEditorManager_)
+            return;
+        
+        assetEditorManager_->CloseAssetEditor(navigationId);
+    }
+
+    void GuiModule::ProcessFocusRequests()
+    {
+        if (focusRequests_.empty())
+            return;
+
+        std::vector<std::string> remainingRequests;
+        remainingRequests.reserve(focusRequests_.size());
+
+        for (const std::string& windowName : focusRequests_)
+        {
+            ImGuiWindow* window = ImGui::FindWindowByName(windowName.c_str());
+            if (!window || !window->Active)
+            {
+                remainingRequests.push_back(windowName);
+                continue;
+            }
+            
+            ImGui::SetWindowFocus(windowName.c_str());
+        }
+
+        focusRequests_ = std::move(remainingRequests);
+    }
+
+    void GuiModule::FocusSceneViewport()
+    {
+        if (!viewportPanel_)
+            return;
+        
+        viewportPanel_->SetVisible(true);
+        focusRequests_.push_back(viewportPanel_->GetTitle().Std());
+    }
+
+    // --- Play/Stop/Pause ---
+
     void GuiModule::OnPlay()
     {
         if (m_EngineState != EngineState::Edit)
             return;
-
+        
         if (!subsystems_)
             return;
 
         Game::Scene* activeScene = subsystems_->GetActiveScene();
         if (!activeScene)
             return;
-
         
         m_SceneBackup.str(""); 
         m_SceneBackup.clear();
-        BixEngine::Serialization::SceneSerializer::SerializeBinary(*activeScene, m_SceneBackup);
+        Serialization::SceneSerializer::SerializeBinary(*activeScene, m_SceneBackup);
 
         m_EngineState = EngineState::Play;
         activeScene->OnRuntimeStart();
@@ -502,7 +463,7 @@ namespace BixEngine::Core
     {
         if (m_EngineState == EngineState::Edit)
             return;
-
+        
         if (!subsystems_)
             return;
 
@@ -510,26 +471,18 @@ namespace BixEngine::Core
         if (!activeScene)
             return;
 
-        
-        
         selectedActor_ = nullptr;
-        
-        
         subsystems_->ResetInput();
-        
         
         activeScene->OnRuntimeStop();
 
-        
         m_SceneBackup.clear(); 
         m_SceneBackup.seekg(0, std::ios::beg);
         
-        if (!BixEngine::Serialization::SceneSerializer::DeserializeBinary(*activeScene, m_SceneBackup))
+        if (!Serialization::SceneSerializer::DeserializeBinary(*activeScene, m_SceneBackup))
         {
             LOG_ERROR("Failed to restore scene from backup during OnStop()");
-            
         }
-        
         
         m_EngineState = EngineState::Edit;
     }
@@ -538,7 +491,7 @@ namespace BixEngine::Core
     {
         if (m_EngineState == EngineState::Edit)
             return;
-
+        
         m_EngineState = (m_EngineState == EngineState::Play) ? EngineState::Pause : EngineState::Play;
     }
 }

@@ -1,8 +1,10 @@
 #pragma once
-#include "imgui.h"
 
 namespace BixEngine::Gui::Widgets
 {
-     
-    bool DrawVector3Control(const char* label, float* values, float resetValue, float speed, const char* format);
+    // Float
+    bool DrawVector3Control(const char* label, float* values, float resetValue = 0.0f, float speed = 0.1f, const char* format = "%.3f");
+
+    // Int
+    bool DrawVector3Control(const char* label, int* values, int resetValue = 0, float speed = 1.0f, const char* format = "%d");
 }

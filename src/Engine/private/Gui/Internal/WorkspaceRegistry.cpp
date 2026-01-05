@@ -6,7 +6,7 @@ namespace BixEngine::Gui
 {
     void WorkspaceRegistry::RegisterWorkspace(Workspace workspace)
     {
-        if (workspace.name.IsEmpty())
+        if (workspace.name.empty())
             return;
 
         workspaces_[workspace.name] = std::move(workspace);
@@ -14,7 +14,7 @@ namespace BixEngine::Gui
 
     bool WorkspaceRegistry::ActivateWorkspace(const String& name, GuiManager& manager)
     {
-        if (name.IsEmpty())
+        if (name.empty())
             return false;
 
         auto it = workspaces_.find(name);
@@ -29,7 +29,7 @@ namespace BixEngine::Gui
             return true;
         }
 
-        if (!activeWorkspace_.IsEmpty())
+        if (!activeWorkspace_.empty())
         {
             if (auto previous = workspaces_.find(activeWorkspace_); previous != workspaces_.end())
             {
@@ -46,7 +46,7 @@ namespace BixEngine::Gui
         if (it->second.onActivate)
             it->second.onActivate(manager);
 
-        if (!it->second.homePanel.IsEmpty())
+        if (!it->second.homePanel.empty())
             manager.GetHistory().SetHome(it->second.homePanel);
 
         return true;
@@ -54,7 +54,7 @@ namespace BixEngine::Gui
 
     const WorkspaceRegistry::Workspace* WorkspaceRegistry::GetActiveWorkspace() const noexcept
     {
-        if (activeWorkspace_.IsEmpty())
+        if (activeWorkspace_.empty())
             return nullptr;
 
         if (auto it = workspaces_.find(activeWorkspace_); it != workspaces_.end())

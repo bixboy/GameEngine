@@ -7,20 +7,19 @@
 #include <unordered_map>
 #include <vector>
 #include "Containers/String.h"
-#include "Gui/Controllers/GuiPanelController.h"
+#include "Gui/Controllers/GuiPanelWindow.h"
 
 namespace BixEngine::Gui
 {
     class GuiPanel;
 
-     
     class GuiPanelRegistry
     {
     public:
         struct PanelEntry
         {
             std::unique_ptr<GuiPanel> panel;
-            std::unique_ptr<GuiPanelController> controller;
+            std::unique_ptr<GuiPanelWindow> controller;
             std::type_index panelType{typeid(void)};
         };
 
@@ -30,35 +29,23 @@ namespace BixEngine::Gui
         GuiPanelRegistry() = default;
         ~GuiPanelRegistry() = default;
         
-
-         
         GuiPanel& AddPanel(String name, String title);
 
         template <typename PanelT, typename... Args>
         PanelT& AddPanelOfType(String name, String title, Args&&... args);
 
-         
         void RemovePanel(const String& name);
 
-         
         [[nodiscard]] GuiPanel* FindPanel(const String& name) noexcept;
 
-
-         
         [[nodiscard]] PanelEntry* FindPanelEntry(const String& name) noexcept;
 
-         
         [[nodiscard]] PanelEntry* FindPanelEntry(GuiPanel& panel) noexcept;
         
-
-         
         [[nodiscard]] std::vector<GuiPanel*> GetAllPanels();
         
-
-         
         void Clear();
         
-
         Callback OnPanelCreated = nullptr;
         Callback OnPanelRemoved = nullptr;
 
@@ -66,10 +53,8 @@ namespace BixEngine::Gui
         MapType panels_; 
         std::unordered_map<GuiPanel*, String> panelToName_;
 
-         
         void RegisterPanelIndex_(GuiPanel& panel, const String& name);
 
-         
         void UnregisterPanelIndex_(GuiPanel& panel);
     };
 }

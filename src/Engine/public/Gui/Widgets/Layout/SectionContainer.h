@@ -2,11 +2,10 @@
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Widgets/Styling/ScopedColor.h"
 #include "Gui/Widgets/Styling/ScopedStyle.h"
-#include "imgui.h"
 
-namespace BixEngine::Gui::Widgets
+
+namespace BixEngine::Gui::Widgets::Layout
 {
-     
     class SectionContainer
     {
     public:
@@ -21,7 +20,7 @@ namespace BixEngine::Gui::Widgets
         [[nodiscard]] bool IsVisible() const noexcept { return isVisible_; }
 
     private:
-        Gui::Utils::ScopedID idScope_;
+        Utils::ScopedID idScope_;
         ScopedColor background_;
         ScopedStyle rounding_;
         ScopedStyle padding_;

@@ -1,11 +1,11 @@
-#include "Gui/Panels/ActorInspectorPanel.h"
-
+#include "Gui/Panels/ActorInspector/ActorInspectorPanel.h"
 #include <utility>
-
 #include "Gui/Panels/ActorInspector/Utils/ActorInspectorHelpers.h"
-
 #include "Framework/Actor.h"
+#include "Framework/SceneManager.h"
 #include "Framework/Scene.h"
+#include "Gui/Panels/ActorInspector/InspectorSections/ActorInspectorSection.h"
+
 
 namespace BixEngine::Gui
 {
@@ -31,10 +31,8 @@ namespace BixEngine::Gui
     {
     }
 
-    ActorInspectorPanel::ActorInspectorPanel(const DefaultEngineGuiContext& context)
-        : GuiPanelBase("actor_inspector"),
-          sceneManagerProvider_(context.sceneManagerProvider), 
-          sceneProvider_(context.sceneProvider),               
+    ActorInspectorPanel::ActorInspectorPanel(const DefaultEngineGuiContext& context): GuiPanelBase("actor_inspector"),
+          sceneManagerProvider_(context.sceneManagerProvider),
           selectedActorGetter_(context.selectedActorGetter),
           selectedActorSetter_(context.selectedActorSetter),
           sections_(ActorInspector::BuildActorInspectorSections()),
@@ -42,9 +40,9 @@ namespace BixEngine::Gui
     {
     }
 
-    void ActorInspectorPanel::Draw()
+    void ActorInspectorPanel::DrawBody()
     {
-        ScopedID panelScope("ActorInspectorPanel");
+        GuiUtils::ScopedID panelScope("ActorInspectorPanel");
 
         Game::Scene* activeScene = nullptr;
         
@@ -60,7 +58,7 @@ namespace BixEngine::Gui
 
         if (!activeScene)
         {
-            DrawEmptyStateMessage("Aucune scène active.");
+            GuiUtils::DrawEmptyStateMessage("Aucune scène active.");
             return;
         }
 
@@ -74,7 +72,7 @@ namespace BixEngine::Gui
         Game::Actor* selectedActor = selectedActorGetter_ ? selectedActorGetter_() : nullptr;
         if (!selectedActor)
         {
-            DrawEmptyStateMessage("Aucun actor sélectionné.");
+            GuiUtils::DrawEmptyStateMessage("Aucun acteur sélectionné.");
             return;
         }
 
@@ -83,14 +81,18 @@ namespace BixEngine::Gui
             if (selectedActorSetter_)
                 selectedActorSetter_(nullptr);
 
-            DrawEmptyStateMessage("L’actor sélectionné n’existe plus dans cette scène.");
+            GuiUtils::DrawEmptyStateMessage("La sélection est invalide ou n'appartient pas à la scène.");
             return;
         }
 
         for (auto& section : sections_)
         {
             if (section)
+            {
+                // ImGui::PushID(section->GetSectionID()); 
                 section->Draw(*selectedActor);
+                // ImGui::PopID();
+            }
         }
     }
 }

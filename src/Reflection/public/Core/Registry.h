@@ -8,7 +8,7 @@
 #include <vector>
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     struct ClassInfo;
 

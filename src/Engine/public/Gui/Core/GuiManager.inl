@@ -3,6 +3,7 @@
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/String/StringUtils.h"
 
+
 namespace BixEngine::Gui
 {
     template <typename PanelT, typename ... Args>
@@ -35,28 +36,29 @@ namespace BixEngine::Gui
     {
         if (descriptor.identifier.IsEmpty())
             throw std::invalid_argument("GuiManager::RegisterPanel — identifier cannot be empty");
-
+        
         if (descriptor.title.IsEmpty())
             descriptor.title = descriptor.identifier;
-
+        
         GuiPanel& panel = CreatePanel(std::move(descriptor.identifier), std::move(descriptor.title));
         ApplyPanelDescriptor_(panel, descriptor);
 
         auto controller = std::make_unique<ControllerT>(std::forward<Args>(args)...);
         ControllerT& controllerRef = static_cast<ControllerT&>(AttachController(panel, std::move(controller)));
-
+        
         if (descriptor.requestFocus)
             panel.RequestFocus();
 
         return {panel, controllerRef};
     }
 
-template <typename ControllerT, typename... Args>
-    ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath, BaseAssetEditorController::PanelConfig config, Args&&... args)
+    template <typename ControllerT, typename... Args>
+    ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath, Args&&... args)
     {
         auto& registry = assetEditors_;
         const auto normalized = FilesUtils::Utilities::NormalizePath(assetPath);
         
+        // 1. Vérifier si déjà ouvert
         if (const auto* existing = registry.FindEntry(normalized))
         {
             if (existing->panel)
@@ -67,26 +69,38 @@ template <typename ControllerT, typename... Args>
 
             if (auto* controller = dynamic_cast<ControllerT*>(existing->controller))
                 return *controller;
-
+            
             registry.CloseEditor(normalized);
         }
         
-        auto sharedState = std::make_shared<BaseAssetEditorController::SharedState>();
-        sharedState->assetPath = normalized;
-        sharedState->assetDisplayName = FilesUtils::Utilities::ExtractDisplayName(normalized);
-        sharedState->stableIdRoot = StringUtils::Utilities::MakeSafeIdentifier(normalized.generic_string());
-        sharedState->assetTypeLabel  = config.titlePrefix.IsEmpty() ? String{"Asset"} : config.titlePrefix;
-
-        String panelName = sharedState->stableIdRoot;
-        String title = sharedState->assetDisplayName.IsEmpty() ? String{"Asset Editor"} : sharedState->assetDisplayName;
-
-        sharedState->onCloseRequest = [this, normalized]()
+        // 2. Préparer l'ID stable et le callback
+        String stableId = StringUtils::Utilities::MakeSafeIdentifier(normalized.generic_string());
+        auto onClose = [this, normalized]()
         {
             assetEditors_.CloseEditor(normalized);
         };
-        
-        ControllerT& controller = OpenPanel<ControllerT>(panelName, title, sharedState, config, std::forward<Args>(args)...);
 
+        // 3. Utiliser la Factory statique de l'éditeur spécifique
+        auto sharedState = ControllerT::CreateSharedState(normalized, stableId, onClose);
+
+        if (!sharedState)
+        {
+            throw std::runtime_error("Failed to create SharedState for asset: " + std::string(normalized.string()));
+        }
+
+        // 4. Configurer le Panel
+        String panelName = sharedState->stableIdRoot;
+        String title = sharedState->assetDisplayName.IsEmpty() ? String{"Asset Editor"} : sharedState->assetDisplayName;
+
+        // 5. Ouvrir le Panel
+        ControllerT& controller = OpenPanel<ControllerT>(
+            panelName, 
+            title, 
+            sharedState, 
+            std::forward<Args>(args)...
+        );
+
+        // 6. Enregistrer dans le registre d'assets
         registry.Register(normalized, controller.GetPanel(), controller, sharedState);
         return controller;
     }   

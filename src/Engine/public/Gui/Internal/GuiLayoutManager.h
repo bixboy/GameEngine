@@ -1,18 +1,15 @@
 #pragma once
-
-#include <array>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <span>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include <functional>
-
-#include "Gui/Core/GuiCommon.h"
 #include "imgui.h"
-
+#include "Containers/String.h"
+#include "Gui/Core/GuiData.h"
 
 namespace BixEngine::Gui
 {
@@ -20,30 +17,31 @@ namespace BixEngine::Gui
     class GuiPanel;
     class GuiSystem;
 
-    enum class EditorLayoutType
-    {
-        Scene,
-        ActorEditor
-    };
+    using LayoutID = String;
 
-    struct EditorLayoutTypeHash
+    namespace DefaultLayouts
     {
-        size_t operator()(EditorLayoutType type) const noexcept
-        {
-            return static_cast<size_t>(type);
-        }
-    };
+        static const LayoutID Scene = "Scene";
+        static const LayoutID ActorEditor = "ActorEditor";
+    }
 
-     
     class GuiLayoutManager
     {
     public:
         GuiLayoutManager(GuiSystem& guiSystem, GuiManager& guiManager);
+        ~GuiLayoutManager() = default;
 
         void Update();
         void Render();
 
-        void Switch(EditorLayoutType newLayout);
+        // --- Layout Management ---
+        void CreateLayout(const LayoutID& layoutName);
+        void Switch(const LayoutID& newLayout);
+        
+        [[nodiscard]] LayoutID GetCurrentLayout() const noexcept { return currentLayout_; }
+        [[nodiscard]] bool HasLayout(const LayoutID& layout) const;
+
+        // --- Persistence ---
         void SaveCurrentLayout();
         void SaveAllLayoutsToDisk();
 
@@ -54,46 +52,28 @@ namespace BixEngine::Gui
             ForceLoad
         };
 
-        void RegisterPanels(EditorLayoutType layout, std::span<GuiPanel*> panels, LayoutRegistrationMode mode = LayoutRegistrationMode::RegisterOnly);
-
-        void ResetLayout(EditorLayoutType layout);
-        void LoadLayout(EditorLayoutType layout);
-
-        void SetPanelsForLayout(EditorLayoutType layout, std::span<GuiPanel*> panels);
-        void AddPanel(EditorLayoutType layout, GuiPanel& panel);
+        // --- Panel Management ---
+        void RegisterPanels(const LayoutID& layout, std::span<GuiPanel*> panels, LayoutRegistrationMode mode = LayoutRegistrationMode::RegisterOnly);
+        void SetPanelsForLayout(const LayoutID& layout, std::span<GuiPanel*> panels);
+        
+        void AddPanel(const LayoutID& layout, GuiPanel& panel);
         void RemovePanel(GuiPanel& panel);
         void DetachPanels(std::span<GuiPanel*> panels);
 
-        void SetMenuPanelFilter(std::function<bool(GuiPanel*)> filter) { menuPanelFilter_ = std::move(filter); }
+        void ResetLayout(const LayoutID& layout);
+        void LoadLayout(const LayoutID& layout);
 
-        [[nodiscard]] EditorLayoutType GetCurrentLayout() const noexcept { return currentLayout_; }
+        [[nodiscard]] bool IsPanelVisibleInCurrentLayout(GuiPanel* panel) const;
+
+        void SetMenuPanelFilter(std::function<bool(GuiPanel*)> filter);
 
     private:
-        
-        
         void ProcessPendingSwitch_();
-        void EnsureDockspaceForCurrentLayout_();
+        void RemovePanelFromLayout_(GuiPanel& panel, const LayoutID& layout);
+        void EnsureDockSpaceForCurrentLayout_();
         void ApplyPanelVisibility_();
-        void DrawMainMenuBar_();
-        void DrawSaveAsDialog_();
-        void DrawOpenSceneDialog_();
-        void DrawDeleteSceneDialog_();
-        void DrawRenameSceneDialog_();
-        void DrawCloseSceneConfirmation_();
-        
-        void AddToRecentScenes_(const std::filesystem::path& path);
-        void LoadRecentScenes_();
-        void SaveRecentScenes_();
-
-        void RemovePanelFromLayout_(GuiPanel& panel, EditorLayoutType layout);
-
-
-
         void LoadPersistedLayouts_();
         void PersistLayoutsToDisk_();
-
-        static std::string LayoutTypeToString(EditorLayoutType type);
-        static std::optional<EditorLayoutType> LayoutTypeFromString(const std::string& v);
 
         struct StoredLayout
         {
@@ -103,39 +83,23 @@ namespace BixEngine::Gui
 
         GuiSystem* guiSystem_{nullptr};
         GuiManager* guiManager_{nullptr};
-        std::function<bool(GuiPanel*)> menuPanelFilter_;
 
-        EditorLayoutType currentLayout_{EditorLayoutType::Scene};
-        std::optional<EditorLayoutType> pendingLayout_;
+        LayoutID currentLayout_{DefaultLayouts::Scene};
+        std::optional<LayoutID> pendingLayout_;
+        
+        std::function<bool(GuiPanel*)> customMenuFilter_;
+
         bool switchRequested_{false};
         bool dockspaceDirty_{true};
 
         std::filesystem::path layoutStorageFile_;
-        std::unordered_map<EditorLayoutType, std::vector<GuiPanel*>> layoutPanels_;
-        std::unordered_map<GuiPanel*, EditorLayoutType> panelLayoutLookup_;
-        std::unordered_map<EditorLayoutType, std::string> dockspaceNames_;
-        std::unordered_map<EditorLayoutType, StoredLayout> layoutData_;
-        std::unordered_set<EditorLayoutType> initializedLayouts_;
-        std::unordered_set<EditorLayoutType> pendingInitialization_;
-
         
-        std::filesystem::path currentScenePath_;
-        bool showSaveAsDialog_{false};
-        bool showOpenSceneDialog_{false};
-        bool showDeleteSceneDialog_{false};
-        bool showRenameSceneDialog_{false};
-        bool showCloseSceneConfirmation_{false};
-        char saveAsFilenameBuffer_[256]{};
-        char renameFilenameBuffer_[256]{};
+        // Data Structures using String (LayoutID) as key
+        std::unordered_map<LayoutID, std::vector<GuiPanel*>> layoutPanels_;
+        std::unordered_map<GuiPanel*, LayoutID> panelLayoutLookup_;
+        std::unordered_map<LayoutID, StoredLayout> layoutData_;
         
-        
-        std::vector<std::filesystem::path> recentScenes_;
-        std::filesystem::path recentScenesFile_;
-        std::filesystem::path sceneToDelete_;
-        
-        
-        bool isSceneDirty_{false};
-        
-        bool showEditorPreferences_{false};
+        std::unordered_set<LayoutID> initializedLayouts_;
+        std::unordered_set<LayoutID> pendingInitialization_;
     };
 }

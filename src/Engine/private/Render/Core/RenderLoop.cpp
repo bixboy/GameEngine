@@ -7,7 +7,7 @@
 
 namespace BixEngine::Core
 {
-    void RenderLoop::Configure(SubsystemManager* subsystems, GuiModule* guiModule, Graphics::Renderer* renderer, Math::Color clearColor) noexcept
+    void RenderLoop::Configure(SubsystemManager* subsystems, Gui::GuiModule* guiModule, Graphics::Renderer* renderer, Math::Color clearColor) noexcept
     {
         subsystems_ = subsystems;
         guiModule_ = guiModule;
@@ -59,25 +59,25 @@ namespace BixEngine::Core
 
         switch (guiModule_->GetEngineState())
         {
-        case GuiModule::EngineState::Edit:
+        case Gui::GuiModule::EngineState::Edit:
             subsystems_->UpdateEditor(deltaTime);
             break;
             
-        case GuiModule::EngineState::Play:
+        case Gui::GuiModule::EngineState::Play:
             subsystems_->UpdateRuntime(deltaTime);
             break;
             
-        case GuiModule::EngineState::Pause:
+        case Gui::GuiModule::EngineState::Pause:
             subsystems_->UpdatePaused(deltaTime);
             break;
             
-        case GuiModule::EngineState::Step:
+        case Gui::GuiModule::EngineState::Step:
             subsystems_->UpdateRuntime(deltaTime);
-            guiModule_->SetEngineState(GuiModule::EngineState::Pause); 
+            guiModule_->OnPause(); 
             break;
         }
     }
-
+    
     void RenderLoop::Render()
     {
         if (!renderer_)

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Gui/Panels/SceneOutlinerPanel.h"
-
+    
 namespace BixEngine::Gui
 {
     class PrefabOutlinerPanel : public SceneOutlinerPanel
@@ -15,5 +15,11 @@ namespace BixEngine::Gui
         bool CanReparentActor(Game::Actor* actor, Game::Actor* newParent) const override;
         void AddCreatedActor(Game::Scene* scene, std::unique_ptr<Game::Actor> actor) override;
         void OnReparentActor(Game::Actor* actor, Game::Actor* newParent) override;
+        
+        void SetRootActor(Game::Actor* root) { rootActor_ = root; }
+        void Draw() override;
+
+    private:
+        Game::Actor* rootActor_{nullptr};
     };
 }

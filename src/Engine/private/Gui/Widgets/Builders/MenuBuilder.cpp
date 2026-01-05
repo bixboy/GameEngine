@@ -6,11 +6,10 @@ namespace BixEngine::Gui::Widgets::Builder
 {
     Menu::Menu(const char* label, bool enabled) noexcept
     {
-        open_ = ImGui::BeginMenu(label, enabled);
-        if (open_)
+        if (ImGui::BeginMenu(label, enabled))
+        {
             Activate();
-        else
-            Deactivate();
+        }
     }
 
     Menu::~Menu()

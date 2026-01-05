@@ -7,7 +7,7 @@ namespace BixEngine::Gui
 {
     void PanelHistory::RecordVisit(const String& panelName)
     {
-        if (panelName.IsEmpty())
+        if (panelName.empty())
             return;
 
         if (!entries_.empty())
@@ -80,7 +80,7 @@ namespace BixEngine::Gui
 
     void PanelHistory::SetHome(const String& panelName)
     {
-        if (panelName.IsEmpty())
+        if (panelName.empty())
         {
             homePanel_.reset();
             return;

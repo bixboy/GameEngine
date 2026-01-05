@@ -2,9 +2,8 @@
 #include <functional>
 #include <vector>
 
-namespace BixEngine::Gui::Widgets
+namespace BixEngine::Gui::Widgets::Layout
 {
-     
     class PanelToolbar
     {
     public:
@@ -18,6 +17,7 @@ namespace BixEngine::Gui::Widgets
 
         void AddLeft(const std::function<void()>& drawCallback);
         void AddRight(const std::function<void()>& drawCallback);
+        
         void Commit();
 
     private:

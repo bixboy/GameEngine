@@ -52,6 +52,14 @@ namespace BixEngine::Game
         return s_MainCamera;
     }
 
+    void CameraComponent::LookAt(const Math::Vector3& target)
+    {
+        if (owner_)
+        {
+            owner_->GetTransform().LookAt(target);
+        }
+    }
+
     Math::Vector2<float> CameraComponent::WorldToScreen(const Math::Vector3& worldPos) const
     {
         float screenWidth = 1600.0f;

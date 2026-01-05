@@ -9,22 +9,13 @@ namespace BixEngine::EditorUtils
     class Utilities
     {
     public:
-
-         
         static void SetPreferredCodeEditor(const std::string& command);
-
-         
         static const std::string& GetPreferredCodeEditor();
         
+        static void OpenFileInCodeEditor(const std::filesystem::path& path, int line = 0);
 
-         
-        static void OpenFileInCodeEditor(const std::filesystem::path& path);
-
-         
         static void ShowPathInExplorer(const std::filesystem::path& path, bool isDirectory);
         
-
-         
         [[nodiscard]] static std::uint64_t HashFNV1a(std::string_view str);
 
     private:

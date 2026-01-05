@@ -3,7 +3,7 @@
 #include "Core/ClassInfo.h"
 
 
-namespace Bix::Reflection
+namespace BixEngine::Reflection
 {
     Registry& Registry::Get()
     {
