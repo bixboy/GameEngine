@@ -15,6 +15,9 @@ namespace BixEngine::Gui
     {
     }
 
+    SceneAssetEditorWindow::SceneSharedState::SceneSharedState() = default;
+    SceneAssetEditorWindow::SceneSharedState::~SceneSharedState() = default;
+
     SceneAssetEditorWindow::~SceneAssetEditorWindow() = default;
 
     void SceneAssetEditorWindow::CreatePreviewEnvironment()
@@ -39,7 +42,7 @@ namespace BixEngine::Gui
                 // camComp->SetNearClip(0.1f);
                 // camComp->SetFarClip(1000.0f);
                 camActor.SetPosition({0.0f, 5.0f, 10.0f}); 
-                camComp->LookAt({0.0f, 0.0f, 0.0f});
+                camComp->GetTransform().LookAt({0.0f, 0.0f, 0.0f});
             }
             state->cameraActor = &camActor;
         }

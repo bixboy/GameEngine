@@ -48,10 +48,10 @@ namespace BixEngine::StringUtils
         if (query.IsEmpty())
             return true;
 
-        String valueLower = ToLowerCopy(value);
-        String queryLower = ToLowerCopy(query);
+        std::string valueLower = ToLowerCopy(value.Std());
+        std::string queryLower = ToLowerCopy(query.Std());
 
-        return valueLower.find(queryLower.View()) != std::string::npos;
+        return valueLower.find(queryLower) != std::string::npos;
     }
 
     

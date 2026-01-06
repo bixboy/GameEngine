@@ -6,15 +6,23 @@ union SDL_Event;
 
 namespace BixEngine::Core
 {
-    class GuiModule;
     class SubsystemManager;
+}
+
+namespace BixEngine::Gui
+{
+    class GuiModule;
+}
+
+namespace BixEngine::Core
+{
 
     class EventDispatcher
     {
     public:
-        EventDispatcher(GuiModule* guiModule, SubsystemManager* subsystems) noexcept;
+        EventDispatcher(Gui::GuiModule* guiModule, SubsystemManager* subsystems) noexcept;
 
-        void SetDependencies(GuiModule* guiModule, SubsystemManager* subsystems) noexcept;
+        void SetDependencies(Gui::GuiModule* guiModule, SubsystemManager* subsystems) noexcept;
         
         void PumpEvents(bool& running);
 
@@ -23,7 +31,7 @@ namespace BixEngine::Core
     private:
         [[nodiscard]] bool ShouldDropMouseMotionEvent_(const SDL_Event& event) noexcept;
 
-        GuiModule* guiModule_{nullptr};
+        Gui::GuiModule* guiModule_{nullptr};
         SubsystemManager* subsystems_{nullptr};
 
         // --- Rate Limiting ---

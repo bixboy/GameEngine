@@ -2,7 +2,6 @@
 #include "Framework/SceneRegistry.h"
 #include "Entities/Player.h"
 #include "Input.h"
-#include "Math/Color.h"
 #include "Debug/Logger.h"
 #include "Framework/BGameplayStatics.h"
 
@@ -14,7 +13,6 @@ namespace BixEngine::Game
     namespace
     {
         constexpr Math::Vector3 kPlayerStart{320.0f, 240.0f, 0.0f};
-        constexpr Math::Vector3 kPlayerSize{150.0f, 150.0f, 150.0f};
     }
 
     EmptyScene::EmptyScene() : Scene("EmptyScene")
@@ -26,22 +24,18 @@ namespace BixEngine::Game
         Scene::HandleEvent(event);
 
         if (event.type == SDL_EVENT_KEY_DOWN && event.key.key == SDLK_F1)
+        {
             LOG_INFO("Reloading EmptyScene...");
+            BGameplayStatics::ReloadScene();
+        }
     }
 
-    void EmptyScene::Update(float deltaTime)
+    void EmptyScene::OnRuntimeUpdate(float deltaTime)
     {
-        Scene::Update(deltaTime);
-
-        for (auto& actor : GetActors())
-            actor->Update(deltaTime);
+        Scene::OnRuntimeUpdate(deltaTime);
+        
     }
 
-    void EmptyScene::Render(Graphics::Renderer& renderer)
-    {
-        for (auto& actor : GetActors())
-            actor->Render(renderer);
-    }
 
     void EmptyScene::OnEnter()
     {
@@ -54,17 +48,22 @@ namespace BixEngine::Game
 
         if (!player_)
         {
-            Math::Transform playerTransform;
-            playerTransform.SetPosition(kPlayerStart);
-            player_ = BGameplayStatics::SpawnActor<Player>(this, playerTransform);
+             player_ = BGameplayStatics::SpawnActor<Player>(this);
+             if (player_) 
+                 player_->GetTransform().SetPosition(kPlayerStart);
         }
 
         if (player_ && HasInputManager())
+        {
             player_->SetupInput(GetInputManager());
+        }
+            
+        LOG_INFO("EmptyScene Entered.");
     }
 
     void EmptyScene::OnExit()
     {
+        LOG_INFO("EmptyScene Exiting.");
         player_ = nullptr;
         Scene::OnExit();
     }

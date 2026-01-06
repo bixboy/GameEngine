@@ -6,8 +6,40 @@
 #include "Components/Core/CameraComponent.h"
 #include "Framework/CollisionHitResult.h"
 
+
 namespace BixEngine::Game
 {
+    namespace
+    {
+        Actor* FindActorByNameRecursive(Actor* current, const String& name)
+        {
+            if (current->GetName() == name)
+                return current;
+
+            for (auto* child : current->GetChildren())
+            {
+                if (auto* found = FindActorByNameRecursive(child, name))
+                    return found;
+            }
+            
+            return nullptr;
+        }
+
+        Actor* FindActorByIDRecursive(Actor* current, const String& uuid)
+        {
+            if (current->GetUUID() == uuid)
+                return current;
+
+            for (auto* child : current->GetChildren())
+            {
+                if (auto* found = FindActorByIDRecursive(child, uuid))
+                    return found;
+            }
+            
+            return nullptr;
+        }
+    }
+
     Scene::Scene(String name) : name_(std::move(name))
     {
         LOG_INFO("Scene created: " + name_);
@@ -41,8 +73,25 @@ namespace BixEngine::Game
 
     void Scene::OnFileDrop(const String& filePath)
     {
-        LOG_INFO("File dropped in scene: {}", filePath);
-        // TODO: Logique pour charger un asset ou spawner un acteur
+        LOG_INFO("File dropped in scene: " + filePath);
+        
+        std::filesystem::path path(filePath.c_str());
+        String extension = path.extension().string();
+        
+        // Simple extension check
+        if (extension == ".prefab")
+        {
+             // TODO: Spawn Actor from Prefab
+             LOG_INFO("Prefab drop detected. Spawning logic to be implemented.");
+        }
+        else if (extension == ".png" || extension == ".jpg" || extension == ".tga")
+        {
+             LOG_INFO("Texture drop detected. Import logic to be implemented.");
+        }
+        else if (extension == ".scene")
+        {
+             LOG_INFO("Scene drop detected. Loading logic to be implemented.");
+        }
     }
 
     void Scene::HandleEvent(const SDL_Event& event) { }
@@ -56,7 +105,6 @@ namespace BixEngine::Game
             b2WorldDef worldDef = b2DefaultWorldDef();
             worldDef.gravity = {0.0f, 9.81f};
             physicsWorldId_ = b2CreateWorld(&worldDef);
-            
             LOG_INFO("Physics World Created.");
         }
 
@@ -69,7 +117,11 @@ namespace BixEngine::Game
 
     void Scene::OnRuntimeStop()
     {
-        // Appel de EndPlay ?
+        for (auto& actor : actors_)
+        {
+            if(actor)
+                actor->EndPlay();
+        }
         
         if (b2World_IsValid(physicsWorldId_))
         {
@@ -82,21 +134,21 @@ namespace BixEngine::Game
     void Scene::OnEditorUpdate(float deltaTime)
     {
         (void)deltaTime;
-        // Nettoyage des acteurs détruits
+        
         pendingDestruction_.clear(); 
         std::erase_if(actors_, [](const std::unique_ptr<Actor>& ptr) { return !ptr; });
     }
 
     void Scene::OnRuntimeUpdate(float deltaTime)
     {
-        // --- Physique Box2D v3 ---
+        // --- Physique Box2D ---
         if (b2World_IsValid(physicsWorldId_))
         {
             constexpr float timeStep = 1.0f / 60.0f;
             constexpr int subStepCount = 4;
             
             physicsAccumulator_ += deltaTime;
-            physicsAccumulator_ = std::min(physicsAccumulator_, 0.2f);
+            physicsAccumulator_ = std::min(physicsAccumulator_, 0.2f); 
 
             while (physicsAccumulator_ >= timeStep)
             {
@@ -104,6 +156,7 @@ namespace BixEngine::Game
                 physicsAccumulator_ -= timeStep;
             }
 
+            // Gestion des collisions
             b2ContactEvents events = b2World_GetContactEvents(physicsWorldId_);
             for (int i = 0; i < events.beginCount; ++i)
             {
@@ -135,11 +188,7 @@ namespace BixEngine::Game
         }
 
         pendingDestruction_.clear();
-        std::erase_if(actors_,
-            [](const std::unique_ptr<Actor>& ptr)
-            {
-                return !ptr;
-            });
+        std::erase_if(actors_, [](const std::unique_ptr<Actor>& ptr) { return !ptr; });
     }
 
     // --- Gestion Acteurs ---
@@ -169,11 +218,7 @@ namespace BixEngine::Game
         
         actor->MarkAsPendingKill();
 
-        // Cas 1 : C'est un actor Racine
-        auto it = std::ranges::find(actors_, actor, [](const auto& ptr)
-        { 
-            return ptr.get(); 
-        });
+        auto it = std::ranges::find(actors_, actor, [](const auto& ptr) { return ptr.get(); });
         
         if (it != actors_.end())
         {
@@ -181,7 +226,6 @@ namespace BixEngine::Game
             return; 
         }
 
-        // Cas 2 : C'est un enfant
         Actor* parent = actor->GetParent();
         if (parent)
         {
@@ -203,15 +247,6 @@ namespace BixEngine::Game
 
     void Scene::Render(Graphics::Renderer& renderer)
     {
-        // 1. Setup Camera (View/Projection)
-        /*
-        if (activeCamera_)
-        {
-            activeCamera_->ApplyTransform(renderer);
-        }
-        */
-
-        // 2. Render Actors
         for (auto& actor : actors_)
         {
             if (actor && actor->IsActive())
@@ -227,36 +262,59 @@ namespace BixEngine::Game
         // Gizmos, Debug Draw, UI Overlay spécifique à la scène...
     }
 
+    // --- Recherches ---
+
     Actor* Scene::FindActorByName(const String& name) noexcept
     {
         for (auto& actor : actors_)
         {
-            if (actor && actor->GetName() == name)
-                return actor.get();
+            if (auto* found = FindActorByNameRecursive(actor.get(), name))
+                return found;
         }
         
         return nullptr;
     }
 
-    Actor* Scene::FindActorByPath(const String& path) noexcept
+    Actor* Scene::FindActorByID(const String& uuid) noexcept
     {
-         for (auto& actor : actors_)
+        for (auto& actor : actors_)
         {
-             if (actor && actor->GetName() == path)
-                 return actor.get();
+            if (auto* found = FindActorByIDRecursive(actor.get(), uuid))
+                return found;
         }
         
         return nullptr;
     }
+
+    // --- Getters / Setters ---
 
     void Scene::Rename(String name)
     {
         SetName(std::move(name));
     }
 
-    Core::Window& Scene::GetWindow() const { return *context_.window; }
-    Input::InputManager& Scene::GetInputManager() const { return *context_.inputManager; }
-    Graphics::Renderer& Scene::GetRenderer() const { return *context_.renderer; }
-    Core::Timer& Scene::GetTimer() const { return *context_.timer; }
-    Gui::GuiManager& Scene::GetGuiManager() const { return *context_.guiManager; }
+    Core::Window& Scene::GetWindow() const
+    {
+        return *context_.window;
+    }
+    
+    Input::InputManager& Scene::GetInputManager() const
+    {
+        return *context_.inputManager;
+    }
+    
+    Graphics::Renderer& Scene::GetRenderer() const
+    {
+        return *context_.renderer;
+    }
+    
+    Core::Timer& Scene::GetTimer() const
+    {
+        return *context_.timer;
+    }
+    
+    Gui::GuiManager& Scene::GetGuiManager() const
+    {
+        return *context_.guiManager;
+    }
 }

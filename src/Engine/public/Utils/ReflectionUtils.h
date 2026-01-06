@@ -8,7 +8,7 @@
 
 namespace BixEngine::Utils
 {
-    using namespace Bix::Reflection;
+    using namespace BixEngine::Reflection;
     struct GenericSubclassType {};
 
     // vérifie les noms de types

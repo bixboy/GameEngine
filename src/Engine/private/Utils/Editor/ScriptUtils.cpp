@@ -18,6 +18,19 @@ namespace BixEngine::ScriptUtils
     }
 
     // --- Helper de Parsing ---
+
+    bool Utilities::IsSubclassOf(const Reflection::ClassInfo& type, const Reflection::ClassInfo& base)
+    {
+        const Reflection::ClassInfo* current = &type;
+        while (current)
+        {
+            if (current == &base)
+                return true;
+            current = current->SuperClass;
+        }
+        return false;
+    }
+
     static void ParseFileContent(const std::filesystem::path& file, ScriptNode& outNode)
     {
         std::ifstream stream(file);

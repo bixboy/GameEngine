@@ -209,6 +209,30 @@ namespace BixEngine::Math
             res.m[3][0] = 0;   res.m[3][1] = 0;   res.m[3][2] = 0;   res.m[3][3] = 1;
             return res;
         }
+
+        static Matrix4 Orthographic(float left, float right, float bottom, float top, float zNear, float zFar)
+        {
+            Matrix4 res;
+            res.m[0][0] = 2.0f / (right - left);
+            res.m[1][1] = 2.0f / (top - bottom);
+            res.m[2][2] = -2.0f / (zFar - zNear);
+            
+            res.m[0][3] = -(right + left) / (right - left);
+            res.m[1][3] = -(top + bottom) / (top - bottom);
+            res.m[2][3] = -(zFar + zNear) / (zFar - zNear);
+            
+            res.m[3][3] = 1.0f;
+            return res;
+        }
+
+        static Matrix4 Translation(const Vector3& translation)
+        {
+            Matrix4 res; // Identity by default
+            res.m[0][3] = translation.x;
+            res.m[1][3] = translation.y;
+            res.m[2][3] = translation.z;
+            return res;
+        }
         
         [[nodiscard]] const float* Data() const
         {

@@ -109,10 +109,8 @@ namespace BixEngine::Gui
             
             // Maths
             { "Math::Vector2", DrawVector2 }, 
-            { "Math::Vector2<float>", DrawVector2 },
             { "BixEngine::Math::Vector2", DrawVector2 },
             { "Math::Vector3", DrawVector3 },
-            { "Math::Vector3<float>", DrawVector3 },
             { "BixEngine::Math::Vector3", DrawVector3 },
             { "SDL_Color", DrawColor },
 
@@ -174,12 +172,12 @@ namespace BixEngine::Gui
     {
         if (p.TypeName.find("int") != std::string::npos || p.TypeName == "Vec2i")
         {
-            auto& vec = p.Get<Math::Vector2<int>>(i);
+            auto& vec = p.Get<Math::TVector2<int>>(i);
             return Widgets::DrawVector2Control("##v", &vec.x, 0, 1.0f);
         }
         else
         {
-            auto& vec = p.Get<Math::Vector2<float>>(i);
+            auto& vec = p.Get<Math::Vector2>(i);
             return Widgets::DrawVector2Control("##v", &vec.x, 0.0f, 0.1f, "%.3f");
         }
     }
@@ -188,12 +186,12 @@ namespace BixEngine::Gui
     {
         if (p.TypeName.find("int") != std::string::npos || p.TypeName == "Vec3i")
         {
-            auto& v = p.Get<Math::Vector3<int>>(i);
+            auto& v = p.Get<Math::TVector3<int>>(i);
             return Widgets::DrawVector3Control("##v", &v.x, 0, 1.0f);
         }
         else
         {
-            auto& v = p.Get<Math::Vector3<float>>(i);
+            auto& v = p.Get<Math::Vector3>(i);
             return Widgets::DrawVector3Control("##v", &v.x, 0.0f, 0.1f, "%.3f");
         }
     }

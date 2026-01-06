@@ -102,7 +102,7 @@ namespace BixEngine::Gui
             if (state->cameraActor)
             {
                 state->cameraActor->SetPosition({0.0f, 2.0f, 5.0f}); 
-                state->cameraActor->GetComponent<Game::CameraComponent>()->LookAt({0.0f, 0.0f, 0.0f});
+                state->cameraActor->GetComponent<Game::CameraComponent>()->GetTransform().LookAt({0.0f, 0.0f, 0.0f});
             }
         }
 

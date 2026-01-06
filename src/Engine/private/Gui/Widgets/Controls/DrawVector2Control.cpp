@@ -3,7 +3,7 @@
 #include <imgui_internal.h>
 #include <type_traits> // Nécessaire pour std::is_same_v
 
-#include "Gui/Core/GuiCommon.h"
+#include "Gui/Core/GuiTheme.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/MouseWrapping.h"
 #include "Gui/Widgets/Controls/ColorHelpers.h"
@@ -27,15 +27,14 @@ namespace BixEngine::Gui::Widgets
 
             bool changed = false;
             const char* idLabel = label ? label : "Vector2Control";
-            Utils::ScopedID idScope(idLabel);
+            GuiUtils::ScopedID idScope(idLabel);
 
-            ImGui::Columns(2, nullptr, false);
-            ImGui::SetColumnWidth(0, kDefaultColumnWidth);
-            ImGui::AlignTextToFramePadding();
-            ImGui::TextUnformatted(label ? label : "");
-            ImGui::NextColumn();
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            float totalSpacing = (2 * kAxisButtonSize.x) + (3 * kItemSpacingX);
+            float inputWidth = availableWidth - totalSpacing;
+            if (inputWidth < 1.0f) inputWidth = 1.0f;
 
-            ImGui::PushMultiItemsWidths(2, ImGui::CalcItemWidth());
+            ImGui::PushMultiItemsWidths(2, inputWidth);
             Styling::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, 0.0f));
 
             constexpr const char* axisLabels[2] = {"X", "Y"};
@@ -43,7 +42,7 @@ namespace BixEngine::Gui::Widgets
 
             for (int index = 0; index < 2; ++index)
             {
-                Utils::ScopedID axisId(index);
+                GuiUtils::ScopedID axisId(index);
 
                 if (index > 0)
                     ImGui::SameLine(0.0f, kItemSpacingX);
@@ -78,7 +77,6 @@ namespace BixEngine::Gui::Widgets
                 ImGui::PopItemWidth();
             }
 
-            ImGui::Columns(1);
             ImGui::Spacing();
 
             return changed;

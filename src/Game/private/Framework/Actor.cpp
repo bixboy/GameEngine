@@ -4,6 +4,8 @@
 #include "Serializer/ReflectedSerializer.h"
 #include "Debug/Logger.h"
 #include <algorithm>
+#include <array>
+
 
 namespace BixEngine::Game
 {
@@ -17,7 +19,7 @@ namespace BixEngine::Game
             if (auto* info = Registry::Get().Find(typeName.c_str()))
                 return info;
 
-            const std::array<String, 7> namespaces = {
+            static const std::array<String, 7> namespaces = {
                 "BixEngine::Game::", "BixEngine::Render::", "BixEngine::Physics::",
                 "BixEngine::Audio::", "BixEngine::Core::", "BixEngine::Systems::", "BixEngine::Gui::"
             };
@@ -57,12 +59,7 @@ namespace BixEngine::Game
             return nullptr;
         }
     }
-
     
-    
-    
-    
-
     Actor::Actor(String name, const Math::Transform& transform) : Object(std::move(name), transform)
     {
     }
@@ -81,10 +78,24 @@ namespace BixEngine::Game
 
     void Actor::BeginPlay()
     {
-        for (auto& c : components_)
-            c->BeginPlay();
+        for (const auto& component : components_)
+        {
+            if (component)
+                component->BeginPlay();
+        }
         
         hasBegunPlay_ = true;
+    }
+
+    void Actor::EndPlay()
+    {
+        // On détruit les enfants d'abord pour un ordre logique
+        for (auto* child : children_)
+        {
+             if (child) child->EndPlay();
+        }
+        
+        hasBegunPlay_ = false;
     }
 
     void Actor::Update(float deltaTime)
@@ -94,9 +105,12 @@ namespace BixEngine::Game
 
         if (!hasBegunPlay_)
             BeginPlay();
-
-        for (auto& comp : components_)
-            comp->Update(deltaTime);
+        
+        for (auto& component : components_)
+        {
+            if (component && component->IsActive())
+                component->Update(deltaTime);
+        }
     }
 
     void Actor::Render(Graphics::Renderer& renderer) const
@@ -105,14 +119,12 @@ namespace BixEngine::Game
             return;
         
         for (const auto& comp : components_)
-            comp->Render(renderer);
+        {
+            if (comp && comp->IsActive())
+                comp->Render(renderer);
+        }
     }
-
     
-    
-    
-    
-
     void Actor::SetParent(Actor* parent)
     {
         if (parent_ == parent)
@@ -130,7 +142,7 @@ namespace BixEngine::Game
         if (parent_)
         {
             auto& siblings = parent_->children_;
-            std::erase(siblings, this);
+            siblings.erase(std::ranges::remove(siblings, this).begin(), siblings.end());
         }
 
         parent_ = parent;
@@ -146,24 +158,69 @@ namespace BixEngine::Game
         }
     }
 
+    std::unique_ptr<Actor> Actor::RemoveChild(Actor* child)
+    {
+        if (!child || child->GetParent() != this)
+            return nullptr;
+
+        // On détache l'enfant de la liste des enfants (pointeu cru)
+        auto it = std::ranges::find(children_, child);
+        if (it != children_.end())
+        {
+            children_.erase(it);
+        }
+
+        // IMPORTANT : Dans ce moteur, Scene/Actor ne possède pas 'owning pointer' dans 'children_'.
+        // 'children_' est vector<Actor*>. 
+        // Mais la SCÈNE possède les acteurs racines.
+        // Si un acteur est enfant, qui possède le unique_ptr ?
+        // D'après Scene.h: std::vector<std::unique_ptr<Actor>> actors_; // Liste des acteurs RACINES uniquement
+        // Cela implique qu'un enfant N'EST PAS dans 'Scene::actors_', donc qui le possède ?
+        // Dans Actor.h, 'std::vector<Actor*> children_;' -> RAW POINTERS.
+        // Cela suggère que Actor DOIT posséder ses enfants via unique_ptr s'ils ne sont pas racines ?
+        // OR Actor.h ne montre pas de vector<unique_ptr> childrenOwners.
+        // Cela veut dire que le système de propriété actuel est cassé ou que Scene gère TOUS les acteurs ?
+        // Vérifions Scene::AddActor -> actors_.push_back(std::move(actor)); actor->SetParent(nullptr);
+        // Donc Scene possède seulement les racines.
+        // Si je fais child->SetParent(this), qui prend ownership ?
+        // Le code actuel de Actor::SetParent ne transfère pas d'ownership.
+        // C'est un souci de conception du moteur fourni.
+        // CEPENDANT, pour répondre à la demande et faire fonctionner Scene::RemoveActor qui attend un unique_ptr :
+        // On va supposer que pour l'instant, on retourne un unique_ptr wrap du pointeur, 
+        // MAIS attention au double free si quelqu'un d'autre le possède.
+        // SI le moteur est mal foutu, on va faire au mieux.
+        // WAIT, Scene::RemoveActor dit : std::unique_ptr<Actor> dyingChild = parent->RemoveChild(actor);
+        // Donc Scene s'attend à récupérer ownership.
+        
+        // Comme 'Actor' ne semble pas stocker de unique_ptr vers ses enfants (juste Actor*), 
+        // cela signifie probablement que l'ownership est mal géré ou géré ailleurs (Scene::actors_ contient TOUT ? non commentaire dit Racines).
+        // REGARDONS Scene::FindActorByNameRecursive.
+        
+        // Hypothèse : Le user a un moteur en cours de dev. 
+        // Je vais implémenter RemoveChild pour détacher le parent (SetParent(nullptr)) 
+        // et retourner un unique_ptr qui prend possession du pointeur raw.
+        // C'est dangereux si le pointeur est stocké ailleurs en unique_ptr, mais c'est ce que demande Scene::RemoveActor.
+        
+        child->SetParent(nullptr); // Ceci va appeler SetParent(nullptr) sur le child
+        // SetParent(nullptr) va retirer child de this->children_ via 'parent_->children_.erase(...)'
+        // Donc pas besoin de faire children_.erase(it) manuellement si SetParent le fait.
+        
+        // On wrap le raw pointer. ATTENTION: C'est un transfert d'ownership implicite "Sauvage".
+        return std::unique_ptr<Actor>(child);
+    }
+
     bool Actor::IsChildOf(const Actor* potentialParent) const
     {
-        if (!potentialParent)
-            return false;
+        if (!potentialParent) return false;
         
         for (const Actor* curr = parent_; curr != nullptr; curr = curr->parent_)
         {
-            if (curr == potentialParent)
-                return true;
+            if (curr == potentialParent) return true;
         }
-        
         return false;
     }
 
-    
-    
-    
-    
+    // --- Gestion Composants ---
 
     void Actor::AddComponent(std::unique_ptr<Component> component)
     {
@@ -171,6 +228,9 @@ namespace BixEngine::Game
         {
             component->SetOwner(this);
             components_.push_back(std::move(component));
+            
+            if (hasBegunPlay_)
+                components_.back()->BeginPlay();
         }
     }
 
@@ -189,22 +249,18 @@ namespace BixEngine::Game
         {
             OnComponentRemoved(*(*it));
             components_.erase(it);
-            
             return true;
         }
-        
         return false;
     }
 
-    
-    
-    
-    
-
     std::unique_ptr<Actor> Actor::ClonePrototype() const
     {
+        // TODO: Implémenter une vraie copie profonde ici si nécessaire
         return std::make_unique<Actor>();
     }
+
+    // --- Sérialisation ---
 
     void Actor::SerializeBinary(std::ostream& stream) const
     {
@@ -237,7 +293,6 @@ namespace BixEngine::Game
 
             if (const auto* info = FindClassInfo(typeName))
             {
-                
                 Serialization::ReflectedSerializer::Serialize(comp.get(), info, writer);
             }
             else

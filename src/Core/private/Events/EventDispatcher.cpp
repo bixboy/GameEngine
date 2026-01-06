@@ -7,11 +7,11 @@
 
 namespace BixEngine::Core
 {
-    EventDispatcher::EventDispatcher(GuiModule* guiModule, SubsystemManager* subsystems) noexcept : guiModule_(guiModule), subsystems_(subsystems)
+    EventDispatcher::EventDispatcher(Gui::GuiModule* guiModule, SubsystemManager* subsystems) noexcept : guiModule_(guiModule), subsystems_(subsystems)
     {
     }
 
-    void EventDispatcher::SetDependencies(GuiModule* guiModule, SubsystemManager* subsystems) noexcept
+    void EventDispatcher::SetDependencies(Gui::GuiModule* guiModule, SubsystemManager* subsystems) noexcept
     {
         guiModule_ = guiModule;
         subsystems_ = subsystems;

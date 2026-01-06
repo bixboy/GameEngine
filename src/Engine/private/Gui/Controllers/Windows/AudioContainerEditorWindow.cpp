@@ -165,9 +165,8 @@ namespace BixEngine::Gui
                 DrawTracks();
                 ImGui::Unindent();
             }
-            
-            ImGui::EndChild();
         }
+        ImGui::EndChild();
     }
 
     void AudioContainerEditorWindow::DrawProperties()

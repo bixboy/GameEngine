@@ -278,7 +278,7 @@ namespace BixEngine::Gui
              if (!actor)
                  continue;
 
-             Math::Vector2<float> worldCorners[4];
+             Math::Vector2 worldCorners[4];
              GetActorWorldCorners(actor, worldCorners);
              
              if (cam)
@@ -286,7 +286,7 @@ namespace BixEngine::Gui
                  for(int i=0; i<4; ++i)
                  {
                       Math::Vector3 p3(worldCorners[i].x, worldCorners[i].y, 0.0f);
-                      Math::Vector2<float> screenPos = cam->WorldToScreen(p3);
+                      Math::Vector2 screenPos = cam->WorldToScreen(p3);
                       worldCorners[i] = screenPos;
                  }
              }
@@ -339,7 +339,7 @@ namespace BixEngine::Gui
 
     void SceneViewportPanel::DrawGizmo(Game::Actor* actor, const ImVec2& screenOffset, float viewScale)
     {
-        Math::Vector2<float> worldCorners[4];
+        Math::Vector2 worldCorners[4];
         GetActorWorldCorners(actor, worldCorners);
 
         ImVec2 screenCorners[4];
@@ -379,7 +379,7 @@ namespace BixEngine::Gui
         
         ImVec2 screenCenter = WorldToScreen({pos.x, pos.y}, screenOffset, viewScale.x); 
         
-        Math::Vector2<float> worldCorners[4];
+        Math::Vector2 worldCorners[4];
         GetActorWorldCorners(actor, worldCorners);
         ImVec2 screenCorners[4];
         for(int i=0; i<4; ++i) screenCorners[i] = WorldToScreen(worldCorners[i], screenOffset, viewScale.x);
@@ -417,36 +417,39 @@ namespace BixEngine::Gui
                     viewportMousePos.y - gizmoState_.DragStartViewportPos.y
                 };
                 
-                Math::Vector2<float> delta = { screenDelta.x * invScale, screenDelta.y * invScale };
+                Math::Vector2 delta = { screenDelta.x * invScale, screenDelta.y * invScale };
                 
                 auto t = actor->GetTransform();
                 float rad = gizmoState_.InitialTransform.Rot * (std::numbers::pi_v<float> / 180.0f);
                 float c = cosf(rad); float s = sinf(rad);
-                Math::Vector2<float> dirX = { c, s }; 
-                Math::Vector2<float> dirY = { -s, c }; 
+                Math::Vector2 dirX = { c, s }; 
+                Math::Vector2 dirY = { -s, c }; 
 
                 if (gizmoState_.DraggingType == DragType::Center)
                 {
-                    t.SetPosition({
+                    t.SetPosition(Math::Vector3(
                         gizmoState_.InitialTransform.PosX + delta.x,
-                        gizmoState_.InitialTransform.PosY + delta.y
-                    });
+                        gizmoState_.InitialTransform.PosY + delta.y,
+                        t.GetWorldPosition().z
+                    ));
                 }
                 else if (gizmoState_.DraggingType == DragType::XAxis)
                 {
                     float proj = delta.x * dirX.x + delta.y * dirX.y;
-                    t.SetPosition({
+                    t.SetPosition(Math::Vector3(
                         gizmoState_.InitialTransform.PosX + dirX.x * proj,
-                        gizmoState_.InitialTransform.PosY + dirX.y * proj
-                    });
+                        gizmoState_.InitialTransform.PosY + dirX.y * proj,
+                        t.GetWorldPosition().z
+                    ));
                 }
                 else if (gizmoState_.DraggingType == DragType::YAxis)
                 {
                     float proj = delta.x * dirY.x + delta.y * dirY.y;
-                    t.SetPosition({
+                    t.SetPosition(Math::Vector3(
                         gizmoState_.InitialTransform.PosX + dirY.x * proj,
-                        gizmoState_.InitialTransform.PosY + dirY.y * proj
-                    });
+                        gizmoState_.InitialTransform.PosY + dirY.y * proj,
+                        t.GetWorldPosition().z
+                    ));
                 }
                 else if (gizmoState_.DraggingType == DragType::Rotate)
                 {
@@ -460,7 +463,7 @@ namespace BixEngine::Gui
                 }
                 else if (gizmoState_.DraggingType >= DragType::ScaleTopLeft)
                 {
-                    Math::Vector2<float> localDelta = { delta.x * c + delta.y * s, -delta.x * s + delta.y * c };
+                    Math::Vector2 localDelta = { delta.x * c + delta.y * s, -delta.x * s + delta.y * c };
                     float signX = 1.0f, signY = 1.0f;
                     
                     if (gizmoState_.DraggingType == DragType::ScaleTopLeft)
@@ -512,7 +515,7 @@ namespace BixEngine::Gui
         }
     }
 
-    void SceneViewportPanel::GetActorWorldCorners(Game::Actor* actor, Math::Vector2<float>* outCorners) const
+    void SceneViewportPanel::GetActorWorldCorners(Game::Actor* actor, Math::Vector2* outCorners) const
     {
          Math::Matrix3 worldMatrix = actor->GetTransform().ToMatrix3();
          float minX = -25.0f, maxX = 25.0f;
@@ -532,7 +535,7 @@ namespace BixEngine::Gui
             minY = -extent.y; maxY = extent.y;
          }
 
-         Math::Vector2<float> corners[4] = {{minX, minY}, {maxX, minY}, {maxX, maxY}, {minX, maxY}};
+         Math::Vector2 corners[4] = {{minX, minY}, {maxX, minY}, {maxX, maxY}, {minX, maxY}};
          for(int i=0; i<4; ++i)
          {
              Math::Vector3 v{corners[i].x, corners[i].y, 1.0f};
@@ -541,9 +544,9 @@ namespace BixEngine::Gui
          }
     }
 
-    ImVec2 SceneViewportPanel::WorldToScreen(const Math::Vector2<float>& worldPos, const ImVec2& screenOffset, float viewScale) const
+    ImVec2 SceneViewportPanel::WorldToScreen(const Math::Vector2& worldPos, const ImVec2& screenOffset, float viewScale) const
     {
-        Math::Vector2<float> posToConvert = worldPos;
+        Math::Vector2 posToConvert = worldPos;
         if (auto* cam = Game::CameraComponent::GetMainCamera())
         {
              Math::Vector3 p3(worldPos.x, worldPos.y, 0.0f);

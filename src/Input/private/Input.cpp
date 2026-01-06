@@ -1,6 +1,6 @@
 #include "Input.h"
 #include <cmath>
-
+#include <utility>
 
 namespace BixEngine::Input
 {
@@ -12,9 +12,6 @@ namespace BixEngine::Input
             quitRequested_ = true;
             break;
 
-        
-        
-        
         case SDL_EVENT_KEY_DOWN:
             if (!event.key.repeat)
             {
@@ -28,9 +25,6 @@ namespace BixEngine::Input
             releasedKeys_.insert(event.key.key);
             break;
 
-        
-        
-        
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
             if (event.button.button < kMaxMouseButtons)
             {
@@ -70,7 +64,7 @@ namespace BixEngine::Input
         mouseButtonsPressed_.reset();
         mouseButtonsReleased_.reset();
         mouseDelta_ = {0.0f, 0.0f};
-        mouseWheel_ = {0, 0};
+        mouseWheel_ = {0.0f, 0.0f};
     }
 
     void Input::UpdateStatistics(float deltaTime) noexcept
@@ -85,10 +79,8 @@ namespace BixEngine::Input
         if (mouseStatisticsTimer_ >= 1.0f)
         {
             const float inv = mouseStatisticsTimer_ > 0.0f ? (1.0f / mouseStatisticsTimer_) : 0.0f;
-            mouseStats_.eventsPerSecond = static_cast<int>(
-                std::round(static_cast<float>(mouseEventsAccumulated_) * inv));
-            mouseStats_.droppedEventsPerSecond = static_cast<int>(std::round(
-                static_cast<float>(mouseEventsDroppedAccumulated_) * inv));
+            mouseStats_.eventsPerSecond = static_cast<int>(std::round(static_cast<float>(mouseEventsAccumulated_) * inv));
+            mouseStats_.droppedEventsPerSecond = static_cast<int>(std::round(static_cast<float>(mouseEventsDroppedAccumulated_) * inv));
 
             mouseEventsAccumulated_ = 0;
             mouseEventsDroppedAccumulated_ = 0;
@@ -115,7 +107,7 @@ namespace BixEngine::Input
         mouseButtonsReleased_.reset();
 
         mouseDelta_ = {0.0f, 0.0f};
-        mouseWheel_ = {0, 0};
+        mouseWheel_ = {0.0f, 0.0f};
 
         mouseStats_ = {};
         mouseEventsProcessedFrame_ = 0;
@@ -127,9 +119,6 @@ namespace BixEngine::Input
         quitRequested_ = false;
     }
 
-    
-    
-    
     bool Input::IsKeyDown(SDL_Keycode key) const noexcept
     {
         return heldKeys_.contains(key);
@@ -145,26 +134,19 @@ namespace BixEngine::Input
         return releasedKeys_.contains(key);
     }
 
-    
-    
-    
-
     bool Input::IsMouseButtonDown(int button) const noexcept
     {
-        return button >= 0 && static_cast<size_t>(button) < kMaxMouseButtons && mouseButtons_.test(
-            static_cast<size_t>(button));
+        return button >= 0 && std::cmp_less(button, kMaxMouseButtons) && mouseButtons_.test(static_cast<size_t>(button));
     }
 
     bool Input::WasMouseButtonPressed(int button) const noexcept
     {
-        return button >= 0 && static_cast<size_t>(button) < kMaxMouseButtons && mouseButtonsPressed_.test(
-            static_cast<size_t>(button));
+        return button >= 0 && std::cmp_less(button, kMaxMouseButtons) && mouseButtonsPressed_.test(static_cast<size_t>(button));
     }
 
     bool Input::WasMouseButtonReleased(int button) const noexcept
     {
-        return button >= 0 && static_cast<size_t>(button) < kMaxMouseButtons && mouseButtonsReleased_.test(
-            static_cast<size_t>(button));
+        return button >= 0 && std::cmp_less(button, kMaxMouseButtons) && mouseButtonsReleased_.test(static_cast<size_t>(button));
     }
 
     std::pair<float, float> Input::GetMouseDelta() const noexcept
@@ -172,7 +154,7 @@ namespace BixEngine::Input
         return mouseDelta_;
     }
 
-    std::pair<int, int> Input::GetMouseWheel() const noexcept
+    std::pair<float, float> Input::GetMouseWheel() const noexcept
     {
         return mouseWheel_;
     }

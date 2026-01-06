@@ -33,8 +33,8 @@ namespace BixEngine::Gui::Widgets::Layout
         if (leftElements_.empty() && rightElements_.empty())
             return;
 
-        ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, kItemSpacingY));
-        ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
+        Styling::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, kItemSpacingY));
+        Styling::ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(4.0f, 4.0f));
 
         ImGui::AlignTextToFramePadding();
 

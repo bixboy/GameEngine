@@ -35,7 +35,6 @@ namespace BixEngine::Gui
         window_ = window;
         renderer_ = renderer;
 
-        // Setup Dear ImGui context
         IMGUI_CHECKVERSION();
         ImGui::CreateContext();
 
@@ -49,9 +48,7 @@ namespace BixEngine::Gui
 
         ImGui::StyleColorsDark();
 
-        // Setup Platform/Renderer backends
-        if (!ImGui_ImplSDL3_InitForSDLRenderer(window_, renderer_) ||
-            !ImGui_ImplSDLRenderer3_Init(renderer_))
+        if (!ImGui_ImplSDL3_InitForSDLRenderer(window_, renderer_) || !ImGui_ImplSDLRenderer3_Init(renderer_))
         {
             LOG_ERROR("Failed to initialize ImGui SDL3 backend: " + std::string(SDL_GetError()));
             Shutdown();
@@ -60,7 +57,6 @@ namespace BixEngine::Gui
 
         initialized_ = true;
         
-        // Si on a une save, on ne rebuilder pas le layout par défaut
         dockLayoutBuilt_ = useSavedDockLayout_;
         rebuildDockLayout_ = !useSavedDockLayout_;
         
@@ -73,30 +69,38 @@ namespace BixEngine::Gui
 
     void GuiSystem::Shutdown() noexcept
     {
-        if (!initialized_) return;
+        if (!initialized_)
+            return;
 
         LOG_INFO("[GuiSystem] Shutdown requested...");
 
         panels_.clear();
         pendingDockUpdates_.clear();
 
-        // Save Ini manually if context exists
-        if (ImGuiContext* context = ImGui::GetCurrentContext())
+        if (ImGui::GetCurrentContext())
         {
-            ImGui::SetCurrentContext(context);
             ImGuiIO& io = ImGui::GetIO();
             if (io.IniFilename && *io.IniFilename)
             {
-                LOG_INFO("[GuiSystem] Saving ImGui layout...");
                 ImGui::SaveIniSettingsToDisk(io.IniFilename);
             }
         }
 
+        LOG_INFO("[GuiSystem] Shutting down ImGui Backends...");
+        ImGui::DestroyPlatformWindows();
         ImGui_ImplSDLRenderer3_Shutdown();
         ImGui_ImplSDL3_Shutdown();
 
         if (ImGui::GetCurrentContext())
         {
+            if (ImGuiViewport* main_viewport = ImGui::GetMainViewport())
+            {
+                main_viewport->PlatformHandle = nullptr;
+                main_viewport->PlatformUserData = nullptr;
+                main_viewport->RendererUserData = nullptr;
+            }
+
+            LOG_INFO("[GuiSystem] Destroying ImGui Context...");
             ImGui::DestroyContext();
         }
 
@@ -207,6 +211,13 @@ namespace BixEngine::Gui
 
         ImGui::Render();
         ImGui_ImplSDLRenderer3_RenderDrawData(ImGui::GetDrawData(), renderer_);
+
+        ImGuiIO& io = ImGui::GetIO();
+        if (io.ConfigFlags & ImGuiConfigFlags_ViewportsEnable)
+        {
+            ImGui::UpdatePlatformWindows();
+            ImGui::RenderPlatformWindowsDefault();
+        }
 
         if (bShowDockDebugOverlay_)
             DumpGuiState();
@@ -357,6 +368,10 @@ namespace BixEngine::Gui
 
         for (GuiPanel* panel : panelsToProcess)
         {
+            if (!panel) continue;
+
+            // LOG_INFO("[GuiSystem] Docking panel: " + panel->GetName());
+
             DockSpaceRegion region = panel->HasDockingPreference() ? panel->GetDockingPreference() : DockSpaceRegion::Center;
 
             std::size_t index = static_cast<std::size_t>(region);

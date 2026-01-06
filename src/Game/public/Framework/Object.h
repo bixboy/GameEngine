@@ -1,19 +1,14 @@
 #pragma once
 #include <istream>
 #include <ostream>
-
 #include "Containers/String.h"
 #include "Math/Transform.h"
-
-namespace Bix = BixEngine;
-
 #include "Object.generated.h"
 
 
 namespace BixEngine::Game
 {
     BCLASS()
-
     class Object
     {
         GENERATED_BODY()
@@ -21,45 +16,50 @@ namespace BixEngine::Game
     public:
         Object();
         explicit Object(String name);
-
         Object(String name, const Math::Transform& transform);
+        
         virtual ~Object() = default;
 
         [[nodiscard]] virtual String GetTypeName() const noexcept;
 
+        // --- Identité ---
         [[nodiscard]] String GetUUID() const noexcept { return uuid_; }
         void SetUUID(String uuid);
+        [[nodiscard]] bool IsValid() const noexcept { return !uuid_.empty(); }
 
         [[nodiscard]] String GetName() const noexcept { return name_; }
         void SetName(String name);
 
+        // --- Transform Wrappers ---
+        
+        // Accès direct au transform
         [[nodiscard]] Math::Transform GetTransform() const noexcept { return transform_; }
         [[nodiscard]] const Math::Transform& GetTransformRef() const noexcept { return transform_; }
         [[nodiscard]] Math::Transform& GetTransformRef() noexcept { return transform_; }
         void SetTransform(const Math::Transform& transform) noexcept { transform_ = transform; }
 
-        [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.GetLocalPosition(); }
-        [[nodiscard]] Math::Vector3 GetWorldPosition() const noexcept { return transform_.GetWorldPosition(); }
-        void SetPosition(const Math::Vector3& position) noexcept { transform_.SetPosition(position); }
+        // Position
+        [[nodiscard]] Math::Vec3 GetPosition() const noexcept { return transform_.GetLocalPosition(); } //
+        [[nodiscard]] Math::Vec3 GetWorldPosition() const noexcept { return transform_.GetWorldPosition(); } //
+        
+        void SetPosition(const Math::Vec3& position) noexcept { transform_.SetPosition(position); } //
         void SetPosition(float x, float y, float z = 0.0f) noexcept { transform_.SetPosition({x, y, z}); }
 
-        [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.GetLocalRotation(); }
-        void SetRotation(const Math::Rotator& rotation) noexcept { transform_.SetRotation(rotation); }
+        // Rotation
+        [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.GetLocalRotation(); } //
+        void SetRotation(const Math::Rotator& rotation) noexcept { transform_.SetRotation(rotation); } //
 
-        [[nodiscard]] Math::Vector3 GetScale() const noexcept { return transform_.GetLocalScale(); }
-        void SetScale(const Math::Vector3& scale) noexcept { transform_.SetScale(scale); }
+        // Scale
+        [[nodiscard]] Math::Vec3 GetScale() const noexcept { return transform_.GetLocalScale(); } //
+        void SetScale(const Math::Vec3& scale) noexcept { transform_.SetScale(scale); } //
 
+        // --- Sérialisation ---
         virtual void SerializeBinary(std::ostream& stream) const;
         virtual void DeserializeBinary(std::istream& stream);
 
     protected:
-        virtual void SerializeBinaryImpl(std::ostream&) const
-        {
-        }
-
-        virtual void DeserializeBinaryImpl(std::istream&)
-        {
-        }
+        virtual void SerializeBinaryImpl(std::ostream&) const {}
+        virtual void DeserializeBinaryImpl(std::istream&) {}
 
         template <typename T>
         static void WritePrimitive(std::ostream& stream, const T& value)

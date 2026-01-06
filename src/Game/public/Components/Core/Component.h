@@ -3,48 +3,44 @@
 #include "Containers/String.h"
 #include "Renderer.h"
 #include "Component.generated.h"
+#include "Component.generated.h"
+#include "Math/Transform.h"
+
+namespace BixEngine::Game { class Actor; }
+
 
 namespace BixEngine::Game
 {
-    class Actor;
-}
-
-namespace BixEngine::resources
-{
-    class ComponentPrefab;
-}
-
-namespace BixEngine::Game
-{
-
     BCLASS()
-
     class Component
     {
         GENERATED_BODY()
 
     public:
-        using Super = Component;
-
         Component() = default;
         explicit Component(Actor* owner) : owner_(owner) {}
 
         virtual ~Component() = default;
 
-        virtual void BeginPlay(){}
-        virtual void Update(float  ){}
-        virtual void Render(Graphics::Renderer&  ) const{}
+        virtual void BeginPlay() {}
+        virtual void Update(float deltaTime) { (void)deltaTime; }
+        virtual void Render(Graphics::Renderer& renderer) const { (void)renderer; }
+        
+        virtual void DrawInspectorUI() {}
 
         [[nodiscard]] virtual String GetTypeName() const { return "Component"; }
-
-        virtual void DrawInspectorUI(){}
-        
-        virtual void LoadFromPrefab(const resources::ComponentPrefab*  ) {}
 
         void SetOwner(Actor* owner) { owner_ = owner; }
         [[nodiscard]] Actor* GetOwner() const { return owner_; }
 
+        [[nodiscard]] bool IsActive() const { return active_; }
+        void SetActive(bool active) { active_ = active; }
+
+        [[nodiscard]] Math::Transform& GetTransform();
+        [[nodiscard]] const Math::Transform& GetTransform() const;
+
     protected:
         Actor* owner_{nullptr};
+        bool active_{true};
     };
 }

@@ -8,11 +8,9 @@ namespace BixEngine::Gui::Widgets
     {
         ImGui::PushID(label);
 
-        Utils::DrawPropertyLabel(label, columnWidth);
-
         bool changed = ImGui::Checkbox("##BoolVal", &value);
 
-        ImGui::Columns(1);
+        // ImGui::Columns(1); // Removed to fix table layout
         ImGui::PopID();
         
         return changed;

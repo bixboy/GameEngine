@@ -20,6 +20,7 @@ namespace BixEngine::Game
             {
                 return static_cast<char>(std::tolower(ch));
             });
+            
             return value;
         }
 
@@ -43,7 +44,9 @@ namespace BixEngine::Game
 
         void CollectAtlasFiles(std::vector<std::filesystem::path>& outAtlases)
         {
+            outAtlases.clear();
             const std::filesystem::path root = DetermineAtlasRoot();
+            
             if (root.empty())
                 return;
 
@@ -52,38 +55,20 @@ namespace BixEngine::Game
             {
                 if (ec)
                     break;
-
+                
                 if (!it->is_regular_file())
                     continue;
 
-                std::string extension = ToLower(it->path().extension().generic_string());
-                if (extension == ".atlas")
-                    outAtlases.push_back(it->path());
+                if (ToLower(it->path().extension().string()) == ".atlas")
+                {
+                    outAtlases.push_back(std::filesystem::relative(it->path(), root, ec)); 
+                }
             }
 
-            std::sort(outAtlases.begin(), outAtlases.end(),
-              [](const std::filesystem::path& a, const std::filesystem::path& b)
-              {
-                  return a.generic_string() < b.generic_string();
-              });
-        }
-
-        std::string MakeDisplayName(const std::filesystem::path& path, const std::filesystem::path& root)
-        {
-            if (root.empty())
-                return path.generic_string();
-
-            std::error_code ec;
-            const std::filesystem::path relative = std::filesystem::relative(path, root, ec);
-            if (!ec && !relative.empty())
-                return relative.generic_string();
-
-            return path.generic_string();
+            std::sort(outAtlases.begin(), outAtlases.end());
         }
     }
 
-
-    
     SpriteAnimatorComponent::SpriteAnimatorComponent(Actor* owner) : SpriteComponent(owner)
     {
     }
@@ -92,12 +77,11 @@ namespace BixEngine::Game
     {
         SpriteComponent::BeginPlay();
 
-        LOG_INFO("ANIMATOR_DEBUG: BeginPlay. AtlasPtr Valid: " + String(atlas_ ? "YES" : "NO") + ", AtlasPath: '" + atlasPath_ + "'");
-
         if (!atlas_ && !atlasPath_.IsEmpty())
+        {
             LoadSpriteAtlas(atlasPath_, defaultAnimation_);
-
-        if (atlas_)
+        }
+        else if (atlas_)
         {
             animator_.SetSpriteAtlas(atlas_);
             if (!defaultAnimation_.IsEmpty() && atlas_->GetAnimation(defaultAnimation_))
@@ -123,19 +107,17 @@ namespace BixEngine::Game
 
     bool SpriteAnimatorComponent::LoadSpriteAtlas(const String& atlasPath, const String& defaultAnimation)
     {
-        auto& resourceManager = resources::ResourceManager::Get();
-        auto atlas = resourceManager.Get<resources::SpriteAtlas>(atlasPath);
+        auto& resourceManager = Resources::ResourceManager::Get();
+        
+        auto atlas = resourceManager.Get<Resources::SpriteAtlas>(atlasPath);
         if (!atlas)
         {
-            LOG_ERROR("❌ Failed to load sprite atlas: " + atlasPath);
-
+            LOG_ERROR("Failed to load sprite atlas: " + atlasPath);
+            
             atlas_.reset();
             animator_.SetSpriteAtlas(nullptr);
-            atlasPath_.Clear();
-            defaultAnimation_.Clear();
-            currentAnimation_.Clear();
             SetTexture(nullptr);
-
+            
             return false;
         }
 
@@ -159,8 +141,8 @@ namespace BixEngine::Game
         }
         else
         {
-            currentAnimation_.Clear();
-            defaultAnimation_.Clear();
+            currentAnimation_.clear();
+            defaultAnimation_.clear();
         }
 
         if (!currentAnimation_.IsEmpty())
@@ -178,50 +160,23 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::Play()
     {
-        if (currentAnimation_.IsEmpty())
-        {
-            LOG_WARNING("⚠️ No animation selected — cannot play.");
+        if (currentAnimation_.IsEmpty() || !atlas_)
             return;
-        }
 
-        if (!atlas_)
+        if (animator_.Play(currentAnimation_))
         {
-            LOG_WARNING("⚠️ Cannot play animation '" + currentAnimation_ + "': No SpriteAtlas assigned.");
-            return;
+            ApplyCurrentFrame(false);
         }
-
-        if (!atlas_->GetAnimation(currentAnimation_))
-        {
-            LOG_WARNING("⚠️ Animation '" + currentAnimation_ + "' not found in atlas: " + atlas_->GetPath());
-            return;
-        }
-
-        if (!animator_.Play(currentAnimation_))
-        {
-            LOG_WARNING("⚠️ Failed to start animation: " + currentAnimation_);
-            return;
-        }
-
-        ApplyCurrentFrame(false);
     }
 
     void SpriteAnimatorComponent::Play(const String& animationName)
     {
-        if (animationName.IsEmpty())
-        {
-            LOG_WARNING("⚠️ Cannot play animation with empty name.");
+        if (animationName.IsEmpty() || !atlas_)
             return;
-        }
-
-        if (!atlas_)
-        {
-            LOG_WARNING("⚠️ Cannot play animation '" + animationName + "': No SpriteAtlas assigned.");
-            return;
-        }
 
         if (!atlas_->GetAnimation(animationName))
         {
-            LOG_WARNING("⚠️ Animation '" + animationName + "' not found in atlas: " + atlas_->GetPath());
+            LOG_WARNING("Animation '" + animationName + "' not found in atlas.");
             return;
         }
 
@@ -237,14 +192,16 @@ namespace BixEngine::Game
 
     void SpriteAnimatorComponent::ApplyCurrentFrame(bool allowFallbackToDefault)
     {
-        const resources::SpriteFrame* frame = animator_.GetCurrentFrame();
+        const Resources::SpriteFrame* frame = animator_.GetCurrentFrame();
 
         if (!frame && allowFallbackToDefault && atlas_ && !currentAnimation_.IsEmpty())
         {
-            const resources::SpriteAnimation* animation = atlas_->GetAnimation(currentAnimation_);
-            if (animation && !animation->frameIndices.empty())
+            if (const auto* anim = atlas_->GetAnimation(currentAnimation_))
             {
-                frame = atlas_->GetFrame(animation->frameIndices.front());
+                if (!anim->frameIndices.empty())
+                {
+                    frame = atlas_->GetFrame(anim->frameIndices.front());
+                }
             }
         }
 
@@ -255,22 +212,12 @@ namespace BixEngine::Game
         }
         else if (atlas_)
         {
-            
-            
             SetTexture(nullptr);
         }
     }
+
     void SpriteAnimatorComponent::DrawInspectorUI()
     {
         SpriteComponent::DrawInspectorUI();
-
-        
-        
-        if (atlas_ && atlasPath_ != atlas_->GetPath())
-        {
-            String oldPath = atlasPath_;
-            atlasPath_ = atlas_->GetPath();
-            LOG_INFO("ANIMATOR_DEBUG: Inspector Synced AtlasPath. Old: '" + oldPath + "' New: '" + atlasPath_ + "'");
-        }
     }
 }

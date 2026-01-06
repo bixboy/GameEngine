@@ -20,56 +20,36 @@ namespace BixEngine::Input
     public:
         Input() = default;
 
-        
         void ProcessEvent(const SDL_Event& event);
 
-        
         void PostUpdate() noexcept;
 
         void UpdateStatistics(float deltaTime) noexcept;
         void NotifyMouseEventDropped() noexcept;
-
-        
         void ResetState() noexcept;
 
-        
-        
-        
-
+        // --- Clavier ---
         [[nodiscard]] bool IsKeyDown(SDL_Keycode key) const noexcept;
+        [[nodiscard]] bool IsKeyHeld(SDL_Keycode key) const noexcept { return IsKeyDown(key); }
         [[nodiscard]] bool WasKeyPressed(SDL_Keycode key) const noexcept;
         [[nodiscard]] bool WasKeyReleased(SDL_Keycode key) const noexcept;
 
-        
-        
-        
-
+        // --- Souris ---
         [[nodiscard]] bool IsMouseButtonDown(int button) const noexcept;
         [[nodiscard]] bool WasMouseButtonPressed(int button) const noexcept;
         [[nodiscard]] bool WasMouseButtonReleased(int button) const noexcept;
+        
         [[nodiscard]] std::pair<float, float> GetMouseDelta() const noexcept;
-        [[nodiscard]] std::pair<int, int> GetMouseWheel() const noexcept;
+        
+        [[nodiscard]] std::pair<float, float> GetMouseWheel() const noexcept;
 
         [[nodiscard]] const MouseStatistics& GetMouseStatistics() const noexcept { return mouseStats_; }
-
-        
-        
-        
-
         [[nodiscard]] bool IsQuitRequested() const noexcept { return quitRequested_; }
 
     private:
-        
-        
-        
-
         std::unordered_set<SDL_Keycode> heldKeys_{};
         std::unordered_set<SDL_Keycode> pressedKeys_{};
         std::unordered_set<SDL_Keycode> releasedKeys_{};
-
-        
-        
-        
 
         static constexpr size_t kMaxMouseButtons = 8;
         std::bitset<kMaxMouseButtons> mouseButtons_{};
@@ -85,10 +65,6 @@ namespace BixEngine::Input
         int mouseEventsAccumulated_{0};
         int mouseEventsDroppedAccumulated_{0};
         float mouseStatisticsTimer_{0.0f};
-
-        
-        
-        
 
         bool quitRequested_{false};
     };

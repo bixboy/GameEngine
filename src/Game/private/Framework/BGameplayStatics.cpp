@@ -6,7 +6,6 @@
 #include "Serializer/PrefabSerializer.h"
 #include <filesystem>
 #include <vector>
-#include <functional>
 
 
 namespace
@@ -22,7 +21,7 @@ namespace
 
         if (worldContext == static_cast<void*>(activeScene))
             return &manager;
-
+        
         const auto& actors = activeScene->GetActors();
         for (const auto& actor : actors)
         {
@@ -39,7 +38,7 @@ namespace
                     return &manager;
             }
         }
-
+        
         return nullptr;
     }
 }
@@ -51,7 +50,7 @@ namespace BixEngine::Game
         SceneManager* manager = SceneManager::GetActiveSceneManager();
         if (!manager)
         {
-            LOG_ERROR("No active SceneManager available to resolve world context.");
+            LOG_ERROR("No active SceneManager available.");
             return nullptr;
         }
 
@@ -68,31 +67,19 @@ namespace BixEngine::Game
     void BGameplayStatics::OpenScene(void* worldContext, const String& sceneName)
     {
         if (sceneName.empty())
-        {
-            LOG_ERROR("Cannot open a scene with an empty name.");
             return;
-        }
-
-        SceneManager* manager = ResolveSceneManager(worldContext);
-        if (!manager)
-            return;
-
-        manager->ChangeSceneByName(sceneName);
+        
+        if (auto* manager = ResolveSceneManager(worldContext))
+            manager->ChangeSceneByName(sceneName);
     }
 
     void BGameplayStatics::LoadScene(void* worldContext, const String& sceneName)
     {
         if (sceneName.empty())
-        {
-            LOG_ERROR("Cannot load a scene with an empty name.");
             return;
-        }
-
-        SceneManager* manager = ResolveSceneManager(worldContext);
-        if (!manager)
-            return;
-
-        manager->LoadScene(sceneName);
+        
+        if (auto* manager = ResolveSceneManager(worldContext))
+            manager->LoadScene(sceneName);
     }
 
     void BGameplayStatics::PreloadScene(void* worldContext, const String& sceneName)
@@ -103,16 +90,21 @@ namespace BixEngine::Game
     void BGameplayStatics::UnloadScene(void* worldContext, const String& sceneName)
     {
         if (sceneName.empty())
+            return;
+        
+        if (auto* manager = ResolveSceneManager(worldContext))
+            manager->UnloadScene(sceneName);
+    }
+
+    void BGameplayStatics::ReloadScene()
+    {
+        if (auto* manager = SceneManager::GetActiveSceneManager())
         {
-            LOG_ERROR("Cannot unload a scene with an empty name.");
-            return;
+            if (auto* active = manager->GetActiveScene())
+            {
+                 manager->ChangeSceneByName(active->GetName());
+            }
         }
-
-        SceneManager* manager = ResolveSceneManager(worldContext);
-        if (!manager)
-            return;
-
-        manager->UnloadScene(sceneName);
     }
 
     Scene* BGameplayStatics::GetActiveScene() noexcept
@@ -122,53 +114,21 @@ namespace BixEngine::Game
 
     Actor* BGameplayStatics::SpawnPrefabInternal(Scene* scene, const String& path)
     {
-        if (!scene || path.IsEmpty()) return nullptr;
+        if (!scene || path.IsEmpty())
+            return nullptr;
 
-         std::filesystem::path prefabPath = path.ToStdString();
-                
+        std::filesystem::path prefabPath = path.Std();
         
-        auto actorUnique = BixEngine::Serialization::PrefabSerializer::LoadPrefab(prefabPath);
-        
+        auto actorUnique = Serialization::PrefabSerializer::LoadPrefab(prefabPath);
+    
         if (!actorUnique)
         {
             LOG_ERROR("SpawnPrefab: Failed to load prefab path: " + path);
             return nullptr;
         }
 
-        
-        
-        struct HierarchyNode { Actor* actor; Actor* parent; };
-        std::vector<HierarchyNode> hierarchy;
-        std::vector<Actor*> descendants;
-
-        std::function<void(Actor*)> collect = [&](Actor* node)
-        {
-            for(auto* child : node->GetChildren())
-            {
-                hierarchy.push_back({child, node});
-                descendants.push_back(child);
-                collect(child);
-            }
-        };
-        collect(actorUnique.get());
-
         Actor* rootPtr = actorUnique.get();
-
-        
         scene->AddActor(std::move(actorUnique));
-
-        
-        for(auto* child : descendants)
-        {
-            scene->AddActor(std::unique_ptr<Actor>(child));
-        }
-
-        
-        for(const auto& node : hierarchy)
-        {
-            if (node.actor && node.parent)
-                node.actor->SetParent(node.parent);
-        }
 
         return rootPtr;
     }

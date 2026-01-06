@@ -102,7 +102,7 @@ namespace BixEngine::Gui
         float distance = 5.0f; 
         
         state->cameraActor->SetPosition({pos.x + distance, pos.y + distance * 0.5f, pos.z + distance}); 
-        state->cameraActor->GetComponent<Game::CameraComponent>()->LookAt(pos);
+        state->cameraActor->GetComponent<Game::CameraComponent>()->GetTransform().LookAt(pos);
     }
 
     void ActorEditorWindow::DrawPanelContents(GuiPanel& panel)

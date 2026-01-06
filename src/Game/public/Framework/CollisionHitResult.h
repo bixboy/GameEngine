@@ -7,8 +7,8 @@ namespace BixEngine::Game
     struct CollisionHitResult
     {
         Actor* OtherActor = nullptr;
-        Math::Vector2<float> ContactPoint;
-        Math::Vector2<float> Normal;
+        Math::Vector2 ContactPoint;
+        Math::Vector2 Normal;
         float Impulse = 0.0f;
     };
 }

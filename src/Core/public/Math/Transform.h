@@ -14,7 +14,6 @@ namespace BixEngine::Math
         Rotator m_LocalRotation{Rotator::Zero()};
         Vec3 m_LocalScale{Vec3::One()};
 
-        // Cache system
         mutable Matrix4 m_LocalMatrix;
         mutable Matrix4 m_WorldMatrix;
         mutable bool m_IsDirty = true;
@@ -49,42 +48,18 @@ namespace BixEngine::Math
 
         void LookAt(const Vec3& target, const Vec3& up = Vec3::Up())
         {
-            // Calculate direction to target
-            // Assuming world space calculation for now, but we set local rotation.
-            // If parented, we might need to adjust.
-            // Simplified implementation:
-            // Calculate world rotation needed.
-            // If parent, Convert world rotation to local.
-            
             Vec3 currentPos = GetWorldPosition();
             Vec3 forward = (target - currentPos).Normalized();
             
-            // Handle edge case where target is same as position
-            if (forward.LengthSquared() < 0.0001f) return;
-
-            // Create LookAt rotation (Quaternion/Rotator)
-            // Assuming Rotator::LookAt or Quaternion::LookRotation exists in the engine math lib.
-            // If not, we need to construct it.
-            // Let's assume Rotator has a static LookAt or we use Matrix.
+            if (forward.LengthSquared() < 0.0001f)
+                return;
             
-            // Method 1: Matrix LookAt
             Matrix4 lookAtMatrix = Matrix4::LookAt(currentPos, target, up);
-            // Invert because LookAt creates a View Matrix (inverse of camera transform) usually?
-            // Wait, Transform usually represents the "Model" matrix.
-            // A "LoopAt" for an object means orienting the object Z+ (or forward) towards target.
-            // Matrix4::LookAt usually creates a View Matrix (Camera at Eye looking at Target).
-            // ViewMatrix = Inverse(CameraTransform).
-            // So CameraTransform = Inverse(ViewMatrix).
-            
             Matrix4 objectTransform = Matrix4::LookAt(currentPos, target, up).Inverse();
             Rotator worldRot = objectTransform.GetRotation();
             
             if (m_Parent)
             {
-                 // Convert worldRot to localRot
-                 // World = Parent * Local
-                 // Local = Inverse(Parent) * World ?? Rotations add up.
-                 // LocalRot = WorldRot - ParentRot ?? Roughly.
                  m_LocalRotation = worldRot - m_Parent->GetWorldRotation();
             }
             else
@@ -100,9 +75,7 @@ namespace BixEngine::Math
             Rotator rot = GetWorldRotation();
             Vec3 scale = GetWorldScale();
             
-            return Matrix3::Translation(pos.x, pos.y) * 
-                   Matrix3::Rotation(rot.yaw) * 
-                   Matrix3::Scale(scale.x, scale.y);
+            return Matrix3::Translation(pos.x, pos.y) * Matrix3::Rotation(rot.yaw) * Matrix3::Scale(scale.x, scale.y);
         }
 
         // --- Hiérarchie ---

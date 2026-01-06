@@ -7,6 +7,7 @@
 #include "Renderer.h"
 #include "Input.h"
 #include "InputManager.h"
+#include "Gui/Core/GuiManager.h"
 
 
 namespace BixEngine::Core
@@ -102,7 +103,7 @@ namespace BixEngine::Core
 
     void SubsystemManager::OnWindowResize(int width, int height)
     {
-        LOG_INFO("Window resized to {}x{}", width, height);
+        LOG_INFO("Window resized to " + std::to_string(width) + "x" + std::to_string(height));
 
         if (rendererRef_)
         {
@@ -143,7 +144,7 @@ namespace BixEngine::Core
 
     void SubsystemManager::OnFileDrop(const char* filePath)
     {
-        LOG_INFO("File dropped: {}", filePath);
+        LOG_INFO("File dropped: " + String(filePath));
         
         // TODO: Envoyer ça à un AssetManager ou charger la scène si c'est un .scene
     }

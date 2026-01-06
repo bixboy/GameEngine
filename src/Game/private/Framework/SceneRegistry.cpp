@@ -1,17 +1,21 @@
 #include "Framework/SceneRegistry.h"
 #include <unordered_map>
+#include <mutex>
 #include "Debug/Logger.h"
 #include "Framework/Scene.h"
 
-
 namespace
 {
-    using FactoryMap = std::unordered_map<BixEngine::String, BixEngine::Game::SceneFactory>;
-
-    FactoryMap& GetSceneFactoryMap()
+    struct RegistryData
     {
-        static FactoryMap factories;
-        return factories;
+        std::unordered_map<BixEngine::String, BixEngine::Game::SceneFactory> factories;
+        std::mutex mutex;
+    };
+
+    RegistryData& GetRegistryData()
+    {
+        static RegistryData data;
+        return data;
     }
 }
 
@@ -31,21 +35,23 @@ namespace BixEngine::Game
             return;
         }
 
-        auto& registry = GetSceneFactoryMap();
+        auto& data = GetRegistryData();
+        std::lock_guard lock(data.mutex);
 
-        if (const auto it = registry.find(name); it != registry.end())
+        if (data.factories.contains(name))
         {
             LOG_WARNING("Scene already registered, replacing existing factory: " + name);
         }
 
-        registry[name] = std::move(factory);
+        data.factories[name] = std::move(factory);
     }
 
     std::unique_ptr<Scene> SceneRegistry::Create(const String& name)
     {
-        auto& registry = GetSceneFactoryMap();
+        auto& data = GetRegistryData();
+        std::lock_guard lock(data.mutex);
 
-        if (const auto it = registry.find(name); it != registry.end())
+        if (const auto it = data.factories.find(name); it != data.factories.end())
         {
             if (it->second)
                 return it->second();
@@ -57,5 +63,20 @@ namespace BixEngine::Game
         LOG_ERROR("Scene not registered: " + name);
         return nullptr;
     }
-}
 
+    std::vector<String> SceneRegistry::GetAvailableScenes()
+    {
+        auto& data = GetRegistryData();
+        std::lock_guard lock(data.mutex);
+
+        std::vector<String> scenes;
+        scenes.reserve(data.factories.size());
+
+        for (const auto& name : data.factories | std::views::keys)
+        {
+            scenes.push_back(name);
+        }
+
+        return scenes;
+    }
+}

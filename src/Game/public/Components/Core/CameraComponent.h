@@ -2,8 +2,9 @@
 #include "Components/Core/Component.h"
 #include "Math/Vector2.h"
 #include "Math/Vector3.h"
-#include <SDL3/SDL_pixels.h>
+#include "Math/Color.h"
 #include "CameraComponent.generated.h"
+
 
 namespace BixEngine::Game
 {
@@ -21,42 +22,50 @@ namespace BixEngine::Game
 
         void BeginPlay() override;
         void OnDestroy();
-        void DrawInspectorUI() override;
-
-        [[nodiscard]] String GetTypeName() const override { return "CameraComponent"; }
-
+        
+        // --- Gestion Caméra Principale ---
         void SetAsMainCamera();
-        void LookAt(const Math::Vector3& target);
+        static CameraComponent* GetMainCamera();
+
+        // --- Utilitaires ---
+        void SetAspectRatio(float ratio);
+        [[nodiscard]] float GetAspectRatio() const { return aspectRatio_; }
 
         [[nodiscard]] Math::Vector2 WorldToScreen(const Math::Vector3& worldPos) const;
         [[nodiscard]] Math::Vector2 ScreenToWorld(const Math::Vector2& screenPos) const;
 
-        static CameraComponent* GetMainCamera();
+        // --- Matrices ---
+        
+        [[nodiscard]] Math::Matrix4 GetViewMatrix() const;
+        [[nodiscard]] Math::Matrix4 GetProjectionMatrix() const;
 
-        
-        
-        BPROPERTY()
+        // --- Propriétés ---
+
+        BPROPERTY(Category="Camera|Settings")
         float Zoom{1.0f};
 
-        BPROPERTY()
+        BPROPERTY(Category="Camera|Settings")
         Math::Vector2 Offset{0.0f, 0.0f};
 
-        BPROPERTY()
-        SDL_Color ClearColor{0, 0, 0, 255}; 
+        BPROPERTY(Category="Camera|Settings")
+        Math::Color ClearColor{0.0f, 0.0f, 0.0f, 1.0f};
 
-        BPROPERTY()
-        bool IsActive{false};
+        BPROPERTY(Category="Camera|Settings")
+        bool StartAsMainCamera{true};
 
-        BPROPERTY(Category="Constraints")
+        // --- Contraintes ---
+
+        BPROPERTY(Category="Camera|Constraints")
         bool LockX{false};
 
-        BPROPERTY(Category="Constraints")
+        BPROPERTY(Category="Camera|Constraints")
         bool LockY{false};
 
     private:
-        static CameraComponent* s_MainCamera;
-        
-        Math::Vector3 initialActorPos_{0.0f, 0.0f, 0.0f};
+        Math::Vector2 GetViewportSize() const;
 
+        static CameraComponent* s_MainCamera;
+        Math::Vector3 initialPosition_{0.0f, 0.0f, 0.0f};
+        float aspectRatio_{16.0f / 9.0f};
     };
 }

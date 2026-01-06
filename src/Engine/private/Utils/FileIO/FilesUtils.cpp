@@ -24,7 +24,7 @@ namespace BixEngine::Utils
         fs::create_directories(dir, ec);
         if (ec)
         {
-            return LogAndStoreError(outError, String("Failed to create directory: ") + dir.string() + " (" + ec.message() + ")");
+            return LogAndStoreError(outError, String("Failed to create directory: ") + String(dir.string()) + " (" + String(ec.message()) + ")");
         }
 
         return true;
@@ -60,7 +60,7 @@ namespace BixEngine::Utils
 
         if (ec)
         {
-            return LogAndStoreError(outError, String("Failed to remove: ") + path.string() + " (" + ec.message() + ")");
+            return LogAndStoreError(outError, String("Failed to remove: ") + String(path.string()) + " (" + String(ec.message()) + ")");
         }
         
         return true;
@@ -72,7 +72,7 @@ namespace BixEngine::Utils
 
         if (!fs::exists(source))
         {
-            return LogAndStoreError(outError, String("Source file not found: ") + source.string());
+            return LogAndStoreError(outError, String("Source file not found: ") + String(source.string()));
         }
 
         if (destination.has_parent_path())
@@ -85,7 +85,7 @@ namespace BixEngine::Utils
 
         if (fs::exists(destination) && !overwrite)
         {
-            outError = String("Destination file already exists: ") + destination.string();
+            outError = String("Destination file already exists: ") + String(destination.string());
             LOG_WARNING(outError);
             return false;
         }
@@ -94,7 +94,7 @@ namespace BixEngine::Utils
 
         if (ec)
         {
-            return LogAndStoreError(outError, String("Failed to copy file: ") + source.string() + " -> " + destination.string());
+            return LogAndStoreError(outError, String("Failed to copy file: ") + String(source.string()) + " -> " + String(destination.string()));
         }
 
         return true;
@@ -111,14 +111,14 @@ namespace BixEngine::Utils
 
         if (!fs::exists(source))
         {
-            return LogAndStoreError(outError, String("Source not found: ") + source.string());
+            return LogAndStoreError(outError, String("Source not found: ") + String(source.string()));
         }
 
         if (fs::exists(destination))
         {
             if (!overwrite)
             {
-                return LogAndStoreError(outError, String("Destination already exists: ") + destination.string());
+                return LogAndStoreError(outError, String("Destination already exists: ") + String(destination.string()));
             }
             
             fs::remove(destination, ec); 
@@ -132,7 +132,7 @@ namespace BixEngine::Utils
         fs::rename(source, destination, ec);
         if (ec)
         {
-            return LogAndStoreError(outError, String("Failed to rename: ") + ec.message());
+            return LogAndStoreError(outError, String("Failed to rename: ") + String(ec.message()));
         }
 
         return true;
@@ -150,7 +150,7 @@ namespace BixEngine::Utils
         std::ofstream file(path, std::ios::out | std::ios::trunc);
         if (!file.is_open())
         {
-            return LogAndStoreError(outError, String("Failed to open file for writing: ") + path.string());
+            return LogAndStoreError(outError, String("Failed to open file for writing: ") + String(path.string()));
         }
 
         file << content;

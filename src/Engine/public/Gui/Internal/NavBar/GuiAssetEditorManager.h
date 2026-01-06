@@ -86,6 +86,7 @@ namespace BixEngine::Gui
             std::filesystem::path assetPath;
             std::string navigationId;
             std::string buttonLabel;
+            LayoutID layoutId;
             AssetMetadata metadata;
             PanelSet panels{};
             std::shared_ptr<BaseAssetEditorWindow::SharedState> sharedState;

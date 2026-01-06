@@ -5,6 +5,7 @@
 #include "Ressources/RessourcesClass/AudioContainer.h"
 #include "AudioSourceComponent.generated.h"
 
+
 namespace BixEngine::Game
 {
     BCLASS()
@@ -22,24 +23,30 @@ namespace BixEngine::Game
         void BeginPlay() override;
         void Update(float dt) override;
         
-        
         void Play();
         void Stop();
+        
+        void SetPaused(bool paused);
+        bool IsPlaying() const;
+
         void SetVolume(float volume);
+        void SetPitch(float pitch);
+
+        void DrawInspectorUI() override;
 
         [[nodiscard]] String GetTypeName() const override { return "AudioSourceComponent"; }
 
-        
-        
-        
         BPROPERTY(EditAnywhere, Category="Audio Settings")
-        std::shared_ptr<resources::AudioClip> AudioClip;
+        std::shared_ptr<Resources::AudioClip> AudioClip;
 
         BPROPERTY(EditAnywhere, Category="Audio Settings")
-        std::shared_ptr<resources::AudioContainer> AudioContainer;
+        std::shared_ptr<Resources::AudioContainer> AudioContainer;
 
         BPROPERTY(EditAnywhere, Category="Audio Settings")
         float Volume = 1.0f;
+
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
+        float Pitch = 1.0f;
 
         BPROPERTY(EditAnywhere, Category="Audio Settings")
         bool Loop = false;
@@ -49,6 +56,9 @@ namespace BixEngine::Game
 
         BPROPERTY(EditAnywhere, Category="Audio Settings")
         bool IsMusic = false;
+
+        BPROPERTY(EditAnywhere, Category="Audio Settings")
+        bool PlayOnAwake = false;
 
     private:
         struct Impl;

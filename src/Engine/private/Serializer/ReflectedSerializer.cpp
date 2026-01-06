@@ -180,8 +180,18 @@ namespace BixEngine::Serialization
                     arr.resize(count);
                     for (uint32_t k = 0; k < count; ++k)
                     {
-                        if (!r.ReadPrimitive(arr[k]))
-                            return false;
+                        if constexpr (std::is_same_v<T, bool>)
+                        {
+                            bool temp;
+                            if (!r.ReadPrimitive(temp))
+                                return false;
+                            arr[k] = temp;
+                        }
+                        else
+                        {
+                            if (!r.ReadPrimitive(arr[k]))
+                                return false;
+                        }
                     }
                     
                     return true; 

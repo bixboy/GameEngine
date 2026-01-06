@@ -23,8 +23,6 @@ namespace BixEngine::Game
         LOG_INFO("Player::SetupInput called");
     }
     
-
-
     void Player::BeginPlay()
     {
         RefreshSpriteComponent();
@@ -51,7 +49,7 @@ namespace BixEngine::Game
     {
         if (physicsComponent_)
         {
-            Math::Vector2<float> currentVel = physicsComponent_->GetLinearVelocity();
+            Math::Vector2 currentVel = physicsComponent_->GetLinearVelocity();
             float targetX = moveSpeed_;
             
             physicsComponent_->SetLinearVelocity({ targetX, currentVel.y });

@@ -48,7 +48,7 @@ namespace BixEngine::Gui
     {
         std::shared_ptr<T>& resourcePtr = property.Get<std::shared_ptr<T>>(instance);
 
-            std::string currentPath = resourcePtr ? resourcePtr->GetPath().ToStdString() : "";
+            std::string currentPath = resourcePtr ? resourcePtr->GetPath().Std() : "";
             std::string previewStr = resourcePtr ? std::filesystem::path(currentPath).filename().string() : "None";
 
             float availableWidth = ImGui::GetContentRegionAvail().x;

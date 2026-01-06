@@ -60,7 +60,7 @@ namespace BixEngine::Game
 
         void OnCollisionEnter(Actor* other, const CollisionHitResult& result);
 
-        Math::Vector2<float> pendingInput_{};
+        Math::Vector2 pendingInput_{};
 
         SpriteAnimatorComponent* animatorComponent_{nullptr};
         BoxColliderComponent* physicsComponent_{nullptr};

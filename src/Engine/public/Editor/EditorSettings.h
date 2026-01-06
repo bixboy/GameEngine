@@ -9,5 +9,6 @@ namespace BixEngine::Core
         ~EditorSettings() = default;
 
         // Minimal implementation to satisfy compilation
+        int MouseEventRateLimit = 200;
     };
 }

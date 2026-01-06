@@ -275,6 +275,11 @@ namespace BixEngine::Gui
         DefaultEngineGuiContextFactory contextFactory(subsystems);
         DefaultEngineGuiContext context = contextFactory.CreateContext(contextArgs);
         
+        context.openAssetInEditor = [this](const std::filesystem::path& path)
+        {
+            this->OpenAssetEditor(path);
+        };        
+        
         SetupDefaultEditorBehaviors(*guiManager_, context);
 
         const DefaultEngineGuiPanels panels = CreateDefaultEngineGui(*guiManager_, context);

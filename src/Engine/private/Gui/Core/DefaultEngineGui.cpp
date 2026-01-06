@@ -102,7 +102,7 @@ namespace BixEngine::Gui
         browserDesc.dockRegion   = DockSpaceRegion::Bottom;
         browserDesc.closable     = true;
         browserDesc.onInitialize = [](GuiPanel& panel) { panel.SetBackgroundColor(Theme::ContentBackground); };
-        // panels.contentBrowserPanel = TryRegisterPanel<ContentBrowserPanel>("ContentBrowser", browserDesc, *context_);
+        panels.contentBrowserPanel = TryRegisterPanel<ContentBrowserPanel>("ContentBrowser", browserDesc, *context_);
 
         panels.allPanels = {
             {"SceneViewport",   panels.sceneViewportPanel},
@@ -119,6 +119,9 @@ namespace BixEngine::Gui
 
     void SetupDefaultEditorBehaviors(GuiManager& guiManager, DefaultEngineGuiContext& context)
     {
+        if (context.openAssetInEditor)
+            return;
+
         context.openAssetInEditor = [&guiManager](const std::filesystem::path& path)
         {
             std::string ext = path.extension().string();

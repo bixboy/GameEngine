@@ -2,12 +2,12 @@
 #include "Framework/Scene.h"
 #include "EmptyScene.generated.h"
 
+
 namespace BixEngine::Game
 {
     class Player;
 
     BCLASS()
-
     class EmptyScene : public Scene
     {
         GENERATED_BODY()
@@ -17,7 +17,6 @@ namespace BixEngine::Game
 
         void HandleEvent(const SDL_Event& event) override;
         void OnRuntimeUpdate(float deltaTime) override;
-        void Render(Graphics::Renderer& renderer) override;
 
         void OnEnter() override;
         void OnExit() override;

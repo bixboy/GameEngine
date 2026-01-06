@@ -52,7 +52,7 @@ namespace BixEngine::Game
         if (activeScene_)
             activeScene_->SetContext(context_);
 
-        for (auto& [_, entry] : loadedScenes_)
+        for (auto& entry : loadedScenes_ | std::views::values)
         {
             if (entry.instance)
                 entry.instance->SetContext(context_);

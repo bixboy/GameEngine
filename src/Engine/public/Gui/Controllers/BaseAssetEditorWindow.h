@@ -37,6 +37,8 @@ namespace BixEngine::Gui
             std::vector<VariableMetadata> exposedVariables;
             String primaryClassName{};
             String includePath{};
+
+            virtual ~SharedState() = default;
         };
 
         struct PanelConfig

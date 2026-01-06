@@ -30,6 +30,8 @@ namespace BixEngine::Gui
             bool isControllingCamera = false;
             float cameraSpeed = 10.0f;
             float mouseSensitivity = 0.1f;
+            SceneSharedState();
+            ~SceneSharedState() override; 
         };
 
         SceneAssetEditorWindow(std::shared_ptr<SharedState> sharedState, PanelConfig config);

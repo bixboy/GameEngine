@@ -3,7 +3,7 @@
 #include <imgui_internal.h>
 #include <type_traits> // Nécessaire pour std::is_same_v
 
-#include "Gui/Core/GuiCommon.h"
+#include "Gui/Core/GuiTheme.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Gui/Utils/MouseWrapping.h"
 #include "Gui/Widgets/Controls/ColorHelpers.h"
@@ -27,31 +27,30 @@ namespace BixEngine::Gui::Widgets
 
             bool changed = false;
             const char* idLabel = label ? label : "Vector3Control";
-            Utils::ScopedID idScope(idLabel);
+            GuiUtils::ScopedID idScope(idLabel);
 
-            ImGui::Columns(2, nullptr, false);
-            ImGui::SetColumnWidth(0, kDefaultColumnWidth);
-            ImGui::AlignTextToFramePadding();
-            ImGui::TextUnformatted(label ? label : "");
-            ImGui::NextColumn();
+            float availableWidth = ImGui::GetContentRegionAvail().x;
+            float totalSpacing = (3 * kAxisButtonSize.x) + (5 * kItemSpacingX);
+            float inputWidth = availableWidth - totalSpacing;
+            if (inputWidth < 1.0f) inputWidth = 1.0f;
 
-            ImGui::PushMultiItemsWidths(3, ImGui::CalcItemWidth());
-            ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, 0.0f));
+            ImGui::PushMultiItemsWidths(3, inputWidth);
+            Styling::ScopedStyle spacing(ImGuiStyleVar_ItemSpacing, ImVec2(kItemSpacingX, 0.0f));
 
             constexpr const char* axisLabels[3] = {"X", "Y", "Z"};
             const ImVec4 axisColors[3] = {Theme::AxisColorX, Theme::AxisColorY, Theme::AxisColorZ};
 
             for (int index = 0; index < 3; ++index)
             {
-                Utils::ScopedID axisId(index);
+                GuiUtils::ScopedID axisId(index);
 
                 if (index > 0)
                     ImGui::SameLine(0.0f, kItemSpacingX);
 
                 const ImVec4& baseColor = axisColors[index];
-                ScopedColor button(ImGuiCol_Button, baseColor);
-                ScopedColor hovered(ImGuiCol_ButtonHovered, Controls::ColorHelpers::ComputeHoveredColor(baseColor));
-                ScopedColor active(ImGuiCol_ButtonActive, Controls::ColorHelpers::ComputeActiveColor(baseColor));
+                Styling::ScopedColor button(ImGuiCol_Button, baseColor);
+                Styling::ScopedColor hovered(ImGuiCol_ButtonHovered, Controls::ColorHelpers::ComputeHoveredColor(baseColor));
+                Styling::ScopedColor active(ImGuiCol_ButtonActive, Controls::ColorHelpers::ComputeActiveColor(baseColor));
 
                 if (ImGui::Button(axisLabels[index], kAxisButtonSize))
                 {
@@ -78,7 +77,6 @@ namespace BixEngine::Gui::Widgets
                 ImGui::PopItemWidth();
             }
 
-            ImGui::Columns(1);
             ImGui::Spacing();
 
             return changed;

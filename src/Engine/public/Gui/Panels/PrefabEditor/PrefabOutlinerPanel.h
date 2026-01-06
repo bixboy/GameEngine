@@ -1,7 +1,7 @@
 #pragma once
-
 #include "Gui/Panels/SceneOutlinerPanel.h"
-    
+
+
 namespace BixEngine::Gui
 {
     class PrefabOutlinerPanel : public SceneOutlinerPanel

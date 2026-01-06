@@ -1,49 +1,46 @@
 #include "InputManager.h"
-#include "unordered_map"
 #include "Input.h"
 
 
 namespace BixEngine::Input
 {
-    namespace
-    {
-        bool IsKeyEvent(const SDL_Event& event) noexcept
-        {
-            return event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP;
-        }
-    }
-
     void InputManager::ProcessEvent(const SDL_Event& event)
     {
-        if (!IsKeyEvent(event))
-            return;
+        InputKey currentInput;
+        bool isPressed = false;
+        bool isRelevant = false;
 
-        const SDL_Keycode key = event.key.key;
-        const bool isPressed = event.type == SDL_EVENT_KEY_DOWN;
+        if (event.type == SDL_EVENT_KEY_DOWN || event.type == SDL_EVENT_KEY_UP)
+        {
+            currentInput = InputKey::FromKey(event.key.key);
+            isPressed = (event.type == SDL_EVENT_KEY_DOWN);
+            isRelevant = true;
+        }
+        else if (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN || event.type == SDL_EVENT_MOUSE_BUTTON_UP)
+        {
+            currentInput = InputKey::FromMouse(event.button.button);
+            isPressed = (event.type == SDL_EVENT_MOUSE_BUTTON_DOWN);
+            isRelevant = true;
+        }
+
+        if (!isRelevant)
+            return;
 
         for (const auto& binding : actionBindings_)
         {
-            if (binding.key != key)
-                continue;
-
-            switch (binding.eventType)
+            if (binding.key == currentInput)
             {
-            case InputEvent::Pressed:
+                if (binding.key != currentInput) 
+                    continue;
 
-                if (isPressed && binding.callback)
-                    binding.callback();
+                const bool triggerPressed = (binding.eventType == InputEvent::Pressed && isPressed);
+                const bool triggerReleased = (binding.eventType == InputEvent::Released && !isPressed);
 
-                break;
-
-            case InputEvent::Released:
-
-                if (!isPressed && binding.callback)
-                    binding.callback();
-
-                break;
-
-            case InputEvent::Hold:
-                break;
+                if (triggerPressed || triggerReleased)
+                {
+                    if (binding.callback)
+                        binding.callback();
+                }
             }
         }
     }
@@ -58,44 +55,48 @@ namespace BixEngine::Input
             if (binding.eventType != InputEvent::Hold)
                 continue;
 
-            if (binding.callback && input_->IsKeyDown(binding.key))
+            bool active = false;
+            if (binding.key.IsKeyboard())
+            {
+                active = input_->IsKeyDown(binding.key.keyCode);
+            }
+            else if (binding.key.IsMouse())
+            {
+                active = input_->IsMouseButtonDown(binding.key.mouseButton);
+            }
+
+            if (active && binding.callback)
                 binding.callback();
         }
 
-        if (axisBindings_.empty())
-            return;
-
-        std::unordered_map<String, float> axisValues;
-        axisValues.reserve(axisBindings_.size());
-
         for (const auto& binding : axisBindings_)
         {
-            axisValues.try_emplace(binding.axisName, 0.0f);
+            float totalValue = 0.0f;
 
-            for (const auto& key : binding.keys)
+            for (const auto& keyEntry : binding.keys)
             {
-                if (!input_->IsKeyDown(key.key))
-                    continue;
+                bool active = false;
+                if (keyEntry.key.IsKeyboard())
+                {
+                    active = input_->IsKeyDown(keyEntry.key.keyCode);
+                }
+                else if (keyEntry.key.IsMouse())
+                {
+                    active = input_->IsMouseButtonDown(keyEntry.key.mouseButton);
+                }
 
-                axisValues[binding.axisName] += key.scale;
+                if (active)
+                    totalValue += keyEntry.scale;
             }
-        }
 
-        for (const auto& binding : axisBindings_)
-        {
-            if (!binding.callback)
-                continue;
-
-            const float value = axisValues[binding.axisName];
-            binding.callback(value);
+            if (binding.callback)
+                binding.callback(totalValue);
         }
     }
-
 
     void InputManager::Reset() noexcept
     {
         ResetState();
-
         actionBindings_.clear();
         axisBindings_.clear();
     }
@@ -104,5 +105,18 @@ namespace BixEngine::Input
     {
         if (input_)
             input_->ResetState();
+    }
+
+    void InputManager::UnbindAllForInstance(void* instance)
+    {
+        std::erase_if(actionBindings_, [instance](const ActionBinding& b)
+            { 
+                return b.instance == instance; 
+            });
+        
+        std::erase_if(axisBindings_, [instance](const AxisBinding& b)
+            { 
+                return b.instance == instance; 
+            });
     }
 }

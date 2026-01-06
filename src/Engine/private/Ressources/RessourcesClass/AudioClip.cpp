@@ -40,7 +40,7 @@ namespace BixEngine::Resources
             return false;
         }
 
-        LOG_INFO("AudioClip loaded: " + path + " (" + std::to_string(size) + " bytes)");
+        LOG_INFO("AudioClip loaded: " + path + " (" + String(std::to_string(size)) + " bytes)");
         return true;
     }
 }

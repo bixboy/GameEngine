@@ -1,11 +1,7 @@
 #include "Framework/Object.h"
 #include <array>
 #include <cstdint>
-#include <iomanip>
-#include <istream>
-#include <ostream>
 #include <random>
-#include <sstream>
 #include <stdexcept>
 
 
@@ -15,6 +11,8 @@ namespace BixEngine::Game
     {
         constexpr std::uint32_t kBinaryFormatVersion = 1;
     }
+
+    // --- Constructeurs ---
 
     Object::Object() : Object("Object")
     {
@@ -27,6 +25,8 @@ namespace BixEngine::Game
     Object::Object(String name, const Math::Transform& transform) : uuid_(GenerateUUID()), name_(std::move(name)), transform_(transform)
     {
     }
+
+    // --- Getters / Setters ---
 
     void Object::SetUUID(String uuid)
     {
@@ -42,6 +42,41 @@ namespace BixEngine::Game
     {
         return "Object";
     }
+    
+    String Object::GenerateUUID()
+    {
+        thread_local std::mt19937 gen([]()
+            {
+                std::random_device rd;
+                return std::mt19937(rd());
+            }());
+        
+        std::uniform_int_distribution<int> dist(0, 255);
+        std::array<std::uint8_t, 16> data{};
+
+        for (auto& byte : data)
+            byte = static_cast<std::uint8_t>(dist(gen));
+
+        data[6] = (data[6] & 0x0F) | 0x40;
+        data[8] = (data[8] & 0x3F) | 0x80;
+        
+        String uuidStr(36, 0); 
+        static constexpr char hexChars[] = "0123456789abcdef";
+
+        int dstIndex = 0;
+        for (size_t i = 0; i < 16; ++i)
+        {
+            if (i == 4 || i == 6 || i == 8 || i == 10)
+                uuidStr[dstIndex++] = '-';
+
+            uuidStr[dstIndex++] = hexChars[(data[i] >> 4) & 0x0F];
+            uuidStr[dstIndex++] = hexChars[data[i] & 0x0F];
+        }
+
+        return uuidStr;
+    }
+
+    // --- Sérialisation ---
 
     void Object::SerializeBinary(std::ostream& stream) const
     {
@@ -69,15 +104,18 @@ namespace BixEngine::Game
     void Object::WriteString(std::ostream& stream, const String& value)
     {
         const auto length = static_cast<std::uint32_t>(value.size());
-
         WritePrimitive(stream, length);
-        stream.write(value.data(), length);
+        
+        if (length > 0)
+            stream.write(value.data(), length);
     }
 
     String Object::ReadString(std::istream& stream)
     {
         std::uint32_t length = 0;
         ReadPrimitive(stream, length);
+
+        if (length == 0) return "";
 
         String result(length, '\0');
         stream.read(result.data(), length);
@@ -88,60 +126,42 @@ namespace BixEngine::Game
         return result;
     }
 
-    String Object::GenerateUUID()
-    {
-        std::array<std::uint8_t, 16> data{};
-
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        std::uniform_int_distribution<int> dist(0, 255);
-
-        for (auto& byte : data)
-            byte = static_cast<std::uint8_t>(dist(gen));
-
-        data[6] = static_cast<std::uint8_t>((data[6] & 0x0F) | 0x40);
-        data[8] = static_cast<std::uint8_t>((data[8] & 0x3F) | 0x80);
-
-        std::ostringstream oss;
-        oss << std::hex << std::setfill('0');
-
-        for (std::size_t i = 0; i < data.size(); ++i)
-        {
-            oss << std::setw(2) << static_cast<int>(data[i]);
-            if (i == 3 || i == 5 || i == 7 || i == 9)
-                oss << '-';
-        }
-
-        return oss.str();
-    }
-
     void Object::SerializeTransform(std::ostream& stream) const
     {
-        WritePrimitive(stream, transform_.position.x);
-        WritePrimitive(stream, transform_.position.y);
-        WritePrimitive(stream, transform_.position.z);
+        const auto pos = transform_.GetLocalPosition();
+        WritePrimitive(stream, pos.x);
+        WritePrimitive(stream, pos.y);
+        WritePrimitive(stream, pos.z);
 
-        WritePrimitive(stream, transform_.rotation.pitch);
-        WritePrimitive(stream, transform_.rotation.yaw);
-        WritePrimitive(stream, transform_.rotation.roll);
+        const auto rot = transform_.GetLocalRotation();
+        WritePrimitive(stream, rot.pitch);
+        WritePrimitive(stream, rot.yaw);
+        WritePrimitive(stream, rot.roll);
 
-        WritePrimitive(stream, transform_.scale.x);
-        WritePrimitive(stream, transform_.scale.y);
-        WritePrimitive(stream, transform_.scale.z);
+        const auto scale = transform_.GetLocalScale();
+        WritePrimitive(stream, scale.x);
+        WritePrimitive(stream, scale.y);
+        WritePrimitive(stream, scale.z);
     }
 
     void Object::DeserializeTransform(std::istream& stream)
     {
-        ReadPrimitive(stream, transform_.position.x);
-        ReadPrimitive(stream, transform_.position.y);
-        ReadPrimitive(stream, transform_.position.z);
+        float px, py, pz;
+        ReadPrimitive(stream, px);
+        ReadPrimitive(stream, py);
+        ReadPrimitive(stream, pz);
+        transform_.SetPosition({px, py, pz});
 
-        ReadPrimitive(stream, transform_.rotation.pitch);
-        ReadPrimitive(stream, transform_.rotation.yaw);
-        ReadPrimitive(stream, transform_.rotation.roll);
+        float rp, ry, rr;
+        ReadPrimitive(stream, rp);
+        ReadPrimitive(stream, ry);
+        ReadPrimitive(stream, rr);
+        transform_.SetRotation({rp, ry, rr});
 
-        ReadPrimitive(stream, transform_.scale.x);
-        ReadPrimitive(stream, transform_.scale.y);
-        ReadPrimitive(stream, transform_.scale.z);
+        float sx, sy, sz;
+        ReadPrimitive(stream, sx);
+        ReadPrimitive(stream, sy);
+        ReadPrimitive(stream, sz);
+        transform_.SetScale({sx, sy, sz});
     }
 }

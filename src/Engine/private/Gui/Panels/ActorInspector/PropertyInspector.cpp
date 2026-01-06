@@ -85,9 +85,11 @@ namespace BixEngine::Gui::ActorInspector
         {
             if (list.empty()) return;
 
-            if (ImGui::BeginTable("##PropTable", 2, ImGuiTableFlags_SizingStretchProp | ImGuiTableFlags_Resizable | ImGuiTableFlags_BordersInnerH))
+            ImGuiTableFlags tableFlags = ImGuiTableFlags_Borders | ImGuiTableFlags_Resizable | ImGuiTableFlags_RowBg | ImGuiTableFlags_SizingStretchProp;
+            
+            if (ImGui::BeginTable("##PropTable", 2, tableFlags))
             {
-                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed, 140.0f);
+                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 140.0f); // Fixed width for labels to look cleaner
                 ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
 
                 for (const auto* p : list)

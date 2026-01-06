@@ -139,10 +139,9 @@ namespace BixEngine::Gui
 
             if (layout == DefaultLayouts::Scene)
             {
-                
                 layoutManager_->SetMenuPanelFilter(nullptr);
             }
-            else if (layout == DefaultLayouts::ActorEditor)
+            else
             {
                 layoutManager_->SetMenuPanelFilter([this, currentNavId = std::string(navId)](GuiPanel* panel) -> bool
                 {
@@ -162,7 +161,7 @@ namespace BixEngine::Gui
 
         RefreshAssetPanelsVisibility();
 
-        if (layout == DefaultLayouts::ActorEditor)
+        if (layout != DefaultLayouts::Scene)
             FocusPanel(panelToFocus);
 
         else if (layout == DefaultLayouts::Scene)
@@ -199,7 +198,7 @@ namespace BixEngine::Gui
         if (!focusPanel)
             focusPanel = storedEntry.panels.toolbar;
 
-        SwitchToLayout(DefaultLayouts::ActorEditor, storedEntry.navigationId, focusPanel);
+        SwitchToLayout(storedEntry.layoutId, storedEntry.navigationId, focusPanel);
     }
 
     void GuiAssetEditorManager::CloseAssetEditor(const std::string& navigationId)
@@ -222,7 +221,11 @@ namespace BixEngine::Gui
         if (assetEditors_.empty())
         {
             if (layoutManager_)
-                layoutManager_->ResetLayout(DefaultLayouts::ActorEditor);
+            {
+                // Reset standard layouts if needed, or just the one we just closed?
+                // For safety, we can leave this or remove it as ResetLayout essentially just hides panels
+                // layoutManager_->ResetLayout(entry.layoutId); 
+            }
 
             SwitchToLayout(DefaultLayouts::Scene, kSceneNavigationId);
         }
@@ -245,7 +248,7 @@ namespace BixEngine::Gui
         if (!focusPanel)
             focusPanel = entry->panels.toolbar;
 
-        SwitchToLayout(DefaultLayouts::ActorEditor, navigationId, requestFocus ? focusPanel : nullptr);
+        SwitchToLayout(entry->layoutId, navigationId, requestFocus ? focusPanel : nullptr);
     }
 
     void GuiAssetEditorManager::ActivateScene(bool requestFocus)
@@ -255,12 +258,20 @@ namespace BixEngine::Gui
 
     void GuiAssetEditorManager::RefreshAssetPanelsVisibility()
     {
-        const bool assetLayoutActive = (layoutManager_ && layoutManager_->GetCurrentLayout() == DefaultLayouts::ActorEditor) ||
-            activeLayout_ == DefaultLayouts::ActorEditor;
+        const bool isScene = activeLayout_ == DefaultLayouts::Scene;
+        const bool assetLayoutActive = !isScene;
 
         for (auto& [navId, entry] : assetEditors_)
         {
-            const bool visible = assetLayoutActive && activeNavigationId_ == navId;
+            // Only visible if global asset mode active AND this specific editor is the active one
+            // However, with per-layout system, layout manager handles visibility of registered panels automatically when switching layouts!
+            // But we still need to ensure panels are set to Visible=true so the layout manager shows them.
+            // The LayoutManager::Switch calls SetVisible(true) for panels in that layout.
+            // But if we have multiple tabs sharing a layout (e.g. 2 Audio Containers), we need to manually hide the inactive one.
+            
+            const bool isSameLayout = entry.layoutId == activeLayout_;
+            const bool visible = assetLayoutActive && activeNavigationId_ == navId && isSameLayout;
+            
             entry.panels.ForEachPanel([visible](GuiPanel* panel)
             {
                 if (panel)
@@ -307,7 +318,7 @@ namespace BixEngine::Gui
 
         PanelBuffer buffer{};
         const auto span = CollectPanels(entry.panels, buffer);
-        layoutManager_->RegisterPanels(DefaultLayouts::ActorEditor, span, GuiLayoutManager::LayoutRegistrationMode::LoadIfUninitialized);
+        layoutManager_->RegisterPanels(entry.layoutId, span, GuiLayoutManager::LayoutRegistrationMode::LoadIfUninitialized);
     }
 
     std::span<GuiPanel*> GuiAssetEditorManager::CollectPanels(const PanelSet& panels, PanelBuffer& buffer) const noexcept
@@ -392,12 +403,7 @@ namespace BixEngine::Gui
         }
         else if (assetType == "Audio Container")
         {
-            sharedState = std::make_shared<BaseAssetEditorWindow::SharedState>();
-            sharedState->assetPath = path;
-            sharedState->assetDisplayName = String(path.stem().generic_string().c_str());
-            sharedState->stableIdRoot = String(navigationId.c_str());
-            sharedState->assetTypeLabel = String("Audio Container");
-            sharedState->onCloseRequest = onClose;
+            sharedState = AudioContainerEditorWindow::CreateSharedState(path, String(navigationId.c_str()), onClose);
         }
 
         if (!sharedState)
@@ -416,6 +422,13 @@ namespace BixEngine::Gui
         entry.metadata.extension = extensionLower;
         entry.metadata.assetType = assetType;
         entry.sharedState = sharedState;
+
+        // Assign Layout ID based on type
+        if (assetType == "Actor Prefab") entry.layoutId = "Layout_ActorPrefab";
+        else if (assetType == "Component Prefab") entry.layoutId = "Layout_ComponentPrefab";
+        else if (assetType == "Sprite Atlas") entry.layoutId = "Layout_SpriteAtlas";
+        else if (assetType == "Audio Container") entry.layoutId = "Layout_AudioContainer";
+        else entry.layoutId = "Layout_GenericAsset";
 
         bool created = false;
         if (assetType == "Actor Prefab")
@@ -448,21 +461,22 @@ namespace BixEngine::Gui
         if (!guiManager_)
             return false;
 
-        auto makePanel = [&](std::string_view suffix, ActorEditorWindow::Section section) -> GuiPanel*
+        auto makePanel = [&](std::string_view suffix, ActorEditorWindow::Section section, DockSpaceRegion region) -> GuiPanel*
         {
             const std::string panelId = std::format("{}_{}", navigationId, suffix);
             
             GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Actor Prefab"});
             panel.SetVisible(false);
+            panel.SetDockingPreference(region);
             
             guiManager_->AttachController(panel, std::make_unique<ActorEditorWindow>(entry.sharedState, section));
             return &panel;
         };
 
-        entry.panels.toolbar = makePanel("toolbar", ActorEditorWindow::Section::Toolbar);
-        entry.panels.viewport = makePanel("viewport", ActorEditorWindow::Section::Viewport);
-        entry.panels.outline = makePanel("outline", ActorEditorWindow::Section::Outline);
-        entry.panels.inspector = makePanel("inspector", ActorEditorWindow::Section::Inspector);
+        entry.panels.toolbar = makePanel("toolbar", ActorEditorWindow::Section::Toolbar, DockSpaceRegion::Top);
+        entry.panels.viewport = makePanel("viewport", ActorEditorWindow::Section::Viewport, DockSpaceRegion::Center);
+        entry.panels.outline = makePanel("outline", ActorEditorWindow::Section::Outline, DockSpaceRegion::Left);
+        entry.panels.inspector = makePanel("inspector", ActorEditorWindow::Section::Inspector, DockSpaceRegion::Right);
 
         return true;
     }
@@ -474,18 +488,19 @@ namespace BixEngine::Gui
         if (!guiManager_)
             return false;
 
-        auto makePanel = [&](std::string_view suffix, ComponentEditorWindow::Section section) -> GuiPanel*
+        auto makePanel = [&](std::string_view suffix, ComponentEditorWindow::Section section, DockSpaceRegion region) -> GuiPanel*
         {
             const std::string panelId = std::format("{}_{}", navigationId, suffix);
             GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Component Prefab"});
             panel.SetVisible(false);
+            panel.SetDockingPreference(region);
             
             guiManager_->AttachController(panel, std::make_unique<ComponentEditorWindow>(entry.sharedState, section));
             return &panel;
         };
 
-        entry.panels.toolbar = makePanel("toolbar", ComponentEditorWindow::Section::Toolbar);
-        entry.panels.inspector = makePanel("inspector", ComponentEditorWindow::Section::Inspector);
+        entry.panels.toolbar = makePanel("toolbar", ComponentEditorWindow::Section::Toolbar, DockSpaceRegion::Top);
+        entry.panels.inspector = makePanel("inspector", ComponentEditorWindow::Section::Inspector, DockSpaceRegion::Right);
         entry.panels.viewport = nullptr;
         entry.panels.outline = nullptr;
 
@@ -505,6 +520,7 @@ namespace BixEngine::Gui
         const std::string panelId = std::format("{}_atlas", navigationId);
         GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Sprite Atlas"});
         panel.SetVisible(false);
+        panel.SetDockingPreference(DockSpaceRegion::Center);
         guiManager_->AttachController(panel, std::make_unique<SpriteAtlasEditorWindow>(atlasState));
         entry.panels.viewport = &panel;
         entry.panels.toolbar = nullptr;
@@ -522,6 +538,7 @@ namespace BixEngine::Gui
         const std::string panelId = std::format("{}_audiocontainer", navigationId);
         GuiPanel& panel = guiManager_->CreatePanel(String(panelId.c_str()), String{"Audio Container"});
         panel.SetVisible(false);
+        panel.SetDockingPreference(DockSpaceRegion::Center);
         guiManager_->AttachController(panel, std::make_unique<AudioContainerEditorWindow>(entry.sharedState));
         entry.panels.viewport = &panel; 
         entry.panels.toolbar = nullptr;

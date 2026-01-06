@@ -10,7 +10,6 @@
 namespace BixEngine::Game
 {
     BCLASS()
-
     class SpriteAnimatorComponent : public SpriteComponent
     {
         GENERATED_BODY()
@@ -37,15 +36,15 @@ namespace BixEngine::Game
     private:
         void ApplyCurrentFrame(bool allowFallbackToDefault);
 
-        BPROPERTY(EditAnywhere)
-        std::shared_ptr<resources::SpriteAtlas> atlas_{};
+        std::shared_ptr<Resources::SpriteAtlas> atlas_{};
 
+        BPROPERTY(EditAnywhere, Category="Animation")
+        String atlasPath_{};
+
+        BPROPERTY(EditAnywhere, Category="Animation")
         String defaultAnimation_{};
 
-        resources::SpriteAnimator animator_{};
-        
-        BPROPERTY(EditAnywhere)
-        String atlasPath_{};
+        Resources::SpriteAnimator animator_{};
         String currentAnimation_{};
     };
 }

@@ -1,44 +1,39 @@
 #include "Components/Core/CameraComponent.h"
 #include "Framework/Actor.h"
 #include "Framework/Scene.h"
-#include "Systems/Core/Window.h" 
-#include <imgui.h>
+#include "Systems/Core/Window.h"
+
 
 namespace BixEngine::Game
 {
     CameraComponent* CameraComponent::s_MainCamera = nullptr;
 
     CameraComponent::CameraComponent() = default;
-
-    CameraComponent::CameraComponent(Actor* owner) : Super(owner)
-    {
-    }
+    CameraComponent::CameraComponent(Actor* owner) : Super(owner) {}
 
     CameraComponent::~CameraComponent()
     {
         OnDestroy();
     }
 
+    void CameraComponent::OnDestroy()
+    {
+        if (s_MainCamera == this)
+            s_MainCamera = nullptr;
+    }
+
     void CameraComponent::BeginPlay()
     {
         Super::BeginPlay();
         
-        if (IsActive)
+        if (StartAsMainCamera)
         {
             SetAsMainCamera();
         }
 
         if (owner_)
         {
-            initialActorPos_ = owner_->GetTransform().GetWorldPosition();
-        }
-    }
-
-    void CameraComponent::OnDestroy()
-    {
-        if (s_MainCamera == this)
-        {
-            s_MainCamera = nullptr;
+            initialPosition_ = owner_->GetTransform().GetWorldPosition();
         }
     }
 
@@ -52,79 +47,80 @@ namespace BixEngine::Game
         return s_MainCamera;
     }
 
-    void CameraComponent::LookAt(const Math::Vector3& target)
+    void CameraComponent::SetAspectRatio(float ratio)
     {
-        if (owner_)
-        {
-            owner_->GetTransform().LookAt(target);
-        }
+        aspectRatio_ = ratio;
     }
 
-    Math::Vector2<float> CameraComponent::WorldToScreen(const Math::Vector3& worldPos) const
+    Math::Vector2 CameraComponent::GetViewportSize() const
     {
-        float screenWidth = 1600.0f;
-        float screenHeight = 900.0f;
-
         if (owner_)
         {
             Scene* scene = owner_->GetOwningScene();
             if (scene && scene->HasWindow())
             {
                auto& win = scene->GetWindow();
-               screenWidth = static_cast<float>(win.GetWidth());
-               screenHeight = static_cast<float>(win.GetHeight());
+               return { static_cast<float>(win.GetWidth()), static_cast<float>(win.GetHeight()) };
             }
         }
-        
+        return { 1600.0f, 900.0f };
+    }
 
-        Math::Vector3 currentActorPos = owner_ ? owner_->GetTransform().GetWorldPosition() : Math::Vector3();
-        
-        float baseX = LockX ? initialActorPos_.x : currentActorPos.x;
-        float baseY = LockY ? initialActorPos_.y : currentActorPos.y;
+    Math::Vector2 CameraComponent::WorldToScreen(const Math::Vector3& worldPos) const
+    {
+        Math::Vector2 screenSize = GetViewportSize();
+        Math::Vector3 camPos = owner_ ? owner_->GetTransform().GetWorldPosition() : Math::Vector3();
 
-        float camX = baseX + Offset.x;
-        float camY = baseY + Offset.y;
+        float effectiveCamX = LockX ? initialPosition_.x : camPos.x;
+        float effectiveCamY = LockY ? initialPosition_.y : camPos.y;
+
+        effectiveCamX += Offset.x;
+        effectiveCamY += Offset.y;
         
-        float screenX = (worldPos.x - camX) * Zoom + (screenWidth * 0.5f);
-        float screenY = (worldPos.y - camY) * Zoom + (screenHeight * 0.5f);
+        float screenX = (worldPos.x - effectiveCamX) * Zoom + (screenSize.x * 0.5f);
+        float screenY = (worldPos.y - effectiveCamY) * Zoom + (screenSize.y * 0.5f);
 
         return { screenX, screenY };
     }
 
-    Math::Vector2<float> CameraComponent::ScreenToWorld(const Math::Vector2<float>& screenPos) const
+    Math::Vector2 CameraComponent::ScreenToWorld(const Math::Vector2& screenPos) const
     {
-        float screenWidth = 1600.0f;
-        float screenHeight = 900.0f;
+        Math::Vector2 screenSize = GetViewportSize();
+        Math::Vector3 camPos = owner_ ? owner_->GetTransform().GetWorldPosition() : Math::Vector3();
 
-        if (owner_)
-        {
-            Scene* scene = owner_->GetOwningScene();
-            if (scene && scene->HasWindow())
-            {
-               auto& win = scene->GetWindow();
-               screenWidth = static_cast<float>(win.GetWidth());
-               screenHeight = static_cast<float>(win.GetHeight());
-            }
-        }
+        float effectiveCamX = LockX ? initialPosition_.x : camPos.x;
+        float effectiveCamY = LockY ? initialPosition_.y : camPos.y;
 
-        Math::Vector3 currentActorPos = owner_ ? owner_->GetTransform().GetWorldPosition() : Math::Vector3();
+        effectiveCamX += Offset.x;
+        effectiveCamY += Offset.y;
 
-        float baseX = LockX ? initialActorPos_.x : currentActorPos.x;
-        float baseY = LockY ? initialActorPos_.y : currentActorPos.y;
-
-        float camX = baseX + Offset.x;
-        float camY = baseY + Offset.y;
-
-        
-        
-        float worldX = (screenPos.x - (screenWidth * 0.5f)) / Zoom + camX;
-        float worldY = (screenPos.y - (screenHeight * 0.5f)) / Zoom + camY;
+        float worldX = (screenPos.x - (screenSize.x * 0.5f)) / Zoom + effectiveCamX;
+        float worldY = (screenPos.y - (screenSize.y * 0.5f)) / Zoom + effectiveCamY;
 
         return { worldX, worldY };
     }
 
-    void CameraComponent::DrawInspectorUI()
+    // --- Matrices ---
+    
+    Math::Matrix4 CameraComponent::GetProjectionMatrix() const
     {
+        Math::Vector2 size = GetViewportSize();
 
+        float halfW = (size.x * 0.5f) / Zoom;
+        float halfH = (size.y * 0.5f) / Zoom;
+        
+        return Math::Matrix4::Orthographic(-halfW, halfW, -halfH, halfH, -1.0f, 1000.0f);
+    }
+
+    Math::Matrix4 CameraComponent::GetViewMatrix() const
+    {
+        if (!owner_)
+            return Math::Matrix4::Identity();
+
+        Math::Vector3 camPos = owner_->GetTransform().GetWorldPosition();
+        float x = LockX ? initialPosition_.x : camPos.x;
+        float y = LockY ? initialPosition_.y : camPos.y;
+        
+        return Math::Matrix4::Translation({ -(x + Offset.x), -(y + Offset.y), 0.0f });
     }
 }
