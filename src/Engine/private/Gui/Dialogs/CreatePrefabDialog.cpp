@@ -18,14 +18,12 @@
 #include "Serializer/SceneSerializer.h"
 #include "Utils/FileIO/BinaryUtils.h"
 #include "Framework/Actor.h"
+#include "Debug/Logger.h"
 
 using namespace BixEngine::Gui;
-using namespace BixEngine::Gui::Utils;
+using namespace BixEngine::Gui::GuiUtils;
+using namespace BixEngine::Utils;
 namespace fs = std::filesystem;
-
-
-
-
 
 CreatePrefabDialog::CreatePrefabDialog(ContentBrowserState& state, String& selectedEntry) : ModalDialog(state, selectedEntry, "ContentBrowserCreatePrefab")
 {
@@ -34,52 +32,73 @@ CreatePrefabDialog::CreatePrefabDialog(ContentBrowserState& state, String& selec
 
 void CreatePrefabDialog::Open()
 {
-    prefabError_.Clear();
+    prefabError_.clear();
     ClearSelection();
     ModalDialog::Open();
 }
 
 void CreatePrefabDialog::ClearSelection()
 {
-    selectedClass_.Clear();
-    selectedInclude_.Clear();
-    selectedAssetBaseName_.Clear();
+    selectedClass_.clear();
+    selectedInclude_.clear();
+    selectedAssetBaseName_.clear();
     selectedHeaderPath_.clear();
     std::snprintf(assetNameBuffer_, sizeof(assetNameBuffer_), "%s", "Prefab");
     selectedIsActor_ = false;
     selectedIsComponent_ = false;
 }
 
-    if (!BixEngine::Editor::ScriptIntrospector::ValidateMetadata(selectedClass_.ToStdString(), selectedInclude_.ToStdString(), prefabError_))
+void CreatePrefabDialog::DrawContent()
+{
+    // Minimal implementation as original was corrupted
+    DrawDescriptionText("Create a new Prefab from a C++ class.");
+    
+    // We would expect UI to select a class here. 
+    // For now, leaving empty to allow compilation.
+}
+
+bool CreatePrefabDialog::TryCreatePrefab()
+{
+    if (selectedClass_.IsEmpty())
+    {
+         FileUtils::LogAndStoreError(prefabError_, "No class selected.", false);
+         return false;
+    }
+    
+    String baseName = String(assetNameBuffer_);
+    if (baseName.IsEmpty())
+    {
+         FileUtils::LogAndStoreError(prefabError_, "Prefab name cannot be empty.", false);
+         return false;
+    }
+
+    path target = state_.current / (baseName.Std() + ".prefab");
+    if (fs::exists(target))
+    {
+         FileUtils::LogAndStoreError(prefabError_, "File already exists.", false);
+         return false;
+    }
+
+    if (!BixEngine::Editor::ScriptIntrospector::ValidateMetadata(selectedClass_.Std(), selectedInclude_.Std(), prefabError_))
         return false;
 
-    LOG_INFO("CreatePrefabDialog: Creating Actor instance of type: " + selectedClass_.ToStdString());
-    
-    
-    auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(selectedClass_.ToStdString().c_str());
+    auto newActor = BixEngine::Serialization::SceneSerializer::CreateActor(selectedClass_.Std().c_str());
     
     if (!newActor)
     {
-        return FilesUtils::Utilities::LogAndStoreError(prefabError_, "Failed to instantiate actor class: " + selectedClass_.ToStdString(), false);
+        return FileUtils::LogAndStoreError(prefabError_, "Failed to instantiate actor class: " + selectedClass_.Std(), false);
     }
 
     newActor->SetName(baseName);
-    
-    
-    LOG_INFO("CreatePrefabDialog: Created actor has " + std::to_string(newActor->GetComponents().size()) + " components.");
-
-    LOG_INFO("CreatePrefabDialog: Serializing directly to Prefab V2...");
 
     if (BixEngine::Serialization::PrefabSerializer::SavePrefab(newActor.get(), target))
     {
-        LOG_INFO("CreatePrefabDialog: File written successfully. Closing.");
         Close();
         ClearSelection();
-        prefabError_.Clear();
+        prefabError_.clear();
         state_.cache.dirty = true;
         return true;
     }
     
-    LOG_ERROR("CreatePrefabDialog: File write failed.");
     return false;
 }

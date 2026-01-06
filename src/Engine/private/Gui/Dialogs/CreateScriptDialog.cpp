@@ -13,7 +13,8 @@
 #include "Utils/Editor/ScriptUtils.h"
 
 using namespace BixEngine::Gui;
-using namespace BixEngine::Gui::Utils;
+using namespace BixEngine::Gui::GuiUtils;
+using namespace BixEngine::Utils;
 
 
 
@@ -27,13 +28,13 @@ CreateScriptDialog::CreateScriptDialog(ContentBrowserState& state, String& selec
       scriptType_(ScriptTemplateType::Actor)
 {
     std::snprintf(scriptName_, sizeof(scriptName_), "%s", "NewScript");
-    scriptError_.Clear();
+    scriptError_.clear();
 }
 
 void CreateScriptDialog::Open()
 {
     std::snprintf(scriptName_, sizeof(scriptName_), "%s", "NewScript");
-    scriptError_.Clear();
+    scriptError_.clear();
     
     ClearParentSelection();
     scriptType_ = ScriptTemplateType::Actor;
@@ -43,9 +44,9 @@ void CreateScriptDialog::Open()
 
 void CreateScriptDialog::ClearParentSelection()
 {
-    selectedParentClass_.Clear();
-    selectedParentInclude_.Clear();
-    selectedParentDisplay_.Clear();
+    selectedParentClass_.clear();
+    selectedParentInclude_.clear();
+    selectedParentDisplay_.clear();
     selectedParentIsBase_ = false;
     selectedParentIsActor_ = false;
     selectedParentIsComponent_ = false;
@@ -107,11 +108,11 @@ void CreateScriptDialog::DrawContent()
         ImGui::IsWindowAppearing());
 
     if (!scriptError_.IsEmpty())
-        DrawErrorMessage(scriptError_.ToStdString());
+        DrawErrorMessage(scriptError_.Std());
 
     
     String trimmedInput = scriptName_;
-    std::string baseName = trimmedInput.IsEmpty() ? std::string() : trimmedInput.ToStdString();
+    std::string baseName = trimmedInput.IsEmpty() ? std::string() : trimmedInput.Std();
 
     if (!baseName.empty())
     {
@@ -175,7 +176,7 @@ void CreateScriptDialog::DrawContent()
         if (ImGui::BeginChild("UserScriptList", ImVec2(0.0f, listHeight), true, ImGuiWindowFlags_HorizontalScrollbar))
         {
             std::string currentlySelected = !selectedParentIsBase_ && !selectedParentClass_.IsEmpty()
-            ? selectedParentClass_.ToStdString()
+            ? selectedParentClass_.Std()
             : std::string();
 
             const std::string prevSelection = currentlySelected;
@@ -200,7 +201,7 @@ void CreateScriptDialog::DrawContent()
     std::string parentLabel = "None";
     
     if (!selectedParentClass_.IsEmpty())
-        parentLabel = selectedParentDisplay_.ToStdString();
+        parentLabel = selectedParentDisplay_.Std();
 
     DrawLabelValue("Selected", parentLabel, "None");
     ImGui::SameLine();
@@ -257,7 +258,7 @@ void CreateScriptDialog::DrawContent()
         [&]
         {
             Close();
-            scriptError_.Clear();
+            scriptError_.clear();
             ClearParentSelection();
         });
 
@@ -269,17 +270,17 @@ void CreateScriptDialog::DrawContent()
     String rawName = String(scriptName_);
     if (rawName.IsEmpty())
     {
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
+        FileUtils::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
         return;
     }
     
     if (rawName.Contains("/") || rawName.Contains("\\"))
     {
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot contain path separators.", false);
+        FileUtils::LogAndStoreError(scriptError_, "Script name cannot contain path separators.", false);
         return;
     }
 
-    std::string baseNameStr = rawName.ToStdString();
+    std::string baseNameStr = rawName.Std();
 
     
     if (baseNameStr.size() > 2 && baseNameStr.ends_with(".h"))
@@ -293,7 +294,7 @@ void CreateScriptDialog::DrawContent()
 
     if (baseNameStr.empty())
     {
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
+        FileUtils::LogAndStoreError(scriptError_, "Script name cannot be empty.", false);
         return;
     }
 
@@ -303,7 +304,7 @@ void CreateScriptDialog::DrawContent()
 
     if (fs::exists(headerPath) || fs::exists(sourcePath))
     {
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "A file with this name already exists.", false);
+        FileUtils::LogAndStoreError(scriptError_, "A file with this name already exists.", false);
         return;
     }
 
@@ -313,8 +314,8 @@ void CreateScriptDialog::DrawContent()
     if (dirErr)
     {
         String msg = "Unable to create directory: ";
-        msg += dirErr.message();
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, std::move(msg));
+        msg += dirErr.message().c_str();
+        FileUtils::LogAndStoreError(scriptError_, std::move(msg));
         return;
     }
 
@@ -322,7 +323,7 @@ void CreateScriptDialog::DrawContent()
     std::ofstream headerFile(headerPath);
     if (!headerFile.is_open())
     {
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to create the header file.");
+        FileUtils::LogAndStoreError(scriptError_, "Failed to create the header file.");
         return;
     }
 
@@ -332,7 +333,7 @@ void CreateScriptDialog::DrawContent()
         headerFile.close();
         std::error_code remErr;
         fs::remove(headerPath, remErr);
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to create the source file.");
+        FileUtils::LogAndStoreError(scriptError_, "Failed to create the source file.");
         
         return;
     }
@@ -348,7 +349,7 @@ void CreateScriptDialog::DrawContent()
     if (!inheritsActor && !inheritsComponent && scriptType_ != ScriptTemplateType::Utility)
         inheritsActor = true;
 
-    const std::string baseType = hasParent ? selectedParentClass_.ToStdString() : (inheritsComponent ? "BixEngine::Game::Component" : "BixEngine::Game::Actor");
+    const std::string baseType = hasParent ? selectedParentClass_.Std() : (inheritsComponent ? "BixEngine::Game::Component" : "BixEngine::Game::Actor");
 
     const std::string baseInclude = inheritsComponent ? "Game/Components/Component.h" : "Game/Actor.h";
 
@@ -415,14 +416,14 @@ void CreateScriptDialog::DrawContent()
         fs::remove(headerPath, remErr1);
         fs::remove(sourcePath, remErr2);
         
-        FilesUtils::Utilities::LogAndStoreError(scriptError_, "Failed to write the script files to disk.");
+        FileUtils::LogAndStoreError(scriptError_, "Failed to write the script files to disk.");
         
         return;
     }
 
     const path selectionKey = headerPath.parent_path() / baseNameStr;
     selectedEntry_ = selectionKey.generic_string().c_str();
-    scriptError_.Clear();
+    scriptError_.clear();
     
     ClearParentSelection();
     state_.cache.dirty = true;

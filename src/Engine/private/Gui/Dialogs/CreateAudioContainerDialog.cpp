@@ -15,7 +15,7 @@ namespace BixEngine::Gui
         currentPath_ = currentPath;
         memset(nameBuffer_, 0, sizeof(nameBuffer_));
         strcpy_s(nameBuffer_, "NewAudioContainer");
-        error_.Clear();
+        error_.clear();
         ModalDialog::Open();
     }
 
@@ -55,7 +55,7 @@ namespace BixEngine::Gui
                 else
                 {
                     
-                    resources::AudioContainer container;
+                    BixEngine::Resources::AudioContainer container;
                     if (container.SaveToFile(fullPath.string()))
                     {
                         Close();

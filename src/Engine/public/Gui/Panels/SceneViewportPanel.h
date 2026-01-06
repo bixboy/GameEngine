@@ -73,9 +73,9 @@ namespace BixEngine::Gui
         void HandleGizmoInteraction(Game::Actor* actor, const ImVec2& screenOffset, const ImVec2& viewportMousePos, const ImVec2& viewScale);
         
         void HandleSelection(const ImVec2& viewportMousePos);
-        void GetActorWorldCorners(Game::Actor* actor, Math::Vector2<float>* outCorners) const;
+        void GetActorWorldCorners(Game::Actor* actor, Math::Vector2* outCorners) const;
         
-        ImVec2 WorldToScreen(const Math::Vector2<float>& worldPos, const ImVec2& screenOffset, float viewScale) const;
+        ImVec2 WorldToScreen(const Math::Vector2& worldPos, const ImVec2& screenOffset, float viewScale) const;
         static ImVec2 RotateVector(const ImVec2& vec, float radians);
         static float DistanceToSegment(const ImVec2& P, const ImVec2& A, const ImVec2& B);
 

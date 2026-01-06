@@ -9,7 +9,7 @@
 #include <utility>
 
 
-namespace BixEngine::Reflection
+namespace BixEngine::Reflection::detail
 {
     template <typename Base, typename Derived, typename = void>
     struct SafeIsBaseOf : std::false_type
@@ -92,25 +92,7 @@ namespace BixEngine::Reflection
     }
 
     template <typename ClassType, typename Populator>
-    ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
-    {
-        return RegisterClass<ClassType, Populator>(
-            name,
-            qualifiedName,
-            superClass,
-            std::forward<Populator>(populator)
-        );
-    }
-
-    template <typename ClassType>
-    struct ClassRegistrationInvoker
-    {
-        ClassRegistrationInvoker()
-        {
-            (void)ClassType::StaticClass();
-        }
-    };
-
+    ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator);
 
     template <typename ClassType, typename Populator>
     ClassInfo& RegisterClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
@@ -135,7 +117,26 @@ namespace BixEngine::Reflection
 
         return classInfo;
     }
+    
+    template <typename ClassType, typename Populator>
+    ClassInfo& RegisterReflectedClass(const char* name, const char* qualifiedName, ClassInfo* superClass, Populator&& populator)
+    {
+        return RegisterClass<ClassType, Populator>(
+            name,
+            qualifiedName,
+            superClass,
+            std::forward<Populator>(populator)
+        );
+    }
 
+    template <typename ClassType>
+    struct ClassRegistrationInvoker
+    {
+        ClassRegistrationInvoker()
+        {
+            (void)ClassType::StaticClass();
+        }
+    };
 
     template <typename ClassType, typename PropertyType>
     BixEngine::Reflection::PropertyInfo& RegisterProperty(ClassInfo& classInfo, const char* name, PropertyType ClassType::* member, const char* displayTypeName, const char* metadata = nullptr)

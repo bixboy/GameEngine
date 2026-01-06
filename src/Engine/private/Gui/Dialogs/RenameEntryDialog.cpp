@@ -5,7 +5,8 @@
 #include "Utils/FileIO/FilesUtils.h"
 
 using namespace BixEngine::Gui;
-using namespace BixEngine::Gui::Utils;
+using namespace BixEngine::Gui::GuiUtils;
+using namespace BixEngine::Utils;
 
 
 
@@ -14,7 +15,7 @@ RenameEntryDialog::RenameEntryDialog(ContentBrowserState& state, String& selecte
     : ModalDialog(state, selectedEntry, "ContentBrowserRenameEntry"), isScriptGroup_(false)
 {
     renameBuffer_[0] = '\0';
-    renameError_.Clear();
+    renameError_.clear();
 }
 
 void RenameEntryDialog::Open(const path& targetPath, const path& secondaryPath, bool isScriptGroup)
@@ -35,7 +36,7 @@ void RenameEntryDialog::Open(const path& targetPath, const path& secondaryPath, 
     }
 
     std::snprintf(renameBuffer_, IM_ARRAYSIZE(renameBuffer_), "%s", defaultName.c_str());
-    renameError_.Clear();
+    renameError_.clear();
     ModalDialog::Open();
 }
 
@@ -44,7 +45,7 @@ void RenameEntryDialog::Open(const path& targetPath, const path& secondaryPath, 
 
 void RenameEntryDialog::ResetState()
 {
-    renameError_.Clear();
+    renameError_.clear();
     targetPath_.clear();
     secondaryPath_.clear();
     isScriptGroup_ = false;
@@ -71,7 +72,7 @@ void RenameEntryDialog::DrawContent()
     bool renameTriggered = InputTextWithLabel("New name", renameBuffer_, IM_ARRAYSIZE(renameBuffer_), ImGuiInputTextFlags_EnterReturnsTrue, ImGui::IsWindowAppearing());
 
     if (!renameError_.IsEmpty())
-        DrawErrorMessage(renameError_.ToStdString());
+        DrawErrorMessage(renameError_.Std());
 
     
     bool confirm = DrawConfirmButtons("Rename", "Cancel", []{},
@@ -88,19 +89,19 @@ void RenameEntryDialog::DrawContent()
     String newNameStr = renameBuffer_;
     if (newNameStr.IsEmpty())
     {
-        FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot be empty.", false);
+        FileUtils::LogAndStoreError(renameError_, "Name cannot be empty.", false);
         return;
     }
 
     if (newNameStr.Contains("/") || newNameStr.Contains("\\"))
     {
-        FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot contain path separators.", false);
+        FileUtils::LogAndStoreError(renameError_, "Name cannot contain path separators.", false);
         return;
     }
 
     if (!isScriptGroup_ && targetPath_.empty())
     {
-        FilesUtils::Utilities::LogAndStoreError(renameError_, "No entry selected for rename.", false);
+        FileUtils::LogAndStoreError(renameError_, "No entry selected for rename.", false);
         return;
     }
 
@@ -123,9 +124,9 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     path sourceOld = secondaryPath_;
 
     if (headerOld.empty() && sourceOld.empty())
-        return FilesUtils::Utilities::LogAndStoreError(renameError_, "No entry selected for rename.", false), false;
+        return FileUtils::LogAndStoreError(renameError_, "No entry selected for rename.", false), false;
 
-    std::string newBaseName = newNameStr.ToStdString();
+    std::string newBaseName = newNameStr.Std();
 
     
     auto StripExt = [&](const path& p)
@@ -142,7 +143,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     StripExt(sourceOld);
 
     if (newBaseName.empty())
-        return FilesUtils::Utilities::LogAndStoreError(renameError_, "Name cannot be empty.", false), false;
+        return FileUtils::LogAndStoreError(renameError_, "Name cannot be empty.", false), false;
 
     std::string currentBaseName = !headerOld.empty() ? headerOld.stem().string() : sourceOld.stem().string();
     if (newBaseName == currentBaseName)
@@ -157,7 +158,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
     path newSource = sourceOld.empty() ? path{} : (parentDir / (newBaseName + sourceOld.extension().string()));
 
     if ((!newHeader.empty() && fs::exists(newHeader)) || (!newSource.empty() && fs::exists(newSource)))
-        return FilesUtils::Utilities::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
+        return FileUtils::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
 
     
     std::vector<std::pair<path, path>> toRename;
@@ -176,7 +177,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
         if (ec)
         {
             String msg = "Unable to rename entry: " + String(ec.message().c_str());
-            FilesUtils::Utilities::LogAndStoreError(renameError_, msg);
+            FileUtils::LogAndStoreError(renameError_, msg);
 
             for (auto it = renamed.rbegin(); it != renamed.rend(); ++it)
             {
@@ -193,7 +194,7 @@ bool RenameEntryDialog::HandleScriptRename(const String& newNameStr)
 
     
     selectedEntry_ = (parentDir / newBaseName).generic_string().c_str();
-    renameError_.Clear();
+    renameError_.clear();
     targetPath_ = newHeader;
     secondaryPath_ = newSource;
     isScriptGroup_ = false;
@@ -208,19 +209,19 @@ bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
 {
     path oldPath = targetPath_;
     if (oldPath.empty())
-        return FilesUtils::Utilities::LogAndStoreError(renameError_, "Invalid target path.", false), false;
+        return FileUtils::LogAndStoreError(renameError_, "Invalid target path.", false), false;
 
     std::string oldName = oldPath.filename().string();
-    std::string newName = newNameStr.ToStdString();
+    std::string newName = newNameStr.Std();
 
     if (oldName == newName)
         return true;
 
     path newPath = oldPath.parent_path() / newName;
     if (fs::exists(newPath))
-        return FilesUtils::Utilities::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
+        return FileUtils::LogAndStoreError(renameError_, "An entry with this name already exists.", false), false;
 
-    if (!FilesUtils::Utilities::TryRename(oldPath, newPath, false, renameError_))
+    if (!FileUtils::TryRename(oldPath, newPath, false, renameError_))
         return false;
 
     
@@ -228,6 +229,6 @@ bool RenameEntryDialog::HandleSingleRename(const String& newNameStr)
         selectedEntry_ = newPath.generic_string().c_str();
 
     targetPath_ = newPath;
-    renameError_.Clear();
+    renameError_.clear();
     return true;
 }

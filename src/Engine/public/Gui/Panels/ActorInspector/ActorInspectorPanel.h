@@ -12,9 +12,9 @@ namespace BixEngine::Game
     class Scene;
 }
 
-
 namespace BixEngine::Gui
 {
+    struct DefaultEngineGuiContext;
     class ActorInspectorPanel : public GuiPanelBase
     {
     public:

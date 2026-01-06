@@ -27,7 +27,7 @@ namespace BixEngine::Gui
         AudioContainerEditorWindow& operator=(AudioContainerEditorWindow&&) = delete;
         // ------------------------------------------------
 
-        static std::shared_ptr<SharedState> CreateSharedState(std::filesystem::path assetPath, std::function<void()> onCloseRequest);
+        static std::shared_ptr<SharedState> CreateSharedState(std::filesystem::path assetPath, const String& stableId, std::function<void()> onCloseRequest);
 
     protected:
         void DrawPanelContents(GuiPanel& panel) override;

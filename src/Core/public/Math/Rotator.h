@@ -134,7 +134,7 @@ namespace BixEngine::Math
 
         [[nodiscard]] String ToString() const
         {
-            return String("Rotator(P=") + std::to_string(pitch) + ", Y=" + std::to_string(yaw) + ", R=" + std::to_string(roll) + ")";
+            return String("Rotator(P=") + String(std::to_string(pitch).c_str()) + ", Y=" + std::to_string(yaw).c_str() + ", R=" + std::to_string(roll).c_str() + ")";
         }
 
     private:

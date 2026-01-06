@@ -13,7 +13,7 @@
 namespace BixEngine::Gui::ActorInspector
 {
     using namespace Theme;
-    using namespace Utils;
+    using namespace GuiUtils;
     using namespace BixEngine::Gui::Widgets;
 
     namespace

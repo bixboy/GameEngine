@@ -20,10 +20,10 @@ namespace BixEngine::Gui::Widgets::Layout
         [[nodiscard]] bool IsVisible() const noexcept { return isVisible_; }
 
     private:
-        Utils::ScopedID idScope_;
-        ScopedColor background_;
-        ScopedStyle rounding_;
-        ScopedStyle padding_;
+        GuiUtils::ScopedID idScope_;
+        Styling::ScopedColor background_;
+        Styling::ScopedStyle rounding_;
+        Styling::ScopedStyle padding_;
         bool isVisible_{false};
     };
 }

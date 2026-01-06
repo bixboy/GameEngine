@@ -28,6 +28,8 @@ namespace BixEngine::Gui
         void ClearSelection();
         void SetSelectedScript(const std::string& className, const std::string& includePath, const std::string& assetBaseName, bool isActor, bool isComponent, const path& headerPath);
 
+        bool TryCreatePrefab();
+
         char searchBuffer_[128]{};
         char assetNameBuffer_[128]{};
 

@@ -1,81 +1,13 @@
 #include "Gui/Panels/PrefabEditor/PrefabOutlinerPanel.h"
 #include "Framework/Actor.h"
 #include "Framework/Scene.h"
+#include "Gui/Utils/GuiHelpers.h"
 #include <utility>
 
 namespace BixEngine::Gui
 {
-    PrefabOutlinerPanel::PrefabOutlinerPanel(std::function<Game::Scene*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter, std::function<bool(const Game::Actor*)> actorFilter)
-        : SceneOutlinerPanel(std::move(sceneProvider), std::move(selectionGetter), std::move(selectionSetter), std::move(actorFilter))
-    {
-    }
+    using namespace GuiUtils;
 
-    bool PrefabOutlinerPanel::CanDeleteActor(Game::Actor* actor) const
-    {
-        
-        return actor && actor->GetParent() != nullptr;
-    }
-    
-    bool PrefabOutlinerPanel::CanReparentActor(Game::Actor* actor, Game::Actor* newParent) const
-    {
-        
-        if (actor && actor->GetParent() == nullptr) return false;
-        
-        
-        
-        
-        
-        
-        if (newParent == nullptr) return true;
-        
-        return true;
-    }
-
-    void PrefabOutlinerPanel::AddCreatedActor(Game::Scene* scene, std::unique_ptr<Game::Actor> actor)
-    {
-        if (!scene || !actor) return;
-        
-        Game::Actor* rawActor = actor.get();
-        scene->AddActor(std::move(actor));
-
-        Game::Actor* parent = nullptr;
-
-        
-        if (selectedActorGetter_)
-        {
-            if (auto* selected = selectedActorGetter_())
-            {
-                
-                if (selected != rawActor)
-                {
-                    parent = selected;
-                }
-            }
-        }
-
-        
-        if (!parent)
-        {
-            const auto& actors = scene->GetActors();
-            for (const auto& a : actors)
-            {
-                
-                if (a && a->GetParent() == nullptr && a.get() != rawActor)
-                {
-                    parent = a.get();
-                    break;
-                }
-            }
-        }
-
-        
-#include "Gui/Panels/PrefabEditor/PrefabOutlinerPanel.h"
-#include "Framework/Actor.h"
-#include "Framework/Scene.h"
-#include <utility>
-
-namespace BixEngine::Gui
-{
     PrefabOutlinerPanel::PrefabOutlinerPanel(std::function<Game::Scene*()> sceneProvider, std::function<Game::Actor*()> selectionGetter, std::function<void(Game::Actor*)> selectionSetter, std::function<bool(const Game::Actor*)> actorFilter)
         : SceneOutlinerPanel(std::move(sceneProvider), std::move(selectionGetter), std::move(selectionSetter), std::move(actorFilter))
     {

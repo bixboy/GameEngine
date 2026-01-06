@@ -2,6 +2,7 @@
 #include "Gui/Panels/GuiPanel.h"
 #include "Utils/FileIO/FilesUtils.h"
 #include "Utils/String/StringUtils.h"
+#include "Gui/Panels/ActorInspector/ActorInspectorPanel.h"
 
 
 namespace BixEngine::Gui
@@ -56,7 +57,7 @@ namespace BixEngine::Gui
     ControllerT& GuiManager::OpenAssetEditor(const std::filesystem::path& assetPath, Args&&... args)
     {
         auto& registry = assetEditors_;
-        const auto normalized = FilesUtils::Utilities::NormalizePath(assetPath);
+        const auto normalized = Utils::FileUtils::NormalizePath(assetPath);
         
         // 1. Vérifier si déjà ouvert
         if (const auto* existing = registry.FindEntry(normalized))
@@ -101,7 +102,7 @@ namespace BixEngine::Gui
         );
 
         // 6. Enregistrer dans le registre d'assets
-        registry.Register(normalized, controller.GetPanel(), controller, sharedState);
+        registry.Register(normalized, *controller.GetPanel(), controller, sharedState);
         return controller;
     }   
 }

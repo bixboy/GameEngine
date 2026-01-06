@@ -3,7 +3,7 @@
 #include "Debug/Logger.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "imgui.h"
-#include "Gui/Core/GuiCommon.h"
+#include "Gui/Core/GuiData.h"
 #include "Gui/Panels/PrefabEditor/PrefabInspectorPanel.h"
 #include "Gui/Panels/PrefabEditor/PrefabOutlinerPanel.h"
 #include "Framework/Scene.h"

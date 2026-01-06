@@ -5,8 +5,9 @@
 
 namespace BixEngine::Gui
 {
+#include "Gui/Core/GuiData.h"
+
     class GuiPanel;
-    enum class DockSpaceRegion;
     
     class GuiPanelBase : public GuiPanelWindow
     {

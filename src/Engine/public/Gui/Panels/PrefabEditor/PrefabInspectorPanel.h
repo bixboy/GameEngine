@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Gui/Panels/ActorInspectorPanel.h"
+#include "Gui/Panels/ActorInspector/ActorInspectorPanel.h"
 
 namespace BixEngine::Gui
 {

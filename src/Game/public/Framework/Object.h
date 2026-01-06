@@ -1,8 +1,12 @@
 #pragma once
 #include <istream>
 #include <ostream>
+
 #include "Containers/String.h"
 #include "Math/Transform.h"
+
+namespace Bix = BixEngine;
+
 #include "Object.generated.h"
 
 
@@ -34,16 +38,16 @@ namespace BixEngine::Game
         [[nodiscard]] Math::Transform& GetTransformRef() noexcept { return transform_; }
         void SetTransform(const Math::Transform& transform) noexcept { transform_ = transform; }
 
-        [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.position; }
+        [[nodiscard]] Math::Vector3 GetPosition() const noexcept { return transform_.GetLocalPosition(); }
         [[nodiscard]] Math::Vector3 GetWorldPosition() const noexcept { return transform_.GetWorldPosition(); }
-        void SetPosition(const Math::Vector3& position) noexcept { transform_.position = position; }
-        void SetPosition(float x, float y, float z = 0.0f) noexcept { transform_.position = {x, y, z}; }
+        void SetPosition(const Math::Vector3& position) noexcept { transform_.SetPosition(position); }
+        void SetPosition(float x, float y, float z = 0.0f) noexcept { transform_.SetPosition({x, y, z}); }
 
-        [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.rotation; }
-        void SetRotation(const Math::Rotator& rotation) noexcept { transform_.rotation = rotation; }
+        [[nodiscard]] Math::Rotator GetRotation() const noexcept { return transform_.GetLocalRotation(); }
+        void SetRotation(const Math::Rotator& rotation) noexcept { transform_.SetRotation(rotation); }
 
-        [[nodiscard]] Math::Vector3 GetScale() const noexcept { return transform_.scale; }
-        void SetScale(const Math::Vector3& scale) noexcept { transform_.scale = scale; }
+        [[nodiscard]] Math::Vector3 GetScale() const noexcept { return transform_.GetLocalScale(); }
+        void SetScale(const Math::Vector3& scale) noexcept { transform_.SetScale(scale); }
 
         virtual void SerializeBinary(std::ostream& stream) const;
         virtual void DeserializeBinary(std::istream& stream);

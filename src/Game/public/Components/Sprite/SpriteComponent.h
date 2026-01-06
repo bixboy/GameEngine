@@ -4,9 +4,8 @@
 #include "SDL3/SDL.h"
 #include "Math/Rect.h"
 #include "Math/Vector2.h"
-#include "Ressources/RessourcesClass/Texture.h"
-#include "Render/Sprite/SpriteFrame.h"
 #include "SpriteComponent.generated.h"
+#include "Render/Sprite/SpriteFrame.h"
 
 
 namespace BixEngine::Game
@@ -36,7 +35,7 @@ namespace BixEngine::Game
         void Update(float deltaTime) override;
         
 
-        void ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
+        void ApplyFrame(const Resources::SpriteFrame* frame, SDL_Color baseTint, float alpha);
 
         void SetColor(SDL_Color color) noexcept { color_ = color; }
 
@@ -47,7 +46,7 @@ namespace BixEngine::Game
 
         void SetDimensions(float w, float h) noexcept { size_ = Math::Vector2(w, h); }
 
-        void SetTexture(resources::Texture* texture) noexcept;
+        void SetTexture(Resources::Texture* texture) noexcept;
 
         void SetUVRect(const Math::Rect& uvRect) noexcept;
 
@@ -68,7 +67,7 @@ namespace BixEngine::Game
         [[nodiscard]] float GetWidth() const noexcept { return size_.x; }
         [[nodiscard]] float GetHeight() const noexcept { return size_.y; }
 
-        [[nodiscard]] resources::Texture* GetTexture() const noexcept { return texture_; }
+        [[nodiscard]] Resources::Texture* GetTexture() const noexcept { return texture_; }
         [[nodiscard]] const Math::Rect& GetUVRect() const noexcept { return uvRect_; }
 
         [[nodiscard]] bool GetFlipX() const noexcept { return bFlipX_; }

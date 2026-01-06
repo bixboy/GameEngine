@@ -77,7 +77,7 @@ namespace BixEngine::Core
         std::unique_ptr<Window> window_{};
         std::unique_ptr<Graphics::Renderer> renderer_{};
 
-        GuiModule guiModule_{};
+        Gui::GuiModule guiModule_{};
         SubsystemManager subsystems_{};
         EditorSettings editorSettings_{};
         

@@ -12,7 +12,7 @@
 #include "Gui/Internal/ChildPanelManager.h"
 #include "Gui/Internal/GuiPanelRegistry.h"
 #include "Gui/Internal/PanelHistory.h"
-#include "Gui/Panels/ActorInspectorPanel.h"
+
 #include "Gui/Internal/WorkspaceRegistry.h"
 #include "imgui.h"
 

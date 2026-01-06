@@ -77,7 +77,7 @@ namespace BixEngine::Gui
 
     // --- Factory ---
     std::shared_ptr<BaseAssetEditorWindow::SharedState> AudioContainerEditorWindow::CreateSharedState(
-        std::filesystem::path assetPath, std::function<void()> onCloseRequest)
+        std::filesystem::path assetPath, const String& stableId, std::function<void()> onCloseRequest)
     {
         auto state = std::make_shared<AudioEditorSharedState>();
         state->assetPath = assetPath;

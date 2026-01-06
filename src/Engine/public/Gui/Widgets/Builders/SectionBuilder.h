@@ -1,10 +1,10 @@
 #pragma once
+#include "Gui/Core/GuiTheme.h"
 #include "Gui/Widgets/ImGuiScopeBase.h"
-#include "Gui/Widgets/Layout/PanelSection.h"
+
 
 namespace BixEngine::Gui::Widgets
 {
-     
     class Section : public ImGuiScopeBase
     {
     public:

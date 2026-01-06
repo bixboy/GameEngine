@@ -48,7 +48,7 @@ namespace BixEngine::Gui
             String error{};
         };
 
-        explicit SpriteAtlasEditorWindow(std::shared_ptr<SharedState> sharedState);
+        explicit SpriteAtlasEditorWindow(std::shared_ptr<BaseAssetEditorWindow::SharedState> sharedState);
         ~SpriteAtlasEditorWindow() override;
 
         SpriteAtlasEditorWindow(const SpriteAtlasEditorWindow&) = delete;

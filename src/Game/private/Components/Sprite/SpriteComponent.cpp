@@ -114,7 +114,7 @@ namespace BixEngine::Game
 
             Math::Rect effectiveUV = uvRect_;
             
-            if (effectiveUV.Width <= 0.0f || effectiveUV.Height <= 0.0f)
+            if (effectiveUV.width <= 0.0f || effectiveUV.height <= 0.0f)
             {
                 effectiveUV = {0.0f, 0.0f, tw, th};
             }
@@ -123,10 +123,10 @@ namespace BixEngine::Game
             {
                 float invW = 1.0f / tw;
                 float invH = 1.0f / th;
-                uvs[0] = { effectiveUV.X * invW, effectiveUV.Y * invH }; 
-                uvs[1] = { (effectiveUV.X + effectiveUV.Width) * invW, effectiveUV.Y * invH }; 
-                uvs[2] = { effectiveUV.X * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; 
-                uvs[3] = { (effectiveUV.X + effectiveUV.Width) * invW, (effectiveUV.Y + effectiveUV.Height) * invH }; 
+                uvs[0] = { effectiveUV.x * invW, effectiveUV.y * invH }; 
+                uvs[1] = { (effectiveUV.x + effectiveUV.width) * invW, effectiveUV.y * invH }; 
+                uvs[2] = { effectiveUV.x * invW, (effectiveUV.y + effectiveUV.height) * invH }; 
+                uvs[3] = { (effectiveUV.x + effectiveUV.width) * invW, (effectiveUV.y + effectiveUV.height) * invH }; 
             }
             else
             {
@@ -172,7 +172,7 @@ namespace BixEngine::Game
         SDL_RenderGeometry(renderer.GetSDLRenderer(), nativeTexture, vertices, 4, indices, 6);
     }
 
-    void SpriteComponent::ApplyFrame(const resources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
+    void SpriteComponent::ApplyFrame(const Resources::SpriteFrame* frame, SDL_Color baseTint, float alpha)
     {
         if (!frame || !frame->IsValid())
         {
@@ -212,7 +212,7 @@ namespace BixEngine::Game
 
 
 
-    void SpriteComponent::SetTexture(resources::Texture* texture) noexcept
+    void SpriteComponent::SetTexture(Resources::Texture* texture) noexcept
     {
         texture_ = texture;
         lastTexture_ = texture;

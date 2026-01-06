@@ -24,6 +24,10 @@ namespace BixEngine::Math
 
     public:
         Transform() = default;
+
+        [[nodiscard]] Vec3 GetLocalPosition() const { return m_LocalPosition; }
+        [[nodiscard]] Rotator GetLocalRotation() const { return m_LocalRotation; }
+        [[nodiscard]] Vec3 GetLocalScale() const { return m_LocalScale; }
         
         void SetPosition(const Vec3& pos)
         { 

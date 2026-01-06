@@ -60,6 +60,7 @@ namespace BixEngine
         [[nodiscard]] size_type size() const noexcept { return data_.size(); }
         [[nodiscard]] size_type length() const noexcept { return data_.length(); }
         [[nodiscard]] bool empty() const noexcept { return data_.empty(); }
+        [[nodiscard]] bool IsEmpty() const noexcept { return data_.empty(); }
         
         void clear() noexcept { data_.clear(); }
         void reserve(size_type newCapacity) { data_.reserve(newCapacity); }

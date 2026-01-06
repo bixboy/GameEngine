@@ -9,8 +9,14 @@
 #include "Containers/String.h"
 #include "Components/Core/Component.h"
 #include "Time/Timer.h"
-#include "Gui/Core/GuiManager.h"
+#include "Time/Timer.h"
 #include "Systems/Core/Window.h"
+//#include "Gui/Core/GuiManager.h"
+
+namespace BixEngine::Gui
+{
+    class GuiManager;
+}
 
 #include "Scene.generated.h"
 #include <box2d/box2d.h>
@@ -52,8 +58,8 @@ namespace BixEngine::Game
         void OnRuntimeStart();
         void OnRuntimeStop();
         
-        void OnEditorUpdate(float deltaTime);
-        void OnRuntimeUpdate(float deltaTime);
+        virtual void OnEditorUpdate(float deltaTime);
+        virtual void OnRuntimeUpdate(float deltaTime);
 
         // --- Événements Système ---
         

@@ -28,8 +28,8 @@ namespace BixEngine::Game
         void SetAsMainCamera();
         void LookAt(const Math::Vector3& target);
 
-        [[nodiscard]] Math::Vector2<float> WorldToScreen(const Math::Vector3& worldPos) const;
-        [[nodiscard]] Math::Vector2<float> ScreenToWorld(const Math::Vector2<float>& screenPos) const;
+        [[nodiscard]] Math::Vector2 WorldToScreen(const Math::Vector3& worldPos) const;
+        [[nodiscard]] Math::Vector2 ScreenToWorld(const Math::Vector2& screenPos) const;
 
         static CameraComponent* GetMainCamera();
 
@@ -39,7 +39,7 @@ namespace BixEngine::Game
         float Zoom{1.0f};
 
         BPROPERTY()
-        Math::Vector2<float> Offset{0.0f, 0.0f};
+        Math::Vector2 Offset{0.0f, 0.0f};
 
         BPROPERTY()
         SDL_Color ClearColor{0, 0, 0, 255}; 

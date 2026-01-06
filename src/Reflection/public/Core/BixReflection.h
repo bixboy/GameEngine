@@ -6,3 +6,5 @@
 #include "Utils/ReflectionDetail.h"
 #include "Utils/ReflectionHelpers.h"
 #include "Utils/ReflectionMacros.h"
+
+namespace Bix = BixEngine;

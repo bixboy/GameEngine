@@ -12,9 +12,10 @@
 #include "Gui/Panels/GuiPanel.h"
 
 
+#include "Gui/Core/GuiManager.h"
+
 namespace BixEngine::Gui
 {
-    class GuiManager;
 
     // --- Context Structure ---
     struct DefaultEngineGuiContext

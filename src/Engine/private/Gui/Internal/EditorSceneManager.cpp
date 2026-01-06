@@ -1,8 +1,9 @@
 #include "Gui/Internal/EditorSceneManager.h"
 #include <filesystem>
+#include "imgui.h"
 #include "Debug/Logger.h"
 #include "Utils/FileIO/FilesUtils.h"
-#include "Game/SceneManager.h"
+#include "Framework/SceneManager.h"
 #include "Serializer/SceneSerializer.h"
 #include "Levels/EmptyScene.h"
 #include <fstream>
@@ -305,6 +306,7 @@ namespace BixEngine::Gui
                              if (auto* scene = sceneManager->GetScene())
                                  scene->SetName(std::filesystem::path(newName).stem().string().c_str());
                          }
+                     }
                      }
                      else
                      {

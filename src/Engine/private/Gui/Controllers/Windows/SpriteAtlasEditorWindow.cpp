@@ -41,7 +41,7 @@ namespace BixEngine::Gui
     }
 
     // --- Constructor ---
-    SpriteAtlasEditorWindow::SpriteAtlasEditorWindow(std::shared_ptr<SharedState> sharedState) : BaseAssetEditorWindow(std::move(sharedState),
+    SpriteAtlasEditorWindow::SpriteAtlasEditorWindow(std::shared_ptr<BaseAssetEditorWindow::SharedState> sharedState) : BaseAssetEditorWindow(std::move(sharedState),
         {
             .titlePrefix = "Sprite Atlas", 
             .dockRegion = DockSpaceRegion::Center,
@@ -145,13 +145,13 @@ namespace BixEngine::Gui
         
         if (!state)
         {
-            Utils::DrawEmptyStateMessage("No sprite atlas selected.");
+            GuiUtils::DrawEmptyStateMessage("No sprite atlas selected.");
             return;
         }
 
         if (!state->error.empty())
         {
-            Utils::DrawErrorMessage(std::string(state->error.View()));
+            GuiUtils::DrawErrorMessage(std::string(state->error.View()));
         }
 
         // --- 1. Header Settings ---
@@ -226,7 +226,7 @@ namespace BixEngine::Gui
 
         if (!state.texture)
         {
-            Utils::DrawEmptyStateMessage("Texture not loaded or path invalid.");
+            GuiUtils::DrawEmptyStateMessage("Texture not loaded or path invalid.");
             return;
         }
 
@@ -261,7 +261,7 @@ namespace BixEngine::Gui
             DrawCheckerboard(draw, origin, {dispW, dispH}, IM_COL32(50, 50, 50, 255), IM_COL32(80, 80, 80, 255));
 
             // 2. Texture Image
-            const ImTextureRef previewRef = Utils::ToTextureRef(state.texture->GetNativeHandle());
+            const ImTextureRef previewRef = GuiUtils::ToTextureRef(state.texture->GetNativeHandle());
             if (previewRef.GetTexID() != ImTextureID_Invalid)
             {
                 ImGui::Image(previewRef, {dispW, dispH});
@@ -495,7 +495,7 @@ namespace BixEngine::Gui
             }
             else
             {
-                Utils::DrawEmptyStateMessage("Select or create an animation to edit.");
+                GuiUtils::DrawEmptyStateMessage("Select or create an animation to edit.");
             }
 
             ImGui::EndTable();
@@ -569,7 +569,7 @@ namespace BixEngine::Gui
 
         DrawCheckerboard(draw, pos, size, IM_COL32(60,60,60,255), IM_COL32(90,90,90,255));
 
-        ImGui::Image(Utils::ToTextureRef(state.texture->GetNativeHandle()), size, uv0, uv1);
+        ImGui::Image(GuiUtils::ToTextureRef(state.texture->GetNativeHandle()), size, uv0, uv1);
 
         ImGui::Spacing();
         ImGui::Separator();

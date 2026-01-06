@@ -9,8 +9,9 @@
 #include <algorithm>
 
 using namespace BixEngine::Gui;
-using namespace BixEngine::Gui::Utils;
-using namespace BixEngine::resources;
+using namespace BixEngine::Gui::GuiUtils;
+using namespace BixEngine::Resources;
+using namespace BixEngine::Utils;
 
 
 
@@ -30,7 +31,7 @@ CreateSpriteAtlasDialog::CreateSpriteAtlasDialog(ContentBrowserState& s, String&
 
 void CreateSpriteAtlasDialog::Open(const path& src)
 {
-    atlasError_.Clear();
+    atlasError_.clear();
 
     framesDir_ = fs::is_directory(src) ? src : src.parent_path();
     std::string name = fs::is_directory(src) ? src.filename().string() : src.stem().string();
@@ -78,12 +79,11 @@ void CreateSpriteAtlasDialog::DrawContent()
     DrawHeader();
     DrawInputFields();
 
-    if (!atlasError_.IsEmpty())
-        DrawErrorMessage(atlasError_);
+        DrawErrorMessage(atlasError_.Std());
 
     if (!DrawConfirmButtons("Create","Cancel",
         []{},
-        [&]{ Close(); atlasError_.Clear(); texturePath_.clear(); textureCandidates_.clear(); }))
+        [&]{ Close(); atlasError_.clear(); texturePath_.clear(); textureCandidates_.clear(); }))
         return;
 
     if (TryGenerateAtlas())
@@ -154,7 +154,7 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
         if (ImGui::Selectable(GetDisplayName(p).c_str(), selected))
         {
             SetTexturePath(p);
-            atlasError_.Clear();
+            atlasError_.clear();
         }
     }
 
@@ -198,7 +198,7 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     float aspect = (float)tex->GetWidth() / tex->GetHeight();
     float previewH = previewW / aspect;
 
-    ImTextureRef ref = Utils::ToTextureRef(tex->GetNativeHandle());
+    ImTextureRef ref = GuiUtils::ToTextureRef(tex->GetNativeHandle());
     if (ref.GetTexID() == ImTextureID_Invalid)
     {
         ImGui::TextDisabled("Preview unavailable.");
@@ -214,7 +214,7 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
     float sx = (max.x-min.x) / tex->GetWidth();
     float sy = (max.y-min.y) / tex->GetHeight();
 
-    auto frames = SpriteAtlasUtils::GenerateFrames(*tex, columns_, rows_, padding_, margin_);
+    auto frames = SpriteAtlasUtils::GenerateFrames(*tex, (int)columns_, (int)rows_, padding_, margin_);
     if (!frames.empty())
     {
         auto* dl = ImGui::GetWindowDrawList();
@@ -222,8 +222,8 @@ void CreateSpriteAtlasDialog::DrawTextureSelector()
         {
             auto& r=f.uvRect;
             dl->AddRect(
-                {min.x+r.X*sx, min.y+r.Y*sy},
-                {min.x+(r.X+r.Width)*sx, min.y+(r.Y+r.Height)*sy},
+                {min.x+r.x*sx, min.y+r.y*sy},
+                {min.x+(r.x+r.width)*sx, min.y+(r.y+r.height)*sy},
                 IM_COL32(255,255,255,180)
             );
         }
@@ -268,7 +268,7 @@ void CreateSpriteAtlasDialog::TryAutoConfigureFromTexture()
 bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 {
     if (atlasName_[0]=='\0')
-        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Atlas name cannot be empty.",false), false;
+        return FileUtils::LogAndStoreError(atlasError_,"Atlas name cannot be empty.",false), false;
 
     std::string base(atlasName_);
     if (base.ends_with(".atlas"))
@@ -282,20 +282,20 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 
     path outDir = usingTexture ? tex.parent_path() : framesDir_;
     if (outDir.empty())
-        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Invalid output directory.",false), false;
+        return FileUtils::LogAndStoreError(atlasError_,"Invalid output directory.",false), false;
 
     path out = outDir / (base+".atlas");
     if (fs::exists(out))
-        return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Atlas already exists.",false), false;
+        return FileUtils::LogAndStoreError(atlasError_,"Atlas already exists.",false), false;
 
     if (usingTexture)
     {
         SpriteAtlasCreationParams p;
         p.texturePath = tex;
-        p.columns = std::max(1.0f,columns_);
-        p.rows    = std::max(1.0f,rows_);
-        p.padding = std::max(0,padding_);
-        p.margin  = std::max(0,margin_);
+        p.columns = std::max(1, (int)columns_);
+        p.rows    = std::max(1, (int)rows_);
+        p.padding = std::max(0, padding_);
+        p.margin  = std::max(0, margin_);
 
         if (!SpriteAtlasFactory::CreateAtlasFile(out,p,atlasError_))
             return false;
@@ -303,14 +303,14 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
     else
     {
         if (framesDir_.empty() || !fs::exists(framesDir_))
-            return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
+            return FileUtils::LogAndStoreError(atlasError_,"Select a valid PNG folder.",false), false;
 
         
         int iCols = (int)std::max(1.0f, std::ceil(columns_));
         int iRows = (int)std::max(1.0f, std::ceil(rows_));
 
         if (!AtlasGenerator::GenerateAtlas(framesDir_,iCols,iRows,padding_,margin_,frameRate_,loop_))
-            return FilesUtils::Utilities::LogAndStoreError(atlasError_,"Failed to generate atlas.",false), false;
+            return FileUtils::LogAndStoreError(atlasError_,"Failed to generate atlas.",false), false;
 
         path autoOut = framesDir_ / (base+".atlas");
         if (fs::exists(autoOut))
@@ -319,7 +319,7 @@ bool CreateSpriteAtlasDialog::TryGenerateAtlas()
 
     selectedEntry_ = out.generic_string().c_str();
     state_.cache.dirty = true;
-    atlasError_.Clear();
+    atlasError_.clear();
     return true;
 }
 
@@ -343,7 +343,7 @@ void CreateSpriteAtlasDialog::RefreshTextureCandidates()
     }
 
     std::sort(textureCandidates_.begin(),textureCandidates_.end(),
-        [](auto&a,auto&b){ return FilesUtils::Utilities::CaseInsensitiveLess(a.filename().string(),b.filename().string()); });
+        [](auto&a,auto&b){ return FileUtils::CaseInsensitiveLess(a.filename().string(),b.filename().string()); });
 
     if (texturePath_.empty() && !textureCandidates_.empty())
         SetTexturePath(textureCandidates_.front());

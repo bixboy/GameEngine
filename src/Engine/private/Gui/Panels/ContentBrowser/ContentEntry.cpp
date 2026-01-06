@@ -1,6 +1,6 @@
 #include "Gui/Panels/ContentBrowser/ContentEntry.h"
 #include <array>
-#include "Gui/Core/GuiCommon.h"
+#include "Gui/Core/GuiData.h"
 #include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include "Gui/Utils/GuiHelpers.h"
 #include "Utils/Editor/EditorUtils.h"
@@ -88,10 +88,10 @@ namespace BixEngine::Gui
         constexpr ImVec2 btnSize(Theme::ThumbnailSize, Theme::ThumbnailSize);
         const ImVec4 base = isSelected ? ImVec4(0.20f, 0.35f, 0.60f, 0.95f) : ImGui::GetStyleColorVec4(ImGuiCol_Button);
 
-        Utils::ScopedColor button(ImGuiCol_Button, base);
-        Utils::ScopedColor hover(ImGuiCol_ButtonHovered, Utils::AdjustColor(base, 0.08f));
-        Utils::ScopedColor active(ImGuiCol_ButtonActive, Utils::AdjustColor(base, 0.14f));
-        Utils::ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(12, 12));
+        GuiUtils::ScopedColor button(ImGuiCol_Button, base);
+        GuiUtils::ScopedColor hover(ImGuiCol_ButtonHovered, GuiUtils::AdjustColor(base, 0.08f));
+        GuiUtils::ScopedColor active(ImGuiCol_ButtonActive, GuiUtils::AdjustColor(base, 0.14f));
+        GuiUtils::ScopedStyle padding(ImGuiStyleVar_FramePadding, ImVec2(12, 12));
 
         bool clicked = ImGui::Button(GetIcon(entry.type), btnSize);
 
@@ -101,19 +101,19 @@ namespace BixEngine::Gui
             {
                 state.current = entry.path;
                 state.cache.dirty = true;
-                selectedEntry.Clear();
+                selectedEntry.clear();
             }
             else
                 selectedEntry = entry.SelectionKey();
         }
 
-        if (Utils::IsItemDoubleClicked(ImGuiMouseButton_Left))
+        if (GuiUtils::IsItemDoubleClicked(ImGuiMouseButton_Left))
         {
             if (entry.IsDirectory())
             {
                 state.current = entry.path;
                 state.cache.dirty = true;
-                selectedEntry.Clear();
+                selectedEntry.clear();
             }
             else if (entry.IsScript())
             {
@@ -160,7 +160,7 @@ namespace BixEngine::Gui
     {
         if (isSelected)
         {
-            Utils::ScopedColor text(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1));
+            GuiUtils::ScopedColor text(ImGuiCol_Text, ImVec4(0.95f, 0.85f, 0.40f, 1));
             ImGui::TextWrapped("%s", entry.name.c_str());
         }
         else

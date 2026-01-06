@@ -4,7 +4,7 @@
 #include <utility>
 #include <algorithm>
 
-#include "Gui/Panels/ActorInspectorPanel.h"
+#include "Gui/Panels/ActorInspector/ActorInspectorPanel.h"
 #include "Gui/Panels/SceneOutlinerPanel.h"
 #include "Gui/Panels/SceneViewportPanel.h"
 #include "Gui/Panels/StatsPanel.h"
@@ -102,7 +102,7 @@ namespace BixEngine::Gui
         browserDesc.dockRegion   = DockSpaceRegion::Bottom;
         browserDesc.closable     = true;
         browserDesc.onInitialize = [](GuiPanel& panel) { panel.SetBackgroundColor(Theme::ContentBackground); };
-        panels.contentBrowserPanel = TryRegisterPanel<ContentBrowserPanel>("ContentBrowser", browserDesc, *context_);
+        // panels.contentBrowserPanel = TryRegisterPanel<ContentBrowserPanel>("ContentBrowser", browserDesc, *context_);
 
         panels.allPanels = {
             {"SceneViewport",   panels.sceneViewportPanel},

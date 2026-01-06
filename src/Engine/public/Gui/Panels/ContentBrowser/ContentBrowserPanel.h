@@ -1,10 +1,10 @@
 #pragma once
-#include "Gui/Base/GuiPanelBase.h"
+#include "Gui/Panels/GuiPanelBase.h"
 #include "Gui/Core/DefaultEngineGui.h"
-#include "Gui/Panels/ContentBrowser/ContentBrowserPanelInternal.h"
-
+#include "Gui/Panels/ContentBrowser/ContentBrowserState.h"
 #include <filesystem>
 #include <vector>
+#include <chrono>
 
 
 namespace BixEngine::Gui
@@ -16,30 +16,39 @@ namespace BixEngine::Gui
         ~ContentBrowserPanel() override;
 
         void Draw() override;
-
-        void DrawHeader() override;
-        void DrawBody() override;
         void HandleShortcuts() override;
         void OnOpen() override;
         void OnClose() override;
 
         void ImportExternalFiles(const std::vector<std::filesystem::path>& paths);
-
         static ContentBrowserPanel* GetActiveInstance() noexcept;
 
     private:
-        void EnsureValidDirectory();
+        // --- Méthodes UI Internes ---
+        void DrawHeader();
+        void DrawBody();
+        void DrawDirectoryTree();
+        void DrawEntries(const String& searchQuery);
+        void DrawPopups();
 
+        // --- Logique Métier ---
+        void EnsureValidDirectory();
+        bool RefreshDirectoryCache();
+        bool DeleteScriptFiles(const ContentEntry& entry, String& error);
+
+    private:
+        // --- Données ---
+        static ContentBrowserPanel* activeInstance_;
         ContentBrowserState state_;
 
+        // UI State
         char searchBuffer_[256] = "";
-        String selectedEntry_;
+        String selectedEntry_; 
         PopupRequestState popupRequests_;
 
-        static ContentBrowserPanel* activeInstance_;
-
+        // --- Gestion du Refresh & Timers ---
         bool m_PendingRefresh = false;
-        int m_RefreshCountdown = 0;
+        float m_RefreshTimer = 0.0f;
+        std::chrono::steady_clock::time_point m_LastImportTime;
     };
-
 }

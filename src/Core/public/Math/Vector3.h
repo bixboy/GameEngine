@@ -19,6 +19,11 @@ namespace BixEngine::Math
         constexpr TVector3() = default;
         constexpr TVector3(T _x, T _y, T _z) : x(_x), y(_y), z(_z) {}
         
+        [[nodiscard]] auto LengthSquared() const 
+        {
+            return x * x + y * y + z * z;
+        }
+
         [[nodiscard]] auto Length() const 
         {
             if constexpr (std::is_same_v<T, double>)
@@ -82,11 +87,6 @@ namespace BixEngine::Math
         bool operator!=(const TVector3& o) const { return !(*this == o); }
 
         friend TVector3 operator*(T s, const TVector3& v) { return v * s; }
-        
-        friend TVector3 operator*(T s, const TVector3& v)
-        {
-            return v * s;
-        }
 
         
         static T Dot(const TVector3& a, const TVector3& b)

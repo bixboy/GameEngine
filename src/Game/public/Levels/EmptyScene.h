@@ -16,7 +16,7 @@ namespace BixEngine::Game
         EmptyScene();
 
         void HandleEvent(const SDL_Event& event) override;
-        void Update(float deltaTime) override;
+        void OnRuntimeUpdate(float deltaTime) override;
         void Render(Graphics::Renderer& renderer) override;
 
         void OnEnter() override;
