@@ -404,6 +404,7 @@ namespace BixEngine::Gui
 
                 if (ImGui::IsItemHovered() && ImGui::IsMouseDoubleClicked(ImGuiMouseButton_Left))
                 {
+                    LOG_INFO("Double-click on: " + entry.name.Std() + " | Type: " + std::to_string((int)entry.type) + " | Path: " + entry.path.generic_string());
                     selectedEntry_ = entry.SelectionKey();
                     
                     if (entry.IsDirectory())
@@ -426,8 +427,15 @@ namespace BixEngine::Gui
                     }
                     else if (entry.IsPrefab() || entry.IsSpriteAtlas() || entry.IsAudioContainer())
                     {
+                        LOG_INFO("[ContentBrowser] Requesting open for asset: " + entry.path.generic_string());
                         if (state_.openAssetEditorCallback)
+                        {
                             state_.openAssetEditorCallback(entry.path);
+                        }
+                        else
+                        {
+                            LOG_ERROR("[ContentBrowser] No openAssetEditorCallback set!");
+                        }
                     }
                 }
 

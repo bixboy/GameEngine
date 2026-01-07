@@ -1,4 +1,5 @@
 ﻿#include "Gui/Widgets/Controls/PropertyDrawer.h"
+#include "Gui/Dialogs/AssetSelectionDialog.h"
 
 #include <unordered_map>
 #include <functional>
@@ -118,6 +119,21 @@ namespace BixEngine::Gui
             { "AudioClip", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioClip>(p, i, {".mp3", ".wav", ".ogg"}); } },
             { "SpriteAtlas", [](const auto& p, void* i) { return DrawResourcePicker<Resources::SpriteAtlas>(p, i, {".atlas"}); } },
             { "AudioContainer", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioContainer>(p, i, {".bixaudio"}); } },
+            
+            // Full Qualified Names (Shared Ptr)
+            { "std::shared_ptr<BixEngine::Resources::AudioClip>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioClip>(p, i, {".mp3", ".wav", ".ogg"}); } },
+            { "std::shared_ptr<BixEngine::Resources::AudioContainer>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioContainer>(p, i, {".bixaudio"}); } },
+            { "std::shared_ptr<BixEngine::Resources::SpriteAtlas>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::SpriteAtlas>(p, i, {".atlas"}); } },
+            
+            // Variants (Potential Typos/Legacy)
+            { "std::shared_ptr<Ressources::AudioClip>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioClip>(p, i, {".mp3", ".wav", ".ogg"}); } },
+            { "std::shared_ptr<Ressources::AudioContainer>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioContainer>(p, i, {".bixaudio"}); } },
+            { "std::shared_ptr<BixEngine::Ressources::AudioClip>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioClip>(p, i, {".mp3", ".wav", ".ogg"}); } },
+
+            // Exact match from screenshot
+            { "std::shared_ptr<Resources::AudioClip>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioClip>(p, i, {".mp3", ".wav", ".ogg"}); } },
+            { "std::shared_ptr<Resources::AudioContainer>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::AudioContainer>(p, i, {".bixaudio"}); } },
+            { "std::shared_ptr<Resources::SpriteAtlas>", [](const auto& p, void* i) { return DrawResourcePicker<Resources::SpriteAtlas>(p, i, {".atlas"}); } },
             // Autres ressources simples
         };
 
@@ -530,5 +546,96 @@ namespace BixEngine::Gui
         }
         
         return false;
+    }
+    // --- Asset Selection ---
+
+    static AssetSelectionDialog g_AssetPicker;
+    static ImGuiID g_RequestingId = 0;
+    static std::string g_PickedPath;
+    static bool g_PickerResultAvailable = false;
+    static int g_LastRenderFrame = -1;
+    static std::vector<std::string> g_CurrentExtensions;
+
+    bool PropertyDrawer::DrawAssetPicker(const std::string& currentPath, std::string& outNewPath, const std::vector<std::string>& extensions)
+    {
+        ImGui::BeginGroup();
+        
+        std::string displayName = "None";
+        if (!currentPath.empty())
+        {
+            displayName = std::filesystem::path(currentPath).filename().string();
+        }
+
+        // 1. Text Button displaying current selection
+        // Use a nice localized button look
+        float avail = ImGui::GetContentRegionAvail().x;
+        
+        // Split space: 80% for button (open dialog), 20% for Clear/X
+        float buttonWidth = avail; 
+        if (!currentPath.empty()) buttonWidth -= 24.0f; // Space for X button
+
+        // Display Name Button
+        if (ImGui::Button(displayName.c_str(), ImVec2(buttonWidth, 0.0f)))
+        {
+            g_AssetPicker.Open();
+            g_RequestingId = ImGui::GetID("##AssetPickerRequest");
+            g_CurrentExtensions = extensions;
+        }
+
+        // Drag Drop Target
+        if (ImGui::BeginDragDropTarget())
+        {
+            if (const ImGuiPayload* payload = ImGui::AcceptDragDropPayload("CONTENT_BROWSER_ITEM"))
+            {
+                 outNewPath = static_cast<const char*>(payload->Data);
+                 ImGui::EndDragDropTarget();
+                 ImGui::EndGroup();
+                 return true;
+            }
+            ImGui::EndDragDropTarget();
+        }
+        
+        // Clear Button
+        if (!currentPath.empty())
+        {
+            ImGui::SameLine();
+            if (ImGui::Button("X", ImVec2(16, 0)))
+            {
+                outNewPath = "";
+                ImGui::EndGroup();
+                return true;
+            }
+        }
+        
+        ImGui::EndGroup();
+
+        // 2. Render Dialog (Once per frame global check)
+        // We use GetFrameCount to ensure we only render it once regardless of how many properties call this.
+        if (g_LastRenderFrame != ImGui::GetFrameCount())
+        {
+            g_LastRenderFrame = ImGui::GetFrameCount();
+            std::string res;
+            if (g_AssetPicker.Render("AssetSelectionPopup", g_CurrentExtensions, res))
+            {
+                g_PickedPath = res;
+                g_PickerResultAvailable = true;
+            }
+        }
+
+        // 3. Check for Result
+        ImGuiID myID = ImGui::GetID("##AssetPickerRequest");
+        bool changed = false;
+
+        if (g_RequestingId == myID && g_PickerResultAvailable)
+        {
+            outNewPath = g_PickedPath;
+            changed = true;
+            
+            // Consume result
+            g_PickerResultAvailable = false;
+            g_RequestingId = 0;
+        }
+
+        return changed;
     }
 }

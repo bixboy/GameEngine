@@ -89,8 +89,8 @@ namespace BixEngine::Gui::ActorInspector
             
             if (ImGui::BeginTable("##PropTable", 2, tableFlags))
             {
-                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthFixed | ImGuiTableColumnFlags_NoResize, 140.0f); // Fixed width for labels to look cleaner
-                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch);
+                ImGui::TableSetupColumn("Label", ImGuiTableColumnFlags_WidthStretch, 0.4f);
+                ImGui::TableSetupColumn("Value", ImGuiTableColumnFlags_WidthStretch, 0.6f);
 
                 for (const auto* p : list)
                 {

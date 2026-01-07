@@ -137,6 +137,7 @@ namespace BixEngine::Gui
             }
             else if (ext == ".bixprefab" || ext == ".prefab")
             {
+                LOG_INFO("[DefaultEngineGui] Opening Actor Editor for: " + path.generic_string());
                 guiManager.OpenAssetEditor<ActorEditorWindow>(path, ActorEditorWindow::Section::Viewport);
             }
             else if (ext == ".bixcomp")

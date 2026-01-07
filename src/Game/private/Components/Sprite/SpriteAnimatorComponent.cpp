@@ -77,16 +77,25 @@ namespace BixEngine::Game
     {
         SpriteComponent::BeginPlay();
 
-        if (!atlas_ && !atlasPath_.IsEmpty())
-        {
-            LoadSpriteAtlas(atlasPath_, defaultAnimation_);
-        }
-        else if (atlas_)
+        if (atlas_)
         {
             animator_.SetSpriteAtlas(atlas_);
+            bool hasAnim = false;
+            
             if (!defaultAnimation_.IsEmpty() && atlas_->GetAnimation(defaultAnimation_))
             {
                 currentAnimation_ = defaultAnimation_;
+                hasAnim = true;
+            }
+            else if (!atlas_->GetAnimations().empty())
+            {
+                // Auto-pick first if default invalid or empty
+                currentAnimation_ = atlas_->GetAnimations().front().name;
+                hasAnim = true;
+            }
+            
+            if (hasAnim)
+            {
                 animator_.Play(currentAnimation_);
             }
         }
@@ -123,7 +132,6 @@ namespace BixEngine::Game
 
         atlas_ = std::move(atlas);
         animator_.SetSpriteAtlas(atlas_);
-        atlasPath_ = atlasPath;
 
         if (!defaultAnimation.IsEmpty() && atlas_->GetAnimation(defaultAnimation))
         {

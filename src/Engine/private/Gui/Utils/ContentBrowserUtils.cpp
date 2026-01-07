@@ -37,11 +37,11 @@ namespace BixEngine::Gui::ContentBrowserUtils
     ContentType DetectContentType(const path& path)
     {
         if (path.empty())
-            return ContentType::File;
-
         const String ext = StringUtils::Utilities::ToLowerCopy(path.extension().generic_string());
+        
+        LOG_INFO("DetectContentType: Path=" + path.generic_string() + " | Ext=" + ext.Std());
 
-        if (ext == ".bixactor")
+        if (ext.Std() == ".bixactor" || ext.Std() == ".prefab" || ext.Std() == ".bixprefab")
             return ContentType::ActorPrefab;
         
         if (ext == ".bixcomponent")

@@ -356,7 +356,7 @@ namespace BixEngine::Gui
         std::string typeTag;
         std::string assetType;
 
-        if (extensionLower == ".bixactor")
+        if (extensionLower == ".bixactor" || extensionLower == ".prefab" || extensionLower == ".bixprefab")
         {
             typeTag = "actor";
             assetType = "Actor Prefab";
@@ -381,6 +381,8 @@ namespace BixEngine::Gui
             LOG_WARNING("[GuiAssetEditorManager] Unsupported asset extension: " + path.generic_string());
             return false;
         }
+
+        LOG_INFO("[GuiAssetEditorManager] Detected type tag '" + typeTag + "' for path: " + path.generic_string());
 
         const std::string navigationId = MakeNavigationId(path, typeTag);
         auto onClose = [this, navigationId]()
@@ -549,7 +551,7 @@ namespace BixEngine::Gui
 
     void GuiAssetEditorManager::PopulatePrefabMetadata(const std::filesystem::path& path, BaseAssetEditorWindow::SharedState& state)
     {
-        if (path.extension() == ".bixactor")
+        if (path.extension() == ".bixactor" || path.extension() == ".prefab" || path.extension() == ".bixprefab")
         {
              
             return;
